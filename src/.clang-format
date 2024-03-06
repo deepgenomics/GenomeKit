@@ -1,0 +1,35 @@
+BasedOnStyle: Microsoft
+ColumnLimit: 120
+IndentWidth: 4
+TabWidth: 4
+
+Language: Cpp
+Standard: Latest
+
+AccessModifierOffset: -4
+AllowShortLoopsOnASingleLine: true
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments: AcrossComments
+AlignConsecutiveDeclarations: AcrossComments
+AlignConsecutiveMacros: AcrossComments
+AlignEscapedNewlines: DontAlign
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Never
+AlwaysBreakTemplateDeclarations: Yes
+BitFieldColonSpacing: After
+BreakBeforeBraces: WebKit
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 0
+MacroBlockBegin: ".*_BEGIN"
+MacroBlockEnd: ".*_END"
+NamespaceMacros: ["BEGIN_NAMESPACE_.*"]
+PackConstructorInitializers: CurrentLine
+PointerAlignment: Left
+SpaceBeforeCtorInitializerColon: false
+SpacesBeforeTrailingComments: 2
+StatementMacros: ["NOCOPY"]
+TypenameMacros: ["GKPY_DECLARE_.*"]
+UseTab: ForContinuationAndIndentation

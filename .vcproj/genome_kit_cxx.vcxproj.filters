@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\genome_anno_io.cpp" />
+    <ClCompile Include="..\src\genome_kit.cpp" />
+    <ClCompile Include="..\src\gk_assert.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\file.cpp" />
+    <ClCompile Include="..\src\py_genome.cpp" />
+    <ClCompile Include="..\src\py_genome_anno.cpp" />
+    <ClCompile Include="..\src\py_genome_dna.cpp" />
+    <ClCompile Include="..\src\py_init.cpp" />
+    <ClCompile Include="..\src\genome_anno.cpp" />
+    <ClCompile Include="..\src\py_util.cpp" />
+    <ClCompile Include="..\src\genome.cpp" />
+    <ClCompile Include="..\src\strutil.cpp" />
+    <ClCompile Include="..\src\gk_time.cpp" />
+    <ClCompile Include="..\src\genome_dna.cpp" />
+    <ClCompile Include="..\src\util.cpp" />
+    <ClCompile Include="..\src\interval.cpp" />
+    <ClCompile Include="..\src\py_interval.cpp" />
+    <ClCompile Include="..\src\genome_track_io.cpp" />
+    <ClCompile Include="..\src\genome_track.cpp" />
+    <ClCompile Include="..\src\half.cpp" />
+    <ClCompile Include="..\src\py_genome_track.cpp" />
+    <ClCompile Include="..\src\variant_table.cpp" />
+    <ClCompile Include="..\src\py_variant_table.cpp" />
+    <ClCompile Include="..\src\ralign.cpp" />
+    <ClCompile Include="..\src\jralign.cpp" />
+    <ClCompile Include="..\src\jrdist.cpp" />
+    <ClCompile Include="..\src\py_jralign.cpp" />
+    <ClCompile Include="..\src\py_jrdist.cpp" />
+    <ClCompile Include="..\src\py_ralign.cpp" />
+    <ClCompile Include="..\src\sam_line_parser.cpp" />
+    <ClCompile Include="..\src\chrom.cpp" />
+    <ClCompile Include="..\src\refg.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\array_view.h" />
+    <ClInclude Include="..\src\strutil.h" />
+    <ClInclude Include="..\src\table.h" />
+    <ClInclude Include="..\src\genome_kit.h" />
+    <ClInclude Include="..\src\gk_assert.h" />
+    <ClInclude Include="..\src\defines.h" />
+    <ClInclude Include="..\src\biostr.h" />
+    <ClInclude Include="..\src\format.h" />
+    <ClInclude Include="..\src\genome_anno.h" />
+    <ClInclude Include="..\src\file.h" />
+    <ClInclude Include="..\src\py_genome.h" />
+    <ClInclude Include="..\src\py_genome_anno.h" />
+    <ClInclude Include="..\src\py_genome_dna.h" />
+    <ClInclude Include="..\src\py_util.h" />
+    <ClInclude Include="..\src\genome.h" />
+    <ClInclude Include="..\src\gk_time.h" />
+    <ClInclude Include="..\src\genome_dna.h" />
+    <ClInclude Include="..\src\util.h" />
+    <ClInclude Include="..\src\py_table.h" />
+    <ClInclude Include="..\src\interval.h" />
+    <ClInclude Include="..\src\py_interval.h" />
+    <ClInclude Include="..\src\genome_track.h" />
+    <ClInclude Include="..\src\half.h" />
+    <ClInclude Include="..\src\py_genome_track.h" />
+    <ClInclude Include="..\src\variant_table.h" />
+    <ClInclude Include="..\src\py_variant_table.h" />
+    <ClInclude Include="..\src\ralign.h" />
+    <ClInclude Include="..\src\jralign.h" />
+    <ClInclude Include="..\src\jrdist.h" />
+    <ClInclude Include="..\src\py_jralign.h" />
+    <ClInclude Include="..\src\py_jrdist.h" />
+    <ClInclude Include="..\src\py_ralign.h" />
+    <ClInclude Include="..\src\sam_line_parser.h" />
+    <ClInclude Include="..\src\chrom.h" />
+    <ClInclude Include="..\src\refg.h" />
+  </ItemGroup>
+</Project>

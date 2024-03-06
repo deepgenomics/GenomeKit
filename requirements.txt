@@ -1,0 +1,5 @@
+appdirs
+boto3
+future
+progressbar2
+numpy

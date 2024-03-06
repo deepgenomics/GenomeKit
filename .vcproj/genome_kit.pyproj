@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{301DAE2E-0B77-4775-AA0A-25EF9BAB3949}</ProjectGuid>
+    <ProjectHome>..</ProjectHome>
+    <StartupFile>tests\test_genome_annotation.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterArguments>
+    </InterpreterArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'debug' " />
+  <PropertyGroup Condition=" '$(Configuration)' == 'release' " />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="demos\" />
+    <Folder Include="genome_kit\" />
+    <Folder Include="tests\" />
+    <Folder Include="tests\data\" />
+    <Folder Include="tests\data\mini1\" />
+    <Folder Include="tests\data\test_genome\" />
+    <Folder Include="tests\data\test_genome_alt\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="demos\build_track.py" />
+    <Compile Include="demos\extract_acceptor_dna.py" />
+    <Compile Include="demos\extract_conservation.py" />
+    <Compile Include="demos\extract_exonic_dna.py" />
+    <Compile Include="demos\find_downstream_acceptors.py" />
+    <Compile Include="demos\query_vcf.py" />
+    <Compile Include="demos\simple_variant_genome.py" />
+    <Compile Include="demos\walk_annotations.py" />
+    <Compile Include="genome_kit\constants.py" />
+    <Compile Include="genome_kit\data_manager.py" />
+    <Compile Include="genome_kit\genome.py" />
+    <Compile Include="genome_kit\genome_annotation.py" />
+    <Compile Include="genome_kit\genome_dna.py" />
+    <Compile Include="genome_kit\genome_track.py" />
+    <Compile Include="genome_kit\gk_data.py" />
+    <Compile Include="genome_kit\jralign.py" />
+    <Compile Include="genome_kit\jrdist.py" />
+    <Compile Include="genome_kit\ralign.py" />
+    <Compile Include="genome_kit\variant.py" />
+    <Compile Include="genome_kit\vcf_table.py" />
+    <Compile Include="genome_kit\interval.py" />
+    <Compile Include="genome_kit\variant_genome.py" />
+    <Compile Include="genome_kit\_apply_variants.py" />
+    <Compile Include="genome_kit\_build_annotations.py" />
+    <Compile Include="genome_kit\_build_appris.py" />
+    <Compile Include="genome_kit\_cxx_util.py" />
+    <Compile Include="genome_kit\_gk_data_config.py" />
+    <Compile Include="genome_kit\_twobitutils.py" />
+    <Compile Include="genome_kit\_util.py" />
+    <Compile Include="genome_kit\__init__.py" />
+    <Compile Include="genome_kit\__main__.py" />
+    <Compile Include="tests\test_apply_variants.py" />
+    <Compile Include="tests\test_data_manager.py" />
+    <Compile Include="tests\test_genome.py" />
+    <Compile Include="tests\test_genome_annotation.py" />
+    <Compile Include="tests\test_genome_dna.py" />
+    <Compile Include="tests\test_genome_track.py" />
+    <Compile Include="tests\test_gk_data.py" />
+    <Compile Include="tests\test_interval.py" />
+    <Compile Include="tests\test_read_alignments.py" />
+    <Compile Include="tests\test_twobitutils.py" />
+    <Compile Include="tests\test_variant.py" />
+    <Compile Include="tests\test_variant_genome.py" />
+    <Compile Include="tests\test_variant_table.py" />
+    <Compile Include="tests\_gk_data_get_file_during_import.py" />
+    <Compile Include="tests\__init__.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="tests\data\mini1\gencode.v25.annotation.dganno" />
+    <Content Include="tests\data\mini1\gencode.v25.annotation.gff3" />
+    <Content Include="tests\data\mini1\gencode.v25lift37.annotation.dganno" />
+    <Content Include="tests\data\mini1\gencode.v25lift37.annotation.gff3" />
+    <Content Include="tests\data\mini1\hg19.2bit" />
+    <Content Include="tests\data\mini1\hg38.2bit" />
+    <Content Include="tests\data\test_genome\hg19.2bit" />
+    <Content Include="tests\data\test_genome_alt\hg19.2bit" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

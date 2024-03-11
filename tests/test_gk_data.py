@@ -12,6 +12,7 @@ from . import test_data_dir
 
 
 class TestGkData(unittest.TestCase):
+    @unittest.skipIf('CI' in os.environ, "can't provide GCS credentials in CI")
     def test_get_file(self):
         assert not os.path.exists(
             os.path.join(test_data_dir, "gencode.vM30.cfg")

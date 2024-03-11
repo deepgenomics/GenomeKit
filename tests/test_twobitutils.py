@@ -2,11 +2,17 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import platform
 import unittest
 import os
 from tempfile import mkstemp
+
+import pytest
+
 import genome_kit._twobitutils as _twobitutils
-from twobitreader import TwoBitFile
+if platform.system() != 'Windows':
+    from twobitreader import TwoBitFile
 
 
 def _check_write(test, seqs):
@@ -19,7 +25,7 @@ def _check_write(test, seqs):
     finally:
         os.unlink(tmpfile)  # Remove temporary file
 
-
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 def _check_write_read(test, seqs):
     # Create named temp file;  immediately close handle so can be re-opened
     fd, tmpfile = mkstemp()
@@ -45,6 +51,7 @@ def _check_write_read(test, seqs):
             os.unlink(tmpfile)  # Remove temporary file
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteEmptyTest(unittest.TestCase):
     def test(self):
         seqs = {'x': ''}
@@ -54,6 +61,7 @@ class TwoBitWriteEmptyTest(unittest.TestCase):
         _check_write_read(self, seqs)
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteSimpleTest(unittest.TestCase):
     def test(self):
         # Multiple of 4
@@ -65,6 +73,7 @@ class TwoBitWriteSimpleTest(unittest.TestCase):
         _check_write_read(self, seqs)
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteMaskTest(unittest.TestCase):
     def test(self):
         seqs = {'chr1': 'ACgtAACCggTTA'}
@@ -74,6 +83,7 @@ class TwoBitWriteMaskTest(unittest.TestCase):
         _check_write_read(self, seqs)
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteNBlockTest(unittest.TestCase):
     def test(self):
         seqs = {'chr1': 'NNGTNNNNGGNNN'}
@@ -83,6 +93,7 @@ class TwoBitWriteNBlockTest(unittest.TestCase):
         _check_write_read(self, seqs)
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteMaskNBlockTest(unittest.TestCase):
     def test(self):
         seqs = {'chr1': 'ACannNACNnngTT'}
@@ -92,6 +103,7 @@ class TwoBitWriteMaskNBlockTest(unittest.TestCase):
         _check_write_read(self, seqs)
 
 
+@pytest.mark.skipif(platform.system() == 'Windows', reason="twobitreader not available on Windows")
 class TwoBitWriteMultiSequenceTest(unittest.TestCase):
     def test(self):
         seqs = {'chr1': 'ACannNACNnngTT', 'chr1_extra': 'TTgcCNCGGGGNNnnnnccaAA'}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.4](https://github.com/deepgenomics/GenomeKit/compare/v4.1.3...v4.1.4) (2024-03-11)
+
+
+### Miscellaneous Chores
+
+* skip windows tests correctly ([#9](https://github.com/deepgenomics/GenomeKit/issues/9)) ([ce7f1b3](https://github.com/deepgenomics/GenomeKit/commit/ce7f1b3d728e71acf910930c3e900b6899966bf0))
+
 ## [4.1.3](https://github.com/deepgenomics/GenomeKit/compare/v4.1.2...v4.1.3) (2024-03-11)
 
 

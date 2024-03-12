@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.5](https://github.com/deepgenomics/GenomeKit/compare/v4.1.4...v4.1.5) (2024-03-12)
+
+
+### Miscellaneous Chores
+
+* revert the windows test change ([#11](https://github.com/deepgenomics/GenomeKit/issues/11)) ([879adb5](https://github.com/deepgenomics/GenomeKit/commit/879adb54963ba7788d681108ca8f494f27637790))
+
 ## [4.1.4](https://github.com/deepgenomics/GenomeKit/compare/v4.1.3...v4.1.4) (2024-03-11)
 
 

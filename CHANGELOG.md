@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.7](https://github.com/deepgenomics/GenomeKit/compare/v4.1.6...v4.1.7) (2024-03-13)
+
+
+### Miscellaneous Chores
+
+* avoid import on Windows ([#15](https://github.com/deepgenomics/GenomeKit/issues/15)) ([0aef946](https://github.com/deepgenomics/GenomeKit/commit/0aef9466fbcea725f16f731e8ce7e499b78d0e32))
+
 ## [4.1.6](https://github.com/deepgenomics/GenomeKit/compare/v4.1.5...v4.1.6) (2024-03-13)
 
 

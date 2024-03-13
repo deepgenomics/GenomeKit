@@ -8,7 +8,8 @@ import unittest
 import os
 from tempfile import mkstemp
 import genome_kit._twobitutils as _twobitutils
-from twobitreader import TwoBitFile
+if platform.system() != "Windows":
+    from twobitreader import TwoBitFile
 
 
 def _check_write(test, seqs):

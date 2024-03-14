@@ -31,6 +31,7 @@ class TestGkData(unittest.TestCase):
         finally:
             os.remove(path)
 
+    @unittest.skipIf('CI' in os.environ, "can't provide GCS credentials in CI")
     def test_list_available_genomes(self):
         assert "gencode.v41" in gk_data.data_manager.list_available_genomes()
         assert "macFas5" in gk_data.data_manager.list_available_genomes()

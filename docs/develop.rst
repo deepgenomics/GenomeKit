@@ -52,6 +52,14 @@ Finally, run the all the tests::
 You can also run examples from the ``demos`` directory.
 
 
+Jetbrains CLion setup
+--------------
+
+In the CMake settings, set the following environment variables::
+
+    IN_CLION=1;CONDA_PREFIX=$HOME/conda/envs/genomekit_dev
+
+
 Making changes
 --------------
 

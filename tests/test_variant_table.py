@@ -1092,6 +1092,7 @@ class TestVCFTable(unittest.TestCase):
             self.assertNotEqual(b, d)
             self.assertNotEqual(c, d)
 
+    @unittest.skipIf("FEEDSTOCK_ROOT" in os.environ, "bioconda dependencies not supported on conda-forge")
     def test_from_vcf(self):
         dumptext(
             self.tmpvcf, vcf_header1, """

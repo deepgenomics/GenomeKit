@@ -95,8 +95,8 @@ C++ tests
 
 To test C++ code directly, you can compile and run src/main.cpp::
 
-    cmake -DCMAKE_BUILD_TYPE=Debug -S . -B unittestbuild
-    make -C unittestbuild main test ARGS="-V"
+    cmake -DCMAKE_BUILD_TYPE=Debug -B unittestbuild
+    cmake --build unittestbuild --parallel --verbose --target main test
 
 Debugging tests
 ^^^^^^^^^^^^^^^

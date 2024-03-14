@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0](https://github.com/deepgenomics/GenomeKit/compare/v4.1.8...v4.2.0) (2024-03-14)
+
+
+### Features
+
+* list available genome configs ([#549](https://github.com/deepgenomics/GenomeKit/issues/549)) ([#19](https://github.com/deepgenomics/GenomeKit/issues/19)) ([fb9776c](https://github.com/deepgenomics/GenomeKit/commit/fb9776cd78b296cdb7cdd903d052a0ed6c68178a))
+
+
+### Documentation
+
+* more standard cmake instructions ([#21](https://github.com/deepgenomics/GenomeKit/issues/21)) ([55a73d8](https://github.com/deepgenomics/GenomeKit/commit/55a73d86301b9514f1e5df5c98428e4f1eb3d464))
+
 ## [4.1.8](https://github.com/deepgenomics/GenomeKit/compare/v4.1.7...v4.1.8) (2024-03-14)
 
 

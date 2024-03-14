@@ -10,12 +10,17 @@ list(APPEND COMMON_CXX_FLAGS -D_FILE_OFFSET_BITS=64)
 
 FILE(GLOB SOURCES src/*.cpp src/*.h)
 if(DEFINED ENV{IN_CLION})
+    execute_process(
+            COMMAND python -c "import sys; print('{}.{}'.format(sys.version_info.major, sys.version_info.minor))"
+            OUTPUT_VARIABLE PYTHON_VERSION
+    )
+
     # Don't really need this lib (handled by setup.py), but required for CLion's search etc.
     # NOTE: Set env vars IN_CLION=1;CONDA_PREFIX=$HOME/conda/envs/genomekit_dev in CLion CMake preferences.
     # include numpy, Python.h, fmt
     include_directories(
-            $ENV{CONDA_PREFIX}/lib/python3.8/site-packages/numpy/core/include/
-            $ENV{CONDA_PREFIX}/include/python3.8/
+            $ENV{CONDA_PREFIX}/lib/python${PYTHON_VERSION}/site-packages/numpy/core/include/
+            $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION}/
     )
     find_package(ZLIB)
     find_package(fmt)

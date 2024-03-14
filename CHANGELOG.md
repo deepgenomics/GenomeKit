@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.8](https://github.com/deepgenomics/GenomeKit/compare/v4.1.7...v4.1.8) (2024-03-14)
+
+
+### Miscellaneous Chores
+
+* skip bioconda-dependant tests on conda-forge ([#17](https://github.com/deepgenomics/GenomeKit/issues/17)) ([cad0584](https://github.com/deepgenomics/GenomeKit/commit/cad0584f84cf494a1bf6a17efdbabda1c26ec8f0))
+
 ## [4.1.7](https://github.com/deepgenomics/GenomeKit/compare/v4.1.6...v4.1.7) (2024-03-13)
 
 

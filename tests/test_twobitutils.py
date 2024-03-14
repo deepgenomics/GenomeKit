@@ -10,7 +10,8 @@ from tempfile import mkstemp
 import genome_kit._twobitutils as _twobitutils
 
 # twobitreader unsupported on Windows, bioconda dependencies unsupported on conda-forge
-_SKIP_TWOBITREADER_TESTS = platform.system() == "Windows"  or "FEEDSTOCK_ROOT" in os.environ
+# TODO: replace CI with a conda-forge specific env var
+_SKIP_TWOBITREADER_TESTS = platform.system() == "Windows"  or "CI" in os.environ
 if not _SKIP_TWOBITREADER_TESTS:
     from twobitreader import TwoBitFile
 

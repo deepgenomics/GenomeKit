@@ -31,6 +31,10 @@ class TestGkData(unittest.TestCase):
         finally:
             os.remove(path)
 
+    def test_list_available_genomes(self):
+        assert "gencode.v41" in gk_data.data_manager.list_available_genomes()
+        assert "macFas5" in gk_data.data_manager.list_available_genomes()
+
 
 class TestWGet(unittest.TestCase):
     """Test the `gk_data.wget` function."""

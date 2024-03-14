@@ -25,6 +25,7 @@ secondary structure, conservation, and more.
 ## Resource Available
 
 - Reference DNA: hg19, hg19.p13.plusMT, hg38, hg38.p12, hg38.p13, hg38.p14, mm10.p6, mm39, rn6, macFas5, susScr11.
+  *  To add more, see [Genomes](docs/genomes.rst)
 - Annotations: GENCODE, RefSeq, Ensembl, APPRIS.
 - Tracks: conservation, RNA structure, methylation, nucleosome positions, ...
 

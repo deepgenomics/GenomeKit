@@ -32,7 +32,8 @@ class Genome(_cxx.Genome):
         # GENCODE v29 implies hg38
         Genome("gencode.v29")
 
-    The currently recognized strings are shown below::
+    The currently recognized strings depend on the data made available by data_manager.
+    Some common ones are:
 
         reference_genomes = [
             "hg19",

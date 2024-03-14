@@ -7,7 +7,7 @@ import os
 import tempfile
 from abc import ABC
 from contextlib import contextmanager
-from functools import wraps
+from functools import wraps, lru_cache
 from pathlib import Path
 from typing import Dict
 
@@ -118,6 +118,10 @@ class DataManager(ABC):
             Extra metadata to attach to the file.
         """
         raise NotImplementedError("Descendant classes must implement upload_file")
+
+    def list_available_genomes(self):
+        """List all available genomes in the data manager"""
+        raise NotImplementedError("Descendant classes must implement list_available_genomes")
 
 
 def _remote_equal(blob: storage.Blob, file_path: Path) -> bool:
@@ -234,3 +238,8 @@ class DefaultDataManager(DataManager):
 
         with FileIO(filepath, filename, "rb", os.path.getsize(filepath), quiet=False) as f:
             blob.upload_from_file(f)
+
+    @lru_cache
+    def list_available_genomes(self):
+        blobs = self.bucket.list_blobs(match_glob="*.{2bit,cfg}")
+        return [blob.name.rpartition(".")[0] for blob in blobs]

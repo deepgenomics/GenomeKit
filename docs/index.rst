@@ -30,6 +30,11 @@ Useful Features
 Resources Available
 ===================
 
+Available reference genomes and annotations depend on the data made available by data_manager.
+You can get a list of all available genomes and annotations by calling ``gk_data.data_manager.list_available_genomes()``.
+
+Some commonly used ones are listed below.
+
 * Reference genomes:
 
   - hg19 (unpatched GRCh37)

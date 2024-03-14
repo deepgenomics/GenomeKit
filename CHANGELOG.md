@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.1](https://github.com/deepgenomics/GenomeKit/compare/v4.2.0...v4.2.1) (2024-03-14)
+
+
+### Miscellaneous Chores
+
+* skip gcs-dependent tests on conda-forge ([#23](https://github.com/deepgenomics/GenomeKit/issues/23)) ([1595cba](https://github.com/deepgenomics/GenomeKit/commit/1595cba8c0071b6ae127aff482cbc9ca5c96ff92))
+
 ## [4.2.0](https://github.com/deepgenomics/GenomeKit/compare/v4.1.8...v4.2.0) (2024-03-14)
 
 

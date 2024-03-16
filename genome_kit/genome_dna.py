@@ -27,7 +27,7 @@ class GenomeDNA(_cxx.GenomeDNA):
     __slots__ = ()  # <--- ADDING SLOTS IS OK
 
     @mock
-    def __call__(self, interval):  # pragma: no cover
+    def __call__(self, interval, allow_outside_chromosome=True):  # pragma: no cover
         """Extract DNA from a reference genome.
 
         If `interval` is on the negative strand, the reverse complement sequence is returned.
@@ -37,6 +37,11 @@ class GenomeDNA(_cxx.GenomeDNA):
         ----------
         interval : :py:class:`~genome_kit.Interval`
             The query interval.
+
+        allow_outside_chromosome : :py:class:`bool`
+            If False, does not allow the interval to be outside the range of the chromosome.
+            Attempting to pass an interval outside the chromosome range will raise an :py:exc:`IndexError`.
+            If not specified, defaults to True. Any base outside the chromosome range will be returned as an 'N'.
 
         Returns
         -------

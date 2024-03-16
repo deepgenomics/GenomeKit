@@ -1,0 +1,243 @@
+version: 2.1
+
+yaml-anchors:
+  on-any-push: &on-any-push
+    context: org-global
+    filters:
+      branches:
+        ignore: /^release-please.*/
+  on-release: &on-release
+    context: org-global
+    filters:
+      branches:
+        only: main
+
+  under-linux: &under-linux
+    executor: conda/miniconda
+  under-macos: &under-macos
+    executor: conda/macos
+
+  cover-module: &cover-module
+    cover-module: genome_kit
+  test-config: &test-config
+    <<: *cover-module
+    pre-steps: [conda/configure-gcloud]
+
+  require-validated: &require-validated
+    requires: [build-docs, test-linux, test-macos]
+
+  with-ccache: &with-ccache
+    extra-conda-build-packages: ccache
+    pre-build:
+      - restore_cache:
+          keys:
+            - &ccache-key gk-mamba-ccache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
+            - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-
+            - gk-mamba-ccache-{{ arch }}-
+      - run: |
+          micromamba activate build
+          ccache -M 100M
+  with-ccache-osx: &with-ccache-osx
+    <<: *with-ccache
+    post-build:
+      - save_cache:
+          key: *ccache-key
+          paths: [~/.ccache]
+
+executors:
+  linux:
+    docker:
+      - image: cimg/base:stable
+    resource_class: large  # clang 12 uses more mem
+    working_directory: ~/project
+    environment:
+      PLATFORM: linux
+      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/linux-64/micromamba-1.4.6-0.tar.bz2
+  macos:
+    macos:
+      xcode: "14.2.0"
+    resource_class: macos.x86.medium.gen2
+    environment:
+      PLATFORM: osx
+      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
+      MACOSX_DEPLOYMENT_TARGET: 10.15  # std::filesystem
+
+
+jobs:
+  build_package_linux:
+    executor: linux
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}]
+      - run:
+          name: Resolve ~ inside environment variables
+          command: |
+            echo 'export CIRCLE_WORKING_DIRECTORY="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"' >> $BASH_ENV
+      - run:
+          name: Install conda
+          command: |
+            if [ ! -e ~/bin/micromamba ]; then
+            curl --retry 5 -Lfs ${CONDA_INSTALLER} | tar -xvj -C ~/ bin/micromamba
+            fi
+            if ! command -vp micromamba >/dev/null 2>&1 ; then
+            echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
+            fi
+      - run:
+          name: Create conda environment
+          command: |
+            if [ ! -d "${HOME}/micromamba/envs/build" ]; then
+              micromamba create -yqn build -c conda-forge \
+                boa==0.11.0 mamba==0.23.3
+            fi
+      - run:
+          name: Configure conda
+          command: |
+            if [ ! -e "${HOME}/.condarc" ]; then
+            micromamba activate << parameters.env >>
+            conda config --set always_yes yes --set changeps1 no --set quiet yes --set auto_update_conda no
+            # cache additional pkgs separately from docker pre-install
+            conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
+            # fallback to docker pre-installed packages
+            conda config --append pkgs_dirs ~/micromamba/pkgs
+            
+            conda config --prepend channels conda-forge
+            # TODO? conda config --append channels bioconda
+            # TODO? conda config --remove channels defaults
+            fi
+      - run:
+          name: Build conda packages
+          command: |
+            micromamba activate build
+            mkdir ~/conda-bld
+            mamba mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+            mamba build --croot ~/conda-bld purge
+            mamba clean -it
+      - save_cache:
+          # TODO extract var
+          key: mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}
+          paths:
+            - ~/micromamba
+            - ~/.condarc
+            - ~/bin/micromamba
+      - persist_to_workspace:
+          root: ~/
+          paths: [conda-bld/*/*.tar.bz2]
+  build_package_macos:
+    executor: macos
+    steps:
+    - checkout
+    - restore_cache:
+        keys: [mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}]
+    - run:
+        name: Resolve ~ inside environment variables
+        command: |
+          echo 'export CIRCLE_WORKING_DIRECTORY="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"' >> $BASH_ENV
+    - run:
+        name: Install conda
+        command: |
+          if [ ! -e ~/bin/micromamba ]; then
+          curl --retry 5 -Lfs ${CONDA_INSTALLER} | tar -xvj -C ~/ bin/micromamba
+          fi
+          if ! command -vp micromamba >/dev/null 2>&1 ; then
+          echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
+          fi
+    - run:
+        name: Create conda environment
+        command: |
+          if [ ! -d "${HOME}/micromamba/envs/build" ]; then
+            micromamba create -yqn build -c conda-forge \
+              boa==0.11.0 mamba==0.23.3
+          fi
+    - run:
+        name: Configure conda
+        command: |
+          if [ ! -e "${HOME}/.condarc" ]; then
+          micromamba activate << parameters.env >>
+          conda config --set always_yes yes --set changeps1 no --set quiet yes --set auto_update_conda no
+          # cache additional pkgs separately from docker pre-install
+          conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
+          # fallback to docker pre-installed packages
+          conda config --append pkgs_dirs ~/micromamba/pkgs
+
+          conda config --prepend channels conda-forge
+          # TODO? conda config --append channels bioconda
+          # TODO? conda config --remove channels defaults
+          fi
+    - run:
+        name: Build conda packages
+        command: |
+          micromamba activate build
+          mkdir ~/conda-bld
+          mamba mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+          mamba build --croot ~/conda-bld purge
+          mamba clean -it
+    - save_cache:
+        # TODO extract var
+        key: mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}
+        paths:
+          - ~/micromamba
+          - ~/.condarc
+          - ~/bin/micromamba
+    - persist_to_workspace:
+        root: ~/
+        paths: [conda-bld/*/*.tar.bz2]
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build_package_linux:
+          filters:
+            branches:
+              ignore: /^release-please.*/
+
+      - conda/build-pkg:
+          name: build-linux
+          <<: *on-any-push
+          <<: *under-linux
+          <<: *with-ccache
+          executor:
+            name: conda/miniconda
+            resource_class: large  # clang 12 uses more mem
+
+      - conda/build-pkg:
+          name: build-macos
+          <<: *on-any-push
+          <<: *under-macos
+          <<: *with-ccache-osx
+
+      - conda/test-pkg:
+          name: test-linux
+          <<: *on-any-push
+          <<: *under-linux
+          <<: *test-config
+          requires: [build-linux]
+          executor:
+            name: conda/miniconda
+            resource_class: medium  # Started needed more RAM between 20021-09-15 and 2021-10-22
+
+      - conda/test-pkg:
+          name: test-macos
+          <<: *on-any-push
+          <<: *under-macos
+          <<: *test-config
+          requires: [build-macos]
+
+      - conda/build-docs:
+          name: build-docs
+          <<: *on-any-push
+          requires: [build-linux]
+
+      - conda/deploy-coverage:
+          name: deploy-coverage
+          <<: *on-any-push
+          <<: *cover-module
+          requires: [test-linux, test-macos]
+
+      - conda/deploy-docs:
+          name: deploy-docs
+          <<: *on-release
+          <<: *require-validated
+          gcloud-project: dg-platform
+          bucket: dg-docs

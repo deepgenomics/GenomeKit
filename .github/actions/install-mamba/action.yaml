@@ -1,0 +1,22 @@
+name: 'Install Mamba'
+description: 'Install Mamba'
+inputs:
+  installer-url:
+    description: 'Installer URL'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - shell: bash -l -e {0}
+      run: |
+        set -x
+        if [ ! -e ${HOME}/bin/micromamba ]; then
+          echo "Downloading ${{inputs.installer-url}}"
+          curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ${HOME}/ bin/micromamba
+        fi
+        # `command -vp` and `hash` don't work on macos for some reason
+        if ! grep -F "bin/micromamba shell hook -s posix" ${HOME}/.bash_profile >/dev/null 2>&1 ; then
+          echo "Adding micromamba init to bash profile"
+          echo "$(~/bin/micromamba shell hook -s posix)" >> ${HOME}/.bash_profile
+        fi
+        set +x

@@ -1,0 +1,135 @@
+name: run-unit-tests
+run-name: run unit tests
+on:
+  push:
+    branches-ignore: ["release-please*"]
+  pull_request: {}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+    runs-on: ${{ matrix.platform[1] }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: get meta.yaml from conda-forge
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          mkdir -p conda-recipe
+          curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
+          set +x
+
+      - name: cache mamba env
+        id: save_mamba_cache
+        uses: actions/cache@v4
+        with:
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
+          path: |
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
+            ~/conda-bld
+
+      - name: install mamba
+        uses: ./.github/actions/install-mamba
+        with:
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform[0] }}/1.5.7
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./.github/actions/create-conda-env
+
+      - name: create build env
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          if [ ! -d "${HOME}/micromamba/envs/build" ]; then
+            micromamba create -yqn build -c conda-forge \
+              boa==0.16.0 mamba==1.5.7 conda==24.1.2 \
+              ccache
+          fi
+          set +x
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./.github/actions/configure-conda
+        with:
+          env: build
+
+      - name: save mamba gk ccache
+        id: save_mamba_gk_ccache
+        uses: actions/cache@v4
+        with:
+          key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+          path: |
+            ~/.ccache
+
+      - name: set compiler cache size
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          micromamba activate build
+          ccache -M 100M
+          set +x
+
+      - name: build conda package
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          micromamba activate build
+          mkdir ~/conda-bld
+          conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+          conda build --croot ~/conda-bld purge
+          conda clean -it
+
+  test:
+    needs: build
+    strategy:
+      matrix:
+        python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
+        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+    runs-on: ${{ matrix.platform[1] }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: restore mamba env
+        id: restore_mamba_cache
+        uses: actions/cache/restore@v4
+        with:
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
+          path: |
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
+            ~/conda-bld
+          fail-on-cache-miss: true
+
+      - name: install mamba
+        uses: ./.github/actions/install-mamba
+        with:
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform[0] }}/1.5.7
+
+      - name: create test env
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          if [ ! -d "${HOME}/micromamba/envs/test" ]; then
+            micromamba create -yqn test -c conda-forge \
+              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+          fi
+          set +x
+
+      - name: run unittests
+        id: run_unittests
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          micromamba activate test
+          # TODO remove? https://docs.python.org/3/using/cmdline.html#cmdoption-u now says:
+          # "Changed in version 3.7: The text layer of the stdout and stderr streams now is unbuffered."
+          export PYTHONUNBUFFERED=1 
+          conda index ~/conda-bld
+          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
+          conda clean -it
+          set +x

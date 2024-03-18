@@ -1,243 +1,480 @@
-version: 2.1
+version: 2
 
 yaml-anchors:
   on-any-push: &on-any-push
-    context: org-global
     filters:
       branches:
         ignore: /^release-please.*/
-  on-release: &on-release
-    context: org-global
-    filters:
-      branches:
-        only: main
 
-  under-linux: &under-linux
-    executor: conda/miniconda
-  under-macos: &under-macos
-    executor: conda/macos
-
-  cover-module: &cover-module
-    cover-module: genome_kit
-  test-config: &test-config
-    <<: *cover-module
-    pre-steps: [conda/configure-gcloud]
-
-  require-validated: &require-validated
-    requires: [build-docs, test-linux, test-macos]
-
-  with-ccache: &with-ccache
-    extra-conda-build-packages: ccache
-    pre-build:
-      - restore_cache:
-          keys:
-            - &ccache-key gk-mamba-ccache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
-            - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-
-            - gk-mamba-ccache-{{ arch }}-
-      - run: |
-          micromamba activate build
-          ccache -M 100M
-  with-ccache-osx: &with-ccache-osx
-    <<: *with-ccache
-    post-build:
-      - save_cache:
-          key: *ccache-key
-          paths: [~/.ccache]
-
-executors:
-  linux:
-    docker:
-      - image: cimg/base:stable
-    resource_class: large  # clang 12 uses more mem
-    working_directory: ~/project
-    environment:
-      PLATFORM: linux
-      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/linux-64/micromamba-1.4.6-0.tar.bz2
-  macos:
-    macos:
-      xcode: "14.2.0"
-    resource_class: macos.x86.medium.gen2
-    environment:
-      PLATFORM: osx
-      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
-      MACOSX_DEPLOYMENT_TARGET: 10.15  # std::filesystem
-
-
-jobs:
-  build_package_linux:
-    executor: linux
+commands:
+  restore_mamba_env:
     steps:
-      - checkout
       - restore_cache:
-          keys: [mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}]
-      - run:
-          name: Resolve ~ inside environment variables
-          command: |
-            echo 'export CIRCLE_WORKING_DIRECTORY="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"' >> $BASH_ENV
-      - run:
-          name: Install conda
-          command: |
-            if [ ! -e ~/bin/micromamba ]; then
-            curl --retry 5 -Lfs ${CONDA_INSTALLER} | tar -xvj -C ~/ bin/micromamba
-            fi
-            if ! command -vp micromamba >/dev/null 2>&1 ; then
-            echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
-            fi
-      - run:
-          name: Create conda environment
-          command: |
-            if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-              micromamba create -yqn build -c conda-forge \
-                boa==0.11.0 mamba==0.23.3
-            fi
-      - run:
-          name: Configure conda
-          command: |
-            if [ ! -e "${HOME}/.condarc" ]; then
-            micromamba activate << parameters.env >>
-            conda config --set always_yes yes --set changeps1 no --set quiet yes --set auto_update_conda no
-            # cache additional pkgs separately from docker pre-install
-            conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
-            # fallback to docker pre-installed packages
-            conda config --append pkgs_dirs ~/micromamba/pkgs
-            
-            conda config --prepend channels conda-forge
-            # TODO? conda config --append channels bioconda
-            # TODO? conda config --remove channels defaults
-            fi
-      - run:
-          name: Build conda packages
-          command: |
-            micromamba activate build
-            mkdir ~/conda-bld
-            mamba mambabuild --croot ~/conda-bld -q --no-test conda-recipe
-            mamba build --croot ~/conda-bld purge
-            mamba clean -it
+          # TODO: download meta.yaml from the conda-forge repo
+          keys:
+            - mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum "conda-recipe/meta.yaml" }}
+
+  save_mamba_env:
+    steps:
       - save_cache:
-          # TODO extract var
-          key: mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}
+          key: mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum "conda-recipe/meta.yaml" }}
           paths:
             - ~/micromamba
             - ~/.condarc
             - ~/bin/micromamba
-      - persist_to_workspace:
-          root: ~/
-          paths: [conda-bld/*/*.tar.bz2]
-  build_package_macos:
-    executor: macos
-    steps:
-    - checkout
-    - restore_cache:
-        keys: [mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}]
-    - run:
-        name: Resolve ~ inside environment variables
-        command: |
-          echo 'export CIRCLE_WORKING_DIRECTORY="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"' >> $BASH_ENV
-    - run:
-        name: Install conda
-        command: |
-          if [ ! -e ~/bin/micromamba ]; then
-          curl --retry 5 -Lfs ${CONDA_INSTALLER} | tar -xvj -C ~/ bin/micromamba
-          fi
-          if ! command -vp micromamba >/dev/null 2>&1 ; then
-          echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
-          fi
-    - run:
-        name: Create conda environment
-        command: |
-          if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-            micromamba create -yqn build -c conda-forge \
-              boa==0.11.0 mamba==0.23.3
-          fi
-    - run:
-        name: Configure conda
-        command: |
-          if [ ! -e "${HOME}/.condarc" ]; then
-          micromamba activate << parameters.env >>
-          conda config --set always_yes yes --set changeps1 no --set quiet yes --set auto_update_conda no
-          # cache additional pkgs separately from docker pre-install
-          conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
-          # fallback to docker pre-installed packages
-          conda config --append pkgs_dirs ~/micromamba/pkgs
 
-          conda config --prepend channels conda-forge
-          # TODO? conda config --append channels bioconda
-          # TODO? conda config --remove channels defaults
-          fi
-    - run:
-        name: Build conda packages
-        command: |
-          micromamba activate build
-          mkdir ~/conda-bld
-          mamba mambabuild --croot ~/conda-bld -q --no-test conda-recipe
-          mamba build --croot ~/conda-bld purge
-          mamba clean -it
-    - save_cache:
-        # TODO extract var
-        key: mamba-env-{{ arch }}-{{ checksum ".circleci/config.yml" }}
-        paths:
-          - ~/micromamba
-          - ~/.condarc
-          - ~/bin/micromamba
-    - persist_to_workspace:
-        root: ~/
-        paths: [conda-bld/*/*.tar.bz2]
+  resolve_tilde:
+    description: Resolve ~ inside environment variables
+    steps:
+      - run:
+          command: |
+            echo 'export CIRCLE_WORKING_DIRECTORY="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"' >> $BASH_ENV
+
+  install_mamba:
+    description: Install Mamba
+    steps:
+      - run:
+          command: |
+            if [ ! -e ~/bin/micromamba ]; then
+              curl --retry 5 -Lfs ${CONDA_INSTALLER} | tar -xvj -C ~/ bin/micromamba
+            fi
+            if ! command -vp micromamba >/dev/null 2>&1 ; then
+              echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
+            fi
+
+  configure_conda:
+    description: Configure conda
+    parameters:
+      env:
+        type: string
+    steps:
+      - run:
+          # TODO: do we need any of the other channels?
+          command: |
+            if [ ! -e "${HOME}/.condarc" ]; then
+              micromamba activate << parameters.env >>
+              conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
+              # cache additional pkgs separately from docker pre-install
+              conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
+              # fallback to docker pre-installed packages
+              conda config --append pkgs_dirs ~/micromamba/pkgs
+            
+              conda config --prepend channels conda-forge
+              #conda config --append channels pytorch
+              #conda config --append channels nvidia
+              #conda config --append channels bioconda
+              #conda config --remove channels defaults
+            fi
+
+  build:
+    steps:
+      - checkout
+      - restore_mamba_env
+      - resolve_tilde
+      - install_mamba
+      - run:
+          command: |
+            if [ ! -d "${HOME}/micromamba/envs/build" ]; then
+              micromamba create -yqn build -c conda-forge \
+                boa==0.16.0 mamba==1.5.7 conda==24.1.2 \
+                ccache
+            fi
+          name: Create conda environment
+      - configure_conda:
+            env: build
+      - restore_cache:
+          keys:
+            - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
+            - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-
+            - gk-mamba-ccache-{{ arch }}-
+      - run:
+          command: |
+            micromamba activate build
+            ccache -M 100M
+      - run:
+          command: |
+            micromamba activate build
+            mkdir ~/conda-bld
+            conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+            conda build --croot ~/conda-bld purge
+            conda clean -it
+          name: Build conda packages
+      - save_mamba_env:
+      - persist_to_workspace:
+          paths:
+            - conda-bld/*/*.tar.bz2
+          root: ~/
+
+  test:
+    steps:
+      - checkout
+      - run:
+          name: Init OS Detection
+          command: |
+            # Start with family detection.
+            family=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+            case $family in
+              linux)
+                osID=$(grep -e \"^ID=\" /etc/os-release | cut -c4-)
+                ;;
+              darwin)
+                osID=macos
+                ;;
+              *)
+                echo \"Unsupported operating system.\"
+                exit 1
+                ;;
+            esac
+
+            # Version number
+            case $osID in
+              ubuntu)
+                osVersion=$(grep -e \"^DISTRIB_RELEASE=\" /etc/lsb-release | cut -c17-)
+                ;;
+              debian)
+                osVersion=$(cat /etc/debian_version)
+                ;;
+              alpine)
+                osVersion=$(cat /etc/alpine-release)
+                ;;
+              macos)
+                osVersion=$(sw_vers -productVersion)
+                ;;
+              *)
+                echo \"Unsupported operating system ID.\"
+                exit 1
+                ;;
+            esac
+
+            # Determine if sudo is available and/or neccessary
+            SUDO=\"\"
+            if [[ $EUID -ne 0 ]]; then
+              SUDO=sudo
+            fi
+            command -v sudo >/dev/null 2>&1 || { SUDO=\"\"; }
+
+            # Export new variables.
+            echo \"export OSD_FAMILY=$(echo $family)\" >> $BASH_ENV
+            echo \"export OSD_ID=$(echo $osID)\" >> $BASH_ENV
+            echo \"export OSD_VERSION=$(echo $osVersion)\" >> $BASH_ENV
+            echo \"export SUDO=$(echo $SUDO)\" >> $BASH_ENV
+
+      - run:
+          command: |
+            case $OSD_FAMILY in
+              darwin)
+                # https://support.circleci.com/hc/en-us/articles/360037142773-Freeing-up-Disk-Space-on-macOS
+                sudo rm -rf /Library/Developer/CoreSimulator/Profiles/Runtimes/
+                ;;
+            esac
+          name: Get more space on OSX
+      - attach_workspace:
+          at: ~/
+      - resolve_tilde
+      - run:
+          command: echo "export TEST_RESULTS=${HOME}/test-results/${PLATFORM}" >> ${BASH_ENV}
+      - run:
+          command: |
+            cat > .circleci/.coveragerc << 'EOL'
+            [run]
+            branch = True
+            relative_files = True
+            source = genome_kit
+            EOL
+          name: Generate .circleci/.coveragerc
+      - run:
+          command: |
+            cat > .circleci/run_cov_tests.sh << 'EOL'
+            # prevent absolute test imports from walking up to the project source
+            cp -rf ${CIRCLE_WORKING_DIRECTORY}/tests .
+            COVERAGE_FILE=${TEST_RESULTS}/.coverage.${CIRCLE_NODE_INDEX} \
+              coverage run --rcfile=${CIRCLE_WORKING_DIRECTORY}/.circleci/.coveragerc \
+              -m pytest -x -ra \
+              --junit-xml=${TEST_RESULTS}/test-results.xml -o junit_family=xunit1 \
+              tests $@
+            EOL
+            cat > .circleci/run_cov_splitted_tests.sh << 'EOL'
+            # prevent absolute test imports from walking up to the project source
+            cp -rf ${CIRCLE_WORKING_DIRECTORY}/tests .
+            TEST_FILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
+            echo ${TEST_FILES}
+            # if there are less than 4 tests, the other executors will run all tests
+            # therefore, we check if there are tests to run on the executor
+            if ! [[ -z $TEST_FILES ]] ; then
+              COVERAGE_FILE=${TEST_RESULTS}/.coverage.${CIRCLE_NODE_INDEX} \
+                coverage run --rcfile=${CIRCLE_WORKING_DIRECTORY}/.circleci/.coveragerc \
+                -m pytest -x -ra \
+                --junit-xml=${TEST_RESULTS}/test-results.xml -o junit_family=xunit1 \
+                ${TEST_FILES} $@
+            fi
+            EOL
+          name: Generate the test scripts
+      - restore_mamba_env
+      - install_mamba
+      - run:
+          command: |
+            if [ ! -d "${HOME}/micromamba/envs/test" ]; then
+              micromamba create -yqn test -c conda-forge \
+                boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+            fi
+          name: Create conda environment
+      - configure_conda:
+            env: test
+      - run:
+          command: |
+            micromamba activate test
+            mkdir -p ${TEST_RESULTS}
+            export PYTHONUNBUFFERED=1
+            conda index ~/conda-bld
+            # filter the configuration by the container
+            # see https://circleci.com/docs/2.0/parallelism-faster-jobs/#using-environment-variables-to-split-tests
+            case ${CIRCLE_NODE_INDEX} in
+              0)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              1)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              2)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              3)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              4)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              5)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              6)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+              7)
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                ;;
+            esac
+            conda clean -it
+          name: Test conda packages
+          no_output_timeout: 10m
+      - save_mamba_env:
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          destination: test-results
+          path: ~/test-results
+      - run:
+          command: |
+            if [ -n "$(ls -A ~/test-results/*/.coverage.* 2>/dev/null)" ]
+            then
+            :
+            else
+              circleci-agent step halt
+            fi
+          name: Halt if no test results
+      - persist_to_workspace:
+          paths:
+            - test-results/*/.coverage*
+          root: ~/
+
+jobs:
+
+  build-linux:
+    docker:
+      - image: cimg/base:stable
+    resource_class: large
+    working_directory: ~/project
+    steps:
+      - build
+    environment:
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+      PLATFORM: linux
+
+  build-macos:
+    macos:
+      xcode: 14.2.0
+    resource_class: macos.x86.medium.gen2
+    steps:
+      - build
+      - save_cache:
+          key: gk-mamba-ccache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ~/.ccache
+    environment:
+      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
+      MACOSX_DEPLOYMENT_TARGET: 10.15
+      PLATFORM: osx
+
+  test-linux:
+    docker:
+      - image: cimg/base:stable
+    resource_class: medium
+    working_directory: ~/project
+    environment:
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+      PLATFORM: linux
+      COVER_MODULE: genome_kit
+    parallelism: 1
+    steps:
+      - test
+
+  test-macos:
+    macos:
+      xcode: 14.2.0
+    resource_class: macos.x86.medium.gen2
+    environment:
+      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
+      MACOSX_DEPLOYMENT_TARGET: 10.15
+      PLATFORM: osx
+      COVER_MODULE: genome_kit
+    parallelism: 1
+    steps:
+      - test
+
+  build-docs:
+    docker:
+      - image: cimg/base:stable
+    resource_class: medium
+    working_directory: ~/project
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - resolve_tilde
+      - restore_mamba_env
+      - install_mamba
+      - run:
+          command: |
+            set -o xtrace
+            pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
+            pkg_name=$(basename ${pkg_name})
+            pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
+            pkg_name=${pkg_name%%-[0-9]*}
+            micromamba activate build
+            conda index ~/conda-bld
+            mamba create -n doc-build -c file://${HOME}/conda-bld \
+              ${pkg_name}=${pkg_version} \
+              m2r2 \
+              make \
+              myst-parser \
+              sphinx \
+              sphinx_rtd_theme
+          name: Create conda environment
+      - run:
+          command: |
+            micromamba activate ~/micromamba/envs/build/envs/doc-build
+            make html
+            mv _build/html ~/docs
+          name: Build documentation
+          working_directory: docs
+      - persist_to_workspace:
+          paths:
+            - docs
+          root: ~/
+    environment:
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+      PLATFORM: linux
+
+  deploy-coverage:
+    docker:
+      - image: cimg/base:stable
+    resource_class: medium
+    working_directory: ~/project
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run:
+          command: |
+            if [ -n "$(ls -A ~/test-results/*/.coverage.* 2>/dev/null)" ]
+            then
+            :
+            else
+              circleci-agent step halt
+            fi
+          name: Halt if no test results
+      - checkout
+      - restore_mamba_env
+      - install_mamba
+      - run:
+          command: |
+            micromamba create -yqn coverage -c conda-forge coverage
+          name: Create conda environment
+      - resolve_tilde
+      - run:
+          command: |
+            echo "[paths]" >> .coveragerc
+            echo "source =" >> .coveragerc
+            echo "  genome_kit" >> .coveragerc
+            echo "  */site-packages/genome_kit" >> .coveragerc
+            echo "  */site-packages/*/genome_kit" >> .coveragerc
+            micromamba activate coverage
+            coverage combine ~/test-results/*/.coverage.*
+          name: Consolidate test coverage into a single report
+      - run:
+          command: |
+            micromamba activate coverage
+            coverage report -i
+            coverage html -i -d ~/test-results/htmlcov
+          name: Report coverage
+      - store_artifacts:
+          destination: test-results/htmlcov
+          path: ~/test-results/htmlcov
+    environment:
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+      PLATFORM: linux
+
+  deploy-docs:
+    docker:
+      - image: google/cloud-sdk:340.0.0-alpine
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          # TODO replace with putting docs on github pages
+          command: |
+            gsutil -m rsync -d -r ~/docs gs://dg-docs/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}
+            git fetch --tags
+            # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+            SEMVER_PATTERN="^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
+            TAGGED_VERSION=$(git tag --points-at HEAD)
+            if echo -n ${TAGGED_VERSION} | grep -qE $SEMVER_PATTERN; then
+                gsutil -m rsync -d -r ~/docs gs://dg-docs/${CIRCLE_PROJECT_REPONAME}/${TAGGED_VERSION}
+            fi
+          name: Deploy documentation
 
 workflows:
   version: 2
   build-test-deploy:
     jobs:
-      - build_package_linux:
+      - build-linux:
+          <<: *on-any-push
+      - build-macos:
+          <<: *on-any-push
+      - test-linux:
+          <<: *on-any-push
+          requires:
+            - build-linux
+      - test-macos:
+          <<: *on-any-push
+          requires:
+            - build-macos
+      - build-docs:
+          <<: *on-any-push
+          requires:
+            - build-linux
+      - deploy-coverage:
+          <<: *on-any-push
+          requires:
+            - test-linux
+            - test-macos
+      - deploy-docs:
           filters:
             branches:
-              ignore: /^release-please.*/
-
-      - conda/build-pkg:
-          name: build-linux
-          <<: *on-any-push
-          <<: *under-linux
-          <<: *with-ccache
-          executor:
-            name: conda/miniconda
-            resource_class: large  # clang 12 uses more mem
-
-      - conda/build-pkg:
-          name: build-macos
-          <<: *on-any-push
-          <<: *under-macos
-          <<: *with-ccache-osx
-
-      - conda/test-pkg:
-          name: test-linux
-          <<: *on-any-push
-          <<: *under-linux
-          <<: *test-config
-          requires: [build-linux]
-          executor:
-            name: conda/miniconda
-            resource_class: medium  # Started needed more RAM between 20021-09-15 and 2021-10-22
-
-      - conda/test-pkg:
-          name: test-macos
-          <<: *on-any-push
-          <<: *under-macos
-          <<: *test-config
-          requires: [build-macos]
-
-      - conda/build-docs:
-          name: build-docs
-          <<: *on-any-push
-          requires: [build-linux]
-
-      - conda/deploy-coverage:
-          name: deploy-coverage
-          <<: *on-any-push
-          <<: *cover-module
-          requires: [test-linux, test-macos]
-
-      - conda/deploy-docs:
-          name: deploy-docs
-          <<: *on-release
-          <<: *require-validated
-          gcloud-project: dg-platform
-          bucket: dg-docs
+              only: main
+          requires:
+            - build-docs
+            - test-linux
+            - test-macos

@@ -140,7 +140,8 @@ public:
 
 	class builder {
 	public:
-		enum class action { error, warn, exclude };
+		// keep ordering consistent with string values in py_variant_table.cpp
+		enum class action_t { error, warn, exclude };
 
 		builder(const char* infile, const genome_t& genome, bool validate = true);
 
@@ -160,7 +161,7 @@ public:
 			_allow.push_back(interval);
 		}
 
-		void ancestral(action behaviour) { _ancestral = behaviour; }
+		void ancestral(action_t behaviour) { _ancenstral_handler._action = behaviour; }
 
 		// Process/Parse through file given by infile
 		// Accumulate fields inside private member of builder
@@ -226,10 +227,16 @@ public:
 		field_values_t _fmt_values;
 		vector<interval_t> _exclude;
 		vector<interval_t> _allow;
-		action _ancestral{ action::error };
 		variant_table::builder _variants{ false };
 		vector<string> _sample_names;
-		vector<long long> ancestral_lines;
+
+		struct ancentral_handler {
+			action_t          _action{action_t::error};
+			vector<long long> _lines;
+
+			bool notify(long long line_number);
+			void log() const;
+		} _ancenstral_handler;
 
 		// Holds the order in which FORMAT IDs were specified on a line containing FORMAT data.
 		vector<size_t> _field_ids_order;

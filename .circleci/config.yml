@@ -49,7 +49,6 @@ commands:
         type: string
     steps:
       - run:
-          # TODO: do we need any of the other channels?
           command: |
             if [ ! -e "${HOME}/.condarc" ]; then
               micromamba activate << parameters.env >>
@@ -58,12 +57,7 @@ commands:
               conda config --prepend pkgs_dirs ~/micromamba/envs/<< parameters.env >>/pkgs
               # fallback to docker pre-installed packages
               conda config --append pkgs_dirs ~/micromamba/pkgs
-            
               conda config --prepend channels conda-forge
-              #conda config --append channels pytorch
-              #conda config --append channels nvidia
-              #conda config --append channels bioconda
-              #conda config --remove channels defaults
             fi
 
   build:
@@ -85,8 +79,6 @@ commands:
       - restore_cache:
           keys:
             - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
-            - gk-mamba-ccache-{{ arch }}-{{ .Branch }}-
-            - gk-mamba-ccache-{{ arch }}-
       - run:
           command: |
             micromamba activate build
@@ -108,67 +100,6 @@ commands:
   test:
     steps:
       - checkout
-      - run:
-          name: Init OS Detection
-          command: |
-            # Start with family detection.
-            family=$(uname -s | tr '[:upper:]' '[:lower:]')
-
-            case $family in
-              linux)
-                osID=$(grep -e \"^ID=\" /etc/os-release | cut -c4-)
-                ;;
-              darwin)
-                osID=macos
-                ;;
-              *)
-                echo \"Unsupported operating system.\"
-                exit 1
-                ;;
-            esac
-
-            # Version number
-            case $osID in
-              ubuntu)
-                osVersion=$(grep -e \"^DISTRIB_RELEASE=\" /etc/lsb-release | cut -c17-)
-                ;;
-              debian)
-                osVersion=$(cat /etc/debian_version)
-                ;;
-              alpine)
-                osVersion=$(cat /etc/alpine-release)
-                ;;
-              macos)
-                osVersion=$(sw_vers -productVersion)
-                ;;
-              *)
-                echo \"Unsupported operating system ID.\"
-                exit 1
-                ;;
-            esac
-
-            # Determine if sudo is available and/or neccessary
-            SUDO=\"\"
-            if [[ $EUID -ne 0 ]]; then
-              SUDO=sudo
-            fi
-            command -v sudo >/dev/null 2>&1 || { SUDO=\"\"; }
-
-            # Export new variables.
-            echo \"export OSD_FAMILY=$(echo $family)\" >> $BASH_ENV
-            echo \"export OSD_ID=$(echo $osID)\" >> $BASH_ENV
-            echo \"export OSD_VERSION=$(echo $osVersion)\" >> $BASH_ENV
-            echo \"export SUDO=$(echo $SUDO)\" >> $BASH_ENV
-
-      - run:
-          command: |
-            case $OSD_FAMILY in
-              darwin)
-                # https://support.circleci.com/hc/en-us/articles/360037142773-Freeing-up-Disk-Space-on-macOS
-                sudo rm -rf /Library/Developer/CoreSimulator/Profiles/Runtimes/
-                ;;
-            esac
-          name: Get more space on OSX
       - attach_workspace:
           at: ~/
       - resolve_tilde
@@ -231,28 +162,13 @@ commands:
             # see https://circleci.com/docs/2.0/parallelism-faster-jobs/#using-environment-variables-to-split-tests
             case ${CIRCLE_NODE_INDEX} in
               0)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py38*.tar.bz2 --extra-deps python=3.8
                 ;;
               1)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py39*.tar.bz2 --extra-deps python=3.9
                 ;;
               2)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
-                ;;
-              3)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
-                ;;
-              4)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
-                ;;
-              5)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
-                ;;
-              6)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
-                ;;
-              7)
-                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*.tar.bz2 --extra-deps python
+                conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py310*.tar.bz2 --extra-deps python=3.10
                 ;;
             esac
             conda clean -it
@@ -302,7 +218,7 @@ jobs:
           paths:
             - ~/.ccache
     environment:
-      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/osx-64/1.5.7
       MACOSX_DEPLOYMENT_TARGET: 10.15
       PLATFORM: osx
 
@@ -324,57 +240,13 @@ jobs:
       xcode: 14.2.0
     resource_class: macos.x86.medium.gen2
     environment:
-      CONDA_INSTALLER: https://anaconda.org/conda-forge/micromamba/1.4.6/download/osx-64/micromamba-1.4.6-0.tar.bz2
+      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
       MACOSX_DEPLOYMENT_TARGET: 10.15
       PLATFORM: osx
       COVER_MODULE: genome_kit
     parallelism: 1
     steps:
       - test
-
-  build-docs:
-    docker:
-      - image: cimg/base:stable
-    resource_class: medium
-    working_directory: ~/project
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ~/
-      - resolve_tilde
-      - restore_mamba_env
-      - install_mamba
-      - run:
-          command: |
-            set -o xtrace
-            pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
-            pkg_name=$(basename ${pkg_name})
-            pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\\.[0-9]+\\.[0-9]+')
-            pkg_name=${pkg_name%%-[0-9]*}
-            micromamba activate build
-            conda index ~/conda-bld
-            mamba create -n doc-build -c file://${HOME}/conda-bld \
-              ${pkg_name}=${pkg_version} \
-              m2r2 \
-              make \
-              myst-parser \
-              sphinx \
-              sphinx_rtd_theme
-          name: Create conda environment
-      - run:
-          command: |
-            micromamba activate ~/micromamba/envs/build/envs/doc-build
-            make html
-            mv _build/html ~/docs
-          name: Build documentation
-          working_directory: docs
-      - persist_to_workspace:
-          paths:
-            - docs
-          root: ~/
-    environment:
-      CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
-      PLATFORM: linux
 
   deploy-coverage:
     docker:
@@ -424,26 +296,6 @@ jobs:
       CONDA_INSTALLER: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
       PLATFORM: linux
 
-  deploy-docs:
-    docker:
-      - image: google/cloud-sdk:340.0.0-alpine
-    resource_class: small
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ~/
-      - run:
-          # TODO replace with putting docs on github pages
-          command: |
-            gsutil -m rsync -d -r ~/docs gs://dg-docs/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}
-            git fetch --tags
-            # https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-            SEMVER_PATTERN="^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$"
-            TAGGED_VERSION=$(git tag --points-at HEAD)
-            if echo -n ${TAGGED_VERSION} | grep -qE $SEMVER_PATTERN; then
-                gsutil -m rsync -d -r ~/docs gs://dg-docs/${CIRCLE_PROJECT_REPONAME}/${TAGGED_VERSION}
-            fi
-          name: Deploy documentation
 
 workflows:
   version: 2
@@ -461,20 +313,8 @@ workflows:
           <<: *on-any-push
           requires:
             - build-macos
-      - build-docs:
-          <<: *on-any-push
-          requires:
-            - build-linux
       - deploy-coverage:
           <<: *on-any-push
           requires:
-            - test-linux
-            - test-macos
-      - deploy-docs:
-          filters:
-            branches:
-              only: main
-          requires:
-            - build-docs
             - test-linux
             - test-macos

@@ -492,6 +492,9 @@ vcf_table::builder::builder(const char* infile, const genome_t& genome, bool val
 	, _dna{&genome.dna()}
 	, _chrom_names{genome.chrom_names()}
 	, _validate(validate)
+	, _interval_filter{[&](interval_t i) {
+		GK_CHECK(i.refg == _chrom_names.refg(), value, "Cannot filter {} for {}", i, _chrom_names.refg_name());
+	}}
 {
 }
 
@@ -810,9 +813,7 @@ bool vcf_table::builder::parse_variant(const vector<string_view>& cols)
 	v.strand = pos_strand;
 	v.refg   = _chrom_names.refg();
 
-	if (is_interval_in_list(v, _exclude))
-		return false;
-	if (!_allow.empty() && !is_interval_in_list(v, _allow))
+	if (!get_interval_filter().filter(v))
 		return false;
 
 	if (ref.size() < 2 && alts.size() < 2) {

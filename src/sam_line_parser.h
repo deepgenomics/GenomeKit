@@ -18,17 +18,7 @@ class sam_line_parser {
 public:
 	sam_line_parser(const genome_t& genome);
 
-	void exclude(interval_t interval)
-	{
-		GK_CHECK(interval.refg == refg(), value, "Cannot exclude {} for {}", interval,
-				 _chrom_names.refg_name());
-		_exclude.push_back(interval);
-	}
-	void allow(interval_t interval)
-	{
-		GK_CHECK(interval.refg == refg(), value, "Cannot allow {} for {}", interval, _chrom_names.refg_name());
-		_allow.push_back(interval);
-	}
+	interval_filter& get_interval_filter() { return _interval_filter; }
 
 	void detect_strand_with_library(const char* format);
 	void set_include_duplicates(bool include) { _include_duplicates = include; }
@@ -48,12 +38,6 @@ protected:
 							  int m, int n, sam_cols cols)
 		= 0;
 
-	bool is_allowed_interval(interval_t interval) const
-	{
-		return !is_interval_in_list(interval, _exclude)
-			   && (std::empty(_allow) || is_interval_in_list(interval, _allow));
-	}
-
 	refg_t refg() const { return _chrom_names.refg(); }
 
 private:
@@ -61,9 +45,8 @@ private:
 	strand_t infer_strand(strand_t strand, bool strand_set, chrom_t chrom, pos_t pos, const cigar_op* codes,
 						  int m, int n) const;
 
-	std::vector<interval_t>      _exclude;
-	std::vector<interval_t>      _allow;
-	chrom_names_t                _chrom_names;
+	chrom_names_t   _chrom_names;
+	interval_filter _interval_filter;
 
 	// if available, used to determine junction direction from reads
 	const intr_table* _introns{};

@@ -265,6 +265,9 @@ strand_t sam_line_parser::infer_strand(strand_t strand, bool strand_set, chrom_t
 
 sam_line_parser::sam_line_parser(const genome_t& genome)
 : _chrom_names{genome.chrom_names()}
+, _interval_filter{[&](interval_t i) {
+	GK_CHECK(i.refg == _chrom_names.refg(), value, "Cannot filter {} for {}", i, _chrom_names.refg_name());
+}}
 , _introns{std::empty(genome.anno()) ? nullptr : &genome.anno().intrs()}
 {
 }

@@ -148,18 +148,7 @@ public:
 		void collect_info(const char* id, std::optional<dtype_t> dtype, const void* default_value = nullptr);
 		void collect_fmt(const char* id, std::optional<dtype_t> dtype, const void* default_value = nullptr);
 
-		void exclude(const interval_t& interval)
-		{
-			GK_CHECK(interval.refg == _chrom_names.refg(), value, "Cannot exclude {} for {}", interval,
-					 _chrom_names.refg_name());
-			_exclude.push_back(interval);
-			}
-		void allow(const interval_t& interval)
-		{
-			GK_CHECK(interval.refg == _chrom_names.refg(), value, "Cannot allow {} for {}", interval,
-					 _chrom_names.refg_name());
-			_allow.push_back(interval);
-		}
+		interval_filter& get_interval_filter() { return _interval_filter; }
 
 		void ancestral(action_t behaviour) { _ancenstral_handler._action = behaviour; }
 
@@ -225,8 +214,7 @@ public:
 
 		field_values_t _info_values;
 		field_values_t _fmt_values;
-		vector<interval_t> _exclude;
-		vector<interval_t> _allow;
+		interval_filter _interval_filter;
 		variant_table::builder _variants{ false };
 		vector<string> _sample_names;
 

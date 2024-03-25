@@ -135,8 +135,7 @@ public:
 	const field_cols_t& fmt_fields() const noexcept { return _fmt_entries; }
 
 	int num_samples() const noexcept { return _num_samples; };
-	// first name contiguous array of C strings if num_samples() else nullptr
-	const char* sample_names() const noexcept { return _sample_names; }
+	std::vector<std::string_view> sample_names() const;
 
 	class builder {
 	public:

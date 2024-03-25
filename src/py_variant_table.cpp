@@ -310,13 +310,11 @@ GKPY_GETATTRO_BEGIN(VCFTable)
 	GKPY_GETATTR_CASE("num_samples") { return Py_BuildValue("i", self->table->num_samples()); }
 	GKPY_GETATTR_CASE("sample_names")
 	{
-		auto size = self->table->num_samples();
-		auto list = PyList_New(size);
-		auto name = self->table->sample_names();
+		auto size  = self->table->num_samples();
+		auto list  = PyList_New(size);
+		auto names = self->table->sample_names();
 		for (int i = 0; i < size; ++i) {
-			auto len = (Py_ssize_t)strlen(name);
-			PyList_SET_ITEM(list, i, PyString_FromStringAndSize(name, len));
-			name += len + 1;
+			PyList_SET_ITEM(list, i, PyString_FromStringAndSize(std::data(names[i]), std::size(names[i])));
 		}
 		return list;
 	}

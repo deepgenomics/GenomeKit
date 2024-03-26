@@ -84,9 +84,11 @@ jobs:
           mkdir ~/conda-bld
           conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
           conda build --croot ~/conda-bld purge
-          conda clean -it
+          #conda clean -it
           find ~/conda-bld
+          echo AFTER
           set +x
+          echo AFTER2
 
 #      - name: create test env
 #        shell: bash -l -e {0}

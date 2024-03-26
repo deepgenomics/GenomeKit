@@ -23,9 +23,9 @@ jobs:
 #            mamba-env-${{ runner.arch }}-
 #            mamba-env-$-
           path: |
-            ~/micromamba
-            ~/.condarc
-            ~/bin/micromamba
+            ${HOME}/micromamba
+            ${HOME}/.condarc
+            ${HOME}/bin/micromamba
 
       - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/install-mamba
@@ -46,7 +46,7 @@ jobs:
           echo HELLO
           cat ~/.bash_profile
           echo HELLO2
-          if [ ! -d "~/micromamba/envs/build" ]; then
+          if [ ! -d "${HOME}/micromamba/envs/build" ]; then
             micromamba create -yqn build -c conda-forge \
               boa==0.16.0 mamba==1.5.7 conda==24.1.2 \
               ccache

@@ -7,8 +7,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash -l -e -x {0}
+    - shell: bash -l -e {0}
       run: |
+        set -x
         if [ ! -e ${HOME}/bin/micromamba ]; then
           echo "Downloading ${{inputs.installer-url}}"
           curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ${HOME}/ bin/micromamba
@@ -17,3 +18,4 @@ runs:
           echo "Adding micromamba init to bash profile"
           echo "$(~/bin/micromamba shell hook -s posix)" >> ${HOME}/.bash_profile
         fi
+        set +x

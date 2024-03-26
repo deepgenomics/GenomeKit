@@ -1,0 +1,12 @@
+name: 'Create Conda Env'
+description: 'Create Conda Env'
+runs:
+  using: "composite"
+  steps:
+    - shell: bash -l {0}
+      run: |
+        if [ ! -d "${HOME}/micromamba/envs/build" ]; then
+          micromamba create -yqn build -c conda-forge \
+            boa==0.16.0 mamba==1.5.7 conda==24.1.2 \
+            ccache
+        fi

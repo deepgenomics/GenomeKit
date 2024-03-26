@@ -1,0 +1,20 @@
+name: 'Configure Conda'
+description: 'Configure Conda'
+inputs:
+  env:
+    description: 'Environment name'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - shell: bash -l {0}
+      run: |
+        if [ ! -e "${HOME}/.condarc" ]; then
+          micromamba activate ${{ inputs.env }}
+          conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
+          # cache additional pkgs separately from docker pre-install
+          conda config --prepend pkgs_dirs ~/micromamba/envs/${{ inputs.env }}/pkgs
+          # fallback to docker pre-installed packages
+          conda config --append pkgs_dirs ~/micromamba/pkgs
+          conda config --prepend channels conda-forge
+        fi

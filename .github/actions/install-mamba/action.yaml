@@ -1,0 +1,21 @@
+name: 'Install Mamba'
+description: 'Install Mamba'
+inputs:
+  installer-url:
+    description: 'Installer URL'
+    required: true
+#outputs:
+#  random-number:
+#    description: "Random number"
+#    value: ${{ steps.random-number-generator.outputs.random-number }}
+runs:
+  using: "composite"
+  steps:
+    - shell: bash -l {0}
+      run: |
+        if [ ! -e ~/bin/micromamba ]; then
+          curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ~/ bin/micromamba
+        fi
+        if ! command -vp micromamba >/dev/null 2>&1 ; then
+          echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
+        fi

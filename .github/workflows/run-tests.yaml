@@ -1,0 +1,41 @@
+name: run-unit-tests
+run-name: run unit tests
+on:
+  push:
+    # TODO remove before merging (ignore release-please branches)
+    branches: [chore/setup-ci]
+
+jobs:
+  build-linux:
+    # TODO need large?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: restore mamba env
+        id: save_mamba_cache
+        uses: actions/cache@v3
+        with:
+          key: mamba-env-${{ runner.arch }}-${{ hashFiles('.circleci/config.yml') }}-${{ hashFiles(checksum 'conda-recipe/meta.yaml') }}
+          # TODO: need this? see https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#using-the-cache-action
+#          restore-keys: |
+#            mamba-env-${{ runner.arch }}-${{ hashFiles('.circleci/config.yml') }}-
+#            mamba-env-${{ runner.arch }}-
+#            mamba-env-$-
+          path: |
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./install-mamba
+        with:
+          installer-url: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./create-conda-env
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./configure-conda
+        with:
+          env: build

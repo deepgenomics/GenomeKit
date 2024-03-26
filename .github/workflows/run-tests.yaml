@@ -43,6 +43,9 @@ jobs:
       - name: create build env
         shell: bash -l {0}
         run: |
+          echo HELLO
+          cat ~/.bash_profile
+          echo HELLO2
           if [ ! -d "~/micromamba/envs/build" ]; then
             micromamba create -yqn build -c conda-forge \
               boa==0.16.0 mamba==1.5.7 conda==24.1.2 \

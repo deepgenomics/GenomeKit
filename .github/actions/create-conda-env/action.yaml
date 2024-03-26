@@ -3,7 +3,7 @@ description: 'Create Conda Env'
 runs:
   using: "composite"
   steps:
-    - shell: bash -l {0}
+    - shell: bash -l -e {0}
       run: |
         if [ ! -d "${HOME}/micromamba/envs/build" ]; then
           micromamba create -yqn build -c conda-forge \

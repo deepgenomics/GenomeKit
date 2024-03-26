@@ -7,7 +7,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash -l {0}
+    - shell: bash -l -e {0}
       run: |
         if [ ! -e "${HOME}/.condarc" ]; then
           micromamba activate ${{ inputs.env }}

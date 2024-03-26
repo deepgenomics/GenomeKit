@@ -10,7 +10,7 @@ runs:
     - shell: bash -l -e {0}
       run: |
         if [ ! -e ${HOME}/bin/micromamba ]; then
-          echo "Downloading ${inputs.installer-url}"
+          echo "Downloading ${{inputs.installer-url}}"
           curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ${HOME}/ bin/micromamba
         fi
         if ! command -vp micromamba >/dev/null 2>&1 ; then

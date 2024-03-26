@@ -7,7 +7,7 @@ on:
   pull_request: {}
 
 jobs:
-  build-linux:
+  test-linux:
     # TODO need large?
     runs-on: ubuntu-latest
     steps:
@@ -21,7 +21,7 @@ jobs:
           curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
           set +x
 
-      - name: restore mamba env
+      - name: save mamba env to cache
         id: save_mamba_cache
         uses: actions/cache@v4
         with:
@@ -32,9 +32,9 @@ jobs:
 #            mamba-env-${{ runner.arch }}-
 #            mamba-env-$-
           path: |
-            ${HOME}/micromamba
-            ${HOME}/.condarc
-            ${HOME}/bin/micromamba
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
 
       - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/install-mamba
@@ -60,13 +60,13 @@ jobs:
         with:
           env: build
 
-      - name: restore mamba gk ccache
+      - name: save mamba gk ccache
         id: save_mamba_gk_ccache
         uses: actions/cache@v4
         with:
           key: gk-mamba-ccache-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
           path: |
-            ${HOME}/.ccache
+            ~/.ccache
 
       - name: set compiler cache size
         shell: bash -l -e {0}
@@ -85,4 +85,20 @@ jobs:
           conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
           conda build --croot ~/conda-bld purge
           conda clean -it
+          find ~/conda-bld
           set +x
+
+#      - name: create test env
+#        shell: bash -l -e {0}
+#        run: |
+#          set -x
+#          if [ ! -d "${HOME}/micromamba/envs/test" ]; then
+#            micromamba create -yqn test -c conda-forge \
+#              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+#          fi
+#          set +x
+#
+#      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+#        uses: ./.github/actions/configure-conda
+#        with:
+#          env: test

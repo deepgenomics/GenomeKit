@@ -17,5 +17,5 @@ runs:
           curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ~/ bin/micromamba
         fi
         if ! command -vp micromamba >/dev/null 2>&1 ; then
-          echo "$(~/bin/micromamba shell hook -s posix)" >> ${BASH_ENV}
+          echo "$(~/bin/micromamba shell hook -s posix)" >> ~/.bash_profile
         fi

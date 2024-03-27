@@ -112,7 +112,7 @@ jobs:
         uses: ./.github/actions/parallel-run-unittests
         with:
           py-version-long: "3.8"
-          py-version-short: "39"
+          py-version-short: "38"
 
       - name: run unittests for py3.9
         uses: ./.github/actions/parallel-run-unittests

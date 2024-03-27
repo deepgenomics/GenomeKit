@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.3.0](https://github.com/deepgenomics/GenomeKit/compare/v4.2.1...v4.3.0) (2024-03-27)
+
+
+### Features
+
+* compatibility with python 3.10 ([#28](https://github.com/deepgenomics/GenomeKit/issues/28)) ([1d51397](https://github.com/deepgenomics/GenomeKit/commit/1d51397db0f84cb5d543f6dc9de331871ff1c6ab))
+
+
+### Bug Fixes
+
+* missing mock for dna boundary ([#25](https://github.com/deepgenomics/GenomeKit/issues/25)) ([b058b53](https://github.com/deepgenomics/GenomeKit/commit/b058b5380a98f0b7766f4fa9de880085d0935a1d))
+
 ## [4.2.1](https://github.com/deepgenomics/GenomeKit/compare/v4.2.0...v4.2.1) (2024-03-14)
 
 

@@ -84,23 +84,44 @@ jobs:
           mkdir ~/conda-bld
           conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
           conda build --croot ~/conda-bld purge
-          #conda clean -it
-          find ~/conda-bld
-          echo AFTER
-          set +x
-          echo AFTER2
+          conda clean -it
 
-#      - name: create test env
+#      - name: set TEST_RESULTS env var
 #        shell: bash -l -e {0}
 #        run: |
 #          set -x
-#          if [ ! -d "${HOME}/micromamba/envs/test" ]; then
-#            micromamba create -yqn test -c conda-forge \
-#              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
-#          fi
+#          echo "export TEST_RESULTS=${HOME}/test-results/linux" >> ${HOME}/.bash_profile
 #          set +x
-#
-#      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
-#        uses: ./.github/actions/configure-conda
-#        with:
-#          env: test
+
+      - name: create test env
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          if [ ! -d "${HOME}/micromamba/envs/test" ]; then
+            micromamba create -yqn test -c conda-forge \
+              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+          fi
+          set +x
+
+      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+        uses: ./.github/actions/configure-conda
+        with:
+          env: test
+
+      - name: run unittests for py3.8
+        uses: ./.github/actions/parallel-run-unittests
+        with:
+          py-version-long: 3.8
+          py-version-short: 38
+
+      - name: run unittests for py3.9
+        uses: ./.github/actions/parallel-run-unittests
+        with:
+          py-version-long: 3.9
+          py-version-short: 39
+
+      - name: run unittests for py3.10
+        uses: ./.github/actions/parallel-run-unittests
+        with:
+          py-version-long: 3.10
+          py-version-short: 310

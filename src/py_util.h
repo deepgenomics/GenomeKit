@@ -535,11 +535,23 @@ struct __value_type_sizes {
 	GKPY_CATCH_RETURN_VALUE(-1)\
 	}
 
-#define GKPY_TRAVERSE_BEGIN(name)\
+#define GKPY_TRAVERSE_BEGIN_COMMON(name)\
 	int Py##name##_Traverse(PyObject* selfo, visitproc visit, void* arg)\
 	{ \
 		GKPY_TRY\
 		[[maybe_unused]] Py##name* self = *((Py##name**)&selfo);
+
+// required for Python >=3.9 (see bpo-35810, bpo-40217)
+// https://docs.python.org/3/whatsnew/3.9.html#changes-in-the-c-api
+#if PY_VERSION_HEX >= 0x03090000
+	#define GKPY_TRAVERSE_BEGIN(name) \
+	GKPY_TRAVERSE_BEGIN_COMMON(name)\
+	Py_VISIT(Py_TYPE(selfo));
+#else
+#define GKPY_TRAVERSE_BEGIN(name) \
+	GKPY_TRAVERSE_BEGIN_COMMON(name)
+#endif
+
 
 #define GKPY_VISIT(name)         Py_VISIT(self->name)
 

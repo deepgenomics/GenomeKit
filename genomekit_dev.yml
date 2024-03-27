@@ -8,7 +8,7 @@ dependencies:
   - crc32c
   - fmt
   - numpy
-  - python>=3.8.0,<3.9.0
+  - python>=3.8.0,<3.11.0
   - tqdm
   - typing-extensions
   - zlib

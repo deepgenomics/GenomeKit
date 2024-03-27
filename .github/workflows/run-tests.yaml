@@ -36,7 +36,7 @@ jobs:
             ~/.condarc
             ~/bin/micromamba
 
-      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
+      - name: install mamba
         uses: ./.github/actions/install-mamba
         with:
           installer-url: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7

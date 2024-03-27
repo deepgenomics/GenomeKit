@@ -111,17 +111,17 @@ jobs:
       - name: run unittests for py3.8
         uses: ./.github/actions/parallel-run-unittests
         with:
-          py-version-long: 3.8
-          py-version-short: 38
+          py-version-long: "3.8"
+          py-version-short: "3.8"
 
       - name: run unittests for py3.9
         uses: ./.github/actions/parallel-run-unittests
         with:
-          py-version-long: 3.9
-          py-version-short: 39
+          py-version-long: "3.8"
+          py-version-short: "3.8"
 
       - name: run unittests for py3.10
         uses: ./.github/actions/parallel-run-unittests
         with:
-          py-version-long: 3.10
-          py-version-short: 310
+          py-version-long: "3.10"
+          py-version-short: "310"

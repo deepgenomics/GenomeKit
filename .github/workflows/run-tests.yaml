@@ -7,7 +7,7 @@ on:
   pull_request: {}
 
 jobs:
-  test-linux:
+  build-linux:
     # TODO need large?
     runs-on: ubuntu-latest
     steps:
@@ -21,20 +21,16 @@ jobs:
           curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
           set +x
 
-      - name: save mamba env to cache
+      - name: cache mamba env
         id: save_mamba_cache
         uses: actions/cache@v4
         with:
           key: mamba-env-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
-          # TODO: need this? see https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#using-the-cache-action
-#          restore-keys: |
-#            mamba-env-${{ runner.arch }}-${{ hashFiles('.circleci/config.yml') }}-
-#            mamba-env-${{ runner.arch }}-
-#            mamba-env-$-
           path: |
             ~/micromamba
             ~/.condarc
             ~/bin/micromamba
+            ~/conda-bld
 
       - name: install mamba
         uses: ./.github/actions/install-mamba
@@ -93,6 +89,26 @@ jobs:
 #          echo "export TEST_RESULTS=${HOME}/test-results/linux" >> ${HOME}/.bash_profile
 #          set +x
 
+  test-linux:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+            python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: restore mamba env
+        id: restore_mamba_cache
+        uses: actions/cache/restore@v4
+        with:
+          key: mamba-env-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
+          path: |
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
+            ~/conda-bld
+          fail-on-cache-miss: true
+
       - name: create test env
         shell: bash -l -e {0}
         run: |
@@ -103,25 +119,16 @@ jobs:
           fi
           set +x
 
-      - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
-        uses: ./.github/actions/configure-conda
-        with:
-          env: test
-
-      - name: run unittests for py3.8
-        uses: ./.github/actions/parallel-run-unittests
-        with:
-          py-version-long: "3.8"
-          py-version-short: "38"
-
-      - name: run unittests for py3.9
-        uses: ./.github/actions/parallel-run-unittests
-        with:
-          py-version-long: "3.8"
-          py-version-short: "38"
-
-      - name: run unittests for py3.10
-        uses: ./.github/actions/parallel-run-unittests
-        with:
-          py-version-long: "3.10"
-          py-version-short: "310"
+      - name: run unittests for py${{ matrix.python-version.1 }}
+        id: run_unittests
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          micromamba activate test
+          # TODO remove? https://docs.python.org/3/using/cmdline.html#cmdoption-u now says:
+          # "Changed in version 3.7: The text layer of the stdout and stderr streams now is unbuffered."
+          export PYTHONUNBUFFERED=1 
+          conda index ~/conda-bld
+          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version.0 }}*.tar.bz2 --extra-deps python=${{ matrix.python-version.1 }}
+          conda clean -it
+          set +x

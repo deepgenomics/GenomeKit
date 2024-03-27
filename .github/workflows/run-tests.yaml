@@ -110,6 +110,11 @@ jobs:
             ~/conda-bld
           fail-on-cache-miss: true
 
+      - name: install mamba
+        uses: ./.github/actions/install-mamba
+        with:
+          installer-url: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+
       - name: create test env
         shell: bash -l -e {0}
         run: |

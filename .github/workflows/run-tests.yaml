@@ -119,7 +119,7 @@ jobs:
           fi
           set +x
 
-      - name: run unittests for py${{ matrix.python-version.1 }}
+      - name: run unittests for py${{ matrix.python-version[1] }}
         id: run_unittests
         shell: bash -l -e {0}
         run: |
@@ -129,6 +129,6 @@ jobs:
           # "Changed in version 3.7: The text layer of the stdout and stderr streams now is unbuffered."
           export PYTHONUNBUFFERED=1 
           conda index ~/conda-bld
-          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version.0 }}*.tar.bz2 --extra-deps python=${{ matrix.python-version.1 }}
+          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
           conda clean -it
           set +x

@@ -90,6 +90,7 @@ jobs:
 #          set +x
 
   test-linux:
+    needs: build-linux
     runs-on: ubuntu-latest
     strategy:
         matrix:

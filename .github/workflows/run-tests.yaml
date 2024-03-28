@@ -45,9 +45,9 @@ jobs:
       - name: create build env
         shell: bash -l -e {0}
         run: |
+          source ${HOME}/.bash_profile # for macos
           set -x
           if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-            source ${HOME}/.bash_profile # for macos
             micromamba create -yqn build -c conda-forge \
               boa==0.16.0 mamba==1.5.7 conda==24.1.2 \
               ccache
@@ -70,8 +70,8 @@ jobs:
       - name: set compiler cache size
         shell: bash -l -e {0}
         run: |
-          set -x
           source ${HOME}/.bash_profile # for macos
+          set -x
           micromamba activate build
           ccache -M 100M
           set +x
@@ -79,8 +79,8 @@ jobs:
       - name: build conda package
         shell: bash -l -e {0}
         run: |
-          set -x
           source ${HOME}/.bash_profile # for macos
+          set -x
           micromamba activate build
           mkdir ~/conda-bld
           conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
@@ -117,9 +117,9 @@ jobs:
       - name: create test env
         shell: bash -l -e {0}
         run: |
+          source ${HOME}/.bash_profile # for macos
           set -x
           if [ ! -d "${HOME}/micromamba/envs/test" ]; then
-            source ${HOME}/.bash_profile # for macos
             micromamba create -yqn test -c conda-forge \
               boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
           fi
@@ -129,8 +129,8 @@ jobs:
         id: run_unittests
         shell: bash -l -e {0}
         run: |
-          set -x
           source ${HOME}/.bash_profile # for macos
+          set -x
           micromamba activate test
           # TODO remove? https://docs.python.org/3/using/cmdline.html#cmdoption-u now says:
           # "Changed in version 3.7: The text layer of the stdout and stderr streams now is unbuffered."

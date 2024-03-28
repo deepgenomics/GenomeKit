@@ -1,9 +1,8 @@
 name: run-unit-tests
 run-name: run unit tests
 on:
-  push:
+  pull_request:
     branches-ignore: ["release-please*"]
-  pull_request: {}
 
 jobs:
   build:

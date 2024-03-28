@@ -27,7 +27,7 @@ jobs:
         id: save_mamba_cache
         uses: actions/cache@v4
         with:
-          key: mamba-env-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
           path: |
             ~/micromamba
             ~/.condarc
@@ -62,7 +62,7 @@ jobs:
         id: save_mamba_gk_ccache
         uses: actions/cache@v4
         with:
-          key: gk-mamba-ccache-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+          key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
           path: |
             ~/.ccache
 
@@ -98,7 +98,7 @@ jobs:
         id: restore_mamba_cache
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml') }}-${{ hashFiles('conda-recipe/meta.yaml') }}
           path: |
             ~/micromamba
             ~/.condarc

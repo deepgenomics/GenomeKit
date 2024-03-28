@@ -45,7 +45,6 @@ jobs:
       - name: create build env
         shell: bash -l -e {0}
         run: |
-          source ${HOME}/.bash_profile # for macos
           set -x
           if [ ! -d "${HOME}/micromamba/envs/build" ]; then
             micromamba create -yqn build -c conda-forge \
@@ -70,7 +69,6 @@ jobs:
       - name: set compiler cache size
         shell: bash -l -e {0}
         run: |
-          source ${HOME}/.bash_profile # for macos
           set -x
           micromamba activate build
           ccache -M 100M
@@ -79,7 +77,6 @@ jobs:
       - name: build conda package
         shell: bash -l -e {0}
         run: |
-          source ${HOME}/.bash_profile # for macos
           set -x
           micromamba activate build
           mkdir ~/conda-bld
@@ -117,7 +114,6 @@ jobs:
       - name: create test env
         shell: bash -l -e {0}
         run: |
-          source ${HOME}/.bash_profile # for macos
           set -x
           if [ ! -d "${HOME}/micromamba/envs/test" ]; then
             micromamba create -yqn test -c conda-forge \
@@ -129,7 +125,6 @@ jobs:
         id: run_unittests
         shell: bash -l -e {0}
         run: |
-          source ${HOME}/.bash_profile # for macos
           set -x
           micromamba activate test
           # TODO remove? https://docs.python.org/3/using/cmdline.html#cmdoption-u now says:

@@ -11,13 +11,9 @@ runs:
       run: |
         source ${HOME}/.bash_profile # for macos
         echo AAAAAAA
-        ls -l ${HOME}/.bash_profile
-        echo CCCCCCCC
-        ls -a ${HOME}
-        echo DDDDDDDD
-        cat ${HOME}/.bash_profile
-        echo BBBBBBB
+        ls -l ${HOME}/.bash_profile && echo CCCCCCCC && ls -a ${HOME} && echo DDDDDDDD && cat ${HOME}/.bash_profile & echo BBBBBBB
         set -x
+        sleep 5
         if [ ! -e "${HOME}/.condarc" ]; then
           micromamba activate ${{ inputs.env }}
           conda config --set always_yes yes --set changeps1 no --set auto_update_conda no

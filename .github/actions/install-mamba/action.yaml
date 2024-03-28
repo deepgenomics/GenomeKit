@@ -14,7 +14,7 @@ runs:
           echo "Downloading ${{inputs.installer-url}}"
           curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C ${HOME}/ bin/micromamba
         fi
-        if ! [ -x "$(command -v micromamba)" ] ; then
+        if ! hash micromamba >/dev/null 2>&1 ; then
           echo "Adding micromamba init to bash profile"
           echo "$(~/bin/micromamba shell hook -s posix)" >> ${HOME}/.bash_profile
         else

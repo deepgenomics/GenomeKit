@@ -1,5 +1,7 @@
 # GenomeKit
 
+[![run-unit-tests](https://github.com/deepgenomics/GenomeKit/actions/workflows/run-tests.yaml/badge.svg)](https://github.com/deepgenomics/GenomeKit/actions/workflows/run-tests.yaml)
+
 ## What is GenomeKit?
 
 GenomeKit is Deep Genomics' Python library for fast and easy access to

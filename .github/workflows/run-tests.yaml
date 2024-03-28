@@ -84,7 +84,7 @@ jobs:
           conda build --croot ~/conda-bld purge
           conda clean -it
 
-  test-linux:
+  test:
     needs: build
     strategy:
       matrix:

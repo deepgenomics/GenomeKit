@@ -126,9 +126,6 @@ jobs:
         run: |
           set -x
           micromamba activate test
-          # TODO remove? https://docs.python.org/3/using/cmdline.html#cmdoption-u now says:
-          # "Changed in version 3.7: The text layer of the stdout and stderr streams now is unbuffered."
-          export PYTHONUNBUFFERED=1 
           conda index ~/conda-bld
           conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
           conda clean -it

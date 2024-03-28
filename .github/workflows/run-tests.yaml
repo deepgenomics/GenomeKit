@@ -7,9 +7,11 @@ on:
   pull_request: {}
 
 jobs:
-  build-linux:
-    # TODO need large?
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+    runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +37,7 @@ jobs:
       - name: install mamba
         uses: ./.github/actions/install-mamba
         with:
-          installer-url: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform[0] }}/1.5.7
 
       - if: ${{ steps.save_mamba_cache.outputs.cache-hit != 'true' }}
         uses: ./.github/actions/create-conda-env
@@ -82,19 +84,13 @@ jobs:
           conda build --croot ~/conda-bld purge
           conda clean -it
 
-#      - name: set TEST_RESULTS env var
-#        shell: bash -l -e {0}
-#        run: |
-#          set -x
-#          echo "export TEST_RESULTS=${HOME}/test-results/linux" >> ${HOME}/.bash_profile
-#          set +x
-
   test-linux:
-    needs: build-linux
-    runs-on: ubuntu-latest
+    needs: build
     strategy:
-        matrix:
-            python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
+      matrix:
+        python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
+        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+    runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4
 
@@ -113,7 +109,7 @@ jobs:
       - name: install mamba
         uses: ./.github/actions/install-mamba
         with:
-          installer-url: https://micro.mamba.pm/api/micromamba/linux-64/1.5.7
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform[0] }}/1.5.7
 
       - name: create test env
         shell: bash -l -e {0}
@@ -125,7 +121,7 @@ jobs:
           fi
           set +x
 
-      - name: run unittests for py${{ matrix.python-version[1] }}
+      - name: run unittests
         id: run_unittests
         shell: bash -l -e {0}
         run: |

@@ -11,6 +11,7 @@ runs:
       run: |
         set -x
         if [ ! -e "${HOME}/.condarc" ]; then
+          source ${HOME}/.bash_profile # for macos
           micromamba activate ${{ inputs.env }}
           conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
           # cache additional pkgs separately from docker pre-install

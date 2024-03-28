@@ -17,7 +17,5 @@ runs:
         if ! command -vp micromamba >/dev/null 2>&1 ; then
           echo "Adding micromamba init to bash profile"
           echo "$(~/bin/micromamba shell hook -s posix)" >> ${HOME}/.bash_profile
-          # for macos
-          echo "$(~/bin/micromamba shell hook -s posix)" >> ${HOME}/.profile
         fi
         set +x

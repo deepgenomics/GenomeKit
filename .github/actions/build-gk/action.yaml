@@ -17,9 +17,9 @@ runs:
 
     - name: try to restore the mamba env
       id: restore_mamba_cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       with:
-        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', 'conda-recipe/meta.yaml') }}
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml') }}
         path: |
           ~/micromamba
           ~/.condarc
@@ -76,9 +76,9 @@ runs:
 
     - name: cache mamba env
       id: save_mamba_cache
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v4
       with:
-        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', 'conda-recipe/meta.yaml') }}
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml') }}
         path: |
           ~/micromamba
           ~/.condarc

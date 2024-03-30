@@ -3,6 +3,12 @@ run-name: run unit tests
 on:
   pull_request:
     branches-ignore: ["release-please*"]
+    paths:
+    - "genome_kit/**"
+    - "src/**"
+    - "tests/**"
+    - "genomekit_dev.yml"
+    - "CMakelists.txt"
 
 jobs:
   build:

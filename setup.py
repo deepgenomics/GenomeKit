@@ -45,8 +45,7 @@ if __name__ == "__main__":
         name="genomekit",
         packages=find_packages(include=["genome_kit"]),
         project_urls={
-            # TODO check documentation link when docs are published on readthedocs
-            "Documentation": f"https://genomekit.readthedocs.io/en/{version}"
+            "Documentation": "https://deepgenomics.github.io/GenomeKit"
         },
         cmdclass={
             'build_ext': c_ext.NoCWarningsBuildExt,

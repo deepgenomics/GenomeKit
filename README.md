@@ -44,4 +44,4 @@ You can install GenomeKit with
 
 ## Full Documentation (including developer instructions)
 
-TODO: add updated readthedocs link
+https://deepgenomics.github.io/GenomeKit

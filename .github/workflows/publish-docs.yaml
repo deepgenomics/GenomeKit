@@ -1,13 +1,13 @@
 name: publish-docs
 run-name: build and publish API docs
 on:
-  push: {}
-#    tags: ["v*"]
-#    paths:
-#      - "docs/**"
-#      - "genome_kit/**"
-#      - ".github/workflows/publish-docs.yaml"
-#      - ".github/actions/**"
+  push:
+    tags: ["v*"]
+    paths:
+      - "docs/**"
+      - "genome_kit/**"
+      - ".github/workflows/publish-docs.yaml"
+      - ".github/actions/**"
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

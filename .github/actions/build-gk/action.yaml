@@ -8,12 +8,7 @@ runs:
   using: "composite"
   steps:
     - name: get meta.yaml from conda-forge
-      shell: bash -l -e {0}
-      run: |
-        set -x
-        mkdir -p conda-recipe
-        curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
-        set +x
+      uses: ./.github/actions/curl-meta-yaml
 
     - name: try to restore the mamba env
       id: restore_mamba_cache

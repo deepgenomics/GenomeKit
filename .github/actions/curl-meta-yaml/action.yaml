@@ -9,6 +9,6 @@ runs:
         mkdir -p conda-recipe
         curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         # build from local source, not from the latest release tarball
-        sed -i 's\|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../; s/sha256: /d'
+        sed -i 's\|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; s/sha256: /d'
         head -10 conda-recipe/meta.yaml
         set +x

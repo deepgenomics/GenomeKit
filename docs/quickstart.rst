@@ -19,10 +19,27 @@ You can install GenomeKit with::
 
     mamba install genomekit
 
-TODO: Replace this with instructions on setting up your own data manager
 
 Basics
 ------
+
+Initial Data Access
+~~~~~~~~~~~~~~~~~~~
+
+Data such as assemblies, annotations, tracks, etc is stored in custom-built binary files.
+
+The files are required most commonly when creating :py:class:`~genome_kit.Genome` objects.
+APIs for building these files are provided as part of the API. A selection of pre-built
+data files is provided in a public Google Cloud Storage bucket, which is set as the default
+data source.
+
+The bucket is configured with `"requester pays" <https://cloud.google.com/storage/docs/requester-pays>`__
+enabled, so you will need to `set up your GCloud credentials <https://cloud.google.com/sdk/docs/authorizing>`__
+beforehand and set the ``GENOMEKIT_GCS_BILLING_PROJECT`` env var to your Google Cloud project.
+
+For more details on creating your own data source, see `the section on Sharing data files <sharing data>`_.
+
+
 
 Import the :py:mod:`genome_kit` package into your project::
 
@@ -766,6 +783,8 @@ the motif into the reference sequence. This is a special case since the
 In this case the interval has its ``anchor_offset`` attribute set to four
 to indicate that the motif matches at the fourth position in the insertion.
 
+
+.. _sharing-data:
 
 Sharing new data files
 ----------------------

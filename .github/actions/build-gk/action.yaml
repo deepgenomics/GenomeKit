@@ -46,7 +46,7 @@ runs:
       id: save_mamba_gk_ccache
       uses: actions/cache@v4
       with:
-        key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+        key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**', 'genome_kit/**') }}
         path: |
           ~/.ccache
 
@@ -56,6 +56,7 @@ runs:
         set -x
         micromamba activate build
         ccache -M 100M
+        mkdir -p ~/.ccache
         set +x
 
     - if: ${{ steps.restore_mamba_cache.outputs.cache-hit != 'true' }}

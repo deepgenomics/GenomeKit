@@ -7,7 +7,6 @@ on:
     - "genome_kit/**"
     - "src/**"
     - "tests/**"
-    - "genomekit_dev.yml"
 
 jobs:
   build:

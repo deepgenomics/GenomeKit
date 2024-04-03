@@ -50,8 +50,6 @@ runs:
         restore-keys: |
           gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}
           gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-
-          gk-mamba-ccache-${{ runner.os }}-
-          gk-mamba-ccache-
         path: |
           ~/.ccache
 

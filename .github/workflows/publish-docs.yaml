@@ -2,6 +2,7 @@ name: publish-docs
 run-name: build and publish API docs
 on:
   push:
+    # only build and publish docs on release-please tags
     tags: ["v*"]
     paths:
       - "docs/**"

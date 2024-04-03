@@ -1,0 +1,15 @@
+name: 'Download meta.yaml'
+description: 'Download meta.yaml from the conda-forge GK feedstock'
+runs:
+  using: "composite"
+  steps:
+    - shell: bash -l -e {0}
+      run: |
+        set -x
+        mkdir -p conda-recipe
+        curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
+        # build from local source, not from the latest release tarball
+        sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1' \
+          -e '/sha256: /d' conda-recipe/meta.yaml
+        head -10 conda-recipe/meta.yaml
+        set +x

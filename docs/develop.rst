@@ -176,4 +176,13 @@ flags on the ``build`` subcommand::
 Releasing GenomeKit
 -------------------
 
-TODO: Update this section after migrating CI.
+The `GenomeKit repo <https://github.com/deepgenomics/GenomeKit>`__ uses
+the `Release Please bot <https://github.com/googleapis/release-please>`__
+to create Github releases based on PRs. When the bot creates a PR, you can
+merge it to create a release.
+
+Once a Github release is created, a PR will automatically be created in
+the `GenomeKit conda-forge feedstock repo <https://github.com/conda-forge/genomekit-feedstock>`__
+by regro-cf-autotick-bot. Once that PR is merged, conda-forge's CI
+pipeline is kicked off and the new version of GenomeKit is built and published
+to conda-forge.

@@ -46,7 +46,12 @@ runs:
       id: save_mamba_gk_ccache
       uses: actions/cache@v4
       with:
-        key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**', 'genome_kit/**') }}
+        key: gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref || github.ref_name }}
+          gk-mamba-ccache-${{ runner.os }}-${{ runner.arch }}-
+          gk-mamba-ccache-${{ runner.os }}-
+          gk-mamba-ccache-
         path: |
           ~/.ccache
 

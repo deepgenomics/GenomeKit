@@ -14,11 +14,18 @@ runs:
       id: restore_mamba_cache
       uses: actions/cache/restore@v4
       with:
-        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml') }}
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
         path: |
           ~/micromamba
           ~/.condarc
           ~/bin/micromamba
+
+    - name: try to restore the gk package tarballs
+      id: restore_gk_pkg
+      uses: actions/cache/restore@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+        path: |
           ~/conda-bld
 
     - name: install mamba
@@ -62,7 +69,7 @@ runs:
         mkdir -p ~/.ccache
         set +x
 
-    - if: ${{ steps.restore_mamba_cache.outputs.cache-hit != 'true' }}
+    - if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       name: build conda package
       shell: bash -l -e {0}
       run: |
@@ -77,9 +84,16 @@ runs:
       id: save_mamba_cache
       uses: actions/cache/save@v4
       with:
-        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml') }}
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
         path: |
           ~/micromamba
           ~/.condarc
           ~/bin/micromamba
+
+    - name: cache gk package tarballs
+      id: save_gk_pkg
+      uses: actions/cache/save@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+        path: |
           ~/conda-bld

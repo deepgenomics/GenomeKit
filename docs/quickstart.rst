@@ -28,7 +28,7 @@ Initial Data Access
 
 Data, such as assemblies, annotations, tracks, etc, are stored in custom-built binary files.
 
-The files are required most commonly when creating :py:class:`~genome_kit.Genome` objects.
+These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
 APIs for building these files are provided as part of the API. A selection of pre-built
 data files is provided in a public Google Cloud Storage bucket, which is set as the default
 data source.

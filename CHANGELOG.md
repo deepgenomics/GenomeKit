@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.0.0](https://github.com/deepgenomics/GenomeKit/compare/v4.3.0...v5.0.0) (2024-04-04)
+
+
+### Features
+
+* use new dedicated requester-pays public bucket ([#33](https://github.com/deepgenomics/GenomeKit/issues/33)) ([e4fb7a1](https://github.com/deepgenomics/GenomeKit/commit/e4fb7a196e0201d653e7a563ca2150c393a0e749))
+
+
+### Miscellaneous Chores
+
+* release 5.0.0 ([#36](https://github.com/deepgenomics/GenomeKit/issues/36)) ([cc939ef](https://github.com/deepgenomics/GenomeKit/commit/cc939ef03a039703a0138d60d8ce1ed5709c8a26))
+
 ## [4.3.0](https://github.com/deepgenomics/GenomeKit/compare/v4.2.1...v4.3.0) (2024-03-27)
 
 

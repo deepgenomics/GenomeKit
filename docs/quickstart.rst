@@ -26,7 +26,7 @@ Basics
 Initial Data Access
 ~~~~~~~~~~~~~~~~~~~
 
-Data such as assemblies, annotations, tracks, etc is stored in custom-built binary files.
+Data, such as assemblies, annotations, tracks, etc, are stored in custom-built binary files.
 
 The files are required most commonly when creating :py:class:`~genome_kit.Genome` objects.
 APIs for building these files are provided as part of the API. A selection of pre-built

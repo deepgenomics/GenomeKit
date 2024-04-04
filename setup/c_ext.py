@@ -122,12 +122,6 @@ if toolset == "gcc":
             "-Wconditional-uninitialized",  # gcc does better here but enable for safety
             "-Wuninitialized",
             "-Wno-unknown-warning-option",
-            "-mtune=skylake",
-            # Rosetta 2 cannot translate AVX
-            # https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
-            "-mno-avx",
-            "-mno-avx2",
-            "-mno-avx512f",
         ]
 
         extra_link_args += [
@@ -136,12 +130,6 @@ if toolset == "gcc":
         define_macros += [
             # https://conda-forge.org/docs/maintainer/knowledge_base/#newer-c-features-with-old-sdk
             ("_LIBCPP_DISABLE_AVAILABILITY", None),
-        ]
-
-    else:
-        extra_compile_args += [
-            "-march=broadwell",
-            "-mtune=znver2",
         ]
 
     extra_compile_args += opt_args

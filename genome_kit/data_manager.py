@@ -51,8 +51,7 @@ class ProgressPercentage(object):  # pragma: no cover
     def __call__(self, bytes_amount):
         self.progress.update(bytes_amount)
 
-# TODO: replace the default once we know the public bucket name
-_GCS_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genomekit-data")
+_GCS_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genomekit-public-dg")
 
 def _hashfile(afile, hasher, blocksize=65536):
     """Memory efficient file hashing function.
@@ -186,7 +185,7 @@ class DefaultDataManager(DataManager):
     def bucket(self):
         if not hasattr(self, "_bucket"):
             gcloud_client = storage.Client()
-            self._bucket = gcloud_client.bucket(_GCS_BUCKET)
+            self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
 
         return self._bucket
 

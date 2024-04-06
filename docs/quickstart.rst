@@ -29,9 +29,14 @@ Initial Data Access
 Data, such as assemblies, annotations, tracks, etc, are stored in custom-built binary files.
 
 These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
-APIs for building these files are provided as part of the API. A selection of pre-built
-data files is provided in a public Google Cloud Storage bucket, which is set as the default
-data source.
+APIs for building these files are provided as part of the API.
+
+``starter/build.sh`` is a bash script that builds a few assemblies and annotations and places
+them in the local data directory, to get you started. It also serves as a good example of how
+to build your own data files.
+
+A larger selection of pre-built data files is provided in a public Google Cloud Storage bucket,
+which is set as the default data source.
 
 The bucket is configured with `"requester pays" <https://cloud.google.com/storage/docs/requester-pays>`__
 enabled, so you will need to `set up your GCloud credentials <https://cloud.google.com/sdk/docs/authorizing>`__

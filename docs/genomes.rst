@@ -11,6 +11,8 @@ must be specified in GENCODE/Ensembl/NCBI GFF3 formats.
 Examples
 --------
 
+``starter/build.sh`` is a bash script that builds a few assemblies and annotations to get you started.
+
 Assemblies
 ^^^^^^^^^^
 

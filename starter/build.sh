@@ -11,7 +11,9 @@ DATA_DIR=$(python -c 'import appdirs; import os; print(os.environ.get("GENOMEKIT
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.2bit
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.chrom.sizes
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.chromAlias.txt
-# chrUn_KI270752v1 missing from some hg38 chromAlias.txt data sources
+# chrUn_KI270752v1 missing from some hg38 chromAlias.txt data sources.
+# It was dropped from the RefSeq release due to being derived likely from the human-hamster CHO cell line.
+# See https://groups.google.com/a/soe.ucsc.edu/g/genome/c/oXgnoLwXn1g/m/zLV4Wgb2AgAJ for more details.
 if ! grep -q "chrUn_KI270752v1" hg38.p12.chromAlias.txt; then
     echo "chrUn_KI270752v1	HSCHRUN_RANDOM_CTG29	KI270752.1	NT_187507.1" >> hg38.p12.chromAlias.txt
 fi

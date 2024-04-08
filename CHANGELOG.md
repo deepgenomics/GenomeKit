@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.0.1](https://github.com/deepgenomics/GenomeKit/compare/v5.0.0...v5.0.1) (2024-04-08)
+
+
+### Bug Fixes
+
+* allow local-only files to be loaded ([#38](https://github.com/deepgenomics/GenomeKit/issues/38)) ([a56a5dc](https://github.com/deepgenomics/GenomeKit/commit/a56a5dc690d507a04b429956b5b3fb96e64839d8)), closes [#37](https://github.com/deepgenomics/GenomeKit/issues/37)
+
+
+### Documentation
+
+* provide a data starter script ([#39](https://github.com/deepgenomics/GenomeKit/issues/39)) ([a257da1](https://github.com/deepgenomics/GenomeKit/commit/a257da1954e750209a0df9848b5d998901dc3d7f))
+
 ## [5.0.0](https://github.com/deepgenomics/GenomeKit/compare/v4.3.0...v5.0.0) (2024-04-04)
 
 

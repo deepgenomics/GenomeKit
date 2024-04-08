@@ -13,8 +13,6 @@ import tempfile
 from contextlib import suppress
 from pathlib import Path
 
-from twobitreader import TwoBitFile
-
 from . import (
     Genome,
     GenomeAnnotation,
@@ -170,6 +168,11 @@ def build_test_2bit_file(name, refg, regions):
     then the new 2bit file will contain a single chromosome named
     'chr5' containing 1000nt of sequence.
     """
+    try:
+        from twobitreader import TwoBitFile
+    except ImportError:
+        raise ImportError("To build test data files, follow the dev setup instructions to set up a dedicated environment")
+
 
     # Source 2bit file to excerpt
     infile = {  # not testing patch contigs yet, use standard assembly for convenience

@@ -17,7 +17,7 @@ available from https://anaconda.org/conda-forge/genomekit.
 
 You can install GenomeKit with::
 
-    mamba install genomekit
+    conda install -c conda-forge genomekit
 
 
 Basics

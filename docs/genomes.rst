@@ -29,10 +29,10 @@ Assemblies
 
    #. .. code-block:: Bash
 
-        mamba create -n ucsc-tools ucsc-fatotwobit ucsc-twobitinfo
+        conda create -n ucsc-tools ucsc-fatotwobit ucsc-twobitinfo
    #. .. code-block:: Bash
 
-        mamba activate ucsc-tools
+        conda activate ucsc-tools
 
    #. follow the instructions at https://genome.ucsc.edu/goldenPath/help/twoBit.html
    #. optionally create an `chromAlias.txt` with any contig aliases required.

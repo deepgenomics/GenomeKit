@@ -16,16 +16,16 @@ Clone the source tree::
 From the ``GenomeKit`` directory, install the provided conda environment which
 contains all dependencies::
 
-    mamba env create -f genomekit_dev.yml
-    mamba activate genomekit_dev
+    conda env create -f genomekit_dev.yml
+    conda activate genomekit_dev
 
 On Windows, you'll need to comment out the mac/linux only test dependencies from genomekit_dev.yml.
 
 On M1 macs, you might need to set up the environment differently::
 
-    mamba create -n cxx cxx-compiler zlib fmt
-    mamba activate cxx
-    mamba install -c conda-forge -c bioconda --file a-file-with-the-deps-from-genomekit_dev-yml.txt
+    conda create -n cxx cxx-compiler zlib fmt
+    conda activate cxx
+    conda install -c conda-forge -c bioconda --file a-file-with-the-deps-from-genomekit_dev-yml.txt
 
 Build the package in development mode::
 
@@ -65,7 +65,7 @@ Making changes
 
 If the C/C++ code changed, you must re-run the ``develop`` command::
 
-    python setup.py develop
+    pip install -e .
 
 This includes switching branches, merging changes, or editing the C/C++ code
 yourself. *Forgetting this step may lead to unpredictable behaviour.*
@@ -161,7 +161,7 @@ Test data files reside in the source tree under ``tests/data``.
 To build them, you must have registered your source tree in
 develop mode::
 
-    python setup.py develop
+    pip install -e .
 
 Now that your source tree is the default `genome_kit` import,
 the ``build`` subcommand will be able to find

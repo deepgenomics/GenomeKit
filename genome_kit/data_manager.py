@@ -190,16 +190,14 @@ class DefaultDataManager(DataManager):
         return self._bucket
 
     def get_file(self, filename: str) -> str:
+        local_path = Path(self.data_dir, filename)
+
+        if local_path.exists():
+            return str(local_path)
+
         blob = self.bucket.blob(filename)
         if not blob.exists():
             raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
-        local_path = Path(self.data_dir, filename)
-
-        blob.reload()
-
-        if local_path.exists():
-            if _remote_equal(blob, local_path):
-                return str(local_path)
 
         # form a temporary filename to make the download safe
         temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")

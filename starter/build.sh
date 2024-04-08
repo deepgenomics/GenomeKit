@@ -33,23 +33,36 @@ rm v109.gff3.gz
 
 mv ./* "${DATA_DIR}"
 
-# macFas5
-# To use: genome_kit.Genome("macFas5")
-wget https://hgdownload.soe.ucsc.edu/goldenPath/macFas5/bigZips/macFas5.2bit
-wget https://hgdownload.soe.ucsc.edu/goldenPath/macFas5/bigZips/macFas5.chrom.sizes
-wget https://hgdownload.soe.ucsc.edu/goldenPath/macFas5/bigZips/macFas5.chromAlias.txt
+# Mus musculus (house mouse) mm39
+# To use: genome_kit.Genome("mm39")
+wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.2bit
+wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.chrom.sizes
+wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.chromAlias.txt
 mv ./* "${DATA_DIR}"
 
-## Ensembl 0.95
-## To use: genome_kit.Genome("ensembl.Macfas_5.0.95")
-wget -O Macfas_5.0.95.gff3.gz ftp://ftp.ensembl.org/pub/release-95/gff3/macaca_fascicularis/Macaca_fascicularis.Macaca_fascicularis_5.0.95.gff3.gz
-python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("Macfas_5.0.95.gff3.gz", "ensembl.Macfas_5.0.95", gk.Genome("macFas5"))'
-rm Macfas_5.0.95.gff3.gz
+## Gencode vM31
+## To use: genome_kit.Genome("gencode.VM31")
+wget -O vM31.gff3.gz ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M31/gencode.vM31.annotation.gff3.gz
+python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("vM31.gff3.gz", "gencode.vM31", gk.Genome("mm39"))'
+rm vM31.gff3.gz
 
-## NCBI RefSeq v101
-## To use: genome_kit.Genome("ncbi_refseq.Macfas_5.0.v101")
-wget -O Macfas_5.0.v101.gff3.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Macaca_fascicularis/annotation_releases/101/GCF_000364345.1_Macaca_fascicularis_5.0/GCF_000364345.1_Macaca_fascicularis_5.0_genomic.gff.gz
-python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_ncbi_refseq("Macfas_5.0.v101.gff3.gz", "ncbi_refseq.Macfas_5.0.v101", gk.Genome("macFas5"))'
-rm Macfas_5.0.v101.gff3.gz
+## NCBI m39.v109
+## To use: genome_kit.Genome("ncbi_refseq.m39.v109")
+wget -O m39.v109.gff3.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Mus_musculus/annotation_releases/109/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.gff.gz
+python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_ncbi_refseq("m39.v109.gff3.gz", "ncbi_refseq.m39.v109", gk.Genome("mm39"))'
+rm m39.v109.gff3.gz
+
+mv ./* "${DATA_DIR}"
+
+# Rattus norvegicus (Norway rat) rn6
+# To use: genome_kit.Genome("rn6")
+wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.2bit
+wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.chrom.sizes
+wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.chromAlias.txt
+
+## Ensembl Rnor_6.0.88
+## To use: genome_kit.Genome("Rnor_6.0.88")
+wget -O Rnor_6.0.88.gff3.gz ftp://ftp.ensembl.org/pub/release-88/gff3/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.88.gff3.gz
+python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("Rnor_6.0.88.gff3.gz", "Rnor_6.0.88", gk.Genome("rn6"))'
 
 mv ./* "${DATA_DIR}"

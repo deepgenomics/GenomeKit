@@ -33,14 +33,27 @@ APIs for building these files are provided as part of the API.
 
 ``starter/build.sh`` is a bash script that builds a few assemblies and annotations and places
 them in the local data directory, to get you started. It also serves as a good example of how
-to build your own data files.
+to build your own data files::
+
+    conda activate env-with-genomekit
+    curl -O starter_build.sh https://raw.githubusercontent.com/deepgenomics/GenomeKit/main/starter/build.sh
+    chmod +x starter_build.sh
+    ./starter_build.sh
 
 A larger selection of pre-built data files is provided in a public Google Cloud Storage bucket,
 which is set as the default data source.
 
 The bucket is configured with `"requester pays" <https://cloud.google.com/storage/docs/requester-pays>`__
-enabled, so you will need to `set up your GCloud credentials <https://cloud.google.com/sdk/docs/authorizing>`__
-beforehand and set the ``GENOMEKIT_GCS_BILLING_PROJECT`` env var to your Google Cloud project.
+enabled, so you will need to
+
+- `install gcloud <https://cloud.google.com/sdk/docs/install>`__
+- set up your `gcloud credentials <https://cloud.google.com/sdk/docs/authorizing>`__::
+
+    gcloud auth application-default login
+
+- set the ``GENOMEKIT_GCS_BILLING_PROJECT`` env var to your Google Cloud project::
+
+    export GENOMEKIT_GCS_BILLING_PROJECT="your-project-id"
 
 For more details on creating your own data source, see `the section on Sharing data files <sharing data>`_.
 

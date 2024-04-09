@@ -45,3 +45,17 @@ You can install GenomeKit with
 ## Full Documentation (including developer instructions)
 
 https://deepgenomics.github.io/GenomeKit
+
+## Acknowledgements
+
+We would like to express our gratitude to the following individuals who have contributed to the development of GenomeKit:
+
+    Andrew Delong ([@andrewdelong](https://github.com/andrewdelong))
+    Khalid Zuberi ([@kzuberi](https://github.com/kzuberi))
+    Ao Bo Cui ([@albscui](https://github.com/albscui))
+    Tasso Karkanis ([@TassoKarkanis](https://github.com/TassoKarkanis))
+    Troy Simpson ([@mrtron](https://github.com/mrtron))
+
+Special thanks to the original author, Andrew Delong, for laying the foundation of this project.
+
+We appreciate the efforts and contributions of all past contributors, whose work has been invaluable to the growth and improvement of GenomeKit.

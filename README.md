@@ -53,7 +53,7 @@ We would like to express our gratitude to the following individuals who have con
     Steve Chan ([@s22chan](https://github.com/andrewdelong))
     Andrew Delong ([@andrewdelong](https://github.com/andrewdelong))
     Khalid Zuberi ([@kzuberi](https://github.com/kzuberi))
-    Ao Bo Cui ([@albscui](https://github.com/albscui))
+    Albert Cui ([@albscui](https://github.com/albscui))
     Tasso Karkanis ([@TassoKarkanis](https://github.com/TassoKarkanis))
     Troy Simpson ([@mrtron](https://github.com/mrtron))
 

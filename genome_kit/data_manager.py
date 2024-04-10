@@ -4,6 +4,7 @@ import base64
 import hashlib
 import logging
 import os
+import sys
 import tempfile
 from abc import ABC
 from contextlib import contextmanager
@@ -206,7 +207,7 @@ class DefaultDataManager(DataManager):
                 raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
         except Exception as e:
             # give the user a hint in case of permission errors
-            print(e)
+            print(e, file=sys.stderr)
             raise
 
         # form a temporary filename to make the download safe

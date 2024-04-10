@@ -50,12 +50,14 @@ https://deepgenomics.github.io/GenomeKit
 
 We would like to express our gratitude to the following individuals who have contributed to the development of GenomeKit:
 
+    Steve Chan ([@s22chan](https://github.com/andrewdelong))
     Andrew Delong ([@andrewdelong](https://github.com/andrewdelong))
     Khalid Zuberi ([@kzuberi](https://github.com/kzuberi))
     Ao Bo Cui ([@albscui](https://github.com/albscui))
     Tasso Karkanis ([@TassoKarkanis](https://github.com/TassoKarkanis))
     Troy Simpson ([@mrtron](https://github.com/mrtron))
 
-Special thanks to the original author, Andrew Delong, for laying the foundation of this project.
+Special thanks to the original author, Andrew Delong, for laying the foundation of this project,
+and to Steve Chan for his continued support and contributions.
 
 We appreciate the efforts and contributions of all past contributors, whose work has been invaluable to the growth and improvement of GenomeKit.

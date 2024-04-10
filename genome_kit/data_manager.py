@@ -185,7 +185,12 @@ class DefaultDataManager(DataManager):
     def bucket(self):
         if not hasattr(self, "_bucket"):
             gcloud_client = storage.Client()
-            self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+            try:
+                self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+            except Exception as e:
+                # give the user a hint in case of permission errors
+                print(e)
+                raise
 
         return self._bucket
 
@@ -195,9 +200,14 @@ class DefaultDataManager(DataManager):
         if local_path.exists():
             return str(local_path)
 
-        blob = self.bucket.blob(filename)
-        if not blob.exists():
-            raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
+        try:
+            blob = self.bucket.blob(filename)
+            if not blob.exists():
+                raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
+        except Exception as e:
+            # give the user a hint in case of permission errors
+            print(e)
+            raise
 
         # form a temporary filename to make the download safe
         temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")

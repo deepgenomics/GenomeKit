@@ -189,7 +189,7 @@ class DefaultDataManager(DataManager):
                 self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
             except Exception as e:
                 # give the user a hint in case of permission errors
-                print(e)
+                print(e, file=sys.stderr)
                 raise
 
         return self._bucket

@@ -56,6 +56,7 @@ We would like to express our gratitude to the following individuals who have con
     Khalid Zuberi ([@kzuberi](https://github.com/kzuberi))
     Albert Cui ([@albscui](https://github.com/albscui))
     Aaron Uhr ([@jwuhr123](https://github.com/jwuhr123))
+    Peiqi (Mark) Wang ([@tt6746690](https://github.com/tt6746690))
     Tasso Karkanis ([@TassoKarkanis](https://github.com/TassoKarkanis))
     Troy Simpson ([@mrtron](https://github.com/mrtron))
 

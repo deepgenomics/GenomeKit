@@ -1011,12 +1011,12 @@ void vcf_table::builder::build(const char* outfile)
 
 bool vcf_table::builder::ancentral_handler::notify(long long line_number)
 {
-	if (action == action_t::error)
+	if (_action == action_t::error)
 		GK_THROW(value, "Ancestral allele found: remove or build with warn/exclude.");
-	if (action == action_t::exclude)
+	if (_action == action_t::exclude)
 		return false;
 
-	GK_ASSERT(action == action_t::warn);
+	GK_ASSERT(_action == action_t::warn);
 	_lines.push_back(line_number);
 	return true;
 }

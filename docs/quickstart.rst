@@ -54,6 +54,8 @@ enabled, so you will need to
 - set the ``GENOMEKIT_GCS_BILLING_PROJECT`` env var to your Google Cloud project::
 
     export GENOMEKIT_GCS_BILLING_PROJECT="your-project-id"
+    # required depending on your local gcloud configuration
+    export GOOGLE_CLOUD_PROJECT="your-project-id"
 
 For more details on creating your own data source, see `the section on Sharing data files <sharing data>`_.
 

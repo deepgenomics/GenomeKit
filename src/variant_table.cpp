@@ -26,8 +26,8 @@ bool contains_if(const T& container, P pred)
 
 BEGIN_NAMESPACE_GK
 
-const unsigned short c_vcfbin_sig = 0xc0ed;
-const unsigned short c_vcfbin_ver = 0x0005;
+constexpr uint16_t c_vcfbin_sig = 0xc0ed;
+constexpr uint16_t c_vcfbin_ver = 0x0005;
 // versions:
 //   0001: initial format
 //   0002: remove extra variants_size field
@@ -992,17 +992,17 @@ void vcf_table::builder::build(const char* outfile)
 	// support easier migration of old vcfbin files
 	out.write_until_align(4);
 
-	out.write((int)_info_values.size());
+	out.write((int32_t)_info_values.size());
 	for (auto& info_value : _info_values) info_value.dump(out);
 
 	// Write FORMAT data as separate columns
-	out.write((int)_sample_names.size());
-	out.write((int)_fmt_values.size());
+	out.write((int32_t)_sample_names.size());
+	out.write((int32_t)_fmt_values.size());
 	for (auto& fmt_value : _fmt_values) fmt_value.dump(out);
 
 	if (!_sample_names.empty()) {
-		auto total_len = int_cast<int>(accumulate(cbegin(_sample_names), cend(_sample_names), (size_t)0,
-												  [](auto x, const auto& y) { return x + y.size() + 1; }));
+		auto total_len = int_cast<int32_t>(accumulate(cbegin(_sample_names), cend(_sample_names), (size_t)0,
+													  [](auto x, const auto& y) { return x + y.size() + 1; }));
 		out.write(total_len);
 		for (const auto& name : _sample_names) out.write(name.c_str(), name.size() + 1);
 	}
@@ -1034,8 +1034,8 @@ void vcf_table::builder::ancentral_handler::log() const {
 vcf_table::vcf_table(mmap_file&& mapped)
 	: _fmap(std::move(mapped))
 {
-	auto sig = _fmap.read<unsigned short>();
-	auto ver = _fmap.read<unsigned short>();
+	auto sig = _fmap.read<uint16_t>();
+	auto ver = _fmap.read<uint16_t>();
 	GK_CHECK(sig == c_vcfbin_sig, file,
 			 "Expected vcfbin file signature {:x} but found {:x}; not a valid vcfbin file?", c_vcfbin_sig,
 			 sig);
@@ -1051,11 +1051,11 @@ vcf_table::vcf_table(mmap_file&& mapped)
 	_info_entries.load(_fmap);
 
 	// Read FORMAT data, sorted by ID string.
-	_num_samples = _fmap.read<int>();
+	_num_samples = _fmap.read<int32_t>();
 	_fmt_entries.load(_fmap);
 
 	if (_num_samples > 0) {
-		_fmap.move_seek(sizeof(int)); // num bytes following
+		_fmap.move_seek(sizeof(int32_t));  // num bytes following
 		_sample_names = _fmap.curr_ptr<char>();
 	}
 }

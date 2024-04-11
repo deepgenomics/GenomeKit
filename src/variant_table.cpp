@@ -739,16 +739,9 @@ bool vcf_table::builder::parse_variant(const vector<string_view>& cols)
 
 	if (alts == ".") {
 		// missing alt means no alternative allele (no variant)
-		switch (_ancestral) {
-		case action::error:
-			GK_THROW(value, "Ancestral allele found: remove or build with warn/exclude.");
-			break;
-		case action::warn:
-			ancestral_lines.push_back(_infile.line_num());
-			alts = ref;
-			break;
-		case action::exclude: return false;
-		}
+		if (!_ancenstral_handler.notify(_infile.line_num()))
+			return false;
+		alts = ref;
 	}
 
 	pos_t start = as_pos(cols[vcf_col_pos]) - 1;
@@ -977,11 +970,7 @@ void vcf_table::builder::build(const char* outfile)
 		GK_RETHROW("In VCF file: {}:{}", _infile_name, _infile.line_num());
 	}
 
-	if (!std::empty(ancestral_lines)) {
-		print("Ancestral allele found on lines: ");
-		for (auto line : ancestral_lines) { print("{}, ", line); }
-		print("\n");
-	}
+	_ancenstral_handler.log();
 
 	// Sort the INFO/FORMAT columns by ID string.
 	auto less_id = [](const auto& lhs, const auto& rhs) { return lhs.id < rhs.id; };
@@ -1018,6 +1007,27 @@ void vcf_table::builder::build(const char* outfile)
 	}
 
 	out.close();
+}
+
+bool vcf_table::builder::ancentral_handler::notify(long long line_number)
+{
+	if (_action == action_t::error)
+		GK_THROW(value, "Ancestral allele found: remove or build with warn/exclude.");
+	if (_action == action_t::exclude)
+		return false;
+
+	GK_ASSERT(_action == action_t::warn);
+	_lines.push_back(line_number);
+	return true;
+}
+
+void vcf_table::builder::ancentral_handler::log() const {
+	if (std::empty(_lines))
+		return;
+
+	print("Ancestral allele found on lines: ");
+	for (auto line : _lines) { print("{}, ", line); }
+	print("\n");
 }
 
 vcf_table::vcf_table(mmap_file&& mapped)

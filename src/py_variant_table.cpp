@@ -486,7 +486,7 @@ static PyObject* PyVCFTable_build_vcfbin(PyObject* cls, PyObject* args, PyObject
 		const auto stop                 = cend(actions);
 		const auto found                = find(start, stop, ancestral);
 		GK_CHECK(found != stop, value, "ancestral must be in [\"error\", \"warn\", \"exclude\"]");
-		builder.ancestral(vcf_table::builder::action(distance(start, found)));
+		builder.ancestral(vcf_table::builder::action_t(distance(start, found)));
 	}
 
 	// Build the file and return.

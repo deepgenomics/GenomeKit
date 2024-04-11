@@ -1021,7 +1021,7 @@ void vcf_table::builder::build(const char* outfile)
 }
 
 vcf_table::vcf_table(mmap_file&& mapped)
-	: _fmap(move(mapped))
+	: _fmap(std::move(mapped))
 {
 	auto sig = _fmap.read<unsigned short>();
 	auto ver = _fmap.read<unsigned short>();

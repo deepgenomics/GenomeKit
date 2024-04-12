@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.genome_annotation &mdash; GenomeKit 4.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                4.2.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.genome_annotation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.genome_annotation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span><span class="p">,</span> <span class="n">mock_unreachable</span><span class="p">,</span> <span class="n">strip_mock_bases</span>
+<span class="kn">from</span> <span class="nn">.interval</span> <span class="kn">import</span> <span class="n">Interval</span>
+
+
+<span class="c1">#########################################################################</span>
+
+
+<div class="viewcode-block" id="Gene"><a class="viewcode-back" href="../../api.html#genome_kit.Gene">[docs]</a><span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Gene</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Gene</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated gene.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Gene.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Gene.__init__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this gene.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Gene` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this gene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ID of this gene.</span>
+
+<span class="sd">        Returns either an Ensembl ID (for GENCODE) or a Entrez ID (for RefSeq)</span>
+<span class="sd">        depending on which annotation is being represented.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The ID of this transcript, e.g. &quot;ENSG00000115275.11&quot; or &quot;7841&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of this gene.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The name of this gene, e.g. &quot;BRCA1&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The type of this gene.</span>
+
+<span class="sd">        This represents the `gene_type` field in most GFF3 annotations.</span>
+
+<span class="sd">        For GENCODE/Ensembl/NCBI RefSeq, the result can be any standard `GENCODE biotype</span>
+<span class="sd">        &lt;https://www.gencodegenes.org/gencode_biotypes.html&gt;`_</span>
+
+<span class="sd">        For UCSC RefSeq, the result is &quot;protein_coding&quot; if any transcript is</span>
+<span class="sd">        protein coding, and otherwise &quot;non_coding&quot;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The type of this gene, e.g. &quot;protein_coding&quot; or &quot;non_coding&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The evidence level of this gene.</span>
+
+<span class="sd">        This represents the `level` field in most GFF3 annotations,</span>
+<span class="sd">        either 1, 2, or 3.</span>
+
+<span class="sd">        Available for `gencode` and `ensembl` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int` | :py:data:`None`</span>
+<span class="sd">            The evidence level of this gene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The transcripts for this gene.</span>
+
+<span class="sd">        A shorthand property `trans` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            A copy of the list of annotated transcripts for this gene.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">index</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Gene.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Gene.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Gene </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="GeneTable"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">GeneTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GeneTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="GeneTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="GeneTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [gene for gene in genes if gene.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            All genes that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GeneTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a gene by index or ID string.</span>
+
+<span class="sd">        If `index` is a string the gene with matching ``id`` is returned (by linear search)::</span>
+
+<span class="sd">            gene = genes[&#39;ENSG00000115275&#39;]  # MOGS gene</span>
+
+<span class="sd">        If the ID string has a version suffix (``&#39;ENSG00000115275.11&#39;``) then the match must be exact.</span>
+
+<span class="sd">        One can also iterate over all genes::</span>
+
+<span class="sd">            for gene in genes:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int` | :py:class:`str`</span>
+<span class="sd">            The integer index or ID string of the requested gene.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Gene`</span>
+<span class="sd">           The gene object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Gene</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GeneTable.first_by_name"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.first_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">first_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Gene</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            The first gene with the specified name or None if none matched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">gene</span> <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">gene</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GeneTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GeneTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Transcript"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript">[docs]</a><span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Transcript</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Tran</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated transcript.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Transcript.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__init__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this transcript.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Transcript` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ID of this transcript.</span>
+
+<span class="sd">        Returns either an Ensembl ID or a RefSeq ID depending on which</span>
+<span class="sd">        annotation is being represented.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The ID of this transcript, e.g. &quot;ENST00000233616.8&quot; or &quot;NM_006302&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tsl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The support level of this transcript.</span>
+
+<span class="sd">        * tsl1: all splice junctions supported by at least one non-suspect mRNA</span>
+<span class="sd">        * tsl2: best supporting mRNA is flagged as suspect or support from multiple ESTs</span>
+<span class="sd">        * tsl3: only support is from a single EST</span>
+<span class="sd">        * tsl4: best supporting EST is flagged as suspect</span>
+<span class="sd">        * tsl5: no single transcript supports the model structure</span>
+
+<span class="sd">        See `Ensemble transcript support level &lt;http://www.ensembl.org/Help/Glossary?id=492&gt;`_.</span>
+
+<span class="sd">        Available for `gencode` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int` | :py:data:`None`</span>
+<span class="sd">            The support level of this transcript, where values 1..5 and 6 correspond to</span>
+<span class="sd">            GENCODE identifiers [tsl1, tsl2, tsl3, tsl4, tsl5, tslNA]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The type of this transcript.</span>
+
+<span class="sd">        This represents the `transcript_type` field in most GFF3 annotations,</span>
+<span class="sd">        which may differ from the parent gene&#39;s `type`.</span>
+
+<span class="sd">        For GENCODE/Ensembl/NCBI RefSeq, the result can be any standard `GENCODE biotype</span>
+<span class="sd">        &lt;https://www.gencodegenes.org/gencode_biotypes.html&gt;`_</span>
+
+<span class="sd">        For UCSC RefSeq, the result is either &quot;protein_coding&quot; or &quot;non_coding&quot;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The type of this transcript, e.g. &quot;protein_coding&quot; or &quot;non_coding&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The evidence level of this transcript.</span>
+
+<span class="sd">        This represents the `level` field in most GFF3 annotations,</span>
+<span class="sd">        either 1, 2, or 3.</span>
+
+<span class="sd">        Available for `gencode` and `ensembl` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int` | :py:data:`None`</span>
+<span class="sd">            The evidence level of this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ccds_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The CCDSID of this transcript&#39;s coding sequence, if applicable.</span>
+
+<span class="sd">        Available for `gencode` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str` | :py:data:`None`</span>
+<span class="sd">            The CCDSID of this transcript, e.g. &quot;CCDS53759.1&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">protein_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The protein ID of this transcript, if applicable.</span>
+
+<span class="sd">        Available for `gencode`, `ensembl`, `ucsc_refseq`, and `ncbi_refseq`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str` | :py:data:`None`</span>
+<span class="sd">            The protein ID of this transcript, e.g. &quot;ENSP00000233616.4&quot; or &quot;NP_006293&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">product</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A description of the transcript&#39;s product.</span>
+
+<span class="sd">        Available for `ucsc_refseq` and `ncbi_refseq` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str` | :py:data:`None`</span>
+<span class="sd">            The product of this transcript, e.g. &quot;breast cancer type 1 susceptibility protein isoform 2&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent gene of this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Gene`</span>
+<span class="sd">            The parent gene for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Gene</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The exons for this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            A copy of the list of annotated exons for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">introns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The introns for this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            A copy of the list of annotated introns for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cdss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The coding sequences (CDSs) for this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            A copy of the list of annotated coding sequences for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr5s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The UTR5 segments for this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Utr`</span>
+<span class="sd">            A copy of the list of annotated UTR5 segments for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Utr</span><span class="p">()]</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr3s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The UTR3 segments for this transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Utr`</span>
+<span class="sd">            A copy of the list of annotated UTR3 segments for this transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Utr</span><span class="p">()]</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">transcripts</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">transcripts</span><span class="p">,</span> <span class="n">index</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Transcript.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Transcript </span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TranscriptTable"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">TranscriptTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">TranTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [tran for tran in transcripts if tran.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            All transcripts that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TranscriptTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a transcript by index or ID string.</span>
+
+<span class="sd">        If `index` is a string the transcript with matching ``id`` is returned (by linear search)::</span>
+
+<span class="sd">            tran = transcripts[&#39;ENST00000233616&#39;]  # MOGS transcript</span>
+
+<span class="sd">        If the ID string has a version suffix (``&#39;ENST00000233616.8&#39;``) then the match must be exact.</span>
+
+<span class="sd">        One can also iterate over all transcripts::</span>
+
+<span class="sd">            for tran in transcripts:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int` | :py:class:`str`</span>
+<span class="sd">            The integer index or ID string of the requested transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">           The transcript object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Transcript</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TranscriptTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;TranscriptTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Exon"><a class="viewcode-back" href="../../api.html#genome_kit.Exon">[docs]</a><span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Exon</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Exon</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated exon.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+
+<span class="sd">    Each `Exon` object is equal only to itself. To build a set of unique exonic</span>
+<span class="sd">    intervals, use the :py:attr:`~genome_kit.Exon.interval` attribute::</span>
+
+<span class="sd">        &gt;&gt;&gt; from genome_kit import Genome</span>
+<span class="sd">        &gt;&gt;&gt; genome = Genome(&#39;gencode.v19&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; exonic_intervals = set([exon.interval for exon in genome.exons])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Exon.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Exon.__init__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this exon.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Exon` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this exon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The ID of this exon.</span>
+
+<span class="sd">        Available for `gencode` and `ensembl` only.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str` | :py:data:`None`</span>
+<span class="sd">            The ID of this exon, e.g. &quot;ENSE00000846737.3&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The index of this exon within the transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The index of the exon number within the parent transcript (0-based).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent transcript of this exon.</span>
+
+<span class="sd">        A shorthand property `tran` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            The parent transcript of this exon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Gene</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The CDS on this exon, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Cds` | :py:data:`None`</span>
+<span class="sd">            The CDS contained within this exon, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Cds</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr5</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The UTR5 on this exon, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr5` | :py:data:`None`</span>
+<span class="sd">            The UTR5 contained within this exon, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Utr</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The UTR3 on this exon, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr3` | :py:data:`None`</span>
+<span class="sd">            The UTR3 contained within this exon, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Utr</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The next exon in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon` | :py:data:`None`</span>
+<span class="sd">            The next annotated exon on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The previous exon in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon` | :py:data:`None`</span>
+<span class="sd">            The previous annotated exon on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_intron</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the previous intron in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Intron` | :py:data:`None`</span>
+<span class="sd">            The previous annotated intron on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_intron</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the next intron in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Intron` | :py:data:`None`</span>
+<span class="sd">            The next annotated intron on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="p">,</span> <span class="n">index</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Exon.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Exon.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Exon </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ExonTable"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">ExonTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">ExonTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="ExonTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="ExonTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [exon for exon in exons if exon.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            All exons that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ExonTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup an exon by index.</span>
+
+<span class="sd">        Allows iteration over all exons::</span>
+
+<span class="sd">            for exon in exons:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested exon.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon`</span>
+<span class="sd">           The exon object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExonTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;ExonTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Intron"><a class="viewcode-back" href="../../api.html#genome_kit.Intron">[docs]</a><span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Intron</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Intr</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated intron.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+
+<span class="sd">    Each `Intron` object is equal only to itself. To build a set of unique intronic</span>
+<span class="sd">    intervals, use the :py:attr:`~genome_kit.Intron.interval` attribute::</span>
+
+<span class="sd">        &gt;&gt;&gt; from genome_kit import Genome</span>
+<span class="sd">        &gt;&gt;&gt; genome = Genome(&#39;gencode.v19&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; intronic_intervals = set([intron.interval for intron in genome.introns])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Intron.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Intron.__init__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this intron.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Intron` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this intron.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The index of the intron within the transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The index of the intron within the parent transcript (0-based).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent transcript of this intron.</span>
+
+<span class="sd">        A shorthand property `tran` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            The parent transcript of this intron.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Transcript</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_intron</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The next intron in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Intron` | :py:data:`None`</span>
+<span class="sd">            The next annotated intron on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_intron</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The previous intron in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Intron` | :py:data:`None`</span>
+<span class="sd">            The previous annotated intron on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the previous exon in the transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            The previous annotated exon on the parent transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the next exon in the transcript.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            The next annotated exon on the parent transcript.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">introns</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">introns</span><span class="p">,</span> <span class="n">index</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Intron.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Intron.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Intron </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">introns</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="IntronTable"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">IntronTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">IntrTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="IntronTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="IntronTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [intr for intr in introns if intr.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Intron`</span>
+<span class="sd">            All introns that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IntronTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup an intron by index.</span>
+
+<span class="sd">        Allows iteration over all introns::</span>
+
+<span class="sd">            for intron in introns:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested intron.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Intron`</span>
+<span class="sd">           The intron object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="IntronTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;IntronTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Cds"><a class="viewcode-back" href="../../api.html#genome_kit.Cds">[docs]</a><span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Cds</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Cds</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated coding sequence (CDS) element within an exon.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Cds.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Cds.__init__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this CDS.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Cds` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this CDS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">phase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The phase of this CDS&#39;s start position.</span>
+
+<span class="sd">        The `phase` is the number of bases that should be trimmed from the 5&#39; end of the</span>
+<span class="sd">        CDS element to reach the start of next codon:</span>
+
+<span class="sd">        - phase 0 means the 5p end is in-frame</span>
+<span class="sd">        - phase 1 means the 5p end is 1 bp away from being in-frame.</span>
+<span class="sd">        - phase 2 means the 5p end is 2 bp away from being in-frame.</span>
+
+<span class="sd">        See the `GFF3 documentation &lt;http://gmod.org/wiki/GFF3&gt;` for a precise explanation.</span>
+
+<span class="sd">        The `frame` attribute in UCSC RefSeq is not available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The phase this CDS, either 0, 1, or 2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent exon of this CDS.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            The parent exon of this CDS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent transcript of this CDS.</span>
+
+<span class="sd">        A shorthand property `tran` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            The parent transcript of this CDS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Transcript</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_cds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The next CDS in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Cds` | :py:data:`None`</span>
+<span class="sd">            The next annotated CDS on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Cds</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_cds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The previous CDS in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Cds` | :py:data:`None`</span>
+<span class="sd">            The previous annotated CDS on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Cds</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">cdss</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+            <span class="n">genome</span><span class="o">.</span><span class="n">cdss</span><span class="p">,</span> <span class="n">index</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Cds.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Cds.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Cds in Exon </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exon</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CdsTable"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">CdsTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">CdsTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="CdsTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="CdsTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [cds for cds in cdss if cds.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Cds`</span>
+<span class="sd">            All coding sequences (CDSs) that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CdsTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a coding sequence element by index.</span>
+
+<span class="sd">        Allows iteration over all coding sequences::</span>
+
+<span class="sd">            for cds in cdss:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested CDS.</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Cds`</span>
+<span class="sd">           The CDS identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Cds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CdsTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;CdsTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Utr</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Utr</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated UTR element within an exon.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this UTR segment.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Utr` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this UTR segment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent exon of this UTR segment.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Exon`</span>
+<span class="sd">            The parent exon of this UTR segment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcript</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The parent transcript of this UTR segment.</span>
+
+<span class="sd">        A shorthand property `tran` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            The parent transcript of this UTR segment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Transcript</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_utr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The next UTR in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr` | :py:data:`None`</span>
+<span class="sd">            The next annotated UTR segment on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Utr</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">prev_utr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The previous UTR in the transcript, if any.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr` | :py:data:`None`</span>
+<span class="sd">            The previous annotated UTR segment on the parent transcript, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Utr</span><span class="p">)</span>
+
+    <span class="n">_FIVE_PRIME</span> <span class="o">=</span> <span class="s2">&quot;5&quot;</span>
+    <span class="n">_THREE_PRIME</span> <span class="o">=</span> <span class="s2">&quot;3&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_genome</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">utr5s</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">Utr</span><span class="o">.</span><span class="n">_FIVE_PRIME</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="n">genome</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">utr3s</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">Utr</span><span class="o">.</span><span class="n">_THREE_PRIME</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">genome</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">side</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="n">Utr</span><span class="o">.</span><span class="n">_FIVE_PRIME</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+                <span class="n">genome</span><span class="o">.</span><span class="n">utr5s</span><span class="p">,</span> <span class="n">index</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setstate</span><span class="p">(</span>
+                <span class="n">genome</span><span class="o">.</span><span class="n">utr3s</span><span class="p">,</span> <span class="n">index</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Utr in Exon </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exon</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span>
+
+
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">UtrTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">UtrTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a UTR element by index.</span>
+
+<span class="sd">        Allows iteration over all coding sequences::</span>
+
+<span class="sd">            for utr in utr5s:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested UTR.</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr`</span>
+<span class="sd">           The UTR segment identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Utr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;UtrTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+<span class="c1">########################################################################</span>
+
+<div class="viewcode-block" id="GenomeAnnotation"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">GenomeAnnotation</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeAnno</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Annotations for a reference genome.</span>
+
+<span class="sd">    This object should not be directly created.</span>
+<span class="sd">    Instead, create a :py:class:`~Genome` object::</span>
+
+<span class="sd">        genome = Genome(&quot;gencode.v19&quot;)</span>
+<span class="sd">        for gene in genome.annotation.genes:</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    The :py:class:`~genome_kit.Genome` object also exposes shortcut</span>
+<span class="sd">    attributes, for convenience::</span>
+
+<span class="sd">        for gene in genome.genes:</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    See :py:class:`~genome_kit.Genome` for a list of annotations</span>
+<span class="sd">    available, e.g. ``gencode.v29``, ``ucsc_refseq.2017-06-25``, etc.</span>
+
+<span class="sd">    .. note:: **UCSC RefSeq can contain multiple versions of the same gene/transcript.**</span>
+<span class="sd">       These tend to be in ambiguously mapped regions. In GenomeKit, they&#39;re</span>
+<span class="sd">       retained as separate entries in the gene and transcript tables, with</span>
+<span class="sd">       distinct intervals but otherwise identical.</span>
+
+<span class="sd">       For example, in GENCODE v19 the SMN1/2 genes are located on chromosome</span>
+<span class="sd">       5 at 70220767-70249769 and 69345349-69374349 respectively.</span>
+<span class="sd">       In UCSC RefSeq, SMN1 is duplicated at both 70220767-70248838 and</span>
+<span class="sd">       69345349-69373418, so there are two gene entries named SMN1, each</span>
+<span class="sd">       with their own version of transcripts NM_000344, NM_001297715, NM_022874.</span>
+<span class="sd">       Similarly, SMN2 is duplicated at both 70220767-70248842 and 69345349-69373422.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">genes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of annotated genes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.GeneTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated genes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">GeneTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of annotated transcripts.</span>
+
+<span class="sd">        A shorthand property `trans` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.TranscriptTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated transcripts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">TranscriptTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of annotated exons.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.ExonTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated exons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">ExonTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">introns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of annotated introns.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.IntronTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated introns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">IntronTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cdss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of annotated coding sequences (CDSs) within exons.</span>
+
+<span class="sd">        This is shorthand for `annotation.cdss`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.CdsTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">CdsTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr5s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of UTR5s within exons.</span>
+
+<span class="sd">        This is shorthand for `annotation.utr5s`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.UtrTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">UtrTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr3s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An indexed table of UTR3s within exons.</span>
+
+<span class="sd">        This is shorthand for `annotation.utr3s`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.UtrTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">UtrTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to the file from which annotations are retrieved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the file, e.g. &quot;/data/gencode.v19.annotation.dganno&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GenomeAnnotation.binary_version"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.binary_version">[docs]</a>    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">binary_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The binary file format version that this build supports.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The version number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_gencode"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_gencode">[docs]</a>    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_gencode</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of GENCODE/Ensembl annotations from a GFF3 file.</span>
+
+<span class="sd">        Currently supports conversion from `gff3[.gz]`.</span>
+
+<span class="sd">        In addition to the versioned `dganno` file, a `cfg` file will also be created.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The path to the original GFF3 file.</span>
+
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The path to the destination `dganno` file.</span>
+
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference assembly used to annotate ``infile``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of built files created from the GFF3.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_ncbi_refseq"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ncbi_refseq">[docs]</a>    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_ncbi_refseq</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of NCBI annotations from a GFF3 file.</span>
+
+<span class="sd">        Currently supports conversion from `gff3[.gz]`.</span>
+
+<span class="sd">        In addition to the versioned `dganno` file, a `cfg` file will also be created.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The path to the original GFF3 file.</span>
+
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The path to the destination `dganno` file.</span>
+
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference assembly used to annotate ``infile``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of built files created from the GFF3.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_ucsc_refseq"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ucsc_refseq">[docs]</a>    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_ucsc_refseq</span><span class="p">(</span><span class="n">ucsc_db_dir</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of UCSC RefSeq annotations.</span>
+
+<span class="sd">        The `ucsc_db_dir` should be a directory that already contains</span>
+<span class="sd">        the following files:</span>
+
+<span class="sd">        * ``refGene.txt[.gz]``</span>
+<span class="sd">        * ``refLink.txt[.gz]``</span>
+
+<span class="sd">        These files will be parsed and used to build a `dganno` file.</span>
+
+<span class="sd">        In addition to the versioned `dganno` file, a `cfg` file will also be created.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ucsc_db_dir : :py:class:`str`</span>
+<span class="sd">            The path to a directory with the UCSC RefSeq source files.</span>
+
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The path to the destination `dganno` file.</span>
+
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference assembly used  ``ucsc_db_dir``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of built files created from the UCSC RefSeq files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GenomeAnnotation.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;GenomeAnnotation &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div></div>
+
+
+<span class="c1">########################################################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

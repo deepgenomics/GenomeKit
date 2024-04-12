@@ -1,6 +1,0 @@
-python:
-  - 3.8
-  - 3.9
-  - 3.10
-CONDA_BUILD_SYSROOT:
-  - /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk  # [osx]

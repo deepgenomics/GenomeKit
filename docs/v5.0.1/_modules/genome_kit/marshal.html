@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.marshal &mdash; GenomeKit 3.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tracks.html">Built-in Tracks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.marshal</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.marshal</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2020 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">deepgenomics.genomekit.v1</span> <span class="k">as</span> <span class="nn">messages</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">genome</span><span class="p">,</span> <span class="n">genome_annotation</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">variant</span>
+
+<span class="n">GenomeKitObject</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="s2">&quot;interval.Interval&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;variant.Variant&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome.Genome&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome_annotation.Gene&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome_annotation.Transcript&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome_annotation.Exon&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome_annotation.Intron&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;genome_annotation.Cds&quot;</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">[</span><span class="s2">&quot;interval.Interval&quot;</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="n">_TYPE_FIELD_TABLE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">genome_annotation</span><span class="o">.</span><span class="n">Cds</span><span class="p">:</span> <span class="s2">&quot;cds&quot;</span><span class="p">,</span>
+    <span class="n">genome_annotation</span><span class="o">.</span><span class="n">Exon</span><span class="p">:</span> <span class="s2">&quot;exon&quot;</span><span class="p">,</span>
+    <span class="n">genome_annotation</span><span class="o">.</span><span class="n">Gene</span><span class="p">:</span> <span class="s2">&quot;gene&quot;</span><span class="p">,</span>
+    <span class="n">genome</span><span class="o">.</span><span class="n">Genome</span><span class="p">:</span> <span class="s2">&quot;genome&quot;</span><span class="p">,</span>
+    <span class="n">interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">:</span> <span class="s2">&quot;interval&quot;</span><span class="p">,</span>
+    <span class="n">genome_annotation</span><span class="o">.</span><span class="n">Intron</span><span class="p">:</span> <span class="s2">&quot;intron&quot;</span><span class="p">,</span>
+    <span class="n">genome_annotation</span><span class="o">.</span><span class="n">Transcript</span><span class="p">:</span> <span class="s2">&quot;transcript&quot;</span><span class="p">,</span>
+    <span class="n">variant</span><span class="o">.</span><span class="n">Variant</span><span class="p">:</span> <span class="s2">&quot;variant&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">_FIELD_TYPE_TABLE</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_TYPE_FIELD_TABLE</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+<div class="viewcode-block" id="marshal"><a class="viewcode-back" href="../../api.html#genome_kit.marshal">[docs]</a><span class="k">def</span> <span class="nf">marshal</span><span class="p">(</span>
+    <span class="n">obj</span><span class="p">:</span> <span class="n">GenomeKitObject</span><span class="p">,</span> <span class="n">field_fill</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;minimal&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a state string suitable for fast transmission or serialization.</span>
+
+<span class="sd">    Note that objects can be directly pickled, without calling :func:`~genome_kit.marshal`.</span>
+<span class="sd">    This method is mainly provided to facilitate use with the `marshal` package.</span>
+<span class="sd">    The result is about 20x faster and 30% smaller than `cPickle`::</span>
+
+<span class="sd">        &gt;&gt;&gt; objs       = [ ... list of objs ... ]</span>
+<span class="sd">        &gt;&gt;&gt; pickled    = cPickle.dumps(objs)               # Simple, general</span>
+<span class="sd">        &gt;&gt;&gt; marshalled = marshal.dumps([gk.marshal(obj)</span>
+<span class="sd">                                        for obj in objs])  # Faster, smaller</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obj</span>
+<span class="sd">        GenomeKit object to marshal</span>
+
+<span class="sd">    field_fill</span>
+<span class="sd">        Determines how much information to store. &#39;full&#39; will fill every</span>
+<span class="sd">        field (the default is &#39;minimal&#39;, which only fills enough to use</span>
+<span class="sd">        :func:`~genome_kit.unmarshal`)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bytes</span>
+<span class="sd">        A state string encoding this object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">as_proto</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">field_fill</span><span class="p">)</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="unmarshal"><a class="viewcode-back" href="../../api.html#genome_kit.unmarshal">[docs]</a><span class="k">def</span> <span class="nf">unmarshal</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenomeKitObject</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates an instance by unmarshalling a state string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    state</span>
+<span class="sd">        The state string, previously returned by :func:`~genome_kit.marshal`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GenomeKitObject</span>
+<span class="sd">        A new object instance corresponding to the state string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">TaggedUnion</span><span class="p">()</span>
+    <span class="n">message</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">from_proto</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="as_proto"><a class="viewcode-back" href="../../api.html#genome_kit.as_proto">[docs]</a><span class="k">def</span> <span class="nf">as_proto</span><span class="p">(</span>
+    <span class="n">obj</span><span class="p">:</span> <span class="n">GenomeKitObject</span><span class="p">,</span> <span class="n">field_fill</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;minimal&quot;</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;minimal&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">messages</span><span class="o">.</span><span class="n">TaggedUnion</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a protobuf message encoding this instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obj</span>
+<span class="sd">        GenomeKit object to encode</span>
+
+<span class="sd">    field_fill</span>
+<span class="sd">        Determines how much information to store. &#39;full&#39; will fill every</span>
+<span class="sd">        field (the default is &#39;minimal&#39;, which only fills enough to use</span>
+<span class="sd">        :func:`~genome_kit.from_proto`)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    messages.TaggedUnion</span>
+<span class="sd">        A protobuf message encoding this object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">messages</span><span class="o">.</span><span class="n">TaggedUnion</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Iterable</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">as_proto</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">disjoint_interval</span><span class="o">.</span><span class="n">interval</span><span class="o">.</span><span class="n">add</span><span class="p">(),</span> <span class="n">field_fill</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">as_proto</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">_TYPE_FIELD_TABLE</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)]),</span> <span class="n">field_fill</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">message</span></div>
+
+
+<div class="viewcode-block" id="from_proto"><a class="viewcode-back" href="../../api.html#genome_kit.from_proto">[docs]</a><span class="k">def</span> <span class="nf">from_proto</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">messages</span><span class="o">.</span><span class="n">TaggedUnion</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GenomeKitObject</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates an instance by decoding a protobuf message.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    message</span>
+<span class="sd">        The protobuf, previously returned by :func:`~genome_kit.as_proto`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GenomeKitObject</span>
+<span class="sd">        A new object instance corresponding to the protobuf message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="s2">&quot;disjoint_interval&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">interval</span><span class="o">.</span><span class="n">Interval</span><span class="o">.</span><span class="n">from_proto</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">interval</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_FIELD_TYPE_TABLE</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">from_proto</span><span class="p">(</span><span class="n">message</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

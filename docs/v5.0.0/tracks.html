@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Built-in Tracks &mdash; GenomeKit 3.1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developers" href="develop.html" />
+    <link rel="prev" title="API Documentation" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                3.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Built-in Tracks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#conservation">Conservation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gerp">GERP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phastcons-and-phylop">PhastCons and PhyloP</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#mappability">Mappability</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#encode-mappability">ENCODE Mappability</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rna-secondary-structure">RNA secondary structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rnaplfold-unpaired-probabilities">RNAplfold unpaired probabilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rna-secondary-structure-categories">RNA secondary structure categories</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#nucleosome-occupancy">Nucleosome occupancy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#encode-nucleosome-occupancy">ENCODE nucleosome occupancy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#computed-nucleosome-occupancy">Computed nucleosome occupancy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#chromatin-state">Chromatin state</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roadmap-chromhmm-state">Roadmap ChromHMM state</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#histone-modifications">Histone modifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roadmap-histone-modifications">Roadmap histone modifications</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dnase-hypersensitivity">DNase hypersensitivity</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roadmap-dnase-hypersensitivity">Roadmap DNase hypersensitivity</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#methylation">Methylation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roadmap-methylation">Roadmap methylation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#expression">Expression</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fantom-cage">FANTOM CAGE</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Built-in Tracks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tracks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="built-in-tracks">
+<span id="tracks"></span><h1>Built-in Tracks<a class="headerlink" href="#built-in-tracks" title="Permalink to this heading"></a></h1>
+<p>GenomeKit provides access to several genome-wide tracks.
+Tracks can be used as features and/or targets for molecular phenotype models.
+(Click to enlarge.)</p>
+<a href="_images/builtin_tracks_overview.png" target="_blank"><img alt="_images/builtin_tracks_overview.png" src="_images/builtin_tracks_overview.png" />
+</a><p>Built-in tracks are accessible by methods on a
+<a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a> object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr17&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">41246881</span><span class="p">,</span> <span class="mi">41246886</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">phastcons_mammal_46way</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 0.969],</span>
+<span class="go">       [ 0.877],</span>
+<span class="go">       [ 0.556],</span>
+<span class="go">       [ 0.341],</span>
+<span class="go">       [ 0.264]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>Tracks fall into the following categories:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#tracks-cons"><span class="std std-ref">Conservation</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-mappability"><span class="std std-ref">Mappability</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-rnastruct"><span class="std std-ref">RNA secondary structure</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-nucleosome"><span class="std std-ref">Nucleosome occupancy</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-chrom-state"><span class="std std-ref">Chromatin state</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-histone-mod"><span class="std std-ref">Histone modifications</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-dnase-hypersense"><span class="std std-ref">DNase hypersensitivity</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-methylation"><span class="std std-ref">Methylation</span></a></p></li>
+<li><p><a class="reference internal" href="#tracks-expression"><span class="std std-ref">Expression</span></a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Track encoding.</strong>
+Some tracks may not perfectly match their raw sources.
+Most built-in tracks are encoded into a compact format that
+quantizes the numerical values stored therein.
+For example, a track of probabilities may be quantized with a 4-bit
+representation, so that only values in <code class="docutils literal notranslate"><span class="pre">numpy.linspace(0,</span> <span class="pre">1,</span> <span class="pre">16)</span></code>
+are representable.
+In some cases, the track is also deliberately sparsified for the sake of
+disk space.
+For example, in a given  particular track, all values within a certain
+range may be deemed noise or weak signal, and therefore deliberately
+collapsed to 0 so that these values are omitted from the file.</p>
+</div>
+<section id="conservation">
+<span id="tracks-cons"></span><h2>Conservation<a class="headerlink" href="#conservation" title="Permalink to this heading"></a></h2>
+<section id="gerp">
+<span id="tracks-gerp"></span><h3>GERP<a class="headerlink" href="#gerp" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_gerp.png" src="_images/builtin_tracks_gerp.png" />
+<p>Genomic Evolutionary Rate Profiling (GERP) identifies sites under evolutionary
+constraint, i.e. sites that show fewer substitutions than would be expected to
+occur during neutral evolution.</p>
+<p>GERP scores are accessible by the
+<a class="reference internal" href="api.html#genome_kit.Genome.gerp" title="genome_kit.Genome.gerp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gerp()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117250573</span><span class="p">,</span> <span class="mi">117250579</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">gerp</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[  5.887],</span>
+<span class="go">       [  2.943],</span>
+<span class="go">       [-11.773],</span>
+<span class="go">       [  5.887],</span>
+<span class="go">       [ -2.061],</span>
+<span class="go">       [ -0.588]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The GERP track is 1-dimensional, with values in the range [-12.36, 6.18]. Positive values indicate
+a site under constraint. Sites at which no Gerp score is available are assigned a background
+value of 0.</p>
+<p>The track provided here is the UCSC version, which is based on GERP++ and alignment of
+the human reference genome to 35 mammalian species.
+GERP++ aggregates these sites into longer, potentially functional sequences
+called constrained elements.</p>
+<p><strong>Availability:</strong> hg19 only, but hg38 in future release.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=allHg19RS_BW">UCSC track settings</a></p></li>
+<li><p><a class="reference external" href="http://mendel.stanford.edu/SidowLab/downloads/gerp/">GERP website</a></p></li>
+<li><p><a class="reference external" href="http://mendel.stanford.edu/SidowLab/pdfs/2010DavydovEtAl.pdf">GERP++ paper</a> (PDF)</p></li>
+</ul>
+</section>
+<section id="phastcons-and-phylop">
+<span id="tracks-phast"></span><h3>PhastCons and PhyloP<a class="headerlink" href="#phastcons-and-phylop" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_phast.png" src="_images/builtin_tracks_phast.png" />
+<p>These tracks are based on the
+<a class="reference external" href="http://compgen.cshl.edu/phast/help-pages/phastCons.txt">phastCons</a> and
+<a class="reference external" href="http://compgen.cshl.edu/phast/help-pages/phyloP.txt">phylop</a> tools.
+Scores are accessible by the following methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome.phastcons_mammal_46way" title="genome_kit.Genome.phastcons_mammal_46way"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phastcons_mammal_46way()</span></code></a></p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome.phastcons_verteb_46way" title="genome_kit.Genome.phastcons_verteb_46way"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phastcons_verteb_46way()</span></code></a></p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome.phastcons_verteb_100way" title="genome_kit.Genome.phastcons_verteb_100way"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phastcons_verteb_100way()</span></code></a></p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome.phylop_mammal_46way" title="genome_kit.Genome.phylop_mammal_46way"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phylop_mammal_46way()</span></code></a></p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome.phylop_verteb_100way" title="genome_kit.Genome.phylop_verteb_100way"><code class="xref py py-meth docutils literal notranslate"><span class="pre">phylop_verteb_100way()</span></code></a></p></li>
+</ul>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr17&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">41246881</span><span class="p">,</span> <span class="mi">41246886</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">phastcons_mammal_46way</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 0.969],</span>
+<span class="go">       [ 0.877],</span>
+<span class="go">       [ 0.556],</span>
+<span class="go">       [ 0.341],</span>
+<span class="go">       [ 0.264]], dtype=float16)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">phylop_mammal_46way</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 3.055],</span>
+<span class="go">       [ 0.877],</span>
+<span class="go">       [ 0.826],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       [ 0.877]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>These tracks are all 1-dimensional.
+PhastCons scores indicate consistency across multiple sequence alignments, and are in range [0,1].
+PhyloP scores represent of p-values for conserved or accelerated evolution.</p>
+<p><strong>Availability:</strong></p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>&#64;kzuberi add phastcons/phylop range details and availability; they depend on 46way vs 100way etc.</p>
+</div>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=cons46way">UCSC track settings</a> (46 species)</p></li>
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=cons100way">UCSC track settings</a> (100 species)</p></li>
+<li><p><a class="reference external" href="http://genome.cshlp.org/content/15/8/1034.full.pdf">phastCons paper</a> (PDF)</p></li>
+<li><p><a class="reference external" href="http://genome.cshlp.org/content/early/2009/10/26/gr.097857.109.full.pdf">phyloP paper</a> (PDF)</p></li>
+<li><p>phastCons and phyloP are part of the <a class="reference external" href="http://compgen.cshl.edu/phast/">PHAST</a> package.</p></li>
+</ul>
+</section>
+</section>
+<section id="mappability">
+<span id="tracks-mappability"></span><h2>Mappability<a class="headerlink" href="#mappability" title="Permalink to this heading"></a></h2>
+<section id="encode-mappability">
+<span id="tracks-encode-mappability"></span><h3>ENCODE Mappability<a class="headerlink" href="#encode-mappability" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_encode_mappability.png" src="_images/builtin_tracks_encode_mappability.png" />
+<p>Mappability measures how unique short sequences are along the reference genome.
+Scores are in range [0,1] where 1 indicates position that is
+uniquely mappable to DNA across all window offsets.
+A low score indicates a position where short-read alignments to DNA may be
+unreliable.</p>
+<p>Scores are accessible via the
+<a class="reference internal" href="api.html#genome_kit.Genome.encode_mappability" title="genome_kit.Genome.encode_mappability"><code class="xref py py-meth docutils literal notranslate"><span class="pre">encode_mappability()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr16&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">67650971</span><span class="p">,</span> <span class="mi">67650979</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">encode_mappability</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="mi">36</span><span class="p">)</span>
+<span class="go">array([[ 1.   ],</span>
+<span class="go">       [ 0.333],</span>
+<span class="go">       [ 0.200],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       [ 0.   ]], dtype=float16)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">encode_mappability</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="p">[</span><span class="mi">24</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>
+<span class="go">array([[ 0.333,  1.   ,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.333,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.200,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  1.   ,  1.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.333,  1.   ]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>Here <cite>window_size</cite> is the size of sliding window being
+checked for uniqueness genome-wide.
+It must be one of [24, 36, 75, 100], or a list of any of those numbers.</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=wgEncodeMapability">UCSC track settings</a></p></li>
+</ul>
+</section>
+</section>
+<section id="rna-secondary-structure">
+<span id="tracks-rnastruct"></span><h2>RNA secondary structure<a class="headerlink" href="#rna-secondary-structure" title="Permalink to this heading"></a></h2>
+<section id="rnaplfold-unpaired-probabilities">
+<span id="tracks-rnaplfold-unpair-prob"></span><h3>RNAplfold unpaired probabilities<a class="headerlink" href="#rnaplfold-unpaired-probabilities" title="Permalink to this heading"></a></h3>
+<p>This track estimates the probability that a pre-mRNA position
+remains unpaired after folding. Values are in the range [0,1]
+where 1 indicates a high probability of being unpaired.
+The track is strand-sensitive and defined only in genic
+intervals (Ensemble+RefSeq), so beware NaNs.
+The estimate is computed by the RNAplfold tool
+that is part of the Vienna RNA software suite.</p>
+<p>Probabilities are accessible via the
+<a class="reference internal" href="api.html#genome_kit.Genome.rnaplfold_unpair_prob" title="genome_kit.Genome.rnaplfold_unpair_prob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rnaplfold_unpair_prob()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117250572</span><span class="p">,</span> <span class="mi">117250584</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">rnaplfold_unpair_prob</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 0.067],</span>
+<span class="go">       [ 0.067],</span>
+<span class="go">       [ 0.067],</span>
+<span class="go">       [ 0.733],</span>
+<span class="go">       [ 0.933],</span>
+<span class="go">       [ 1.   ],</span>
+<span class="go">       [ 1.   ],</span>
+<span class="go">       [ 0.400],</span>
+<span class="go">       [ 0.133],</span>
+<span class="go">       [ 0.133],</span>
+<span class="go">       [ 0.067],</span>
+<span class="go">       [ 0.   ],</span>
+<span class="go">       ], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The middle part of the above region forms a 4 bp hairpin loop,
+similar to the image below.
+The hairpin classification can be seen more definitively in the
+<a class="reference internal" href="#tracks-rnaplfold-categories"><span class="std std-ref">RNA secondary structure categories</span></a> track.</p>
+<img alt="_images/rna_stem_loop.png" src="_images/rna_stem_loop.png" />
+<p>The specific settings that were used to generate this track are
+<code class="docutils literal notranslate"><span class="pre">RNAplfold</span> <span class="pre">-W</span> <span class="pre">200</span> <span class="pre">-L</span> <span class="pre">160</span> <span class="pre">-u</span> <span class="pre">1</span></code>, that is:</p>
+<ul class="simple">
+<li><p>average the probabilities over a sliding window of size 200,</p></li>
+<li><p>only consider pairing of positions at most 160 bp apart, and</p></li>
+<li><p>only return the probability that a 1 bp span is unpaired.</p></li>
+</ul>
+<p><strong>Availability:</strong> hg19 only, but hg38 in future releases.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tbi.univie.ac.at/RNA/RNAplfold.1.html">RNAplfold manual</a></p></li>
+</ul>
+</section>
+<section id="rna-secondary-structure-categories">
+<span id="tracks-rnaplfold-categories"></span><h3>RNA secondary structure categories<a class="headerlink" href="#rna-secondary-structure-categories" title="Permalink to this heading"></a></h3>
+<p>This track estimates the probability that a pre-mRNA position
+will base pair in one of a few standard secondary structure categories.
+Values are in the range [0,1] where 1 indicates a high probability
+of being unpaired in that particular category.
+The track is strand-sensitive and defined only in genic
+intervals (Ensemble+RefSeq), so beware NaNs.
+The track is computed by the RNAcontext software, which is a modified
+version of RNAplfold.</p>
+<p>The structural categories represent types of open (unpaired) regions.
+In order, they are:</p>
+<ol class="arabic simple">
+<li><p>external / single-stranded</p></li>
+<li><p>hairpin loop</p></li>
+<li><p>internal loop</p></li>
+<li><p>multiloop</p></li>
+</ol>
+<img alt="_images/rna_struct_categories.png" src="_images/rna_struct_categories.png" />
+<p>Probabilities are accessible via the
+<a class="reference internal" href="api.html#genome_kit.Genome.rnaplfold_categories" title="genome_kit.Genome.rnaplfold_categories"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rnaplfold_categories()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117250572</span><span class="p">,</span> <span class="mi">117250584</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">rnaplfold_categories</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 0.   ,  0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.   ,  0.067,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.067,  0.733,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.067,  0.733,  0.133,  0.   ],</span>
+<span class="go">       [ 0.067,  0.733,  0.200,  0.   ],</span>
+<span class="go">       [ 0.067,  0.733,  0.200,  0.   ],</span>
+<span class="go">       [ 0.067,  0.067,  0.200,  0.   ],</span>
+<span class="go">       [ 0.067,  0.   ,  0.067,  0.   ],</span>
+<span class="go">       [ 0.067,  0.   ,  0.067,  0.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ,  0.   ]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The middle part of the above region forms a 4 bp hairpin loop.
+This track can be thought of as a categorical version of the
+<a class="reference internal" href="#tracks-rnaplfold-unpair-prob"><span class="std std-ref">RNAplfold unpaired probabilities</span></a> track.
+Note that, due to quantization effects and slightly different versions
+of the RNApfold software, the sum along each row may not exactly match the
+<a class="reference internal" href="api.html#genome_kit.Genome.rnaplfold_unpair_prob" title="genome_kit.Genome.rnaplfold_unpair_prob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rnaplfold_unpair_prob()</span></code></a> values.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://www.cs.toronto.edu/~hilal/rnacontext/">RNAcontext website</a></p></li>
+</ul>
+</section>
+</section>
+<section id="nucleosome-occupancy">
+<span id="tracks-nucleosome"></span><h2>Nucleosome occupancy<a class="headerlink" href="#nucleosome-occupancy" title="Permalink to this heading"></a></h2>
+<p>Nucleosome occupancy is the probability that a position is wrapped around a
+histone octamer.
+There are two types of tracks: ENCODE nucleosome occupancy (measured),
+and computed nucleosome occupancy (predicted).</p>
+<section id="encode-nucleosome-occupancy">
+<span id="tracks-encode-nucleosome"></span><h3>ENCODE nucleosome occupancy<a class="headerlink" href="#encode-nucleosome-occupancy" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_encode_nucleosome_occupancy.png" src="_images/builtin_tracks_encode_nucleosome_occupancy.png" />
+<p>These tracks represent genome-wide experimental nucleosome occupancy in two
+human cell lines. They were created
+by aligning reads from MNase digestion, shifting them 74 bp downstream,
+and then smoothing the resulting signal over a 60 bp window.</p>
+<p>Occupancy scores are available by the
+<a class="reference internal" href="api.html#genome_kit.Genome.encode_nucleosome_occupancy" title="genome_kit.Genome.encode_nucleosome_occupancy"><code class="xref py py-meth docutils literal notranslate"><span class="pre">encode_nucleosome_occupancy()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr14&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">75415612</span><span class="p">,</span> <span class="mi">75415618</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">encode_nucleosome_occupancy</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;K562&quot;</span><span class="p">,</span> <span class="s2">&quot;GM12878&quot;</span><span class="p">])</span>
+<span class="go">array([[ 3.600,  4.602 ],</span>
+<span class="go">       [ 3.600,  4.898 ],</span>
+<span class="go">       [ 3.600,  4.898 ],</span>
+<span class="go">       [ 3.600,  4.898 ],</span>
+<span class="go">       [ 3.801,  4.898 ],</span>
+<span class="go">       [ 3.801,  4.898 ]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The two cell lines supported are K562 and GM12878, so <cite>cell</cite> can be
+<code class="docutils literal notranslate"><span class="pre">&quot;K562&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;GM12878&quot;</span></code> or a list of both.
+Values are typically in range [0,5.5] where higher numbers indicate
+higher density. Values below 0.5 were clamped to 0 during construction
+to improve track sparsity.</p>
+<p><em>Note.</em> The original ENCODE track contained a small set of regions with extremely high
+density values (&gt;70).
+These tended to to appear beside regions of poor mappability, and are likely artifacts.
+The track presented here has had its maximum density clamped to the typical maximum
+in uniquely alignable regions, to facilitate more compact encoding and to minimize
+the potential impact of these large-magnitude density mapping artifacts.</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=wgEncodeSydhNsome">UCSC track settings</a></p></li>
+</ul>
+</section>
+<section id="computed-nucleosome-occupancy">
+<span id="tracks-computed-nucleosome"></span><h3>Computed nucleosome occupancy<a class="headerlink" href="#computed-nucleosome-occupancy" title="Permalink to this heading"></a></h3>
+<img alt="_images/builting_tracks_nucleosome_occupancy_bmc_pnas.png" src="_images/builting_tracks_nucleosome_occupancy_bmc_pnas.png" />
+<p>These tracks provide computed (predicted) nucleosome occupancy based on two algorithms:
+PNAS2012 and BMC2010 (<cite>NuPoP</cite> algorithm).
+The tracks are defined only in genic
+intervals (Ensemble, RefSeq), so beware NaNs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The PNAS2012 and BMC2010 algorithms were trained on <strong>yeast</strong>,
+not human cell types.</p>
+</div>
+<p>Occupancy scores are available by the
+<a class="reference internal" href="api.html#genome_kit.Genome.nucleosome_occupancy_pnas2012" title="genome_kit.Genome.nucleosome_occupancy_pnas2012"><code class="xref py py-meth docutils literal notranslate"><span class="pre">nucleosome_occupancy_pnas2012()</span></code></a> and
+<a class="reference internal" href="api.html#genome_kit.Genome.nucleosome_occupancy_bmc2010" title="genome_kit.Genome.nucleosome_occupancy_bmc2010"><code class="xref py py-meth docutils literal notranslate"><span class="pre">nucleosome_occupancy_bmc2010()</span></code></a> methods:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr22&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">41521995</span><span class="p">,</span> <span class="mi">41522004</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">nucleosome_occupancy_pnas2012</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[ 0.271],</span>
+<span class="go">       [ 0.271],</span>
+<span class="go">       [ 0.271],</span>
+<span class="go">       [ 0.248],</span>
+<span class="go">       [ 0.248],</span>
+<span class="go">       [ 0.248],</span>
+<span class="go">       [ 0.248],</span>
+<span class="go">       [ 0.226],</span>
+<span class="go">       [ 0.226]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The PNAS2012 algorithm is based on the periodic distribution of
+dinucleotides TA, TT, AA, and GC.
+Occupancy scores are smooth because the algorithm applies
+a 10 bp low-pass filter.</p>
+<p>The BMC2010 algorithm is an HMM that oscillates between two states:
+nucleosome (score 1.0) and linker (score 0.0, occasionally -0.05).
+The nucleosome state has a fixed length of 147 bp.</p>
+<p><strong>Availability:</strong> hg19 only, but hg38 in future release.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-11-346">BMC 2010 paper</a></p></li>
+<li><p><a class="reference external" href="http://www.pnas.org/content/109/38/E2514.abstract">PNAS 2012 paper</a></p></li>
+</ul>
+</section>
+</section>
+<section id="chromatin-state">
+<span id="tracks-chrom-state"></span><h2>Chromatin state<a class="headerlink" href="#chromatin-state" title="Permalink to this heading"></a></h2>
+<p>Chromatin states are generally predicted by software from other
+genomic or epigenomic features, such as DNase hypersensitivity and
+histone modifications. This high-level feature can be used, for example,
+to identify genes that are expressed in a particular cell type.</p>
+<section id="roadmap-chromhmm-state">
+<span id="tracks-roadmap-chromhmm"></span><h3>Roadmap ChromHMM state<a class="headerlink" href="#roadmap-chromhmm-state" title="Permalink to this heading"></a></h3>
+<p>This track contains a probability distribution
+over 15 chromatin states, as computed by ChromHMM on
+Roadmap Epigenomics data.</p>
+<p>States 0–7 are associated with <em>active</em> chromatin.</p>
+<ol class="arabic simple" start="0">
+<li><p><code class="docutils literal notranslate"><span class="pre">TssA</span></code> (Active TSS; 0.7%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TssAFlnk</span></code> (Flanks an active TSS; 0.5%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TxFlnk</span></code> (Transcribed at gene 5p and 3p showing both
+promoter and enhancer signatures; 0.1%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tx</span></code> (Strong transcription; 3.6%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TxWk</span></code> (Weak transcription; 11.6%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EnhG</span></code> (Genic enhancer; 0.4%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Enh</span></code> (Enhancer; 2.8%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ZNF/Rpts</span></code> (Zinc finger genes and repeats; 0.2%)</p></li>
+</ol>
+<p>States 8–14 are associated with <em>inactive</em> chromatin,
+with quiescent being the most prevalent state.</p>
+<ol class="arabic simple" start="8">
+<li><p><code class="docutils literal notranslate"><span class="pre">Het</span></code> (Heterochromatin; 2.6%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TssBiv</span></code> (Bivalent/poised TSS; 0.1%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BivFlnk</span></code> (Flanking bivalent TSS/enhancer; 0.1%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EnhBiv</span></code> (Bivalent enhancer; 0.1%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ReprPC</span></code> (Repressed PolyComb; 1.2%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ReprPCWk</span></code> (Weakly repressed PolyComb; 8.3%)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Quies</span></code> (Quiescent / low expression; 67.8%)</p></li>
+</ol>
+<p>Below is an example of ChromHMM states across
+a genomic interval; the colour coding can be found in the UCSC track
+documentation.
+(Click to enlarge.)</p>
+<a href="_images/builtin_tracks_roadmap_chromhmm.png" target="_blank"><img alt="_images/builtin_tracks_roadmap_chromhmm.png" src="_images/builtin_tracks_roadmap_chromhmm.png" />
+</a><p>Probabilities for these states can be accessed via the
+<a class="reference internal" href="api.html#genome_kit.Genome.roadmap_chromhmm" title="genome_kit.Genome.roadmap_chromhmm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">roadmap_chromhmm()</span></code></a>
+method by specifying one or more cell from
+<a class="reference internal" href="api.html#genome_kit.Genome.ROADMAP_CELLS" title="genome_kit.Genome.ROADMAP_CELLS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ROADMAP_CELLS</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr14&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">75415270</span><span class="p">,</span> <span class="mi">75415274</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_chromhmm</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="s2">&quot;LNG&quot;</span><span class="p">)</span>
+<span class="go">array([[ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  1.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>In lung the most probable state for this region is <code class="docutils literal notranslate"><span class="pre">TxWk</span></code> (4).
+Other tissues are available:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_chromhmm</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="s2">&quot;OVRY&quot;</span><span class="p">)</span>
+<span class="go">array([[ 0.,  0.,  0.,  0.,  0.355,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.032],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.355,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.032],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.355,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.032],</span>
+<span class="go">       [ 0.,  0.,  0.,  0.,  0.355,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.032]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>In ovary the most probable state is actually <code class="docutils literal notranslate"><span class="pre">Quies</span></code> (14) with a probability of
+.613 = 1 - .335 - .032, even though this final column is omitted from the track.</p>
+<p>If multiple cell types are specified, their state matrices are concatenated
+horizontally.</p>
+<p>Alternatively, one can extract an integer identifying only the most probable state
+by the <a class="reference internal" href="api.html#genome_kit.Genome.roadmap_chromhmm_max" title="genome_kit.Genome.roadmap_chromhmm_max"><code class="xref py py-meth docutils literal notranslate"><span class="pre">roadmap_chromhmm_max()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_chromhmm_max</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LNG&quot;</span><span class="p">,</span> <span class="s2">&quot;OVRY&quot;</span><span class="p">])</span>
+<span class="go">array([[ 4, 14],</span>
+<span class="go">       [ 4, 14],</span>
+<span class="go">       [ 4, 14],</span>
+<span class="go">       [ 4, 14]], dtype=uint8)</span>
+</pre></div>
+</div>
+<p>The track is represented at 200 bp resolution, so it should primarily be used
+for analysis of large regions, not individual positions.</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=hub_24125_RoadmapConsolidatedAssaya27004">UCSC track settings</a> (requires <em>Roadmap Epigenomics Integrative Analysis</em>)</p></li>
+<li><p><a class="reference external" href="http://www.nature.com/nature/journal/v518/n7539/full/nature14248.html">Roadmap Epigenomics main paper</a></p></li>
+<li><p><a class="reference external" href="http://www.roadmapepigenomics.org/">Roadmap Epigenomics website</a></p></li>
+<li><p><a class="reference external" href="http://compbio.mit.edu/ChromHMM/">ChromHMM website</a></p></li>
+</ul>
+</section>
+</section>
+<section id="histone-modifications">
+<span id="tracks-histone-mod"></span><h2>Histone modifications<a class="headerlink" href="#histone-modifications" title="Permalink to this heading"></a></h2>
+<section id="roadmap-histone-modifications">
+<span id="tracks-roadmap-histone-mod"></span><h3>Roadmap histone modifications<a class="headerlink" href="#roadmap-histone-modifications" title="Permalink to this heading"></a></h3>
+<p>Below is an example of Roadmap histone modification density scores across
+a genomic interval, alongside other Roadmap tracks for comparison.
+Many histone modification tracks are very sparse.
+(Click to enlarge.)</p>
+<a href="_images/builtin_tracks_roadmap_histone_mod.png" target="_blank"><img alt="_images/builtin_tracks_roadmap_histone_mod.png" src="_images/builtin_tracks_roadmap_histone_mod.png" />
+</a><p>Scores can be accessed via the
+<a class="reference internal" href="api.html#genome_kit.Genome.roadmap_histone_mod" title="genome_kit.Genome.roadmap_histone_mod"><code class="xref py py-meth docutils literal notranslate"><span class="pre">roadmap_histone_mod()</span></code></a>
+method by specifying one or more cells from
+<a class="reference internal" href="api.html#genome_kit.Genome.ROADMAP_CELLS" title="genome_kit.Genome.ROADMAP_CELLS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ROADMAP_CELLS</span></code></a>
+and one or more histone modifications from
+<a class="reference internal" href="api.html#genome_kit.Genome.ROADMAP_HISTONE_MODS" title="genome_kit.Genome.ROADMAP_HISTONE_MODS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ROADMAP_HISTONE_MODS</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr16&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">67605146</span><span class="p">,</span> <span class="mi">67605152</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_histone_mod</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="s2">&quot;H3K79me2&quot;</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LNG&quot;</span><span class="p">,</span> <span class="s2">&quot;OVRY&quot;</span><span class="p">])</span>
+<span class="go">array([[ 8.86,  6.14],</span>
+<span class="go">       [ 8.86,  6.14],</span>
+<span class="go">       [ 8.86,  6.14],</span>
+<span class="go">       [ 8.86,  6.14],</span>
+<span class="go">       [ 6.91,  7.53],</span>
+<span class="go">       [ 6.91,  7.53]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>Values are in range [0, 15]. Values less than 1.75 were clamped to 0
+during track construction, and regions where no score is available
+are assigned a background value of 0.</p>
+<p>If multiple modifications are specified, the column order is such that inner
+stride is over cell types:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_histone_mod</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">mod</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;H3K79me2&quot;</span><span class="p">,</span> <span class="s2">&quot;H3K36me3&quot;</span><span class="p">,</span> <span class="s2">&quot;H4K20me1&quot;</span><span class="p">],</span>
+<span class="gp">... </span>                                     <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LNG&quot;</span><span class="p">,</span> <span class="s2">&quot;OVRY&quot;</span><span class="p">])</span>
+<span class="go">array([[ 8.86,  6.14,  2.72,  3.18,  3.13,  2.56],</span>
+<span class="go">       [ 8.86,  6.14,  2.72,  3.18,  3.13,  2.56],</span>
+<span class="go">       [ 8.86,  6.14,  2.72,  3.18,  3.13,  2.56],</span>
+<span class="go">       [ 8.86,  6.14,  2.72,  3.18,  3.13,  2.56],</span>
+<span class="go">       [ 6.91,  7.53,  2.72,  3.02,  4.97,  2.23],</span>
+<span class="go">       [ 6.91,  7.53,  2.72,  3.02,  4.97,  2.23]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The track is represented at 200 bp resolution, so it should primarily be used
+for analysis of large regions, not individual positions.</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=hub_24125_RoadmapConsolidatedAssay">UCSC track settings</a> (requires <em>Roadmap Epigenomics Integrative Analysis Hub</em>)</p></li>
+</ul>
+</section>
+</section>
+<section id="dnase-hypersensitivity">
+<span id="tracks-dnase-hypersense"></span><h2>DNase hypersensitivity<a class="headerlink" href="#dnase-hypersensitivity" title="Permalink to this heading"></a></h2>
+<section id="roadmap-dnase-hypersensitivity">
+<span id="tracks-roadmap-dnase-hypersense"></span><h3>Roadmap DNase hypersensitivity<a class="headerlink" href="#roadmap-dnase-hypersensitivity" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_roadmap_dnase_hypersense.png" src="_images/builtin_tracks_roadmap_dnase_hypersense.png" />
+<p>These tracks provide DNase hypersensitivity scores from the Roadmap Epigenomics
+project. DNase hypersensitivity is associated with open chromatin.</p>
+<p>Scores can be accessed via the
+<a class="reference internal" href="api.html#genome_kit.Genome.roadmap_dnase_hypersensitivity" title="genome_kit.Genome.roadmap_dnase_hypersensitivity"><code class="xref py py-meth docutils literal notranslate"><span class="pre">roadmap_dnase_hypersensitivity()</span></code></a>
+method by specifying one or more cells from
+<a class="reference internal" href="api.html#genome_kit.Genome.ROADMAP_CELLS" title="genome_kit.Genome.ROADMAP_CELLS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ROADMAP_CELLS</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr14&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">75406996</span><span class="p">,</span> <span class="mi">75407002</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_dnase_hypersensitivity</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LNG&quot;</span><span class="p">,</span> <span class="s2">&quot;OVRY&quot;</span><span class="p">,</span> <span class="s2">&quot;THYM&quot;</span><span class="p">])</span>
+<span class="go">array([[ 25.6,  26.8,  20.0],</span>
+<span class="go">       [ 25.6,  26.8,  20.0],</span>
+<span class="go">       [ 25.6,  26.8,  20.0],</span>
+<span class="go">       [ 25.6,  26.8,  20.0],</span>
+<span class="go">       [ 21.2,  18.9,  17.3],</span>
+<span class="go">       [ 21.2,  18.9,  17.3]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>Values are in range [0, 40]. Values less than 1.75 were clamped to 0 during track
+construction, and regions with no score are assigned a background value of 0.</p>
+<div class="admonition-todo admonition" id="id8">
+<p class="admonition-title">Todo</p>
+<p>&#64;kzuberi double check that choice of sparsification threshold of 1.75 against data.</p>
+</div>
+<p>The track is represented at 200 bp resolution, so it should primarily be used
+for analysis of large regions, not individual positions.</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=hub_24125_RoadmapConsolidatedAssaya23001">UCSC track settings</a> (requires <em>Roadmap Epigenomics Integrative Analysis Hub</em>)</p></li>
+</ul>
+</section>
+</section>
+<section id="methylation">
+<span id="tracks-methylation"></span><h2>Methylation<a class="headerlink" href="#methylation" title="Permalink to this heading"></a></h2>
+<section id="roadmap-methylation">
+<span id="tracks-roadmap-methylation"></span><h3>Roadmap methylation<a class="headerlink" href="#roadmap-methylation" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_roadmap_methylation.png" src="_images/builtin_tracks_roadmap_methylation.png" />
+<p>This track provides the experimental probability that a CpG site is methylated.
+The methylC-seq experiments were done as part of the Roadmap Epigenomics project.
+Methylated DNA usually lowers accessibility to regulatory proteins, thus
+hampering transcription.
+Unmethylated DNA is usually associated with open chromatin.</p>
+<p>Probabilities can be accessed by the
+<a class="reference internal" href="api.html#genome_kit.Genome.roadmap_methylation" title="genome_kit.Genome.roadmap_methylation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">roadmap_methylation()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr14&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">75413571</span><span class="p">,</span> <span class="mi">75413579</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;AGCGACGG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">roadmap_methylation</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;LNG&quot;</span><span class="p">,</span> <span class="s2">&quot;OVRY&quot;</span><span class="p">,</span> <span class="s2">&quot;THYM&quot;</span><span class="p">])</span>
+<span class="go">array([[ 0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.267,  0.200,  0.400],</span>
+<span class="go">       [ 0.267,  0.200,  0.400],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ],</span>
+<span class="go">       [ 0.200,  0.133,  0.400],</span>
+<span class="go">       [ 0.200,  0.133,  0.400],</span>
+<span class="go">       [ 0.   ,  0.   ,  0.   ]], dtype=float16)</span>
+</pre></div>
+</div>
+<p>The two <code class="docutils literal notranslate"><span class="pre">CG</span></code> dinucleotides in the above interval are methylated
+in some fraction of cells. Probabilities are in range [0,1].</p>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg19&amp;c=chr1&amp;g=hub_24125_RoadmapConsolidatedAssaya21004">UCSC track settings</a> (requires <em>Roadmap Epigenomics Integrative Analysis Hub</em>)</p></li>
+</ul>
+</section>
+</section>
+<section id="expression">
+<span id="tracks-expression"></span><h2>Expression<a class="headerlink" href="#expression" title="Permalink to this heading"></a></h2>
+<section id="fantom-cage">
+<span id="tracks-fantom-cage"></span><h3>FANTOM CAGE<a class="headerlink" href="#fantom-cage" title="Permalink to this heading"></a></h3>
+<img alt="_images/builtin_tracks_fantom_cage.png" src="_images/builtin_tracks_fantom_cage.png" />
+<p>CAGE tracks provide TSS activity in samples from tissues, cell lines, and primary cells. Tracks are available
+as both raw counts or normalized TPM (tags per million). Each track is at 1-bp resolution and stranded. The tracks
+have been sparsified dropping values &lt;=2 because it is assumed that these lie below a noise threshold resulting
+in smaller files. Only tracks profiled with the hCAGE protocol are currently included.</p>
+<p>Tracks are selected by their library id, e.g. CNhs10621. A full list is available tracks is in <a class="reference internal" href="fantom_metadata.html"><span class="doc">FANTOM Metadata</span></a>. The
+methods <a class="reference internal" href="api.html#genome_kit.Genome.fantom_cage_tpm" title="genome_kit.Genome.fantom_cage_tpm"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fantom_cage_tpm()</span></code></a> and <a class="reference internal" href="api.html#genome_kit.Genome.fantom_cage_count" title="genome_kit.Genome.fantom_cage_count"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fantom_cage_count()</span></code></a> provide track
+values for normalized counts and raw counts respectively:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">116915858</span><span class="p">,</span> <span class="mi">116915871</span><span class="p">,</span> <span class="s2">&quot;h37&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">fantom_cage_tpm</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CNhs10621&#39;</span><span class="p">,</span> <span class="s1">&#39;CNhs10622&#39;</span><span class="p">])</span>
+<span class="go">array([[   0.,    5.],</span>
+<span class="go">       [   0.,    8.],</span>
+<span class="go">       [  10.,   37.],</span>
+<span class="go">       [   4.,   28.],</span>
+<span class="go">       [   7.,   28.],</span>
+<span class="go">       [   6.,   39.],</span>
+<span class="go">       [  33.,  128.],</span>
+<span class="go">       [ 126.,  428.],</span>
+<span class="go">       [  45.,  169.],</span>
+<span class="go">       [   8.,   43.],</span>
+<span class="go">       [   3.,   19.],</span>
+<span class="go">       [   0.,    3.],</span>
+<span class="go">       [   0.,    0.]], dtype=float32)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">fantom_cage_count</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;CNhs10621&#39;</span><span class="p">,</span> <span class="s1">&#39;CNhs10622&#39;</span><span class="p">])</span>
+<span class="go">array([[    6.,    63.],</span>
+<span class="go">       [    7.,   102.],</span>
+<span class="go">       [   44.,   464.],</span>
+<span class="go">       [   19.,   354.],</span>
+<span class="go">       [   32.,   359.],</span>
+<span class="go">       [   25.,   495.],</span>
+<span class="go">       [  146.,  1625.],</span>
+<span class="go">       [  566.,  5435.],</span>
+<span class="go">       [  202.,  2144.],</span>
+<span class="go">       [   36.,   551.],</span>
+<span class="go">       [   13.,   244.],</span>
+<span class="go">       [    0.,    34.],</span>
+<span class="go">       [    0.,    19.]], dtype=float32)</span>
+</pre></div>
+</div>
+<p><strong>Availability:</strong> hg19 only.</p>
+<p><strong>Links:</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://fantom.gsc.riken.jp/">FANTOM Project</a></p></li>
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?hgsid=603787071_5djoeHTroOgmmn0JHflaofosAIsI&amp;c=chr1&amp;g=hub_21891_TSS_activity_read_counts">UCSC Track settings - read counts</a></p></li>
+<li><p><a class="reference external" href="https://genome.ucsc.edu/cgi-bin/hgTrackUi?hgsid=603787071_5djoeHTroOgmmn0JHflaofosAIsI&amp;c=chr1&amp;g=hub_21891_TSS_activity_TPM">UCSC Track settings - TPM</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="develop.html" class="btn btn-neutral float-right" title="Developers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2016, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,8 +1,0 @@
-fixedStep chrom=chr1 start=1001 step=1 span=1
-1000.0
-fixedStep chrom=chr1 start=1002 step=1 span=1
-10000.0
-fixedStep chrom=chr1 start=1003 step=1 span=1
-40000.0
-fixedStep chrom=chr1 start=1004 step=1 span=1
-70000.0

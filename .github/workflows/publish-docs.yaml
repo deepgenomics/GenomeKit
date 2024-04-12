@@ -70,7 +70,12 @@ jobs:
         run: |
           set -x
           micromamba activate ~/micromamba/envs/build/envs/doc-build
-          make html -C docs
+          make html -C docs-src
+          pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
+          pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+          mkdir -p ../docs/${pkg_version}/
+          cp -r docs-src/_build/html/* ../docs/
+          cp -r docs-src/_build/html/* ../docs/${GK_VERSION}/
           set +x
 
       - name: Upload artifact

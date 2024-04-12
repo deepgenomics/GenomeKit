@@ -12,8 +12,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
-  pages: write
+  contents: write
   id-token: write
 
 jobs:
@@ -70,14 +69,25 @@ jobs:
         run: |
           set -x
           micromamba activate ~/micromamba/envs/build/envs/doc-build
-          make html -C docs
+          make html -C docs-src
           set +x
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: docs/_build/html
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: push to gh-pages branch
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
+          pkg_name=$(basename ${pkg_name})
+          pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
+          git fetch origin
+          git checkout gh-pages
+          cp -r docs-src/_build/html/* docs/
+          mkdir -p docs/${pkg_version}/
+          cp -r docs-src/_build/html/* docs/${pkg_version}/
+          git status
+          git config --global user.email "gh-actions-bot@deepgenomics.com"
+          git config --global user.name "gh-actions-bot"
+          git add docs
+          git commit -m "docs: update to version ${pkg_version}"
+          git push origin gh-pages
+          set +x

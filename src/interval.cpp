@@ -48,7 +48,11 @@ void interval_filter::exclude(interval_t i)
 
 bool interval_filter::filter(interval_t i) const
 {
-	return !_in_list(i, _exclude) && (std::empty(_allow) || _in_list(i, _allow));
+	if (_in_list(i, _exclude))
+		return false;
+	if (std::empty(_allow))
+		return true;
+	return _in_list(i, _allow);
 }
 
 void interval_filter::validate() const

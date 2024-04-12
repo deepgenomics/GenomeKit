@@ -119,8 +119,7 @@ public:
 		builder(const char* outfile);
 		INLINE void set_min_reads(int value) { _min_reads = (unsigned)value; }
 		INLINE void set_min_overhang(int value) { _min_overhang = value; }
-		void exclude(const interval_t& interval);
-		void allow(const interval_t& interval);
+		interval_filter& get_interval_filter() { return _interval_filter; }
 		void filter(filterfn filter) { _filter = filter; }
 		void add(const char* infile);
 		void finalize();
@@ -168,8 +167,7 @@ public:
 		std::optional<refg_t> _refg;
 		unsigned    _min_reads{1};
 		int         _min_overhang{1};
-		vector<interval_t> _exclude;
-		vector<interval_t> _allow;
+		interval_filter _interval_filter;
 		map<interval_t, jrdist_entry> _juncs;
 		filterfn _filter{};
 

@@ -257,7 +257,7 @@ static PyObject* PyReadAlignments_build_ralign(PyObject* cls, PyObject* args, Py
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(exclude); ++i) {
 			PyObject* interval = PyList_GET_ITEM(exclude, i); // borrowed reference
 			GK_CHECK(PyInterval::check(interval), type, "Each exclude item must be an Interval");
-			raligns.exclude(PyInterval::value(interval));
+			raligns.get_interval_filter().exclude(PyInterval::value(interval));
 		}
 	}
 
@@ -266,7 +266,7 @@ static PyObject* PyReadAlignments_build_ralign(PyObject* cls, PyObject* args, Py
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(allow); ++i) {
 			PyObject* interval = PyList_GET_ITEM(allow, i); // borrowed reference
 			GK_CHECK(PyInterval::check(interval), type, "Each allow item must be an Interval");
-			raligns.allow(PyInterval::value(interval));
+			raligns.get_interval_filter().allow(PyInterval::value(interval));
 		}
 	}
 

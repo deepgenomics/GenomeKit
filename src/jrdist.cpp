@@ -328,11 +328,11 @@ void read_distributions::builder::jrdist_entry::collect_impl(jrdist_collector& c
 
 read_distributions::builder::builder(const char* outfile)
 : _file(outfile, "w")
+, _interval_filter{[&](interval_t i) {
+	GK_CHECK(!_refg || i.refg == *_refg, value, "Cannot filter {} for {}", i, get_refg_registry().refg_as_sv(*_refg));
+}}
 {
 }
-
-void read_distributions::builder::exclude(const interval_t& interval) { _exclude.push_back(interval); }
-void read_distributions::builder::allow(const interval_t& interval) { _allow.push_back(interval); }
 
 void read_distributions::builder::add(const char* infile)
 {
@@ -356,15 +356,9 @@ void read_distributions::builder::add(const char* infile)
 	if (ralign.juncs().size() > 0) {
 		auto junc_refg = ralign.juncs()[0].refg;
 		if (!_refg) {
-			for (auto x : _exclude) {
-				GK_CHECK(junc_refg == x.refg, value, "Cannot exclude {} for {}", x,
-						 get_refg_registry().refg_as_sv(junc_refg));
-			}
-			for (auto x : _allow) {
-				GK_CHECK(junc_refg == x.refg, value, "Cannot allow {} for {}", x,
-						 get_refg_registry().refg_as_sv(junc_refg));
-			}
+
 			_refg = junc_refg;
+			_interval_filter.validate();
 		} else {
 			GK_CHECK(*_refg == junc_refg, file, "Reference genome mismatch between different input files.");
 		}
@@ -373,10 +367,7 @@ void read_distributions::builder::add(const char* infile)
 		for (int j = 0; j < ralign.juncs().size(); ++j) {
 			jraligns_t junc(j, ralign.juncs());
 
-			// Filter out by allow and exclude
-			if (is_interval_in_list(junc, _exclude))
-				continue;
-			if (!_allow.empty() && !is_interval_in_list(junc, _allow))
+			if (!get_interval_filter().filter(junc))
 				continue;
 
 			jrdist_entry& rdist = _juncs[junc];

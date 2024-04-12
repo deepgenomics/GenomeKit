@@ -11,7 +11,7 @@ list(APPEND COMMON_CXX_FLAGS -D_FILE_OFFSET_BITS=64)
 FILE(GLOB SOURCES src/*.cpp src/*.h)
 if(DEFINED ENV{IN_CLION})
     execute_process(
-            COMMAND python -c "import sys; print('{}.{}'.format(sys.version_info.major, sys.version_info.minor))"
+            COMMAND $ENV{CONDA_PREFIX}/bin/python -c "import sys; print('{}.{}'.format(sys.version_info.major, sys.version_info.minor), end='')"
             OUTPUT_VARIABLE PYTHON_VERSION
     )
 
@@ -26,7 +26,7 @@ if(DEFINED ENV{IN_CLION})
     find_package(fmt)
     add_library(gkdev ${SOURCES})
     target_link_libraries(gkdev fmt::fmt ZLIB::ZLIB)
-    target_compile_options(gkdev PRIVATE ${COMMON_CXX_FLAGS} -DDGPY_LIBNAME=$ENV{CONDA_PREFIX}/lib)
+    target_compile_options(gkdev PRIVATE ${COMMON_CXX_FLAGS} -DGKPY_LIBNAME=$ENV{CONDA_PREFIX}/lib)
 endif()
 
 # We don't want any py_* files in gk because it brings in the python runtime and causes compile errors

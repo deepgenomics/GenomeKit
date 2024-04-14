@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.vcf_table &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.vcf_table &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -162,7 +162,9 @@
         <span class="k">yield</span> <span class="n">script</span><span class="o">.</span><span class="n">name</span>
 
 
-<div class="viewcode-block" id="VCFVariant"><a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="VCFVariant">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">VCFVariant</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFVariant</span><span class="p">,</span> <span class="n">Variant</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A VCF variant. Scalar INFO/FORMAT fields can be accessed as a dynamic</span>
@@ -175,11 +177,16 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="VCFVariant.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="VCFVariant.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
 
-<div class="viewcode-block" id="VCFVariant.as_variant_string"><a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.as_variant_string">[docs]</a>    <span class="k">def</span> <span class="nf">as_variant_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFVariant.as_variant_string">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.as_variant_string">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_variant_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a string representation of the variant.</span>
 
 <span class="sd">        See Also</span>
@@ -194,13 +201,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div>
 
+
     <span class="fm">__str__</span> <span class="o">=</span> <span class="n">as_variant_string</span>
 
-<div class="viewcode-block" id="VCFVariant.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;VCFVariant </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="VCFVariant.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;VCFVariant </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="VCFTable"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="VCFTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">VCFTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a ``.vcfbin`` file for querying.</span>
 
@@ -219,11 +233,16 @@
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="VCFTable.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>
+<div class="viewcode-block" id="VCFTable.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.from_vcf"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.from_vcf">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="VCFTable.from_vcf">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.from_vcf">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">from_vcf</span><span class="p">(</span><span class="n">vcfpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                  <span class="n">reference_genome</span><span class="p">:</span> <span class="n">Genome</span><span class="p">,</span>
                  <span class="o">*</span><span class="n">args</span><span class="p">,</span>
@@ -335,7 +354,10 @@
         <span class="c1"># Open the binary file</span>
         <span class="k">return</span> <span class="n">VCFTable</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_aligned">[docs]</a>    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_aligned">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -356,7 +378,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_aligned">[docs]</a>    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_aligned">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -377,7 +402,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_within">[docs]</a>    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39; end within `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -398,7 +426,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_within">[docs]</a>    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39; end within `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -419,7 +450,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_within">[docs]</a>    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that fall entirely within `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -440,7 +474,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_overlapping">[docs]</a>    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_overlapping">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that overlap `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -461,7 +498,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="VCFTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_exact">[docs]</a>    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_exact">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that span exactly `interval`.</span>
 
 <span class="sd">        This function is a faster version of the brute-force filter::</span>
@@ -482,6 +522,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -494,7 +535,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VCFTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__getitem__">[docs]</a>    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<div class="viewcode-block" id="VCFTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to all variants.</span>
 
 <span class="sd">        Allows iteration over all variants::</span>
@@ -523,10 +566,16 @@
             <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.__len__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__len__">[docs]</a>    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.__len__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__len__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.where"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.where">[docs]</a>    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.where">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.where">[docs]</a>
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter variants by numpy mask.</span>
 
 <span class="sd">        Fast extraction of table elements based on a mask::</span>
@@ -553,7 +602,10 @@
             <span class="n">mask</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.masked"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.masked">[docs]</a>    <span class="k">def</span> <span class="nf">masked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.masked">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.masked">[docs]</a>
+    <span class="k">def</span> <span class="nf">masked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new VCFTable which is filtered by a numpy mask</span>
 
 <span class="sd">        For example, to do a random downsample::</span>
@@ -586,6 +638,7 @@
             <span class="n">result</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span>
                 <span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">,</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
+
 
     <span class="k">def</span> <span class="nf">_masked_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -653,7 +706,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VCFTable.info"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info_id</span><span class="p">):</span>
+<div class="viewcode-block" id="VCFTable.info">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.info">[docs]</a>
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The full per-variant data array associated with an INFO field. String INFO fields</span>
 <span class="sd">        are accessed by :class:`~.VCFVariant` attribute, eg. ``variant.CIGAR``.</span>
 
@@ -699,6 +754,7 @@
             <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">format_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -712,7 +768,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VCFTable.format"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_id</span><span class="p">):</span>
+<div class="viewcode-block" id="VCFTable.format">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.format">[docs]</a>
+    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The full per-variant per-sample data matrix associated with a FORMAT field.</span>
 
 <span class="sd">        Parameters</span>
@@ -755,7 +813,10 @@
             <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
-<div class="viewcode-block" id="VCFTable.build_vcfbin"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.build_vcfbin">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="VCFTable.build_vcfbin">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.build_vcfbin">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_vcfbin</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span>
                      <span class="n">infile</span><span class="p">,</span>
@@ -901,7 +962,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="VCFTable.vcfbin_version"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.vcfbin_version">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="VCFTable.vcfbin_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.vcfbin_version">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">vcfbin_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The `vcfbin` file format version that this build supports.</span>
@@ -915,7 +979,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.sequence_variations"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.sequence_variations">[docs]</a>    <span class="k">def</span> <span class="nf">sequence_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.sequence_variations">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.sequence_variations">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequence_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find variants that could affect the given `interval`&#39;s DNA sequence.</span>
 <span class="sd">        When specified with an `anchor`, deletion variants will increase the</span>
 <span class="sd">        interval&#39;s span; this can be overestimated (due to overlapping</span>
@@ -940,7 +1007,10 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;masked variants are not yet supported.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">sequence_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.variant_combinations"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.variant_combinations">[docs]</a>    <span class="k">def</span> <span class="nf">variant_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">heterozygous_alt_af_threshold</span><span class="o">=</span><span class="mf">0.90</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VCFTable.variant_combinations">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.variant_combinations">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">heterozygous_alt_af_threshold</span><span class="o">=</span><span class="mf">0.90</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a list of all possible applications of the specified</span>
 <span class="sd">        variants. This is useful when the variants are not phased (difficult</span>
 <span class="sd">        to determine the consensus sequence.)</span>
@@ -974,7 +1044,10 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;masked variants are not yet supported.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">variant_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">heterozygous_alt_af_threshold</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VCFTable.close"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.close">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="VCFTable.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.close">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
 
@@ -991,6 +1064,7 @@
 <span class="sd">        Closing this table will invalidate all VCFVariants previously accessed via __getitem__.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -1010,8 +1084,12 @@
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="VCFTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;VCFTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+<div class="viewcode-block" id="VCFTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;VCFTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>

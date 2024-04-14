@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.genome &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.genome &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -94,7 +94,9 @@
 <span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span>
 
 
-<div class="viewcode-block" id="Genome"><a class="viewcode-back" href="../../api.html#genome_kit.Genome">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="Genome">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Genome</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Genome</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize a reference genome and its corresponding resources (DNA, annotations, etc).</span>
 
@@ -167,7 +169,9 @@
 <span class="sd">        expected to serve.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Genome.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<div class="viewcode-block" id="Genome.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts</span> <span class="o">=</span> <span class="kc">None</span>
@@ -175,12 +179,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_appris_principality_strings</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;PRINCIPAL:1&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:2&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:3&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:4&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:5&#39;</span><span class="p">,</span>
                                              <span class="s1">&#39;ALTERNATIVE:1&#39;</span><span class="p">,</span> <span class="s1">&#39;ALTERNATIVE:2&#39;</span><span class="p">)</span></div>
 
+
     <span class="n">genome_cache</span> <span class="o">=</span> <span class="n">WeakValueDictionary</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Genome.__reduce__"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.__reduce__">[docs]</a>    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Genome.__reduce__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__reduce__">[docs]</a>
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="p">))</span></div>
 
-<div class="viewcode-block" id="Genome.__new__"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.__new__">[docs]</a>    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+
+<div class="viewcode-block" id="Genome.__new__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__new__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">if</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">Genome</span><span class="p">:</span>
             <span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="o">.</span><span class="n">genome_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">genome</span><span class="p">:</span>
@@ -193,17 +203,26 @@
 
         <span class="k">return</span> <span class="n">genome</span></div>
 
-<div class="viewcode-block" id="Genome.interval"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.interval">[docs]</a>    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Genome.interval">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shorthand method for creating an Interval with the same refg as the genome object called on.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Genome.variant"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant">[docs]</a>    <span class="k">def</span> <span class="nf">variant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_string</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Genome.variant">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_string</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shorthand method for creating a Variant with the same refg as the genome object called on.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Variant</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">variant_string</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Genome.dna"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.dna">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="Genome.dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.dna">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">allow_outside_chromosome</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract DNA from a reference genome.</span>
 
@@ -226,7 +245,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Genome.variant_dna"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant_dna">[docs]</a>    <span class="k">def</span> <span class="nf">variant_dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Genome.variant_dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant_dna">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant_dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract DNA from a genome with specific variants applied to it.</span>
 
 <span class="sd">        Follows the same rules as :py:meth:`~genome_kit.VariantGenome.dna`.</span>
@@ -246,6 +268,7 @@
 <span class="sd">            The variant DNA sequence.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">apply_variants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dna</span><span class="p">,</span> <span class="n">check_variants_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">),</span> <span class="n">interval</span><span class="p">)</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -361,7 +384,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">Utr3Table</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Genome.find_motif"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.find_motif">[docs]</a>    <span class="k">def</span> <span class="nf">find_motif</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Genome.find_motif">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.find_motif">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_motif</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a genomic motif in an interval on a :py:class:`~genome_kit.Genome`.</span>
 
 <span class="sd">        Parameters</span>
@@ -448,6 +473,7 @@
 
         <span class="k">return</span> <span class="n">motif_hits</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -465,7 +491,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of valid chromosome names for this genome.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-<div class="viewcode-block" id="Genome.chromosome_size"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.chromosome_size">[docs]</a>    <span class="k">def</span> <span class="nf">chromosome_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">):</span>
+<div class="viewcode-block" id="Genome.chromosome_size">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.chromosome_size">[docs]</a>
+    <span class="k">def</span> <span class="nf">chromosome_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the size of the given chromosome, in bp.</span>
 
 <span class="sd">        Returns</span>
@@ -478,6 +506,7 @@
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;No such chromosome: </span><span class="si">%s</span><span class="s2">. </span><span class="se">\n</span><span class="s2">Supported values: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -503,8 +532,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Genome.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Genome.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Genome(&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="si">}</span><span class="s1">&quot;)&#39;</span></div>
+
 
     <span class="k">def</span> <span class="nf">_chrom_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span><span class="p">:</span>
@@ -554,7 +586,9 @@
         <span class="c1"># ordered by APPRIS index.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts_by_gene</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Genome.appris_transcripts"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_transcripts">[docs]</a>    <span class="k">def</span> <span class="nf">appris_transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Genome.appris_transcripts">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_transcripts">[docs]</a>
+    <span class="k">def</span> <span class="nf">appris_transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of transcript objects ordered by our custom APPRIS index.</span>
 <span class="sd">        If a gene is provided, returns a list of transcripts for that gene ordered by decreasing priority.</span>
 
@@ -591,7 +625,10 @@
 
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">transcript_indices</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Genome.appris_principality"><a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_principality">[docs]</a>    <span class="k">def</span> <span class="nf">appris_principality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transcript</span><span class="p">,</span> <span class="n">as_string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Genome.appris_principality">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_principality">[docs]</a>
+    <span class="k">def</span> <span class="nf">appris_principality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transcript</span><span class="p">,</span> <span class="n">as_string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the APPRIS principality index (isoform specific number) for this transcript.</span>
 <span class="sd">        An APPRIS principality index is an integer from 0..6 where 0 is considered most prinicpal and 6 considered least</span>
 <span class="sd">        principal.</span>
@@ -641,7 +678,9 @@
         <span class="k">if</span> <span class="n">as_string</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_principality_strings</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span><span class="p">[</span><span class="n">tidx</span><span class="p">]]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span><span class="p">[</span><span class="n">tidx</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span><span class="p">[</span><span class="n">tidx</span><span class="p">]</span></div>
+</div>
+
 
 <span class="k">class</span> <span class="nc">ApprisNotAvailableError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
     <span class="k">pass</span>

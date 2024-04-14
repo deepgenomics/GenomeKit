@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.variant_genome &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.variant_genome &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -87,7 +87,9 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_util</span>
 
 
-<div class="viewcode-block" id="VariantGenome"><a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome">[docs]</a><span class="k">class</span> <span class="nc">VariantGenome</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="VariantGenome">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome">[docs]</a>
+<span class="k">class</span> <span class="nc">VariantGenome</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A reference genome with a number of variants applied to it.</span>
 
 <span class="sd">    A variant genome behaves like a :py:class:`~genome_kit.Genome` object,</span>
@@ -102,7 +104,9 @@
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;genome&#39;</span><span class="p">,</span> <span class="s1">&#39;variants&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="VariantGenome.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
+<div class="viewcode-block" id="VariantGenome.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a variant genome.</span>
 
 <span class="sd">        Parameters</span>
@@ -123,7 +127,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">genome</span> <span class="o">=</span> <span class="n">reference_genome</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variants</span> <span class="o">=</span> <span class="n">check_variants_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genome</span><span class="p">,</span> <span class="n">variants</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VariantGenome.dna"><a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.dna">[docs]</a>    <span class="k">def</span> <span class="nf">dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VariantGenome.dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.dna">[docs]</a>
+    <span class="k">def</span> <span class="nf">dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract variant DNA for an anchored interval or coordinate.</span>
 
 <span class="sd">        Parameters</span>
@@ -141,7 +148,10 @@
 
         <span class="k">return</span> <span class="n">apply_variants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="VariantGenome.find_motif"><a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.find_motif">[docs]</a>    <span class="k">def</span> <span class="nf">find_motif</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VariantGenome.find_motif">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.find_motif">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_motif</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a genomic motif in an interval on a :py:class:`~genome_kit.VariantGenome`.</span>
 
 <span class="sd">        This method finds all occurrences of a genomic motif on a VariantGenome. It can</span>
@@ -270,8 +280,12 @@
 
         <span class="k">return</span> <span class="n">motif_hits</span></div>
 
-<div class="viewcode-block" id="VariantGenome.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="VariantGenome.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantGenome.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;&lt;VariantGenome </span><span class="si">{}</span><span class="s1"> with </span><span class="si">{}</span><span class="s1"> variants&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="c1"># Intercept any attribute requests that weren&#39;t found on the VariantGenome object itself,</span>
@@ -280,6 +294,7 @@
         <span class="c1"># TODO: This is problematic: See DGENGINE-1401</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">genome</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; GenomeKit 5.0.0 documentation</title>
+  <title>Quickstart &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ec0e10ea"></script>
+        <script src="_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,7 +39,7 @@
               <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.0.0
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -101,12 +101,12 @@
            <div itemprop="articleBody">
              
   <section id="quickstart">
-<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
 <p>Here is a quick tutorial covering GenomeKit’s most important functionality.</p>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <section id="install-via-conda">
-<h3>Install via conda<a class="headerlink" href="#install-via-conda" title="Permalink to this heading"></a></h3>
+<h3>Install via conda<a class="headerlink" href="#install-via-conda" title="Link to this heading"></a></h3>
 <p>The best way to install GenomeKit is via the pre-compiled conda packages
 available from <a class="reference external" href="https://anaconda.org/conda-forge/genomekit">https://anaconda.org/conda-forge/genomekit</a>.</p>
 <p>You can install GenomeKit with:</p>
@@ -116,15 +116,21 @@ available from <a class="reference external" href="https://anaconda.org/conda-fo
 </section>
 </section>
 <section id="basics">
-<h2>Basics<a class="headerlink" href="#basics" title="Permalink to this heading"></a></h2>
+<h2>Basics<a class="headerlink" href="#basics" title="Link to this heading"></a></h2>
 <section id="initial-data-access">
-<h3>Initial Data Access<a class="headerlink" href="#initial-data-access" title="Permalink to this heading"></a></h3>
+<h3>Initial Data Access<a class="headerlink" href="#initial-data-access" title="Link to this heading"></a></h3>
 <p>Data, such as assemblies, annotations, tracks, etc, are stored in custom-built binary files.</p>
 <p>These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
 APIs for building these files are provided as part of the API.</p>
 <p><code class="docutils literal notranslate"><span class="pre">starter/build.sh</span></code> is a bash script that builds a few assemblies and annotations and places
 them in the local data directory, to get you started. It also serves as a good example of how
-to build your own data files.</p>
+to build your own data files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">env</span><span class="o">-</span><span class="k">with</span><span class="o">-</span><span class="n">genomekit</span>
+<span class="n">curl</span> <span class="o">-</span><span class="n">O</span> <span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">deepgenomics</span><span class="o">/</span><span class="n">GenomeKit</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">starter</span><span class="o">/</span><span class="n">build</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">chmod</span> <span class="o">+</span><span class="n">x</span> <span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span>
+<span class="o">./</span><span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
 <p>A larger selection of pre-built data files is provided in a public Google Cloud Storage bucket,
 which is set as the default data source.</p>
 <p>The bucket is configured with <a class="reference external" href="https://cloud.google.com/storage/docs/requester-pays">“requester pays”</a>
@@ -138,6 +144,8 @@ enabled, so you will need to</p>
 </li>
 <li><p>set the <code class="docutils literal notranslate"><span class="pre">GENOMEKIT_GCS_BILLING_PROJECT</span></code> env var to your Google Cloud project:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">GENOMEKIT_GCS_BILLING_PROJECT</span><span class="o">=</span><span class="s2">&quot;your-project-id&quot;</span>
+<span class="c1"># required depending on your local gcloud configuration</span>
+<span class="n">export</span> <span class="n">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span><span class="s2">&quot;your-project-id&quot;</span>
 </pre></div>
 </div>
 </li>
@@ -212,7 +220,7 @@ plus several other attributes:</p>
 </section>
 </section>
 <section id="tracks">
-<h2>Tracks<a class="headerlink" href="#tracks" title="Permalink to this heading"></a></h2>
+<h2>Tracks<a class="headerlink" href="#tracks" title="Link to this heading"></a></h2>
 <p>GenomeKit users can also build tracks via
 <a class="reference internal" href="api.html#genome_kit.GenomeTrackBuilder" title="genome_kit.GenomeTrackBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenomeTrackBuilder</span></code></a>.</p>
 <div class="admonition note">
@@ -250,7 +258,7 @@ passed to the builder’s constructor:</p>
 </div>
 </section>
 <section id="annotations">
-<h2>Annotations<a class="headerlink" href="#annotations" title="Permalink to this heading"></a></h2>
+<h2>Annotations<a class="headerlink" href="#annotations" title="Link to this heading"></a></h2>
 <p>GenomeKit provides access to GENCODE and RefSeq annotations.</p>
 <p>Walking the structure of an annotation is straight-forward:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>
@@ -314,7 +322,7 @@ See <a class="reference internal" href="api.html#genome_kit.GenomeAnnotation" ti
 ultimately owns all the annotation tables.</p>
 </section>
 <section id="working-with-intervals">
-<h2>Working with Intervals<a class="headerlink" href="#working-with-intervals" title="Permalink to this heading"></a></h2>
+<h2>Working with Intervals<a class="headerlink" href="#working-with-intervals" title="Link to this heading"></a></h2>
 <p>GenomeKit uses the following convention for
 <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>:</p>
 <ol class="arabic simple">
@@ -432,7 +440,7 @@ as follows:</p>
 </div>
 </section>
 <section id="feature-extraction-basics">
-<h2>Feature extraction basics<a class="headerlink" href="#feature-extraction-basics" title="Permalink to this heading"></a></h2>
+<h2>Feature extraction basics<a class="headerlink" href="#feature-extraction-basics" title="Link to this heading"></a></h2>
 <p>GenomeKit currently provides DNA sequence, accessible via the
 <cite>dna</cite> attribute of <a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a>. The extracted DNA is
 automatically reverse-complemented according to strand:</p>
@@ -502,7 +510,7 @@ acceptor site:</p>
 </div>
 </section>
 <section id="variants">
-<h2>Variants<a class="headerlink" href="#variants" title="Permalink to this heading"></a></h2>
+<h2>Variants<a class="headerlink" href="#variants" title="Link to this heading"></a></h2>
 <p>Individual genomic variants are represented by a <a class="reference internal" href="api.html#genome_kit.Variant" title="genome_kit.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">genome_kit</span> <span class="kn">import</span> <span class="n">Variant</span>
 </pre></div>
@@ -544,7 +552,7 @@ variants <code class="docutils literal notranslate"><span class="pre">chr7:117,1
 <p>Empty alleles can be specified by <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;-&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p>
 </section>
 <section id="variants-from-vcf-files">
-<h2>Variants from VCF Files<a class="headerlink" href="#variants-from-vcf-files" title="Permalink to this heading"></a></h2>
+<h2>Variants from VCF Files<a class="headerlink" href="#variants-from-vcf-files" title="Link to this heading"></a></h2>
 <p>GenomeKit provides a binary VCF format that is compact, indexed by position.
 The binary files can be opened by <a class="reference internal" href="api.html#genome_kit.VCFTable" title="genome_kit.VCFTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">VCFTable</span></code></a>, which returns
 convenient <a class="reference internal" href="api.html#genome_kit.Variant" title="genome_kit.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a>-based objects:</p>
@@ -641,7 +649,7 @@ convenient <a class="reference internal" href="api.html#genome_kit.Variant" titl
 <p>You can run the above examples with <code class="docutils literal notranslate"><span class="pre">$python</span> <span class="pre">demos/query_vcf.py</span></code> from the GenomeKit directory.</p>
 </section>
 <section id="feature-extraction-with-variants">
-<h2>Feature Extraction with Variants<a class="headerlink" href="#feature-extraction-with-variants" title="Permalink to this heading"></a></h2>
+<h2>Feature Extraction with Variants<a class="headerlink" href="#feature-extraction-with-variants" title="Link to this heading"></a></h2>
 <p>Besides reference genomes (<a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a>), GenomeKit can also represent
 a genome that has variants applied to it (<a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a>).
 The idea is that you can pass either a reference genome or a variant genome
@@ -746,7 +754,7 @@ your intervals.
 See <a class="reference internal" href="anchors.html#anchors"><span class="std std-ref">Anchors</span></a> for a more in-depth explanation.</p>
 </section>
 <section id="motif-finding">
-<h2>Motif finding<a class="headerlink" href="#motif-finding" title="Permalink to this heading"></a></h2>
+<h2>Motif finding<a class="headerlink" href="#motif-finding" title="Link to this heading"></a></h2>
 <p>GenomeKit can find motifs in both reference and mutant sequences for you. This
 is based on string matching, not PWMs.</p>
 <p>The example shows how to search for motifs on both the reference and a variant
@@ -851,7 +859,7 @@ In this case the interval has its <code class="docutils literal notranslate"><sp
 to indicate that the motif matches at the fourth position in the insertion.</p>
 </section>
 <section id="sharing-new-data-files">
-<span id="sharing-data"></span><h2>Sharing new data files<a class="headerlink" href="#sharing-new-data-files" title="Permalink to this heading"></a></h2>
+<span id="sharing-data"></span><h2>Sharing new data files<a class="headerlink" href="#sharing-new-data-files" title="Link to this heading"></a></h2>
 <p>Data such as assemblies, annotations, tracks, etc is stored in custom-built binary files.
 APIs for building these files are provided as part of the API.
 GenomeKit first searches for data files in the directory specified by the environment variable

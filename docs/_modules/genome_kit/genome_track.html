@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.genome_track &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.genome_track &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -91,7 +91,9 @@
 <span class="c1">#########################################################################</span>
 
 
-<div class="viewcode-block" id="GenomeTrackBuilder"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="GenomeTrackBuilder">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">GenomeTrackBuilder</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeTrackBuilder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a .gtrack file.</span>
 
@@ -140,7 +142,9 @@
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- ADDING SLOTS IS OK</span>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GenomeTrackBuilder.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">strandedness</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .gtrack for writing.</span>
 
@@ -165,7 +169,10 @@
 <span class="sd">            Optional. The resolution of the track data, in genomic positions.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_default_value"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_default_value">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_default_value">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_default_value">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_default_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the fill value for gaps in the track.</span>
 
@@ -180,7 +187,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_sparsity"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_sparsity">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_sparsity">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_sparsity">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_run</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable automatic sparsification of data intervals.</span>
 
@@ -213,7 +223,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_clamping"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_clamping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_clamping">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_clamping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_clamping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clamp all values to the encodable range.</span>
 
@@ -226,7 +239,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_dict"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_dict">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_dict">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_dict">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the dictionary for etypes `f2..8`.</span>
 
@@ -243,7 +259,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_transform"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_transform">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_transform">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_transform">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform data from range `[a, b]` to range `[c, d]`.</span>
 
@@ -260,7 +279,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_restriction"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_restriction">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_restriction">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_restriction">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_restriction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">restriction</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict data to a specific interval.</span>
 
@@ -284,7 +306,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_data"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the track data on a specific interval.</span>
 
@@ -313,7 +338,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_wig"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_wig">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_wig">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_wig">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_data_from_wig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_strand_file</span><span class="p">,</span> <span class="n">neg_strand_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .wig or .wig.gz file.</span>
 
@@ -339,7 +367,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bedgraph"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bedgraph">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bedgraph">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bedgraph">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_data_from_bedgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_strand_file</span><span class="p">,</span> <span class="n">neg_strand_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .bedgraph or .bedgraph.gz file.</span>
 
@@ -355,7 +386,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bed"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bed">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bed">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bed">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">set_data_from_bed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bedfile</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .bed or .bed.gz file.</span>
 
@@ -392,7 +426,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.flush"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.flush">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.flush">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.flush">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Flush the currently accumulated data to disk.</span>
 
@@ -403,13 +440,17 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.finalize"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.finalize">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.finalize">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.finalize">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Finish writing the file and close it.</span>
 
 <span class="sd">        This function must be called last, to complete creation of the GTRACK file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -544,14 +585,20 @@
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="GenomeTrackBuilder.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrackBuilder &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="GenomeTrackBuilder.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrackBuilder &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="c1">#########################################################################</span>
 
 
-<div class="viewcode-block" id="GenomeTrack"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="GenomeTrack">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">GenomeTrack</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeTrack</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to a genomic data track.</span>
 
@@ -622,7 +669,9 @@
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- ADDING SLOTS IS OK</span>
 
-<div class="viewcode-block" id="GenomeTrack.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GenomeTrack.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .gtrack file.</span>
 
@@ -632,7 +681,10 @@
 <span class="sd">            The .gtrack file to open.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
-<div class="viewcode-block" id="GenomeTrack.__call__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__call__">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrack.__call__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__call__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract data from a genomic track.</span>
 
@@ -656,6 +708,7 @@
 <span class="sd">            The decoded track data with ``len(interval)`` rows and ``dim`` columns.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -741,7 +794,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GenomeTrack.histogram"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.histogram">[docs]</a>    <span class="k">def</span> <span class="nf">histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">separate_dims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GenomeTrack.histogram">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.histogram">[docs]</a>
+    <span class="k">def</span> <span class="nf">histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">separate_dims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a histogram of the values in the track.</span>
 
 <span class="sd">        Returns a dictionary where each key is a float appearing</span>
@@ -795,6 +850,7 @@
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_histogram_dict_from_counters</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">counters</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_dict_from_counters</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
 
     <span class="k">def</span> <span class="nf">_intervals_for_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of intervals, one for each chromosome, which effectively partition the entire reference genome</span>
@@ -863,7 +919,9 @@
 
         <span class="k">return</span> <span class="n">histogram</span>
 
-<div class="viewcode-block" id="GenomeTrack.close"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.close">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GenomeTrack.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.close">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
 
@@ -876,7 +934,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="GenomeTrack.gtrack_version"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.gtrack_version">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeTrack.gtrack_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.gtrack_version">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">gtrack_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The `gtrack` file format version that this build supports.</span>
@@ -890,14 +951,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
 
+
     <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="GenomeTrack.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrack &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="GenomeTrack.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrack &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
            </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit._twobitutils &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit._twobitutils &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -164,7 +164,9 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;starts&#39;</span><span class="p">:</span> <span class="n">starts</span><span class="p">,</span> <span class="s1">&#39;sizes&#39;</span><span class="p">:</span> <span class="n">sizes</span><span class="p">}</span>
 
 
-<div class="viewcode-block" id="write2bit"><a class="viewcode-back" href="../../api.html#genome_kit._twobitutils.write2bit">[docs]</a><span class="k">def</span> <span class="nf">write2bit</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">seqs</span><span class="p">):</span>
+<div class="viewcode-block" id="write2bit">
+<a class="viewcode-back" href="../../api.html#genome_kit._twobitutils.write2bit">[docs]</a>
+<span class="k">def</span> <span class="nf">write2bit</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">seqs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a 2bit file containing the given DNA sequences.</span>
 
 <span class="sd">    Parameters</span>
@@ -273,6 +275,7 @@
 
             <span class="c1"># Write DNA bits (size rounded up to nearest byte)</span>
             <span class="n">array</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;bits&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

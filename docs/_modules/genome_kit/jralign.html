@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.jralign &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.jralign &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -94,7 +94,9 @@
 <span class="c1">#########################################################################</span>
 
 
-<div class="viewcode-block" id="JunctionReadAlignment"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="JunctionReadAlignment">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">JunctionReadAlignment</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAlign</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A junction read alignment.</span>
 
@@ -166,7 +168,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JunctionReadAlignment.variants"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.variants">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JunctionReadAlignment.variants">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.variants">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of variants observed in this read alignment.</span>
 
@@ -178,14 +182,21 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">Variant</span><span class="p">(),</span> <span class="p">)</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignment.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignment (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_variants</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="JunctionReadAlignment.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignment (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_variants</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="JunctionReadAlignments"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="JunctionReadAlignments">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">JunctionReadAlignments</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAligns</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A set of read alignments across a junction.</span>
@@ -197,9 +208,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="JunctionReadAlignments.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JunctionReadAlignments.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -231,7 +245,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JunctionReadAlignments.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JunctionReadAlignments.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to a junction read alignment.</span>
 
@@ -252,20 +268,29 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionReadAlignment</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignments.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignments </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1"> reads)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_ucsc</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_reads</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="JunctionReadAlignments.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignments </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1"> reads)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_ucsc</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_reads</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="JunctionReadAlignmentsTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">JunctionReadAlignmentsTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAlignsTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -288,7 +313,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -311,7 +339,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39;-most position within `interval`.</span>
 
@@ -334,7 +365,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39;-most position within `interval`.</span>
 
@@ -357,7 +391,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that fall entirely within `interval`.</span>
 
@@ -380,7 +417,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that overlap `interval`.</span>
 
@@ -403,7 +443,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that span exactly `interval`.</span>
 
@@ -426,6 +469,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -438,7 +482,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to all junctions.</span>
 
@@ -461,14 +507,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionReadAlignments</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="JunctionReadAlignmentsTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;JunctionReadAlignmentsTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;JunctionReadAlignmentsTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="JReadAlignments"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="JReadAlignments">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">JReadAlignments</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JReadAlignments</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to read alignments.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -477,7 +530,9 @@
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="JReadAlignments.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JReadAlignments.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .jralign file.</span>
 
@@ -486,6 +541,7 @@
 <span class="sd">        infile : :py:class:`str`</span>
 <span class="sd">            The .jralign file to open.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -535,7 +591,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="JReadAlignments.close"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.close">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="JReadAlignments.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.close">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
 
@@ -554,7 +612,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="JReadAlignments.jralign_version"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.jralign_version">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JReadAlignments.jralign_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.jralign_version">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">jralign_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The `jralign` file format version that this build supports.</span>
@@ -568,7 +629,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="JReadAlignments.build_jralign"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.build_jralign">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="JReadAlignments.build_jralign">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.build_jralign">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_jralign</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span>
                       <span class="n">infiles</span><span class="p">,</span>
@@ -706,14 +770,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">mock_unreachable</span><span class="p">()</span></div>
 
+
     <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="JReadAlignments.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;JReadAlignments &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="JReadAlignments.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JReadAlignments &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>

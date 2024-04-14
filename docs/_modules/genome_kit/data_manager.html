@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.data_manager &mdash; GenomeKit 5.0.0 documentation</title>
+  <title>genome_kit.data_manager &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ec0e10ea"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.0.0
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -85,6 +85,7 @@
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
@@ -98,7 +99,9 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ProgressPercentage"><a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage">[docs]</a><span class="k">class</span> <span class="nc">ProgressPercentage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<div class="viewcode-block" id="ProgressPercentage">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage">[docs]</a>
+<span class="k">class</span> <span class="nc">ProgressPercentage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Display a progress bar on a text terminal showing file being transferred, completion</span>
 <span class="sd">    percentage, estimated transfer time and throughput.</span>
@@ -106,7 +109,9 @@
 <span class="sd">    ```Progress &quot;myfile.bin&quot; [ 20.0 B/ 20.0 B] 100% |###############| ETA:  0:00:00 147.8 B/s```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ProgressPercentage.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filesize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress_msg</span><span class="o">=</span><span class="s1">&#39;Progress&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="ProgressPercentage.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filesize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress_msg</span><span class="o">=</span><span class="s1">&#39;Progress&#39;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -129,8 +134,13 @@
                              <span class="n">total</span><span class="o">=</span><span class="n">filesize</span><span class="p">,</span>
                              <span class="n">postfix</span><span class="o">=</span><span class="p">{</span><span class="n">progress_msg</span><span class="p">:</span> <span class="n">filename</span><span class="p">})</span></div>
 
-<div class="viewcode-block" id="ProgressPercentage.__call__"><a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bytes_amount</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bytes_amount</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="ProgressPercentage.__call__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bytes_amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bytes_amount</span><span class="p">)</span></div>
+</div>
+
 
 <span class="n">_GCS_BUCKET</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GENOMEKIT_GCS_BUCKET&quot;</span><span class="p">,</span> <span class="s2">&quot;genomekit-public-dg&quot;</span><span class="p">)</span>
 
@@ -159,8 +169,12 @@
         <span class="n">buf</span> <span class="o">=</span> <span class="n">afile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">hasher</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 
-<div class="viewcode-block" id="DataManager"><a class="viewcode-back" href="../../api.html#genome_kit.DataManager">[docs]</a><span class="k">class</span> <span class="nc">DataManager</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<div class="viewcode-block" id="DataManager.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.DataManager.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="DataManager">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager">[docs]</a>
+<span class="k">class</span> <span class="nc">DataManager</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="DataManager.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Implementations should accept a data directory.</span>
 <span class="sd">        Args:</span>
@@ -169,7 +183,10 @@
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span></div>
 
-<div class="viewcode-block" id="DataManager.get_file"><a class="viewcode-back" href="../../api.html#genome_kit.DataManager.get_file">[docs]</a>    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+<div class="viewcode-block" id="DataManager.get_file">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.get_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to a managed data file and download if necessary.</span>
 
 <span class="sd">        Parameters</span>
@@ -183,7 +200,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement get_file&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DataManager.upload_file"><a class="viewcode-back" href="../../api.html#genome_kit.DataManager.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DataManager.upload_file">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.upload_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Upload a file to make it available in GenomeKit.</span>
 
 <span class="sd">        Parameters</span>
@@ -199,9 +219,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement upload_file&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DataManager.list_available_genomes"><a class="viewcode-back" href="../../api.html#genome_kit.DataManager.list_available_genomes">[docs]</a>    <span class="k">def</span> <span class="nf">list_available_genomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DataManager.list_available_genomes">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.list_available_genomes">[docs]</a>
+    <span class="k">def</span> <span class="nf">list_available_genomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;List all available genomes in the data manager&quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement list_available_genomes&quot;</span><span class="p">)</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement list_available_genomes&quot;</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">def</span> <span class="nf">_remote_equal</span><span class="p">(</span><span class="n">blob</span><span class="p">:</span> <span class="n">storage</span><span class="o">.</span><span class="n">Blob</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -266,21 +291,29 @@
     <span class="k">def</span> <span class="nf">bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_bucket&quot;</span><span class="p">):</span>
             <span class="n">gcloud_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span> <span class="o">=</span> <span class="n">gcloud_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">_GCS_BUCKET</span><span class="p">,</span> <span class="n">user_project</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GENOMEKIT_GCS_BILLING_PROJECT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span> <span class="o">=</span> <span class="n">gcloud_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">_GCS_BUCKET</span><span class="p">,</span> <span class="n">user_project</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GENOMEKIT_GCS_BILLING_PROJECT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># give the user a hint in case of permission errors</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="k">raise</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span>
 
     <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; not found in the GCS bucket&quot;</span><span class="p">)</span>
         <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 
-        <span class="n">blob</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
-
         <span class="k">if</span> <span class="n">local_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">_remote_equal</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">local_path</span><span class="p">):</span>
-                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; not found in the GCS bucket&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># give the user a hint in case of permission errors</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+            <span class="k">raise</span>
 
         <span class="c1"># form a temporary filename to make the download safe</span>
         <span class="n">temp_file</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.part&quot;</span><span class="p">)</span>

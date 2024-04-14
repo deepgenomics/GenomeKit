@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developers &mdash; GenomeKit 5.0.0 documentation</title>
+  <title>Developers &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ec0e10ea"></script>
+        <script src="_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -38,7 +38,7 @@
               <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.0.0
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -97,10 +97,10 @@
            <div itemprop="articleBody">
              
   <section id="developers">
-<span id="develop"></span><h1>Developers<a class="headerlink" href="#developers" title="Permalink to this heading"></a></h1>
+<span id="develop"></span><h1>Developers<a class="headerlink" href="#developers" title="Link to this heading"></a></h1>
 <p>Developing for GenomeKit currently requires a C++ compiler that support C++20 features. Both can be installed via conda (<code class="docutils literal notranslate"><span class="pre">gxx_linux-64</span></code> and <code class="docutils literal notranslate"><span class="pre">`clangxx_osx-64</span></code>). For OSX, you will also need the SDK via <code class="docutils literal notranslate"><span class="pre">xcode-select</span> <span class="pre">--install</span></code> or from <a class="reference external" href="https://developer.apple.com/download/all/">https://developer.apple.com/download/all/</a>.</p>
 <section id="setting-up">
-<h2>Setting up<a class="headerlink" href="#setting-up" title="Permalink to this heading"></a></h2>
+<h2>Setting up<a class="headerlink" href="#setting-up" title="Link to this heading"></a></h2>
 <p>Clone the source tree:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">deepgenomics</span><span class="o">/</span><span class="n">GenomeKit</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
@@ -144,16 +144,16 @@ To open VS with a preconfigured project, directly run in that command prompt:</p
 <p>You can also run examples from the <code class="docutils literal notranslate"><span class="pre">demos</span></code> directory.</p>
 </section>
 <section id="jetbrains-clion-setup">
-<h2>Jetbrains CLion setup<a class="headerlink" href="#jetbrains-clion-setup" title="Permalink to this heading"></a></h2>
+<h2>Jetbrains CLion setup<a class="headerlink" href="#jetbrains-clion-setup" title="Link to this heading"></a></h2>
 <p>In the CMake settings, set the following environment variables:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>IN_CLION=1;CONDA_PREFIX=$HOME/conda/envs/genomekit_dev
 </pre></div>
 </div>
 </section>
 <section id="making-changes">
-<h2>Making changes<a class="headerlink" href="#making-changes" title="Permalink to this heading"></a></h2>
+<h2>Making changes<a class="headerlink" href="#making-changes" title="Link to this heading"></a></h2>
 <p>If the C/C++ code changed, you must re-run the <code class="docutils literal notranslate"><span class="pre">develop</span></code> command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">develop</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
 </pre></div>
 </div>
 <p>This includes switching branches, merging changes, or editing the C/C++ code
@@ -168,7 +168,7 @@ yourself. <em>Forgetting this step may lead to unpredictable behaviour.</em></p>
 </div>
 </section>
 <section id="adding-tests">
-<h2>Adding tests<a class="headerlink" href="#adding-tests" title="Permalink to this heading"></a></h2>
+<h2>Adding tests<a class="headerlink" href="#adding-tests" title="Link to this heading"></a></h2>
 <p>Tests are located in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> directory, and any data they need
 is located in the <code class="docutils literal notranslate"><span class="pre">tests/data</span></code> directory.</p>
 <p>While developing a test, you may want to run it repeatedly, without
@@ -179,7 +179,7 @@ For example, to run just the <code class="docutils literal notranslate"><span cl
 </pre></div>
 </div>
 <section id="c-tests">
-<h3>C++ tests<a class="headerlink" href="#c-tests" title="Permalink to this heading"></a></h3>
+<h3>C++ tests<a class="headerlink" href="#c-tests" title="Link to this heading"></a></h3>
 <p>To test C++ code directly, you can compile and run src/main.cpp:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">-</span><span class="n">DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="n">Debug</span> <span class="o">-</span><span class="n">B</span> <span class="n">unittestbuild</span>
 <span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">unittestbuild</span> <span class="o">--</span><span class="n">parallel</span> <span class="o">--</span><span class="n">verbose</span> <span class="o">--</span><span class="n">target</span> <span class="n">main</span> <span class="n">test</span>
@@ -187,13 +187,13 @@ For example, to run just the <code class="docutils literal notranslate"><span cl
 </div>
 </section>
 <section id="debugging-tests">
-<h3>Debugging tests<a class="headerlink" href="#debugging-tests" title="Permalink to this heading"></a></h3>
+<h3>Debugging tests<a class="headerlink" href="#debugging-tests" title="Link to this heading"></a></h3>
 <p>Define envvar <cite>GK_DEBUGBREAK</cite> to break upon GK_CHECK failures when running
 under a debugger.</p>
 </section>
 </section>
 <section id="building-data-files">
-<h2>Building data files<a class="headerlink" href="#building-data-files" title="Permalink to this heading"></a></h2>
+<h2>Building data files<a class="headerlink" href="#building-data-files" title="Link to this heading"></a></h2>
 <p>GenomeKit relies on many pre-built files.
 For example, the binary annotation <code class="docutils literal notranslate"><span class="pre">gencode.v19.annotation.dganno</span></code>
 is built from <code class="docutils literal notranslate"><span class="pre">gencode.v19.annotation.gff3.gz</span></code>.
@@ -221,7 +221,7 @@ Appris data files, and Appris/dganno/2bit test data files.</p>
 </pre></div>
 </div>
 <section id="building-full-data-files">
-<h3>Building full data files<a class="headerlink" href="#building-full-data-files" title="Permalink to this heading"></a></h3>
+<h3>Building full data files<a class="headerlink" href="#building-full-data-files" title="Link to this heading"></a></h3>
 <p>For instructions on how to build annotation (dganno) files and assembly
 (2bit) files, see <a class="reference external" href="genomes.html">Genomes</a>.</p>
 <p>Full-sized data files reside in a local user directory reserved
@@ -237,11 +237,11 @@ and <a class="reference external" href="api.html#genome_kit.VCFTable.build_vcfbi
 </div>
 </section>
 <section id="building-test-data-files">
-<h3>Building test data files<a class="headerlink" href="#building-test-data-files" title="Permalink to this heading"></a></h3>
+<h3>Building test data files<a class="headerlink" href="#building-test-data-files" title="Link to this heading"></a></h3>
 <p>Test data files reside in the source tree under <code class="docutils literal notranslate"><span class="pre">tests/data</span></code>.
 To build them, you must have registered your source tree in
 develop mode:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">develop</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
 </pre></div>
 </div>
 <p>Now that your source tree is the default <cite>genome_kit</cite> import,
@@ -255,7 +255,7 @@ flags on the <code class="docutils literal notranslate"><span class="pre">build<
 </section>
 </section>
 <section id="releasing-genomekit">
-<h2>Releasing GenomeKit<a class="headerlink" href="#releasing-genomekit" title="Permalink to this heading"></a></h2>
+<h2>Releasing GenomeKit<a class="headerlink" href="#releasing-genomekit" title="Link to this heading"></a></h2>
 <p>The <a class="reference external" href="https://github.com/deepgenomics/GenomeKit">GenomeKit repo</a> uses
 the <a class="reference external" href="https://github.com/googleapis/release-please">Release Please bot</a>
 to create Github releases based on PRs. When the bot creates a PR, you can

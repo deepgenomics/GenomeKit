@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>genome_kit.genome_annotation &mdash; GenomeKit 4.2.1 documentation</title>
+  <title>genome_kit.genome_annotation &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,9 +15,9 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=56ac3f07"></script>
+        <script src="../../_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -36,7 +36,7 @@
               <img src="../../_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                4.2.1
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -93,7 +93,9 @@
 <span class="c1">#########################################################################</span>
 
 
-<div class="viewcode-block" id="Gene"><a class="viewcode-back" href="../../api.html#genome_kit.Gene">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="Gene">
+<a class="viewcode-back" href="../../api.html#genome_kit.Gene">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Gene</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Gene</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated gene.</span>
@@ -106,9 +108,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="Gene.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Gene.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="Gene.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Gene.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -213,17 +218,25 @@
             <span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">index</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Gene.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Gene.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;Gene </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="Gene.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Gene.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Gene </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="GeneTable"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="GeneTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">GeneTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GeneTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="GeneTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GeneTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -246,7 +259,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -269,7 +285,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 5&#39;-most position within `interval`.</span>
 
@@ -292,7 +311,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that have 3&#39;-most position within `interval`.</span>
 
@@ -315,7 +337,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that fall entirely within `interval`.</span>
 
@@ -338,7 +363,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that overlap `interval`.</span>
 
@@ -361,7 +389,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="GeneTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GeneTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all genes that span exactly `interval`.</span>
 
@@ -384,6 +415,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Gene</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -396,7 +428,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GeneTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GeneTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a gene by index or ID string.</span>
 
@@ -425,7 +459,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Gene</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GeneTable.first_by_name"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.first_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">first_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Gene</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="GeneTable.first_by_name">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.first_by_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">first_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Gene</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -434,14 +471,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">gene</span> <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">if</span> <span class="n">gene</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GeneTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;GeneTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="GeneTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GeneTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GeneTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="Transcript"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="Transcript">
+<a class="viewcode-back" href="../../api.html#genome_kit.Transcript">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Transcript</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Tran</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated transcript.</span>
@@ -454,9 +498,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="Transcript.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="Transcript.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -677,17 +724,25 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="Transcript.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;Transcript </span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="Transcript.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Transcript.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Transcript </span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="TranscriptTable"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="TranscriptTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">TranscriptTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">TranTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="TranscriptTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="TranscriptTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -710,7 +765,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -733,7 +791,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 5&#39;-most position within `interval`.</span>
 
@@ -756,7 +817,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that have 3&#39;-most position within `interval`.</span>
 
@@ -779,7 +843,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that fall entirely within `interval`.</span>
 
@@ -802,7 +869,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that overlap `interval`.</span>
 
@@ -825,7 +895,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="TranscriptTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all transcripts that span exactly `interval`.</span>
 
@@ -848,6 +921,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Transcript</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -860,7 +934,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TranscriptTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="TranscriptTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a transcript by index or ID string.</span>
 
@@ -889,14 +965,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Transcript</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TranscriptTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;TranscriptTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="TranscriptTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.TranscriptTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;TranscriptTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="Exon"><a class="viewcode-back" href="../../api.html#genome_kit.Exon">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="Exon">
+<a class="viewcode-back" href="../../api.html#genome_kit.Exon">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Exon</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Exon</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated exon.</span>
@@ -917,9 +1000,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="Exon.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Exon.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="Exon.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Exon.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -1069,19 +1155,27 @@
             <span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="p">,</span> <span class="n">index</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Exon.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Exon.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Exon.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Exon.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;Exon </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="ExonTable"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="ExonTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">ExonTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">ExonTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="ExonTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="ExonTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -1104,7 +1198,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -1127,7 +1224,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 5&#39;-most position within `interval`.</span>
 
@@ -1150,7 +1250,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that have 3&#39;-most position within `interval`.</span>
 
@@ -1173,7 +1276,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that fall entirely within `interval`.</span>
 
@@ -1196,7 +1302,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that overlap `interval`.</span>
 
@@ -1219,7 +1328,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="ExonTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="ExonTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all exons that span exactly `interval`.</span>
 
@@ -1242,6 +1354,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Exon</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -1254,7 +1367,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ExonTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="ExonTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup an exon by index.</span>
 
@@ -1277,14 +1392,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Exon</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ExonTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;ExonTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="ExonTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ExonTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;ExonTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="Intron"><a class="viewcode-back" href="../../api.html#genome_kit.Intron">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="Intron">
+<a class="viewcode-back" href="../../api.html#genome_kit.Intron">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Intron</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Intr</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated intron.</span>
@@ -1305,9 +1427,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="Intron.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Intron.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="Intron.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Intron.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -1407,19 +1532,27 @@
             <span class="n">genome</span><span class="o">.</span><span class="n">introns</span><span class="p">,</span> <span class="n">index</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Intron.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Intron.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Intron.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Intron.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;Intron </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">introns</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="IntronTable"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="IntronTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">IntronTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">IntrTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="IntronTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="IntronTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -1442,7 +1575,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -1465,7 +1601,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 5&#39;-most position within `interval`.</span>
 
@@ -1488,7 +1627,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that have 3&#39;-most position within `interval`.</span>
 
@@ -1511,7 +1653,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that fall entirely within `interval`.</span>
 
@@ -1534,7 +1679,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that overlap `interval`.</span>
 
@@ -1557,7 +1705,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="IntronTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="IntronTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all introns that span exactly `interval`.</span>
 
@@ -1580,6 +1731,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Intron</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -1592,7 +1744,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="IntronTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="IntronTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup an intron by index.</span>
 
@@ -1615,14 +1769,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Intron</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="IntronTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;IntronTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="IntronTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntronTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;IntronTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
 
 
-<div class="viewcode-block" id="Cds"><a class="viewcode-back" href="../../api.html#genome_kit.Cds">[docs]</a><span class="nd">@strip_mock_bases</span>
+<div class="viewcode-block" id="Cds">
+<a class="viewcode-back" href="../../api.html#genome_kit.Cds">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
 <span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">Cds</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Cds</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An annotated coding sequence (CDS) element within an exon.</span>
@@ -1635,9 +1796,12 @@
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
     <span class="c1"># noinspection PyMissingConstructor</span>
-<div class="viewcode-block" id="Cds.__init__"><a class="viewcode-back" href="../../api.html#genome_kit.Cds.__init__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="Cds.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Cds.__init__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
         <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
 
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
@@ -1736,19 +1900,27 @@
             <span class="n">genome</span><span class="o">.</span><span class="n">cdss</span><span class="p">,</span> <span class="n">index</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Cds.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.Cds.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Cds.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Cds.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;&lt;Cds in Exon </span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">exon</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
-        <span class="p">)</span></div></div>
+        <span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="CdsTable"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+
+<div class="viewcode-block" id="CdsTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">CdsTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">CdsTable</span><span class="p">):</span>
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
     <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
     <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
 
-<div class="viewcode-block" id="CdsTable.find_5p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_aligned">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="CdsTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
 
@@ -1771,7 +1943,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_3p_aligned"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_aligned">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
 
@@ -1794,7 +1969,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_5p_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 5&#39;-most position within `interval`.</span>
 
@@ -1817,7 +1995,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_3p_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that have 3&#39;-most position within `interval`.</span>
 
@@ -1840,7 +2021,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_within"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_within">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that fall entirely within `interval`.</span>
 
@@ -1863,7 +2047,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_overlapping"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_overlapping">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that overlap `interval`.</span>
 
@@ -1886,7 +2073,10 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
-<div class="viewcode-block" id="CdsTable.find_exact"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_exact">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="CdsTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all CDSs that span exactly `interval`.</span>
 
@@ -1909,6 +2099,7 @@
         <span class="n">mock_unreachable</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Cds</span><span class="p">()]</span></div>
 
+
     <span class="nd">@mock</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -1921,7 +2112,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
 
-<div class="viewcode-block" id="CdsTable.__getitem__"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__getitem__">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="CdsTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a coding sequence element by index.</span>
 
@@ -1944,8 +2137,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Cds</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="CdsTable.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;&lt;CdsTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="CdsTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.CdsTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;CdsTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>
@@ -2104,7 +2302,9 @@
 
 <span class="c1">########################################################################</span>
 
-<div class="viewcode-block" id="GenomeAnnotation"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation">[docs]</a><span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<div class="viewcode-block" id="GenomeAnnotation">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
 <span class="k">class</span> <span class="nc">GenomeAnnotation</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeAnno</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Annotations for a reference genome.</span>
 
@@ -2245,7 +2445,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GenomeAnnotation.binary_version"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.binary_version">[docs]</a>    <span class="nd">@mock</span>
+<div class="viewcode-block" id="GenomeAnnotation.binary_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.binary_version">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">binary_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The binary file format version that this build supports.</span>
@@ -2257,7 +2459,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GenomeAnnotation.build_gencode"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_gencode">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_gencode">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_gencode">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_gencode</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of GENCODE/Ensembl annotations from a GFF3 file.</span>
@@ -2284,7 +2489,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GenomeAnnotation.build_ncbi_refseq"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ncbi_refseq">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_ncbi_refseq">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ncbi_refseq">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_ncbi_refseq</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of NCBI annotations from a GFF3 file.</span>
@@ -2311,7 +2519,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GenomeAnnotation.build_ucsc_refseq"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ucsc_refseq">[docs]</a>    <span class="nd">@mock</span>
+
+<div class="viewcode-block" id="GenomeAnnotation.build_ucsc_refseq">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.build_ucsc_refseq">[docs]</a>
+    <span class="nd">@mock</span>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">build_ucsc_refseq</span><span class="p">(</span><span class="n">ucsc_db_dir</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a binary version of UCSC RefSeq annotations.</span>
@@ -2344,8 +2555,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GenomeAnnotation.__repr__"><a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;&lt;GenomeAnnotation &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="GenomeAnnotation.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeAnnotation.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;GenomeAnnotation &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="c1">########################################################################</span>

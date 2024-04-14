@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Anchors &mdash; GenomeKit 5.0.0 documentation</title>
+  <title>Anchors &mdash; GenomeKit 5.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ec0e10ea"></script>
+        <script src="_static/documentation_options.js?v=6a0c42bb"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -39,7 +39,7 @@
               <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                5.0.0
+                5.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -91,7 +91,7 @@
            <div itemprop="articleBody">
              
   <section id="anchors">
-<span id="id1"></span><h1>Anchors<a class="headerlink" href="#anchors" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>Anchors<a class="headerlink" href="#anchors" title="Link to this heading"></a></h1>
 <p>When applying variants to a genome and extracting features (most importantly DNA sequence) from the resulting
 <a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a>, there needs to be some notion of alignment between the wild-type and mutant
 sequences when variants change the length of the sequence.  Furthermore, many machine learning methods expect
@@ -119,7 +119,7 @@ variants strings like <code class="docutils literal notranslate"><span class="pr
 <p>Now consider we are going to apply a length changing variant to this interval. Consider the variant
 <code class="docutils literal notranslate"><span class="pre">chr7:117,231,993:TCT:T</span></code> which deletes the <code class="docutils literal notranslate"><span class="pre">CT</span></code> dinucleotide at position 16.</p>
 <section id="intervals-without-anchors">
-<h2>Intervals without anchors<a class="headerlink" href="#intervals-without-anchors" title="Permalink to this heading"></a></h2>
+<h2>Intervals without anchors<a class="headerlink" href="#intervals-without-anchors" title="Link to this heading"></a></h2>
 <p>The default behaviour of <a class="reference internal" href="api.html#genome_kit.VariantGenome.dna" title="genome_kit.VariantGenome.dna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">genome_kit.VariantGenome.dna()</span></code></a> is to apply the variant naïvely (without an anchor)
 and allow the length of the sequence to change:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
@@ -135,7 +135,7 @@ and allow the length of the sequence to change:</p>
 <p>As you can see two bases were removed and the resulting mutant sequence is shorter than the wild-type.</p>
 </section>
 <section id="deletions-with-an-anchored-interval">
-<h2>Deletions with an anchored interval<a class="headerlink" href="#deletions-with-an-anchored-interval" title="Permalink to this heading"></a></h2>
+<h2>Deletions with an anchored interval<a class="headerlink" href="#deletions-with-an-anchored-interval" title="Link to this heading"></a></h2>
 <p>If we set an anchor, we can specify to keep the wild-type and mutant sequences aligned at the splice site and expand
 the mutant sequence to keep its length constant:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
@@ -160,14 +160,14 @@ the mutant sequence to keep its length constant:</p>
 extended on the right side to include extra sequence equal to the length of the deletion.</p>
 </section>
 <section id="specifying-anchors">
-<h2>Specifying anchors<a class="headerlink" href="#specifying-anchors" title="Permalink to this heading"></a></h2>
+<h2>Specifying anchors<a class="headerlink" href="#specifying-anchors" title="Link to this heading"></a></h2>
 <p>An anchor is always an integer coordinate on the chromosome. The anchor can be at the start or end of an interval,
 anywhere inside the interval, or even outside the interval (we’ll look at this case in <a class="reference internal" href="#insertions-at-the-anchor"><span class="std std-ref">Insertions at the anchor</span></a>).
 However, <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> allows to set the anchor by passing one of the strings <code class="docutils literal notranslate"><span class="pre">'5p'</span></code>, <code class="docutils literal notranslate"><span class="pre">'3p'</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">'center'</span></code> to set the anchor more conveniently.</p>
 </section>
 <section id="insertions-with-an-anchored-interval">
-<h2>Insertions with an anchored interval<a class="headerlink" href="#insertions-with-an-anchored-interval" title="Permalink to this heading"></a></h2>
+<h2>Insertions with an anchored interval<a class="headerlink" href="#insertions-with-an-anchored-interval" title="Link to this heading"></a></h2>
 <p>Now we consider an insertion to the left side of the anchor. Whereas the deletion <em>pulled in</em> extra sequence to keep
 the length constant, the insertion will <em>push out</em> sequence from the interval:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
@@ -192,7 +192,7 @@ the length constant, the insertion will <em>push out</em> sequence from the inte
 to accommodate the length change.</p>
 </section>
 <section id="deletions-at-the-anchor">
-<h2>Deletions at the anchor<a class="headerlink" href="#deletions-at-the-anchor" title="Permalink to this heading"></a></h2>
+<h2>Deletions at the anchor<a class="headerlink" href="#deletions-at-the-anchor" title="Link to this heading"></a></h2>
 <p>Since the anchor is an idealized coordinate or <em>“gap”</em>, the mechanism still works even when a deletion occurs right
 around the anchor. For example, if a five deletion overlaps the anchor and three bases are to the left of the anchor
 and two bases are to the right of the anchor, then the interval start will be extended by three bases and the end by
@@ -217,7 +217,7 @@ two bases to accommodate the deletion. Coming back to our previous example:</p>
 expanded accordingly to keep the length constant.</p>
 </section>
 <section id="insertions-at-the-anchor">
-<span id="id2"></span><h2>Insertions at the anchor<a class="headerlink" href="#insertions-at-the-anchor" title="Permalink to this heading"></a></h2>
+<span id="id2"></span><h2>Insertions at the anchor<a class="headerlink" href="#insertions-at-the-anchor" title="Link to this heading"></a></h2>
 <p>The last case is slightly more complicated. When insertions occur directly at the anchor, it is not clear whether
 the insertion should occur on the left or ride side of the anchor. There is also the special case when we would like to
 align a coordinate <em>within the insertion</em>. This case is actually important to distinguish, <em>i.e.</em> when an insertion
@@ -303,7 +303,7 @@ applied, <em>i.e.</em> the insertion is done on the left side of the anchor (so 
 </div>
 </section>
 <section id="anchors-outside-an-interval">
-<span id="id4"></span><h2>Anchors outside an interval<a class="headerlink" href="#anchors-outside-an-interval" title="Permalink to this heading"></a></h2>
+<span id="id4"></span><h2>Anchors outside an interval<a class="headerlink" href="#anchors-outside-an-interval" title="Link to this heading"></a></h2>
 <p>It is even possible to define an anchor outside of an interval. This is primarily done for completeness to allow an
 interval to have its length or coordinates modified, but still work for feature extraction when the anchor stays the
 same. Conceptually, defining an anchor outside an interval is equivalent to extending the interval up to the anchor,

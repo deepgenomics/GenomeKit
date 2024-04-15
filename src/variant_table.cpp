@@ -1062,4 +1062,18 @@ vcf_table::vcf_table(mmap_file&& mapped)
 
 int vcf_table::file_version() noexcept { return c_vcfbin_ver; }
 
+std::vector<std::string_view> vcf_table::sample_names() const
+{
+	std::vector<std::string_view> ret;
+	auto                          num_names = num_samples();
+	auto                          name = _sample_names;
+	ret.reserve(num_names);
+	for (int i = 0; i < num_names; ++i) {
+		auto name_len = std::strlen(name);
+		ret.push_back({name, name_len});
+		name += name_len + 1;
+	}
+	return ret;
+}
+
 END_NAMESPACE_GK

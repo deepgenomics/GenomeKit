@@ -46,6 +46,9 @@ You can install GenomeKit with
 
 https://deepgenomics.github.io/GenomeKit
 
+Documentation for previous versions is also available, e.g
+https://deepgenomics.github.io/GenomeKit/v5.0.0
+
 ## Acknowledgements
 
 We would like to express our gratitude to the following individuals who have contributed to the development of GenomeKit:

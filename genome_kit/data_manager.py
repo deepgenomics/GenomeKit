@@ -206,7 +206,7 @@ class DefaultDataManager(DataManager):
             if not blob.exists():
                 raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
         except Exception as e:
-            if "GK_TRACE" in os.environ:
+            if "GENOMEKIT_TRACE" in os.environ:
                 # give the user a hint in case of permission errors
                 print(e, file=sys.stderr)
                 raise

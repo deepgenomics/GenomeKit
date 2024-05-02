@@ -840,3 +840,11 @@ implementation of :py:class:`genome_kit.data_manager.DataManager` and register i
     # endpoint under the "genomekit.plugins.data_manager" group. GenomeKit will automatically
     # use the plugin's data manager.
     # (see https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins)
+
+
+Logging and troubleshooting
+----------------------
+
+Set the ``GENOMEKIT_QUIET`` to any value to suppress logging output.
+
+Set the ``GENOMEKIT_TRACE`` to any value to enable trace logging.

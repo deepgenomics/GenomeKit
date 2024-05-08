@@ -843,7 +843,7 @@ implementation of :py:class:`genome_kit.data_manager.DataManager` and register i
 
 
 Logging and troubleshooting
-----------------------
+---------------------------
 
 Set the ``GENOMEKIT_QUIET`` to any value to suppress logging output.
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.0.2](https://github.com/deepgenomics/GenomeKit/compare/v5.0.1...v5.0.2) (2024-05-09)
+
+
+### Bug Fixes
+
+* avoid errors when blob metadata is None ([#54](https://github.com/deepgenomics/GenomeKit/issues/54)) ([e850c54](https://github.com/deepgenomics/GenomeKit/commit/e850c5417f285e2f4f82d30cff2555c12e590be9))
+* avoid user confusion when loading annotation ([#53](https://github.com/deepgenomics/GenomeKit/issues/53)) ([e556030](https://github.com/deepgenomics/GenomeKit/commit/e556030bebd2c214ada791909925fa151a016017))
+* provide a better hint in case of permissions error ([#42](https://github.com/deepgenomics/GenomeKit/issues/42)) ([cb21280](https://github.com/deepgenomics/GenomeKit/commit/cb212800dd9017b3627ce1d6093da9e0fa3c4d3f))
+
+
+### Documentation
+
+* acknowledge past contributors ([#43](https://github.com/deepgenomics/GenomeKit/issues/43)) ([d0dcfd5](https://github.com/deepgenomics/GenomeKit/commit/d0dcfd5df09b1f36e0627031bad6461766b24b12))
+* restore and document link to versionized docs ([#51](https://github.com/deepgenomics/GenomeKit/issues/51)) ([cc22955](https://github.com/deepgenomics/GenomeKit/commit/cc22955ec125d7f802ff1a2d42eec20dc16f8db8)), closes [#50](https://github.com/deepgenomics/GenomeKit/issues/50)
+
 ## [5.0.1](https://github.com/deepgenomics/GenomeKit/compare/v5.0.0...v5.0.1) (2024-04-08)
 
 

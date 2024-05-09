@@ -240,7 +240,10 @@ class DefaultDataManager(DataManager):
             else:
                 logger.warning(f"Overwriting '{filename}' on the server.")
 
-            blob.metadata.update(metadata or {})
+            if blob.metadata is None:
+                blob.metadata = metadata
+            else:
+                blob.metadata.update(metadata or {})
         else:
             blob.metadata = metadata
 

@@ -53,7 +53,7 @@ You can also run examples from the ``demos`` directory.
 
 
 Jetbrains CLion setup
---------------
+---------------------
 
 In the CMake settings, set the following environment variables::
 

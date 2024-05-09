@@ -616,7 +616,7 @@ respect to insertions/deletions. Read on and learn about
 
 
 Variant genomes
-^^^^^^^^^^^^^^^
+---------------
 
 Variant genomes are made by applying a zero or more variants to a reference
 genome via the :py:class:`.VariantGenome` class.
@@ -660,7 +660,7 @@ by 'anchoring' an interval.
 
 
 Length-changing variants
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Variants that insert or delete positions (INDELs) effectively change the
 coordinate system of the variant genome. If an interval is specified on the
@@ -840,3 +840,11 @@ implementation of :py:class:`genome_kit.data_manager.DataManager` and register i
     # endpoint under the "genomekit.plugins.data_manager" group. GenomeKit will automatically
     # use the plugin's data manager.
     # (see https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins)
+
+
+Logging and troubleshooting
+---------------------------
+
+Set the ``GENOMEKIT_QUIET`` to any value to suppress logging output.
+
+Set the ``GENOMEKIT_TRACE`` to any value to enable trace logging.

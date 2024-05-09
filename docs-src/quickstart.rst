@@ -616,7 +616,7 @@ respect to insertions/deletions. Read on and learn about
 
 
 Variant genomes
-^^^^^^^^^^^^^^^
+---------------
 
 Variant genomes are made by applying a zero or more variants to a reference
 genome via the :py:class:`.VariantGenome` class.
@@ -660,7 +660,7 @@ by 'anchoring' an interval.
 
 
 Length-changing variants
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 
 Variants that insert or delete positions (INDELs) effectively change the
 coordinate system of the variant genome. If an interval is specified on the

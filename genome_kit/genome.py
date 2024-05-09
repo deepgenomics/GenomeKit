@@ -33,7 +33,7 @@ class Genome(_cxx.Genome):
         Genome("gencode.v29")
 
     The currently recognized strings depend on the data made available by data_manager.
-    Some common ones are:
+    Some common ones are::
 
         reference_genomes = [
             "hg19",

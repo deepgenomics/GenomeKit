@@ -398,7 +398,7 @@ void write_ralign_test(const vector<string>& samfiles)
 		ralign.set_min_reads(3);
 		ralign.set_min_overhang(5);
 		for (auto& i : exclude)
-			ralign.exclude(i);
+			ralign.get_interval_filter().exclude(i);
 		ralign.add(samfile.c_str());
 		ralign.finalize();
 	}

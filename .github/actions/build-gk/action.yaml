@@ -39,7 +39,7 @@ runs:
         set -x
         if [ ! -d "${HOME}/micromamba/envs/build" ]; then
           micromamba create -yqn build -c conda-forge \
-            boa==0.16.0 mamba==1.5.7 conda==24.5.0 \
+            boa==0.16.0 mamba==1.5.7 conda==24.3.0 \
             ccache
         fi
         set +x

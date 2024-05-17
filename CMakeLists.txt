@@ -26,7 +26,7 @@ if(DEFINED ENV{IN_CLION})
     find_package(fmt)
     add_library(gkdev ${SOURCES})
     target_link_libraries(gkdev fmt::fmt ZLIB::ZLIB)
-    target_compile_options(gkdev PRIVATE ${COMMON_CXX_FLAGS} -DGKPY_LIBNAME=$ENV{CONDA_PREFIX}/lib)
+    target_compile_options(gkdev PRIVATE ${COMMON_CXX_FLAGS} -DGKPY_LIBNAME=$ENV{CONDA_PREFIX}/lib -D_WANT_MAIN=1)
 endif()
 
 # We don't want any py_* files in gk because it brings in the python runtime and causes compile errors

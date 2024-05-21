@@ -3,10 +3,6 @@ run-name: run unit tests
 on:
   pull_request:
     branches-ignore: ["release-please*"]
-    paths:
-    - "genome_kit/**"
-    - "src/**"
-    - "tests/**"
 
 jobs:
   build:

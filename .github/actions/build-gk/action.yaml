@@ -39,7 +39,7 @@ runs:
         set -x
         if [ ! -d "${HOME}/micromamba/envs/build" ]; then
           micromamba create -yqn build -c conda-forge \
-            mamba==1.5.8 conda-build=24.5 \
+            boa==0.17.0 mamba==1.5.8 conda=24.5 \
             ccache
         fi
         set +x
@@ -76,7 +76,7 @@ runs:
         set -x
         micromamba activate build
         mkdir ~/conda-bld
-        conda build --croot ~/conda-bld -q --no-test conda-recipe
+        conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
         conda build --croot ~/conda-bld purge
         conda clean -it
 

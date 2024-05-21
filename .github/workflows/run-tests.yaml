@@ -4,7 +4,12 @@ on:
   pull_request:
     branches-ignore: ["release-please*"]
     paths:
+    - ".github/actions/**"
+    - ".github/workflows/**"
+    - "conda-recipe/**"
     - "genome_kit/**"
+    - "setup.py"
+    - "setup/**"
     - "src/**"
     - "tests/**"
 

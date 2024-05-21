@@ -1,6 +1,12 @@
+c_stdlib:
+- sysroot # [linux]
+- macosx_deployment_target # [osx]
+c_stdlib_version:
+- '2.12' # [linux]
+- '11.0' # [osx]
+numpy:
+- '1.22'
 python:
-  - 3.8
-  - 3.9
-  - 3.10
-CONDA_BUILD_SYSROOT:
-  - /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk  # [osx]
+- '3.8'
+- '3.9'
+- '3.10'

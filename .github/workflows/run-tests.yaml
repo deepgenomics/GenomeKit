@@ -3,6 +3,15 @@ run-name: run unit tests
 on:
   pull_request:
     branches-ignore: ["release-please*"]
+    paths:
+    - ".github/actions/**"
+    - ".github/workflows/**"
+    - "conda-recipe/**"
+    - "genome_kit/**"
+    - "setup.py"
+    - "setup/**"
+    - "src/**"
+    - "tests/**"
 
 jobs:
   build:

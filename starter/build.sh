@@ -21,13 +21,13 @@ mv ./* "${DATA_DIR}"
 
 ## Gencode v29
 ## To use: genome_kit.Genome("gencode.v29")
-wget -O v29.gff3.gz ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gff3.gz
+wget -O v29.gff3.gz http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gff3.gz
 python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("v29.gff3.gz", "gencode.v29", gk.Genome("hg38.p12"))'
 rm v29.gff3.gz
 
 ## NCBI RefSeq v109
 ## To use: genome_kit.Genome("ncbi_refseq.v109")
-wget -O v109.gff3.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_refseq/Homo_sapiens/ARCHIVE/ANNOTATION_RELEASE.109/GFF/ref_GRCh38.p12_top_level.gff3.gz
+wget -O v109.gff3.gz http://ftp.ncbi.nlm.nih.gov/genomes/archive/old_refseq/Homo_sapiens/ARCHIVE/ANNOTATION_RELEASE.109/GFF/ref_GRCh38.p12_top_level.gff3.gz
 python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_ncbi_refseq("v109.gff3.gz", "ncbi_refseq.v109", gk.Genome("hg38.p12"))'
 rm v109.gff3.gz
 
@@ -42,13 +42,13 @@ mv ./* "${DATA_DIR}"
 
 ## Gencode vM31
 ## To use: genome_kit.Genome("gencode.VM31")
-wget -O vM31.gff3.gz ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M31/gencode.vM31.annotation.gff3.gz
+wget -O vM31.gff3.gz http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M31/gencode.vM31.annotation.gff3.gz
 python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("vM31.gff3.gz", "gencode.vM31", gk.Genome("mm39"))'
 rm vM31.gff3.gz
 
 ## NCBI m39.v109
 ## To use: genome_kit.Genome("ncbi_refseq.m39.v109")
-wget -O m39.v109.gff3.gz ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Mus_musculus/annotation_releases/109/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.gff.gz
+wget -O m39.v109.gff3.gz http://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Mus_musculus/annotation_releases/109/GCF_000001635.27_GRCm39/GCF_000001635.27_GRCm39_genomic.gff.gz
 python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_ncbi_refseq("m39.v109.gff3.gz", "ncbi_refseq.m39.v109", gk.Genome("mm39"))'
 rm m39.v109.gff3.gz
 
@@ -62,7 +62,7 @@ wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.chromAlias.txt
 
 ## Ensembl Rnor_6.0.88
 ## To use: genome_kit.Genome("Rnor_6.0.88")
-wget -O Rnor_6.0.88.gff3.gz ftp://ftp.ensembl.org/pub/release-88/gff3/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.88.gff3.gz
+wget -O Rnor_6.0.88.gff3.gz http://ftp.ensembl.org/pub/release-88/gff3/rattus_norvegicus/Rattus_norvegicus.Rnor_6.0.88.gff3.gz
 python -c 'import genome_kit as gk; gk.GenomeAnnotation.build_gencode("Rnor_6.0.88.gff3.gz", "Rnor_6.0.88", gk.Genome("rn6"))'
 
 mv ./* "${DATA_DIR}"

@@ -59,7 +59,8 @@ enabled, so you will need to
 
 For more details on creating your own data source, see `the section on Sharing data files <sharing data>`_.
 
-
+Usage
+~~~~~
 
 Import the :py:mod:`genome_kit` package into your project::
 

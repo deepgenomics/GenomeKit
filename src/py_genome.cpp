@@ -119,6 +119,21 @@ GKPY_MEMBERS_BEGIN(Genome)
 	GKPY_MEMBER_OBJECT(Genome, utr3s,  "utr3s",      nullptr)
 GKPY_MEMBERS_END
 
+// intentionally not documenting as a public Python api
+GKPY_OMETHOD_BEGIN(Genome, _refg_hash)
+		const char*  refg_name;
+		static char* kwlist[] = {"refg_name", nullptr};
+		if (!PyArg_ParseTupleAndKeywords(args, kwds, "s", kwlist, &refg_name))
+			return nullptr;
+
+		return PyLong_FromUnsignedLongLong(fnv1a_hash64(refg_name));
+GKPY_OMETHOD_END
+
+
+GKPY_METHODS_BEGIN(Genome)
+		GKPY_METHOD_ENTRY(Genome, _refg_hash, METH_VARARGS | METH_KEYWORDS | METH_STATIC, nullptr)
+GKPY_METHODS_END
+
 GKPY_TYPEOBJ_BEGIN(Genome)
 	tp_flags |= Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC;
 	tp_new = PyGenome_New;
@@ -130,6 +145,7 @@ GKPY_TYPEOBJ_BEGIN(Genome)
 	tp_clear = PyGenome_Clear;
 	tp_richcompare = PyGenericValue_RichCompare<PyGenome>;
 	tp_members = PyGenome_Members;
+	tp_methods = PyGenome_Methods;
 GKPY_TYPEOBJ_END
 
 END_NAMESPACE_GK

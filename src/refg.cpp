@@ -8,6 +8,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "gk_assert.h"
 
 #include <filesystem>
+#include <cstdio>
 
 BEGIN_NAMESPACE_GK
 
@@ -68,9 +69,52 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 	return ref;
 }
 
+std::string_view refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
+{
+	std::string path{fmt::format("{}.hash", ref)};
+	if (!std::filesystem::exists(path)) {
+		path = resolve_datafile_path(prepend_dir(data_dir(), path));
+	}
+	if (!std::filesystem::exists(path)) {
+		return {};
+	}
+	std::FILE* file = std::fopen(path.c_str(), "rb");
+	if (!file) {
+		println("Could not open file '{}'", path);
+		return {};
+	}
+	std::string refg_name;
+	constexpr auto max_size = 1024;
+	refg_name.resize(max_size);
+	auto bytesRead = std::fread(&refg_name[0], 1, max_size, file);
+	if (std::ferror(file)) {
+        std::fclose(file);
+		println("Could not read file '{}'", path);
+		return {};
+    }
+	std::fclose(file);
+	refg_name.resize(bytesRead);
+	refg_name.erase(refg_name.find_last_not_of(" \n\r\t") + 1);
+	auto expected_ref = fnv1a_hash64(std::string_view(refg_name));
+	GK_CHECK(expected_ref == (uint64_t)ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
+			 path, refg_name, expected_ref, ref);
+
+	const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, refg_name);
+	GK_CHECK(name_inserted || name_it->second == refg_name, runtime,
+			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, refg_name);
+
+	return name_it->second;
+}
+
 std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
 {
 	const auto it = _names_by_refg.find(ref);
+	if (it == std::end(_names_by_refg)) {
+		const auto& refg_name = _try_refg_as_sv_from_file(ref);
+		if (!refg_name.empty()) {
+			return refg_name;
+		}
+	}
 	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", ref);
 	return it->second;
 }

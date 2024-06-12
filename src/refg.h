@@ -26,6 +26,7 @@ public:
 
 	refg_t           as_refg(std::string_view config) const;
 	std::string_view refg_as_sv(refg_t refg) const;
+	std::string_view _try_refg_as_sv_from_file(refg_t ref) const;
 
 	const std::string& data_dir() const;
 

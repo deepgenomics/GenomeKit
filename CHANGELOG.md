@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.1.0](https://github.com/deepgenomics/GenomeKit/compare/v5.0.2...v5.1.0) (2024-06-13)
+
+
+### Features
+
+* read/write files for refg name hash lookups ([#62](https://github.com/deepgenomics/GenomeKit/issues/62)) ([8074701](https://github.com/deepgenomics/GenomeKit/commit/80747011a83d731b7e1f594e98f1996ac69085fd))
+
+
+### Bug Fixes
+
+* avoid accessing released memory ([#63](https://github.com/deepgenomics/GenomeKit/issues/63)) ([1ab7456](https://github.com/deepgenomics/GenomeKit/commit/1ab74561c5a80ed5a4c47c02c8cbdeb55040260c))
+* ensure correctness of signed/unsigned comparisons ([#55](https://github.com/deepgenomics/GenomeKit/issues/55)) ([23c1d03](https://github.com/deepgenomics/GenomeKit/commit/23c1d0356a582933c8971f3eef408562727c18a6))
+
 ## [5.0.2](https://github.com/deepgenomics/GenomeKit/compare/v5.0.1...v5.0.2) (2024-05-09)
 
 

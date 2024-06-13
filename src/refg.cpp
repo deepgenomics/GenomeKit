@@ -80,8 +80,7 @@ std::string_view refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 	}
 
 	line_reader lr{path};
-	auto refg_name = std::string(lr.line());
-	refg_name.erase(refg_name.find_last_not_of(" \n\r\t") + 1);
+    auto refg_name = strip(lr.line());
 	auto expected_ref = fnv1a_hash64(refg_name);
 	GK_CHECK(refg_t(expected_ref) == ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
 			 path, refg_name, expected_ref, ref);

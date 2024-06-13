@@ -8,6 +8,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "gk_assert.h"
 
 #include <filesystem>
+#include <cstdio>
 
 BEGIN_NAMESPACE_GK
 
@@ -68,9 +69,37 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 	return ref;
 }
 
+std::string_view refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
+{
+	std::string path{fmt::format("{}.hash", ref)};
+	if (!std::filesystem::exists(path)) {
+		path = resolve_datafile_path(prepend_dir(data_dir(), path));
+	}
+	if (!std::filesystem::exists(path)) {
+		return {};
+	}
+
+	line_reader lr{path};
+    const auto& refg_name = strip(lr.line());
+	auto expected_ref = fnv1a_hash64(refg_name);
+	GK_CHECK(refg_t(expected_ref) == ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
+			 path, refg_name, expected_ref, ref);
+
+	return refg_name;
+}
+
 std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
 {
 	const auto it = _names_by_refg.find(ref);
+	if (it == std::end(_names_by_refg)) {
+		const auto& refg_name = _try_refg_as_sv_from_file(ref);
+		if (!refg_name.empty()) {
+			const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, refg_name);
+			GK_CHECK(name_inserted || name_it->second == refg_name, runtime,
+					 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, refg_name);
+			return refg_name;
+		}
+	}
 	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", ref);
 	return it->second;
 }

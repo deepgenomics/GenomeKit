@@ -56,6 +56,17 @@ def get_file(filename):
 def upload_file(filepath:str, filename:str, metadata:Dict[str, str]=None):  # pragma: no cover
     """compatibility wrapper for :py:meth:`~genome_kit.DataManager.upload_file`"""
 
+    chrom_sizes_ext = ".chrom.sizes"
+    if filename.endswith(chrom_sizes_ext):
+        refg_name = filename[:-len(chrom_sizes_ext)]
+        hashval = _cxx.Genome._refg_hash(refg_name)
+        print(f"Detected upload of a refg. Creating and uploading a hash lookup file {hashval}.hash")
+        tmpfilename = None
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+            f.write(refg_name)
+            tmpfilename = f.name
+        data_manager.upload_file(tmpfilename, f"{hashval}.hash", metadata)
+
     return data_manager.upload_file(filepath, filename, metadata)
 
 @_cxx.register

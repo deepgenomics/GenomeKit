@@ -6,11 +6,18 @@ TMP_DIR=$(mktemp -d)
 pushd "${TMP_DIR}"
 DATA_DIR=$(python -c 'import appdirs; import os; print(os.environ.get("GENOMEKIT_DATA_DIR", appdirs.user_data_dir("genome_kit")))')
 
+function write_hash_file() {
+  refg_name=$1
+  hashval=$(python -c 'import genome_kit as gk; print(gk.Genome._refg_hash("${refg_name}"))')
+  echo ${refg_name} > "${hashval}.hash"
+}
+
 # hg38.p12
 # To use: genome_kit.Genome("hg38.p12")
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.2bit
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.chrom.sizes
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/p12/hg38.p12.chromAlias.txt
+write_hash_file "hg38.p12"
 # chrUn_KI270752v1 missing from some hg38 chromAlias.txt data sources.
 # It was dropped from the RefSeq release due to being derived likely from the human-hamster CHO cell line.
 # See https://groups.google.com/a/soe.ucsc.edu/g/genome/c/oXgnoLwXn1g/m/zLV4Wgb2AgAJ for more details.
@@ -38,6 +45,7 @@ mv ./* "${DATA_DIR}"
 wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.2bit
 wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.chrom.sizes
 wget https://hgdownload.soe.ucsc.edu/goldenPath/mm39/bigZips/mm39.chromAlias.txt
+write_hash_file "mm39"
 mv ./* "${DATA_DIR}"
 
 ## Gencode vM31
@@ -59,6 +67,7 @@ mv ./* "${DATA_DIR}"
 wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.2bit
 wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.chrom.sizes
 wget https://hgdownload.soe.ucsc.edu/goldenPath/rn6/bigZips/rn6.chromAlias.txt
+write_hash_file "rn6"
 
 ## Ensembl Rnor_6.0.88
 ## To use: genome_kit.Genome("Rnor_6.0.88")

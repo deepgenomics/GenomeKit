@@ -78,22 +78,9 @@ std::string_view refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 	if (!std::filesystem::exists(path)) {
 		return {};
 	}
-	std::FILE* file = std::fopen(path.c_str(), "rb");
-	if (!file) {
-		println("Could not open file '{}'", path);
-		return {};
-	}
-	std::string refg_name;
-	constexpr auto max_size = 1024;
-	refg_name.resize(max_size);
-	auto bytesRead = std::fread(&refg_name[0], 1, max_size, file);
-	if (std::ferror(file)) {
-        std::fclose(file);
-		println("Could not read file '{}'", path);
-		return {};
-    }
-	std::fclose(file);
-	refg_name.resize(bytesRead);
+
+	line_reader lr{path};
+	auto refg_name = std::string(lr.line());
 	refg_name.erase(refg_name.find_last_not_of(" \n\r\t") + 1);
 	auto expected_ref = fnv1a_hash64(std::string_view(refg_name));
 	GK_CHECK(expected_ref == (uint64_t)ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",

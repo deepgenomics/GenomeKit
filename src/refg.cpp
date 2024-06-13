@@ -80,16 +80,12 @@ std::string_view refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 	}
 
 	line_reader lr{path};
-    auto refg_name = strip(lr.line());
+    const auto& refg_name = strip(lr.line());
 	auto expected_ref = fnv1a_hash64(refg_name);
 	GK_CHECK(refg_t(expected_ref) == ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
 			 path, refg_name, expected_ref, ref);
 
-	const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, refg_name);
-	GK_CHECK(name_inserted || name_it->second == refg_name, runtime,
-			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, refg_name);
-
-	return name_it->second;
+	return refg_name;
 }
 
 std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
@@ -98,6 +94,9 @@ std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
 	if (it == std::end(_names_by_refg)) {
 		const auto& refg_name = _try_refg_as_sv_from_file(ref);
 		if (!refg_name.empty()) {
+			const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, refg_name);
+			GK_CHECK(name_inserted || name_it->second == refg_name, runtime,
+					 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, refg_name);
 			return refg_name;
 		}
 	}

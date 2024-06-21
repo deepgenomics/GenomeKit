@@ -5,7 +5,6 @@ channels:
   - bioconda
 dependencies:
   - appdirs>=1.4.0
-  - crc32c
   - fmt
   - numpy
   - python>=3.8.0,<3.11.0

@@ -64,6 +64,9 @@ GKPY_OMETHOD_BEGIN(GenomeDNA, Call)
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|p", arg_names, &interval_arg, &allow_outside_chromosome))
 		 return nullptr;
 
+	if (!PyInterval::check(interval_arg)) {
+		GK_THROW(type, "Expected argument of type Interval");
+	}
 	// Extract DNA for an Interval arg
 	const interval_t& c = ((PyInterval*)interval_arg)->value();
 	return PyString_FromSV((*self->dna)(c, allow_outside_chromosome));

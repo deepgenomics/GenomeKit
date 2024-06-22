@@ -65,7 +65,7 @@ GKPY_OMETHOD_BEGIN(GenomeDNA, Call)
 		 return nullptr;
 
 	// Extract DNA for an Interval arg
-	const interval_t& c = ((PyInterval*)interval_arg)->value();
+	const interval_t& c = PyAsInterval(interval_arg);
 	return PyString_FromSV((*self->dna)(c, allow_outside_chromosome));
 GKPY_OMETHOD_END
 

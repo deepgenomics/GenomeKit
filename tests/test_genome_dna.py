@@ -25,6 +25,11 @@ class AttrTest(unittest.TestCase):
         gc.collect()
         self.assertEqual(gc.garbage, [])
 
+    def test_arg_typecheck(self):
+        genome = MiniGenome()
+        with self.assertRaises(TypeError):
+            genome.dna(100)
+
 
 ########################################################
 

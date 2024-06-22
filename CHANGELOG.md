@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.1](https://github.com/deepgenomics/GenomeKit/compare/v5.1.0...v5.1.1) (2024-06-22)
+
+
+### Bug Fixes
+
+* broken installation on osx-arm64 ([#65](https://github.com/deepgenomics/GenomeKit/issues/65)) ([6bd68c2](https://github.com/deepgenomics/GenomeKit/commit/6bd68c2ae79ac37cca1b01a9dc3cde582c92bfa2))
+* check genome.dna(Interval) arg type ([#68](https://github.com/deepgenomics/GenomeKit/issues/68)) ([f7b6e5c](https://github.com/deepgenomics/GenomeKit/commit/f7b6e5c998b8492cb5142b4fb83a5c3b86c4c49f)), closes [#67](https://github.com/deepgenomics/GenomeKit/issues/67)
+
 ## [5.1.0](https://github.com/deepgenomics/GenomeKit/compare/v5.0.2...v5.1.0) (2024-06-13)
 
 

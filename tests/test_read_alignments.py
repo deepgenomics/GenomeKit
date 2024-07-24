@@ -1654,7 +1654,7 @@ class StrandedTest(unittest.TestCase):
         ReverseFirst	81	chr1	20	255	1M1N1M	*	0	0	*	*
         ReverseSecond	145	chr1	30	255	1M1N1M	*	0	0	*	*
         """)
-    #     self.make_ralign(library_format='ISF')
+        self.make_ralign(library_format='ISF')
     #     with ReadAlignments(self.tmpout) as table:
     #         self.assertTrue(table.junctions.stranded)
     #         self.assertTrue(table.alignments.stranded)

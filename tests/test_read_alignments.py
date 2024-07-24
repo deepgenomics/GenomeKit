@@ -219,7 +219,9 @@ sam_header1 = """
 
 
 def make_ralign(outfile, infiles, reference_genome=MiniGenome('hg19'), **kwargs):
+    print("before calling ReadAlignments.build_ralign")
     ReadAlignments.build_ralign(outfile, infiles, reference_genome, **kwargs)
+    print("after calling ReadAlignments.build_ralign")
     return reference_genome
 
 

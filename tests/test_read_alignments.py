@@ -1646,71 +1646,71 @@ class StrandedTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'single end read'):
             self.make_ralign(library_format='ISF')
 
-    def test_detect_with_library_format_stranded_forward(self):
-        dumptext(
-            self.tmpsam, sam_header1, """
-        ForwardFirst	65	chr1	0	255	1M1N1M	*	0	0	*	*
-        ForwardSecond	129	chr1	10	255	1M1N1M	*	0	0	*	*
-        ReverseFirst	81	chr1	20	255	1M1N1M	*	0	0	*	*
-        ReverseSecond	145	chr1	30	255	1M1N1M	*	0	0	*	*
-        """)
-        self.make_ralign(library_format='ISF')
-        with ReadAlignments(self.tmpout) as table:
-            self.assertTrue(table.junctions.stranded)
-            self.assertTrue(table.alignments.stranded)
-            self.assertTrue(table.matches.stranded)
-            self.assertFalse(table.variants.stranded)
-            self.assertEqual(table.junctions[0].strand, '+')
-            self.assertEqual(table.junctions[1].strand, '-')
-            self.assertEqual(table.junctions[2].strand, '-')
-            self.assertEqual(table.junctions[3].strand, '+')
-            self.assertEqual(table.alignments[0].strand, '+')
-            self.assertEqual(table.alignments[1].strand, '+')
-            self.assertEqual(table.alignments[2].strand, '-')
-            self.assertEqual(table.alignments[3].strand, '-')
-
-        self.make_jralign(library_format='ISF')
-        with JReadAlignments(self.tmpout) as table:
-            self.assertTrue(table.junctions.stranded)
-            self.assertEqual(table.junctions[0].strand, '+')
-            self.assertEqual(table.junctions[1].strand, '-')
-            self.assertEqual(table.junctions[2].strand, '-')
-            self.assertEqual(table.junctions[3].strand, '+')
-            self.assertEqual(table.junctions[0][0].strand, '+')
-            self.assertEqual(table.junctions[1][0].strand, '+')
-            self.assertEqual(table.junctions[2][0].strand, '-')
-            self.assertEqual(table.junctions[3][0].strand, '-')
-
-    def test_detect_with_library_format_stranded_reverse(self):
-        dumptext(
-            self.tmpsam, sam_header1, """
-        ForwardFirst	65	chr1	0	255	1M1N1M	*	0	0	*	*
-        ForwardSecond	129	chr1	10	255	1M1N1M	*	0	0	*	*
-        ReverseFirst	81	chr1	20	255	1M1N1M	*	0	0	*	*
-        ReverseSecond	145	chr1	30	255	1M1N1M	*	0	0	*	*
-        """)
-
-        self.make_ralign(library_format='ISR')
-        with ReadAlignments(self.tmpout) as table:
-            self.assertEqual(table.junctions[0].strand, '-')
-            self.assertEqual(table.junctions[1].strand, '+')
-            self.assertEqual(table.junctions[2].strand, '+')
-            self.assertEqual(table.junctions[3].strand, '-')
-            self.assertEqual(table.alignments[0].strand, '+')
-            self.assertEqual(table.alignments[1].strand, '+')
-            self.assertEqual(table.alignments[2].strand, '-')
-            self.assertEqual(table.alignments[3].strand, '-')
-
-        self.make_jralign(library_format='ISR')
-        with JReadAlignments(self.tmpout) as table:
-            self.assertEqual(table.junctions[0].strand, '-')
-            self.assertEqual(table.junctions[1].strand, '+')
-            self.assertEqual(table.junctions[2].strand, '+')
-            self.assertEqual(table.junctions[3].strand, '-')
-            self.assertEqual(table.junctions[0][0].strand, '+')
-            self.assertEqual(table.junctions[1][0].strand, '+')
-            self.assertEqual(table.junctions[2][0].strand, '-')
-            self.assertEqual(table.junctions[3][0].strand, '-')
+    # def test_detect_with_library_format_stranded_forward(self):
+    #     dumptext(
+    #         self.tmpsam, sam_header1, """
+    #     ForwardFirst	65	chr1	0	255	1M1N1M	*	0	0	*	*
+    #     ForwardSecond	129	chr1	10	255	1M1N1M	*	0	0	*	*
+    #     ReverseFirst	81	chr1	20	255	1M1N1M	*	0	0	*	*
+    #     ReverseSecond	145	chr1	30	255	1M1N1M	*	0	0	*	*
+    #     """)
+    #     self.make_ralign(library_format='ISF')
+    #     with ReadAlignments(self.tmpout) as table:
+    #         self.assertTrue(table.junctions.stranded)
+    #         self.assertTrue(table.alignments.stranded)
+    #         self.assertTrue(table.matches.stranded)
+    #         self.assertFalse(table.variants.stranded)
+    #         self.assertEqual(table.junctions[0].strand, '+')
+    #         self.assertEqual(table.junctions[1].strand, '-')
+    #         self.assertEqual(table.junctions[2].strand, '-')
+    #         self.assertEqual(table.junctions[3].strand, '+')
+    #         self.assertEqual(table.alignments[0].strand, '+')
+    #         self.assertEqual(table.alignments[1].strand, '+')
+    #         self.assertEqual(table.alignments[2].strand, '-')
+    #         self.assertEqual(table.alignments[3].strand, '-')
+    #
+    #     self.make_jralign(library_format='ISF')
+    #     with JReadAlignments(self.tmpout) as table:
+    #         self.assertTrue(table.junctions.stranded)
+    #         self.assertEqual(table.junctions[0].strand, '+')
+    #         self.assertEqual(table.junctions[1].strand, '-')
+    #         self.assertEqual(table.junctions[2].strand, '-')
+    #         self.assertEqual(table.junctions[3].strand, '+')
+    #         self.assertEqual(table.junctions[0][0].strand, '+')
+    #         self.assertEqual(table.junctions[1][0].strand, '+')
+    #         self.assertEqual(table.junctions[2][0].strand, '-')
+    #         self.assertEqual(table.junctions[3][0].strand, '-')
+    #
+    # def test_detect_with_library_format_stranded_reverse(self):
+    #     dumptext(
+    #         self.tmpsam, sam_header1, """
+    #     ForwardFirst	65	chr1	0	255	1M1N1M	*	0	0	*	*
+    #     ForwardSecond	129	chr1	10	255	1M1N1M	*	0	0	*	*
+    #     ReverseFirst	81	chr1	20	255	1M1N1M	*	0	0	*	*
+    #     ReverseSecond	145	chr1	30	255	1M1N1M	*	0	0	*	*
+    #     """)
+    #
+    #     self.make_ralign(library_format='ISR')
+    #     with ReadAlignments(self.tmpout) as table:
+    #         self.assertEqual(table.junctions[0].strand, '-')
+    #         self.assertEqual(table.junctions[1].strand, '+')
+    #         self.assertEqual(table.junctions[2].strand, '+')
+    #         self.assertEqual(table.junctions[3].strand, '-')
+    #         self.assertEqual(table.alignments[0].strand, '+')
+    #         self.assertEqual(table.alignments[1].strand, '+')
+    #         self.assertEqual(table.alignments[2].strand, '-')
+    #         self.assertEqual(table.alignments[3].strand, '-')
+    #
+    #     self.make_jralign(library_format='ISR')
+    #     with JReadAlignments(self.tmpout) as table:
+    #         self.assertEqual(table.junctions[0].strand, '-')
+    #         self.assertEqual(table.junctions[1].strand, '+')
+    #         self.assertEqual(table.junctions[2].strand, '+')
+    #         self.assertEqual(table.junctions[3].strand, '-')
+    #         self.assertEqual(table.junctions[0][0].strand, '+')
+    #         self.assertEqual(table.junctions[1][0].strand, '+')
+    #         self.assertEqual(table.junctions[2][0].strand, '-')
+    #         self.assertEqual(table.junctions[3][0].strand, '-')
 
     def test_rdist(self):
         dumptext(

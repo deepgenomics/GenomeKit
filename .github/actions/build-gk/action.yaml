@@ -20,6 +20,14 @@ runs:
           ~/.condarc
           ~/bin/micromamba
 
+    - name: try to restore the gk package tarballs
+      id: restore_gk_pkg
+      uses: actions/cache/restore@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+        path: |
+          ~/conda-bld
+
     - name: install mamba
       uses: ./.github/actions/install-mamba
       with:
@@ -67,7 +75,10 @@ runs:
       run: |
         set -x
         micromamba activate build
-        micromamba create -y -n gk -f genomekit_dev.yml
+        mkdir ~/conda-bld
+        conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+        conda build --croot ~/conda-bld purge
+        conda clean -it
 
     - name: cache mamba env
       id: save_mamba_cache
@@ -79,10 +90,10 @@ runs:
           ~/.condarc
           ~/bin/micromamba
 
-#    - name: cache gk package tarballs
-#      id: save_gk_pkg
-#      uses: actions/cache/save@v4
-#      with:
-#        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
-#        path: |
-#          ~/conda-bld
+    - name: cache gk package tarballs
+      id: save_gk_pkg
+      uses: actions/cache/save@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+        path: |
+          ~/conda-bld

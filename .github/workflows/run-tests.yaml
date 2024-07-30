@@ -50,6 +50,15 @@ jobs:
             ~/bin/micromamba
           fail-on-cache-miss: true
 
+      - name: restore the gk package tarballs
+        id: restore_gk_pkg
+        uses: actions/cache/restore@v4
+        with:
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+          path: |
+            ~/conda-bld
+          fail-on-cache-miss: true
+
       - name: install mamba
         uses: ./.github/actions/install-mamba
         with:
@@ -71,8 +80,5 @@ jobs:
         run: |
           set -x
           pwd
-          ls -l ~/micromamba/envs/
-          micromamba activate gk
-          pip install -e .
           python -m unittest discover -v
           set +x

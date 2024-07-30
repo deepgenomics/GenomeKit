@@ -73,5 +73,6 @@ jobs:
           pwd
           ls -l ~/micromamba/envs/
           micromamba activate gk
+          pip install -e .
           python -m unittest discover -v
           set +x

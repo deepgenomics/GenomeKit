@@ -43,7 +43,7 @@ jobs:
         id: restore_mamba_cache
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}
           path: |
             ~/micromamba
             ~/.condarc

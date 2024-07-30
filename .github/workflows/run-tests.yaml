@@ -79,6 +79,8 @@ jobs:
         shell: bash -l -e {0}
         run: |
           set -x
-          pwd
-          python -m unittest discover -v
+          micromamba activate test
+          conda index ~/conda-bld
+          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
+          conda clean -it
           set +x

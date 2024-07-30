@@ -71,8 +71,7 @@ jobs:
         run: |
           set -x
           pwd
-          find ~/micromamba
-          find ~/.condarc
-          find ~/bin/micromamba
+          ls -l ~/micromamba/envs/
+          micromamba activate gk
           python -m unittest discover -v
           set +x

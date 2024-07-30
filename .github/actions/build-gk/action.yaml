@@ -67,10 +67,7 @@ runs:
       run: |
         set -x
         micromamba activate build
-        mkdir ~/conda-bld
-        conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
-        conda build --croot ~/conda-bld purge
-        conda clean -it
+        micromamba create -y -n gk conda-recipe
 
     - name: cache mamba env
       id: save_mamba_cache

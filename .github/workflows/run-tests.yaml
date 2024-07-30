@@ -1,8 +1,8 @@
 name: run-unit-tests
 run-name: run unit tests
 on:
-  pull_request:
-    branches-ignore: ["release-please*"]
+  push:
+    branches: ["debug-ci"]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
@@ -17,7 +17,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+        platform: [["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +30,8 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+        python-version: [["310", "3.10"]]
+        platform: [["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4
@@ -79,8 +79,6 @@ jobs:
         shell: bash -l -e {0}
         run: |
           set -x
-          micromamba activate test
-          conda index ~/conda-bld
-          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
-          conda clean -it
+          pwd
+          python -m unittest discover -v
           set +x

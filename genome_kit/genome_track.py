@@ -660,6 +660,17 @@ class GenomeTrack(_cxx.GenomeTrack):
         """
         return mock_result(str)
 
+    @mock
+    def intervals(self):  # pragma: no cover
+        """The list of intervals covered by this track.
+
+        Returns
+        -------
+        :py:class:`list` of :py:class:`~genome_kit.Interval`
+           The list of intervals with data in this track.
+        """
+        return mock_result(str)
+
     def histogram(self, region, separate_dims=False):
         """Generate a histogram of the values in the track.
 

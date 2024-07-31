@@ -357,6 +357,18 @@ GKPY_GETATTRO_BEGIN(GenomeTrack)
 	GKPY_GETATTR_CASE("reference_genome")  return PyString_FromSV(get_refg_registry().refg_as_sv(self->track->refg()));
 	GKPY_GETATTR_CASE("refg")              return PyString_FromSV(get_refg_registry().refg_as_sv(self->track->refg()));
 	GKPY_GETATTR_CASE("filename")          return PyString_FromSV(self->track->source());
+	GKPY_GETATTR_CASE("intervals")
+	{
+		auto      intervals = self->track->intervals();
+		auto      count     = std::ssize(intervals);
+		PyObject* list      = PyList_New(count);
+		GKPY_TAKEREF(list);
+		for (Py_ssize_t i = 0; i < count; ++i) {
+			PyList_SET_ITEM(list, i, PyInterval::create(intervals[i]));
+		}
+		GKPY_FORGETREF(list);  // keep list refcount at 1
+		return list;
+	}
 	return PyObject_GenericGetAttr(selfo, attro);
 GKPY_GETATTRO_END
 

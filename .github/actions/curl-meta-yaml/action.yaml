@@ -10,6 +10,6 @@ runs:
         curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         # build from local source, not from the latest release tarball
         sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d' conda-recipe/meta.yaml
-        sed -i -e 's|python -m unittest discover|python -m unittest tests.test_variant_table tests.test_variant_genome tests.test_variant tests.test_twobitutils -v -b|1' conda-recipe/meta.yaml
+        sed -i -e 's|python -m unittest discover|python -m unittest tests.test_serialize tests.test_interval tests.test_gk_data tests.test_genome_track -v -b|1' conda-recipe/meta.yaml
         cat conda-recipe/meta.yaml
         set +x

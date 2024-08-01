@@ -402,8 +402,8 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 	PyObject*      dtype_arg = nullptr;
 	PyArrayObject* out       = nullptr;
 	static char*   kwlist[] = {"interval", "dtype", "out", nullptr};
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|O!O!", kwlist, PyInterval::DefaultType, &itv, &PyArrayDescr_Type,
-									 &dtype_arg, &PyArray_Type, &out))
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|OO!", kwlist, PyInterval::DefaultType, &itv, &dtype_arg,
+									 &PyArray_Type, &out))
 		return nullptr;
 
 	auto      c      = PyAsInterval(itv);

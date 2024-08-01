@@ -285,6 +285,18 @@ class TestBuildTrack(unittest.TestCase):
         empty_dict = {}
         self.assertEqual(track(interval, **empty_dict).dtype, np.float16)
 
+    def test_intervals(self):
+        # Build a valid .gtrack file for some tests
+        builder = self.make_builder(strandedness="strand_aware")
+        intervals = [Interval('chr1', '+', 10, 30, builder.refg)]
+        intervals.append(intervals[0].as_opposite_strand().shift(1))
+        builder.set_data(intervals[0], np.zeros((20, 1), np.float16))
+        builder.set_data(intervals[1], np.ones((20, 1), np.float16))
+        builder.finalize()
+
+        with GenomeTrack(self.tmpfile) as track:
+            self.assertEqual(set(intervals), set(track.intervals))
+
     def _try_parse_wig(self,
                        dim,
                        res,

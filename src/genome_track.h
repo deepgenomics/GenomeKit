@@ -160,6 +160,8 @@ public:
 
 	static int gtrack_version();
 
+	std::vector<interval_t> intervals() const;
+
 private:
 
 	using any_t = detail::any_t;

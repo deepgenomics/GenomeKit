@@ -3,6 +3,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 */
 #include "genome_track.h"
 #include <algorithm>
+#include <numeric>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -538,6 +539,29 @@ bool genome_track::empty() const noexcept
 	ensure_open();
 	return std::empty(_tracks);
 }
+
+std::vector<interval_t> genome_track::intervals() const
+{
+	ensure_open();
+
+	std::vector<interval_t> ret(std::accumulate(std::begin(_tracks), std::end(_tracks), 0,
+												[](auto num, auto kv) { return num + kv.second.index->num_blocks; }));
+
+	size_t i_itv = 0;
+	for (auto [k, v] : _tracks) {
+		const auto num_blocks = v.index->num_blocks;
+		const auto jumps      = rcast<const int32_t*>(v.index + 1);
+		const auto ends       = rcast<const pos_t*>(jumps + v.index->num_jumps);
+		const auto starts     = rcast<const pos_t*>(ends + num_blocks);
+
+		for (std::decay_t<decltype(num_blocks)> i_block{}; i_block < num_blocks; ++i_block) {
+			ret[i_itv] = interval_t::from_dna0(k.chrom, starts[i_block], ends[i_block], k.other, _refg);
+			++i_itv;
+		}
+	}
+	return ret;
+}
+
 ///////////////////////////////////////////////////////////////
 
 template <typename D, typename S>

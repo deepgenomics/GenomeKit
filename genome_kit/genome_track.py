@@ -568,7 +568,7 @@ class GenomeTrack(_cxx.GenomeTrack):
             The stranded query interval.
         dtype : :py:class:`type`
             Optional. The numpy dtype of the resulting array.
-        dtype : :py:class:`~numpy.ndarray`
+        out : :py:class:`~numpy.ndarray`
             Optional. A numpy array to hold the result.
 
         Returns

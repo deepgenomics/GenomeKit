@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.0](https://github.com/deepgenomics/GenomeKit/compare/v5.1.1...v5.2.0) (2024-08-01)
+
+
+### Features
+
+* **gtrack:** inplace output ([#73](https://github.com/deepgenomics/GenomeKit/issues/73)) ([17838b7](https://github.com/deepgenomics/GenomeKit/commit/17838b7a7b78aa067eecf817193bee1ec07f9245))
+* **gtrack:** interval iteration ([#71](https://github.com/deepgenomics/GenomeKit/issues/71)) ([1e2b672](https://github.com/deepgenomics/GenomeKit/commit/1e2b67222fd3504dfd112925893f633bf665f11c))
+
 ## [5.1.1](https://github.com/deepgenomics/GenomeKit/compare/v5.1.0...v5.1.1) (2024-06-22)
 
 

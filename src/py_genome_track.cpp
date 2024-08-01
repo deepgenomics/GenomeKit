@@ -398,33 +398,35 @@ dtype_t dtype_from_obj(PyObject* obj)
 }
 
 GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
-	PyObject*      itv       = nullptr;
-	PyObject*      dtype_arg = nullptr;
-	PyArrayObject* out       = nullptr;
-	static char*   kwlist[] = {"interval", "dtype", "out", nullptr};
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|OO!", kwlist, PyInterval::DefaultType, &itv, &dtype_arg,
-									 &PyArray_Type, &out))
+	PyObject*    itv       = nullptr;
+	PyObject*    dtype_arg = nullptr;
+	PyObject*    out       = nullptr;
+	static char* kwlist[]  = {"interval", "dtype", "out", nullptr};
+	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|OO", kwlist, PyInterval::DefaultType, &itv, &dtype_arg, &out))
 		return nullptr;
 
 	auto      c      = PyAsInterval(itv);
-	auto      dtype  = dtype_arg ? dtype_from_obj(dtype_arg) : self->track->dtype();
+	auto      dtype  = dtype_arg && dtype_arg != Py_None ? dtype_from_obj(dtype_arg) : self->track->dtype();
 	PyObject* py_dst = nullptr;
 
-	if (!out) {
+	if (!out || out == Py_None) {
 		// Create an output array of the right type, size, and dimensionality
 		npy_intp dims[2] = {c.size(), self->track->dim()};
 		py_dst           = PyArray_Empty(2, dims, PyArray_DescrFromType(py_dtypes[dtype]), 0);  // 0 => C_CONTIGUOUS
 		if (!py_dst)
 			return nullptr;  // Propagate the error up to interpreter immediately
 	} else {
-		GK_CHECK(PyArray_NDIM(out) == 1 || PyArray_NDIM(out) == 2, value,
-				 "Dimension must be 1- or 2-dimensional: out is {}.", PyArray_NDIM(out));
-		GK_CHECK(PyArray_DIMS(out)[0] == c.size(), value, "Row mismatch: out is {} but interval is {}",
-				 PyArray_DIMS(out)[0], c.size());
-		GK_CHECK(PyArray_DIMS(out)[1] == self->track->dim(), value, "Column mismatch: out is {} but track is {}",
-				 PyArray_DIMS(out)[1], self->track->dim());
-		GK_CHECK(PyArray_ISCARRAY(out), value, "out must be writable from C.");
-		py_dst = rcast<PyObject*>(out);
+		GK_CHECK(PyArray_Check(out), type, "out must be a numpy ndarray.");
+
+		auto out_array = rcast<PyArrayObject*>(out);
+		GK_CHECK(PyArray_NDIM(out_array) == 1 || PyArray_NDIM(out_array) == 2, value,
+				 "Dimension must be 1- or 2-dimensional: out is {}.", PyArray_NDIM(out_array));
+		GK_CHECK(PyArray_DIMS(out_array)[0] == c.size(), value, "Row mismatch: out is {} but interval is {}",
+				 PyArray_DIMS(out_array)[0], c.size());
+		GK_CHECK(PyArray_DIMS(out_array)[1] == self->track->dim(), value, "Column mismatch: out is {} but track is {}",
+				 PyArray_DIMS(out_array)[1], self->track->dim());
+		GK_CHECK(PyArray_ISCARRAY(out_array), value, "out must be writable from C.");
+		py_dst = out;
 		Py_INCREF(py_dst);
 	}
 	GKPY_TAKEREF(py_dst);

@@ -306,8 +306,12 @@ class TestBuildTrack(unittest.TestCase):
 
         with GenomeTrack(self.tmpfile) as track:
             out = np.zeros((20, 1), np.float16)
-            track(interval, out=out)
+            res = track(interval, out=out)
             np.testing.assert_equal(out, np.ones((20, 1), np.float16))
+            np.testing.assert_equal(res, np.ones((20, 1), np.float16))
+
+            res = track(interval, out=None)
+            np.testing.assert_equal(res, np.ones((20, 1), np.float16))
 
             with self.assertRaisesRegex(ValueError, "Dimension"):
                 out = np.zeros((20, 1, 1), np.float16)

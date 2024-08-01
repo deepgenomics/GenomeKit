@@ -552,7 +552,7 @@ class GenomeTrack(_cxx.GenomeTrack):
         """
 
     @mock
-    def __call__(self, interval, dtype=None):  # pragma: no cover
+    def __call__(self, interval, dtype=None, out=None):  # pragma: no cover
         """Extract data from a genomic track.
 
         Data is always returned in sense-strand order, meaning it is
@@ -568,6 +568,8 @@ class GenomeTrack(_cxx.GenomeTrack):
             The stranded query interval.
         dtype : :py:class:`type`
             Optional. The numpy dtype of the resulting array.
+        out : :py:class:`~numpy.ndarray`
+            Optional. A numpy array to hold the result.
 
         Returns
         -------

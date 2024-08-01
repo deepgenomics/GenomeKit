@@ -261,7 +261,7 @@ class TestBuildTrack(unittest.TestCase):
         self.assertEqual(track(interval).dtype, np.float16)
 
         # Wrong interval arg types
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             track()
         with self.assertRaises(TypeError):
             track(None)
@@ -296,6 +296,38 @@ class TestBuildTrack(unittest.TestCase):
 
         with GenomeTrack(self.tmpfile) as track:
             self.assertEqual(set(intervals), set(track.intervals))
+
+    def test_out(self):
+        # Build a valid .gtrack file for some tests
+        builder = self.make_builder(strandedness="strand_aware")
+        interval = Interval('chr1', '+', 10, 30, builder.refg)
+        builder.set_data(interval, np.ones((20, 1), np.float16))
+        builder.finalize()
+
+        with GenomeTrack(self.tmpfile) as track:
+            out = np.zeros((20, 1), np.float16)
+            res = track(interval, out=out)
+            np.testing.assert_equal(out, np.ones((20, 1), np.float16))
+            np.testing.assert_equal(res, np.ones((20, 1), np.float16))
+
+            res = track(interval, out=None)
+            np.testing.assert_equal(res, np.ones((20, 1), np.float16))
+
+            with self.assertRaisesRegex(ValueError, "Dimension"):
+                out = np.zeros((20, 1, 1), np.float16)
+                track(interval, out=out)
+
+            with self.assertRaisesRegex(ValueError, "Row"):
+                out = np.zeros((19, 1), np.float16)
+                track(interval, out=out)
+
+            with self.assertRaisesRegex(ValueError, "Column"):
+                out = np.zeros((20, 2), np.float16)
+                track(interval, out=out)
+
+            with self.assertRaisesRegex(ValueError, "writable"):
+                out = np.zeros((40, 1), np.float16)
+                track(interval, out=out[0:None:2])
 
     def _try_parse_wig(self,
                        dim,

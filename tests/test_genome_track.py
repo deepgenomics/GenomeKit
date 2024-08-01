@@ -261,7 +261,7 @@ class TestBuildTrack(unittest.TestCase):
         self.assertEqual(track(interval).dtype, np.float16)
 
         # Wrong interval arg types
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             track()
         with self.assertRaises(TypeError):
             track(None)

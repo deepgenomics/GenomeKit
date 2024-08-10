@@ -58,7 +58,7 @@ namespace detail {
 	template <>
 	struct fractional_store<1> {
 		template <typename T>
-		INLINE static void apply(T* RESTRICT& dst, int i, int& k, int dim, T value) { dst[i] = value; }
+		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, T value) { dst[i] = value; }
 	};
 
 	// When storing a decoded value in reverse direction, we must step dst backwards each time
@@ -66,7 +66,7 @@ namespace detail {
 	template <>
 	struct fractional_store<-1> {
 		template <typename T>
-		INLINE static void apply(T* RESTRICT& dst, int i, int& k, int dim, T value)
+		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, T value)
 		{
 			*(dst++) = value;
 
@@ -334,7 +334,7 @@ private:
 
 		INLINE size_t num_required_bits(int size, int dim) const
 		{
-			return bits_per_encoded_datum * size * dim;
+			return bits_per_encoded_datum * (size_t)size * dim;
 		}
 
 		INLINE size_t num_encoded_bytes(int size, int dim) const
@@ -343,7 +343,7 @@ private:
 				return 0;
 			// A datum encoding is not allowed to cross the word boundary to simplify the encoders/decoders
 			const int num_per_word = 8*bytes_per_encoded_word/bits_per_encoded_datum; // Round down.
-			return size_t(bytes_per_encoded_word)*divup(size*dim, num_per_word); // Round up to the nearest word size.
+			return bytes_per_encoded_word*divup(size_t(size)*dim, num_per_word); // Round up to the nearest word size.
 		}
 
 		// Encodes by applying encoder::apply repeatedly to each src element and storing the encoded values in dst.
@@ -358,7 +358,7 @@ private:
 			// then it's safe to simply advance the pointers (no fractional dst bytes to worry about).
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[i*dim+j] = encoder::apply(src[i*dim+j], dict);
+					dst[(size_t)i*dim+j] = encoder::apply(src[(size_t)i*dim+j], dict);
 		}
 
 		// Decodes by applying decoder::apply repeatedly to each src element and storing the result in dst.
@@ -373,11 +373,11 @@ private:
 			// then it's safe to simply advance the pointers (no fractional src bytes to worry about).
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			dst += d*dim;
-			src += s*dim;
+			dst += (size_t)d*dim;
+			src += (size_t)s*dim;
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[i*dim*dir+j] = decoder::apply(src[i*dim+j], dict);
+					dst[(size_t)i*dim*dir+j] = decoder::apply(src[(size_t)i*dim+j], dict);
 			return size*dir;
 		}
 
@@ -386,11 +386,11 @@ private:
 		{
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			dst += d*dim;
+			dst += (size_t)d*dim;
 			dst_t x = fill.as<dst_t>();
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[i*dim*dir+j] = x;
+					dst[(size_t)i*dim*dir+j] = x;
 			return size*dir;
 		}
 
@@ -496,7 +496,7 @@ private:
 
 					// Otherwise copy all dimensions for this particular destination index `d`.
 					for (int j = dim-1; j >= 0; --j)  // High-to-low access pattern, for consistency.
-						dst[d*dim+j] = src[s*dim+j];
+						dst[(size_t)d*dim+j] = src[(size_t)s*dim+j];
 
 				} while (--phase);
 			}
@@ -520,7 +520,7 @@ private:
 					if (d > 1) {
 						while (--d)    // Advance `d` by one position at a time until we hit `s`.
 							for (int j = dim-1; j >= 0; --j)
-								dst[d*dim+j] = src[j];
+								dst[(size_t)d*dim+j] = src[j];
 					}
 					return;
 				}
@@ -531,12 +531,12 @@ private:
 				// and can unroll the 'res' loop. Outer loop is over dimensions so that
 				// we can read each value once and write it multiple times.
 				for (int j = dim-1; j >= 0; --j) {
-					const T x = src[s*dim+j];  // Read the value for dimension j that we need to repeat.
+					const T x = src[(size_t)s*dim+j];  // Read the value for dimension j that we need to repeat.
 
 					// Inner loop is over resolution. Go from large addresses to smaller
 					// addresses to keep the memory access pattern in a consistent direction.
 					for (int r = res-1; r >= 0; --r)
-						dst[(d+r)*dim+j] = x;
+						dst[((size_t)d+r)*dim+j] = x;
 				}
 			}
 		}
@@ -596,7 +596,7 @@ private:
 			const int num_per_dword = 8*sizeof(dword_t)/nbits; // Round down.
 
 			// Pre-initialize all dwords to zero. We're guaranteed to have this many dwords to work with.
-			for (int i = 0; i < divup(size*dim, num_per_dword); ++i)
+			for (size_t i = 0; i < divup((size_t)size*dim, num_per_dword); ++i)
 				dst[i] = 0;
 
 			// Store the encoded bits into each dword using bitwise OR.
@@ -613,7 +613,7 @@ private:
 			//
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[(i*dim+j)/num_per_dword] |= encoder::apply(src[i*dim+j], dict) << (nbits*((i*dim+j) % num_per_dword));
+					dst[((size_t)i*dim+j)/num_per_dword] |= encoder::apply(src[(size_t)i*dim+j], dict) << (nbits*(((size_t)i*dim+j) % num_per_dword));
 		}
 
 
@@ -627,31 +627,33 @@ private:
 			const int num_per_dword = 8*sizeof(dword_t)/nbits; // Round down.
 			const unsigned mask = (1 << nbits)-1;
 
-			int m = size*dim;
-			int a = dim*s;
-			int b = a + m;
-			int first_dword = udivdn(a, num_per_dword);  // round down
-			int last_dword  = udivup(b, num_per_dword);  // round up
-			int num_dwords  = last_dword - first_dword;
+			size_t m = (size_t)size*dim;
+			size_t a = dim*(size_t)s;
+			size_t b = a + m;
+			size_t first_dword = udivdn(a, num_per_dword);  // round down
+			size_t last_dword  = udivup(b, num_per_dword);  // round up
+			size_t num_dwords  = last_dword - first_dword;
 
 			// Advance pointers to starting positions
-			dst += d*dim;
+			dst += (size_t)d*dim;
 			src += first_dword;
 
 			if (num_dwords <= 1) {
 
 				// All values decoded from a single dword
 				dword_t dword = *src;
-				int ra = a - num_per_dword*first_dword;
+				size_t ra = a - num_per_dword*first_dword;
 				dword >>= ra*nbits;
-				for (int i = 0, k = dim; i < size*dim; ++i, dword >>= nbits)
+				int k = dim;
+				for (size_t i = 0; i < (size_t)size*dim; ++i, dword >>= nbits)
 					detail::fractional_store<dir>::apply(dst, i, k, dim, decoder::apply(dword & mask, dict));
 
 			} else {
 
 				// Handle low-order bits in first dword, if any
-				int i = 0, k = dim;
-				int ra = umod(a, num_per_dword);
+				size_t i  = 0;
+				int k     = dim;
+				size_t ra = umod(a, num_per_dword);
 				if (ra > 0) {
 					dword_t dword = *src++;
 					dword >>= ra*nbits;
@@ -660,8 +662,8 @@ private:
 				}
 
 				// Handle chunks that span entire dword
-				int rb = umod(b, num_per_dword);
-				int n  = m - rb;
+				size_t rb = umod(b, num_per_dword);
+				size_t n  = m - rb;
 				for (; i < n; i += num_per_dword) {
 					dword_t dword = *src++;
 					for (int j = 0; j < num_per_dword; ++j, dword >>= nbits)

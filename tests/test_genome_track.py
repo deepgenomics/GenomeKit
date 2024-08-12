@@ -34,7 +34,14 @@ def make_data(interval, dim, pattern, dtype):
 
 
 def as_list(array):
-    return [float(value) for value in array]
+    def as_scalar(x):
+        try:
+            x[0]
+            assert len(x) == 1
+            return x[0]
+        except TypeError:
+            return x
+    return [as_scalar(value) for value in array.tolist()]
 
 
 def make_builder(outfile, etype="f16", strandedness="single_stranded", reference_genome=MiniGenome("hg19"), **kwargs):

@@ -110,15 +110,20 @@ void genome_track::open_on_demand() const
 	// TODO: release lock here (implicitly, when falls out of scope)
 }
 
-void genome_track::operator()(const interval_t& c, bool*    dst) const { (*this)(c, dst, bool_); }
-void genome_track::operator()(const interval_t& c, uint8_t* dst) const { (*this)(c, dst, uint8); }
-void genome_track::operator()(const interval_t& c, int8_t*  dst) const { (*this)(c, dst, int8); }
-void genome_track::operator()(const interval_t& c, half_t*  dst) const { (*this)(c, dst, float16); }
-void genome_track::operator()(const interval_t& c, float*   dst) const { (*this)(c, dst, float32); }
-void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype) const
+void genome_track::operator()(const interval_t& c, bool*    dst, int stride) const { (*this)(c, dst, bool_,   stride); }
+void genome_track::operator()(const interval_t& c, uint8_t* dst, int stride) const { (*this)(c, dst, uint8,   stride); }
+void genome_track::operator()(const interval_t& c, int8_t*  dst, int stride) const { (*this)(c, dst, int8,    stride); }
+void genome_track::operator()(const interval_t& c, half_t*  dst, int stride) const { (*this)(c, dst, float16, stride); }
+void genome_track::operator()(const interval_t& c, float*   dst, int stride) const { (*this)(c, dst, float32, stride); }
+void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype, int stride) const
 {
 	ensure_open();
 	GK_CHECK(refg() == c.refg, value, "Reference genome mismatch");
+
+	if (stride == 0)
+		stride = dim();
+	GK_CHECK(stride > 0, value, "Negative strides not supported: stride={}", stride);
+	GK_CHECK(stride >= dim(), value, "Stride is too small: stride={}, dim={}", stride, dim());
 
 	// Get callbacks that are specialized to decode and default fill for this dtype and strand direction.
 	encoding::decode_fn decode = _encoding.decoders[dtype][as_ordinal(c.strand)];
@@ -354,7 +359,7 @@ void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype) 
 			s = 0;        // No overlap, so the decoding step will decode from the start of the data block.
 			if (a >= ce)  // If this data block is beyond the end of the query interval, truncate at end.
 				break;    // (Let the final dfill handle this case)
-			d += dfill(dst, fill, a-b, dim, d); // Fill with default
+			d += dfill(dst, fill, a-b, dim, d, stride); // Fill with default
 		}
 
 		// Get pointer to the encoded data block (src)
@@ -375,16 +380,16 @@ void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype) 
 		// Fill [a,b) with src decoded data.
 		b = ends[i];
 		if (b >= ce) {
-			decode(dst, src, dict, ce-a, dim, d, s);
+			decode(dst, src, dict, ce-a, dim, d, s, stride);
 			goto done; // Skip the final dfill
 		} else {
-			d += decode(dst, src, dict, b-a, dim, d, s);
+			d += decode(dst, src, dict, b-a, dim, d, s, stride);
 		}
 	}
 
 	// Fill the last [b,a) with default value where a == ce.
 	if (ce != b)
-		dfill(dst, fill, ce-b, dim, d);
+		dfill(dst, fill, ce-b, dim, d, stride);
 
 done:
 
@@ -527,7 +532,7 @@ done:
 			if (phase == _res)
 				phase = 0;
 		}
-		_encoding.expanders[dtype](dst, c.size(), dim, ce-cs, _res, phase);
+		_encoding.expanders[dtype](dst, c.size(), dim, ce-cs, _res, phase, stride);
 	}
 }
 

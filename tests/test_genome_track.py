@@ -311,7 +311,12 @@ class TestBuildTrack(unittest.TestCase):
             np.testing.assert_equal(res, np.ones((20, 1), np.float16))
 
             res = track(interval, out=None)
-            np.testing.assert_equal(res, np.ones((20, 1), np.float16))
+
+            out = np.zeros((40, 1), np.float16)
+            res = track(interval, out=out[::2])
+            np.testing.assert_equal(out[::2], np.ones((20, 1), np.float16))
+            np.testing.assert_equal(out[1::2], np.zeros((20, 1), np.float16))
+
 
             with self.assertRaisesRegex(ValueError, "Dimension"):
                 out = np.zeros((20, 1, 1), np.float16)
@@ -326,8 +331,13 @@ class TestBuildTrack(unittest.TestCase):
                 track(interval, out=out)
 
             with self.assertRaisesRegex(ValueError, "writable"):
-                out = np.zeros((40, 1), np.float16)
-                track(interval, out=out[0:None:2])
+                out = np.zeros((20, 1), np.float16)
+                out.flags.writeable = False
+                track(interval, out=out)
+
+            with self.assertRaisesRegex(ValueError, "Negative"):
+                out = np.zeros((20, 1), np.float16)
+                track(interval, out=out[::-1])
 
     def _try_parse_wig(self,
                        dim,

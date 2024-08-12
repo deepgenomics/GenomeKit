@@ -58,7 +58,7 @@ namespace detail {
 	template <>
 	struct fractional_store<1> {
 		template <typename T>
-		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, T value) { dst[i] = value; }
+		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, int stride, T value) { dst[i] = value; }
 	};
 
 	// When storing a decoded value in reverse direction, we must step dst backwards each time
@@ -66,7 +66,7 @@ namespace detail {
 	template <>
 	struct fractional_store<-1> {
 		template <typename T>
-		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, T value)
+		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, int stride, T value)
 		{
 			*(dst++) = value;
 
@@ -74,7 +74,7 @@ namespace detail {
 			// then advance to the first dimension of the next  position
 			// to be written to, which is backwards, not forwards.
 			if (--k == 0) {
-				dst -= 2*dim;
+				dst -= 2*stride;
 				k = dim;
 			}
 		}
@@ -142,12 +142,12 @@ public:
 	// TODO: add stride to the destination writes, so that user can
 	// create numpy array for mini-batch and fill data elements directly
 	// regardless of how the features are strided in mini-batch memory.
-	void operator()(const interval_t& c, bool*    dst) const;
-	void operator()(const interval_t& c, int8_t*  dst) const;
-	void operator()(const interval_t& c, uint8_t* dst) const;
-	void operator()(const interval_t& c, half_t*  dst) const;
-	void operator()(const interval_t& c, float*   dst) const;
-	void operator()(const interval_t& c, void*    dst, dtype_t dtype) const;
+	void operator()(const interval_t& c, bool*    dst, int stride=0) const;
+	void operator()(const interval_t& c, int8_t*  dst, int stride=0) const;
+	void operator()(const interval_t& c, uint8_t* dst, int stride=0) const;
+	void operator()(const interval_t& c, half_t*  dst, int stride=0) const;
+	void operator()(const interval_t& c, float*   dst, int stride=0) const;
+	void operator()(const interval_t& c, void*    dst, dtype_t dtype, int stride=0) const;
 
 	etype_t etype() const;
 	dtype_t dtype() const;
@@ -308,9 +308,9 @@ private:
 		//             to genomic coordinates.
 		//
 		using encode_fn = void (*)(void *__restrict, const void *__restrict, const float_dict &, int, int);
-		using decode_fn = int (*)(void *__restrict, const void *__restrict, const void *__restrict, int, int, int, int);
-		using dfill_fn = int (*)(void *__restrict, const any_t &, int, int, int);
-		using expand_fn = void (*)(void *__restrict, int, int, int, int, int);
+		using decode_fn = int (*)(void *__restrict, const void *__restrict, const void *__restrict, int, int, int, int, int);
+		using dfill_fn = int (*)(void *__restrict, const any_t &, int, int, int, int);
+		using expand_fn = void (*)(void *__restrict, int, int, int, int, int, int);
 
 		// Function pointers to implement encode, decode, default fill, and expand.
 		// Each pointer is specialized by etype, dtype, and possibly dim and strand.
@@ -367,30 +367,32 @@ private:
 		INLINE static int generic_decode(       typename decoder::dst_t* RESTRICT dst,
 		                                  const typename decoder::src_t* RESTRICT src,
 		                                  const typename decoder::dst_t* RESTRICT dict,
-		                                  int size, int dim, int d, int s)
+		                                  int size, int dim, int d, int s, int stride)
 		{
 			// generic_decode works when e->bits_per_encoded_datum us a multiples of 8, because
 			// then it's safe to simply advance the pointers (no fractional src bytes to worry about).
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			dst += (size_t)d*dim;
+			GK_ASSERT(stride >= dim);
+			dst += (size_t)d*stride;
 			src += (size_t)s*dim;
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[(size_t)i*dim*dir+j] = decoder::apply(src[(size_t)i*dim+j], dict);
+					dst[(size_t)i*stride*dir+j] = decoder::apply(src[(size_t)i*dim+j], dict);
 			return size*dir;
 		}
 
 		template <typename dst_t, int dir>
-		INLINE static int default_fill(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d)
+		INLINE static int default_fill(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d, int stride)
 		{
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			dst += (size_t)d*dim;
+			GK_ASSERT(stride >= dim);
+			dst += (size_t)d*stride;
 			dst_t x = fill.as<dst_t>();
 			for (int i = 0; i < size; ++i)
 				for (int j = 0; j < dim; ++j)
-					dst[(size_t)i*dim*dir+j] = x;
+					dst[(size_t)i*stride*dir+j] = x;
 			return size*dir;
 		}
 
@@ -399,17 +401,17 @@ private:
 		static int generic_decode_dim(      typename decoder::dst_t* RESTRICT dst,
 		                              const typename decoder::src_t* RESTRICT src,
 		                              const typename decoder::dst_t* RESTRICT dict,
-		                              int size, int dim, int d, int s)
+		                              int size, int dim, int d, int s, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
-			return generic_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s); // inline generic_decode with 'dim' constant-propagated into the inner loop
+			return generic_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s, stride); // inline generic_decode with 'dim' constant-propagated into the inner loop
 		}
 
 		template <typename dst_t, int dir, int const_dim>
-		INLINE static int default_fill_dim(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d)
+		INLINE static int default_fill_dim(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
-			return default_fill<dst_t, dir>(dst, fill, size, const_dim, d); // inline default_fill with 'dim' constant-propagated into the inner loop
+			return default_fill<dst_t, dir>(dst, fill, size, const_dim, d, stride); // inline default_fill with 'dim' constant-propagated into the inner loop
 		}
 
 		template <typename decoder, int dir>
@@ -458,7 +460,7 @@ private:
 		// See the documentation at end of genome_track::operator() for explanation of how this works.
 		// Important to INLINE this function so that constant propagation of `dim` optimizes away the 'dim' loops.
 		template <typename T>
-		INLINE static void generic_expand(T* RESTRICT dst, int size, int dim, int s, int res, int phase)
+		INLINE static void generic_expand(T* RESTRICT dst, int size, int dim, int s, int res, int phase, int stride)
 		{
 			// restrict only tells the compiler the pointer will not alias
 			// another restrict pointer, so to tell the compiler that we're
@@ -467,16 +469,17 @@ private:
 
 			#pragma GCC diagnostic push
 			#pragma GCC diagnostic ignored "-Wrestrict"
-			generic_expand_inner<T>(dst, dst, size, dim, s, res, phase);
+			generic_expand_inner<T>(dst, dst, size, dim, s, res, phase, stride);
 			#pragma GCC diagnostic pop
 		}
 		template <typename T>
 		INLINE static void generic_expand_inner(T* RESTRICT dst, T* RESTRICT src, int size, int dim, int s, int res,
-												int phase)
+												int phase, int stride)
 		{
 			GK_ASSERT(size > 0);
 			GK_ASSERT(res > 1);
 			GK_ASSERT(dim > 0);
+			GK_ASSERT(stride >= dim);
 			GK_ASSERT(phase >= 0 && phase < res);
 
 			// Start moving items to the end of the array, so our new destination 'd' will be the end.
@@ -496,7 +499,7 @@ private:
 
 					// Otherwise copy all dimensions for this particular destination index `d`.
 					for (int j = dim-1; j >= 0; --j)  // High-to-low access pattern, for consistency.
-						dst[(size_t)d*dim+j] = src[(size_t)s*dim+j];
+						dst[(size_t)d*stride+j] = src[(size_t)s*dim+j];
 
 				} while (--phase);
 			}
@@ -520,7 +523,7 @@ private:
 					if (d > 1) {
 						while (--d)    // Advance `d` by one position at a time until we hit `s`.
 							for (int j = dim-1; j >= 0; --j)
-								dst[(size_t)d*dim+j] = src[j];
+								dst[(size_t)d*stride+j] = src[j];
 					}
 					return;
 				}
@@ -536,17 +539,17 @@ private:
 					// Inner loop is over resolution. Go from large addresses to smaller
 					// addresses to keep the memory access pattern in a consistent direction.
 					for (int r = res-1; r >= 0; --r)
-						dst[((size_t)d+r)*dim+j] = x;
+						dst[((size_t)d+r)*stride+j] = x;
 				}
 			}
 		}
 
 		// Define a specialization so that constant-propagation of 'dim=1' can optimize away the 'dim' loop of generic_expand().
 		template <typename T, int const_dim>
-		static void generic_expand_dim(T* RESTRICT dst, int size, int dim, int s, int res, int phase)
+		static void generic_expand_dim(T* RESTRICT dst, int size, int dim, int s, int res, int phase, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
-			generic_expand<T>(dst, size, const_dim, s, res, phase); // inline generic_expand with 'dim' constant-propagated into the inner loop
+			generic_expand<T>(dst, size, const_dim, s, res, phase, stride); // inline generic_expand with 'dim' constant-propagated into the inner loop
 		}
 
 		template <typename T>
@@ -570,11 +573,11 @@ private:
 		static int decode_m0(      typename decoder::dst_t* RESTRICT dst,
 		                     const typename decoder::src_t* RESTRICT src,
 		                     const typename decoder::dst_t* RESTRICT dict,
-		                     int size, int dim, int d, int s)
+		                     int size, int dim, int d, int s, int stride)
 		{
-			dst += d;
+			dst += (size_t)d * stride;
 			for (int i = 0; i < size; ++i)
-				dst[i*dir] = 1;  // Fill the dst with 1s, ignoring 'src' and which is void* for m0 masks
+				dst[(size_t)i*stride*dir] = 1;  // Fill the dst with 1s, ignoring 'src' and which is void* for m0 masks
 			return size*dir;
 		}
 
@@ -621,7 +624,7 @@ private:
 		INLINE static int fractional_decode(      typename decoder::dst_t* RESTRICT dst,
 		                                    const typename decoder::src_t* RESTRICT src,
 		                                    const typename decoder::dst_t* RESTRICT dict,
-		                                    int size, int dim, int d, int s)
+		                                    int size, int dim, int d, int s, int stride)
 		{
 			const int nbits = decoder::nbits;
 			const int num_per_dword = 8*sizeof(dword_t)/nbits; // Round down.
@@ -635,7 +638,7 @@ private:
 			size_t num_dwords  = last_dword - first_dword;
 
 			// Advance pointers to starting positions
-			dst += (size_t)d*dim;
+			dst += (size_t)d*stride;
 			src += first_dword;
 
 			if (num_dwords <= 1) {
@@ -646,7 +649,7 @@ private:
 				dword >>= ra*nbits;
 				int k = dim;
 				for (size_t i = 0; i < (size_t)size*dim; ++i, dword >>= nbits)
-					detail::fractional_store<dir>::apply(dst, i, k, dim, decoder::apply(dword & mask, dict));
+					detail::fractional_store<dir>::apply(dst, i, k, dim, stride, decoder::apply(dword & mask, dict));
 
 			} else {
 
@@ -658,7 +661,7 @@ private:
 					dword_t dword = *src++;
 					dword >>= ra*nbits;
 					for (; i < num_per_dword-ra; ++i, dword >>= nbits)
-						detail::fractional_store<dir>::apply(dst, i, k, dim, decoder::apply(dword & mask, dict));
+						detail::fractional_store<dir>::apply(dst, i, k, dim, stride, decoder::apply(dword & mask, dict));
 				}
 
 				// Handle chunks that span entire dword
@@ -667,13 +670,13 @@ private:
 				for (; i < n; i += num_per_dword) {
 					dword_t dword = *src++;
 					for (int j = 0; j < num_per_dword; ++j, dword >>= nbits)
-						detail::fractional_store<dir>::apply(dst, i+j, k, dim, decoder::apply(dword & mask, dict));
+						detail::fractional_store<dir>::apply(dst, i+j, k, dim, stride, decoder::apply(dword & mask, dict));
 				}
 				// Handle any remaining high-order bits in final dword, if any
 				if (i < m) {
 					dword_t dword = *src;
 					for (; i < m; ++i, dword >>= nbits)
-						detail::fractional_store<dir>::apply(dst, i, k, dim, decoder::apply(dword & mask, dict));
+						detail::fractional_store<dir>::apply(dst, i, k, dim, stride, decoder::apply(dword & mask, dict));
 				}
 			}
 
@@ -685,10 +688,10 @@ private:
 		static int fractional_decode_dim(      typename decoder::dst_t* RESTRICT dst,
 		                                 const typename decoder::src_t* RESTRICT src,
 		                                 const typename decoder::dst_t* RESTRICT dict,
-		                                 int size, int dim, int d, int s)
+		                                 int size, int dim, int d, int s, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
-			return fractional_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s); // inline with 'dim' constant-propagated into the inner loop
+			return fractional_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s, stride); // inline with 'dim' constant-propagated into the inner loop
 		}
 
 		template <typename decoder, int dir>

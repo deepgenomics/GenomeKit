@@ -407,6 +407,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 
 	auto      c      = PyAsInterval(itv);
 	auto      dtype  = dtype_arg && dtype_arg != Py_None ? dtype_from_obj(dtype_arg) : self->track->dtype();
+	auto      stride = 0;
 	PyObject* py_dst = nullptr;
 
 	if (!out || out == Py_None) {
@@ -421,18 +422,21 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 		auto out_array = rcast<PyArrayObject*>(out);
 		GK_CHECK(PyArray_NDIM(out_array) == 1 || PyArray_NDIM(out_array) == 2, value,
 				 "Dimension must be 1- or 2-dimensional: out is {}.", PyArray_NDIM(out_array));
-		GK_CHECK(PyArray_DIMS(out_array)[0] == c.size(), value, "Row mismatch: out is {} but interval is {}",
-				 PyArray_DIMS(out_array)[0], c.size());
-		GK_CHECK(PyArray_DIMS(out_array)[1] == self->track->dim(), value, "Column mismatch: out is {} but track is {}",
-				 PyArray_DIMS(out_array)[1], self->track->dim());
-		GK_CHECK(PyArray_ISCARRAY(out_array), value, "out must be writable from C.");
+		GK_CHECK(PyArray_DIM(out_array, 0) == c.size(), value, "Row mismatch: out is {} but interval is {}",
+				 PyArray_DIM(out_array, 0), c.size());
+		if (PyArray_NDIM(out_array) == 2) {
+			GK_CHECK(PyArray_DIM(out_array, 1) == self->track->dim(), value,
+					 "Column mismatch: out is {} but track is {}", PyArray_DIM(out_array, 1), self->track->dim());
+		}
+		GK_CHECK(PyArray_ISBEHAVED(out_array), value, "out must be writable from C.");
+		stride = PyArray_STRIDE(out_array, 0) / PyArray_ITEMSIZE(out_array);
 		py_dst = out;
 		Py_INCREF(py_dst);
 	}
 	GKPY_TAKEREF(py_dst);
 
 	// Decode the track data into the numpy array py_dst
-	(*self->track)(c, PyArray_DATA(rcast<PyArrayObject*>(py_dst)), dtype);
+	(*self->track)(c, PyArray_DATA(rcast<PyArrayObject*>(py_dst)), dtype, stride);
 
 	GKPY_FORGETREF(py_dst);
 	return py_dst;

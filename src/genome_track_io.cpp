@@ -698,11 +698,11 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 
 	// If sparsify mode enabled, decode the data block and re-encode only the chunks that are not default_value
 	if (_sparsity_min_run) {
-		encoding::decode_fn decode = _encoding.decoders[dtype][as_ordinal(pos_strand)];  // decode forward, regardless of interval strand
+		encoding::decode_fn decode = _encoding.decoders[dtype][as_ordinal(encoding::layout_t::contiguous)][as_ordinal(pos_strand)];  // decode forward, regardless of interval strand
 		GK_ASSERT(decode);  // should always be a decoder for dtype if there was an encoder
 		if (!alt_data)
 			alt_data = std::make_unique<T[]>((size_t)size*dim);
-		decode(&alt_data[0], &dst[0], _encoding.dict.get<T>(), size, dim, 0, 0);  // Fill `alt_data` by decoding `dst`
+		decode(&alt_data[0], &dst[0], _encoding.dict.get<T>(), size, dim, 0, 0, 0);  // Fill `alt_data` by decoding `dst`
 
 		// Now that we've decoded the encoded data, thereby quantizing the data as it would
 		// appear in the final track, we're ready to scan the decoded copy for blocks of

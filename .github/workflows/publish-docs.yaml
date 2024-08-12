@@ -40,7 +40,7 @@ jobs:
         id: restore_gk_pkg
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**', 'tests/**') }}
           path: |
             ~/conda-bld
           fail-on-cache-miss: true

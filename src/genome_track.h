@@ -312,13 +312,19 @@ private:
 		using dfill_fn = int (*)(void *__restrict, const any_t &, int, int, int, int);
 		using expand_fn = void (*)(void *__restrict, int, int, int, int, int, int);
 
+		enum class layout_t {
+			contiguous,
+			noncontiguous,
+			amount
+		};
+
 		// Function pointers to implement encode, decode, default fill, and expand.
 		// Each pointer is specialized by etype, dtype, and possibly dim and strand.
 		// The pointers are initialized by init().
 		encode_fn encoders[num_dtype];
-		decode_fn decoders[num_dtype][2];  // [neg_strand] = reverse, [pos_strand] = forward
-		dfill_fn  dfillers[num_dtype][2];  // [neg_strand] = reverse, [pos_strand] = forward
-		expand_fn expanders[num_dtype];
+		decode_fn decoders[num_dtype][as_ordinal(layout_t::amount)][num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
+		dfill_fn  dfillers[num_dtype][as_ordinal(layout_t::amount)][num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
+		expand_fn expanders[num_dtype][as_ordinal(layout_t::amount)];
 
 		// Parameters of this particular encoding.
 		int bits_per_encoded_datum;  // 1-8 or 16
@@ -331,6 +337,8 @@ private:
 
 		void init(etype_t etype, int dim, int res, any_t default_value);
 		void init_dict();
+
+		bool supports_dtype(dtype_t dtype) const { return decoders[dtype][0][0] != nullptr; }
 
 		INLINE size_t num_required_bits(int size, int dim) const
 		{
@@ -397,64 +405,82 @@ private:
 		}
 
 		// Define some specializations where constant-propagation of 'dim' can reach the inner loops of the generic implementation
-		template <typename decoder, int dir, int const_dim>
+		template <typename decoder, int dir, int const_dim, layout_t layout>
 		static int generic_decode_dim(      typename decoder::dst_t* RESTRICT dst,
 		                              const typename decoder::src_t* RESTRICT src,
 		                              const typename decoder::dst_t* RESTRICT dict,
 		                              int size, int dim, int d, int s, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
+			if constexpr (layout == layout_t::contiguous)
+				stride = const_dim;
 			return generic_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s, stride); // inline generic_decode with 'dim' constant-propagated into the inner loop
 		}
 
-		template <typename dst_t, int dir, int const_dim>
+		template <typename dst_t, int dir, int const_dim, layout_t layout>
 		INLINE static int default_fill_dim(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
+			if constexpr (layout == layout_t::contiguous)
+				stride = const_dim;
 			return default_fill<dst_t, dir>(dst, fill, size, const_dim, d, stride); // inline default_fill with 'dim' constant-propagated into the inner loop
 		}
 
+		template <typename decoder, int dir, int const_dim>
+		static decode_fn specialized_decode_fn_dim(layout_t layout)
+		{
+			return layout == layout_t::contiguous ? (decode_fn)generic_decode_dim<decoder, dir, const_dim, layout_t::contiguous>
+										          : (decode_fn)generic_decode_dim<decoder, dir, const_dim, layout_t::noncontiguous>;
+		}
+
 		template <typename decoder, int dir>
-		static decode_fn specialized_decode_fn_dir(int dim)
+		static decode_fn specialized_decode_fn_dir(int dim, layout_t layout)
 		{
 			// Specialize based on *exact* value of 'dim', i.e. inner loop completely unrolled at compile time.
 			// Clang/GCC/MSVC isn't able/willing to unroll this for an extra 6.34% boost
 			switch (dim) {
-			case 1:  return (decode_fn)generic_decode_dim<decoder, dir, 1>;
-			case 2:  return (decode_fn)generic_decode_dim<decoder, dir, 2>;
-			case 3:  return (decode_fn)generic_decode_dim<decoder, dir, 3>;
-			case 4:  return (decode_fn)generic_decode_dim<decoder, dir, 4>;
+			case 1:  return specialized_decode_fn_dim<decoder, dir, 1>(layout);
+			case 2:  return specialized_decode_fn_dim<decoder, dir, 2>(layout);
+			case 3:  return specialized_decode_fn_dim<decoder, dir, 3>(layout);
+			case 4:  return specialized_decode_fn_dim<decoder, dir, 4>(layout);
 			}
 
 			return (decode_fn)generic_decode<decoder, dir>;
 		}
 
 		template <typename decoder>
-		static decode_fn specialized_decode_fn(int dim, int dir)
+		static decode_fn specialized_decode_fn(int dim, layout_t layout, int dir)
 		{
-			return dir == 1 ? specialized_decode_fn_dir<decoder,  1>(dim)
-			                : specialized_decode_fn_dir<decoder, -1>(dim);
+			return dir == 1 ? specialized_decode_fn_dir<decoder,  1>(dim, layout)
+			                : specialized_decode_fn_dir<decoder, -1>(dim, layout);
+		}
+
+		template <typename decoder, int dir, int const_dim>
+		static dfill_fn specialized_default_fill_fn_dim(layout_t layout)
+		{
+			return layout == layout_t::contiguous ? (dfill_fn)default_fill_dim<decoder, dir, const_dim, layout_t::contiguous>
+										          : (dfill_fn)default_fill_dim<decoder, dir, const_dim, layout_t::noncontiguous>;
 		}
 
 		template <typename dst_t, int dir>
-		static dfill_fn specialized_default_fill_fn_dir(int dim)
+		static dfill_fn specialized_default_fill_fn_dir(int dim, layout_t layout)
 		{
 			// Specialize based on *exact* value of 'dim', i.e. inner loop completely unrolled at compile time.
 			switch (dim) {
-			case 1:  return (dfill_fn)default_fill_dim<dst_t, dir, 1>;
-			case 2:  return (dfill_fn)default_fill_dim<dst_t, dir, 2>;
-			case 3:  return (dfill_fn)default_fill_dim<dst_t, dir, 3>;
-			case 4:  return (dfill_fn)default_fill_dim<dst_t, dir, 4>;
+			case 1:  return specialized_default_fill_fn_dim<dst_t, dir, 1>(layout);
+			case 2:  return specialized_default_fill_fn_dim<dst_t, dir, 2>(layout);
+			case 3:  return specialized_default_fill_fn_dim<dst_t, dir, 3>(layout);
+			case 4:  return specialized_default_fill_fn_dim<dst_t, dir, 4>(layout);
 			}
 
 			return (dfill_fn)default_fill<dst_t, dir>;
 		}
 
 		template <typename dst_t>
-		static dfill_fn specialized_default_fill_fn(int dim, int dir)
+		static dfill_fn specialized_default_fill_fn(int dim, layout_t layout, int dir)
 		{
-			return dir == 1 ? specialized_default_fill_fn_dir<dst_t,  1>(dim)
-			                : specialized_default_fill_fn_dir<dst_t, -1>(dim);
+			return dir == 1 ? specialized_default_fill_fn_dir<dst_t,  1>(dim, layout)
+			                : specialized_default_fill_fn_dir<dst_t, -1>(dim, layout);
 		}
 
 		// See the documentation at end of genome_track::operator() for explanation of how this works.
@@ -545,47 +571,66 @@ private:
 		}
 
 		// Define a specialization so that constant-propagation of 'dim=1' can optimize away the 'dim' loop of generic_expand().
-		template <typename T, int const_dim>
+		template <typename T, int const_dim, layout_t layout>
 		static void generic_expand_dim(T* RESTRICT dst, int size, int dim, int s, int res, int phase, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
+			if constexpr (layout == layout_t::contiguous)
+				stride = const_dim;
 			generic_expand<T>(dst, size, const_dim, s, res, phase, stride); // inline generic_expand with 'dim' constant-propagated into the inner loop
 		}
 
+		template <typename T, int const_dim>
+		static expand_fn specialized_expand_fn_dim(layout_t layout)
+		{
+			return (layout == layout_t::contiguous) ? (expand_fn)generic_expand_dim<T, const_dim, layout_t::contiguous>
+													: (expand_fn)generic_expand_dim<T, const_dim, layout_t::noncontiguous>;
+		}
+
 		template <typename T>
-		static expand_fn specialized_expand_fn_res(int dim)
+		static expand_fn specialized_expand_fn_res(int dim, layout_t layout)
 		{
 			// If 1-dimensional track, then specialize on dim to optimize away the dim loop.
 			// Since dim isn't inner-most loop, don't bother specializing on other values.
-			return (dim == 1) ? (expand_fn)generic_expand_dim<T, 1>  // dim = 1 at compile time
-			                  : (expand_fn)generic_expand<T>;        // generic dim
+			return (dim == 1) ? specialized_expand_fn_dim<T, 1>(layout)  // dim = 1 at compile time
+							  : (expand_fn)generic_expand<T>;            // generic dim
 		}
 
 		template <typename T>
-		static expand_fn specialized_expand_fn(int dim, int res)
+		static expand_fn specialized_expand_fn(int dim, layout_t layout, int res)
 		{
 			if (res == 0) return nullptr; // Possible if not set yet by genome_track::builder
 
-			return specialized_expand_fn_res<T>(dim);
+			return specialized_expand_fn_res<T>(dim, layout);
 		}
 
-		template <typename decoder, int dir>
+		template <typename decoder, int dir, layout_t layout>
 		static int decode_m0(      typename decoder::dst_t* RESTRICT dst,
 		                     const typename decoder::src_t* RESTRICT src,
 		                     const typename decoder::dst_t* RESTRICT dict,
 		                     int size, int dim, int d, int s, int stride)
 		{
+			if constexpr (layout == layout_t::contiguous)
+				stride = 1;
 			dst += (size_t)d * stride;
 			for (int i = 0; i < size; ++i)
 				dst[(size_t)i*stride*dir] = 1;  // Fill the dst with 1s, ignoring 'src' and which is void* for m0 masks
 			return size*dir;
 		}
 
-		template <typename decoder>
-		static decode_fn specialized_decode_m0_fn(int dim, int dir)
+		template <typename decoder, int dir>
+		static decode_fn specialized_decode_m0_fn_dir(int dim, layout_t layout)
 		{
 			GK_CHECK(dim == 1, value, "Masks can only be 1 dimensional");
-			return dir == 1 ? (decode_fn)decode_m0<decoder, 1> : (decode_fn)decode_m0<decoder, -1>;
+			return layout == layout_t::contiguous ? (decode_fn)decode_m0<decoder, dir, layout_t::contiguous>
+										          : (decode_fn)decode_m0<decoder, dir, layout_t::noncontiguous>;
+		}
+
+		template <typename decoder>
+		static decode_fn specialized_decode_m0_fn(int dim, layout_t layout, int dir)
+		{
+			return dir == 1 ? specialized_decode_m0_fn_dir<decoder, 1>(dim, layout)
+							: specialized_decode_m0_fn_dir<decoder, -1>(dim, layout);
 		}
 
 		// Encoder for etypes that use 1, 2, or 4 bits.
@@ -684,27 +729,36 @@ private:
 		}
 
 		// Define some specializations where constant-propagation of 'dim' can reach the inner loops of the generic implementation
-		template <typename decoder, int dir, int const_dim>
+		template <typename decoder, int dir, int const_dim, layout_t layout>
 		static int fractional_decode_dim(      typename decoder::dst_t* RESTRICT dst,
 		                                 const typename decoder::src_t* RESTRICT src,
 		                                 const typename decoder::dst_t* RESTRICT dict,
 		                                 int size, int dim, int d, int s, int stride)
 		{
 			GK_DBASSERT(dim == const_dim);
+			if constexpr (layout == layout_t::contiguous)
+				stride = const_dim;
 			return fractional_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s, stride); // inline with 'dim' constant-propagated into the inner loop
 		}
 
+		template <typename decoder, int dir, int const_dim>
+		static decode_fn specialized_fractional_decode_fn_dim(layout_t layout)
+		{
+			return layout == layout_t::contiguous ? (decode_fn)fractional_decode_dim<decoder, dir, const_dim, layout_t::contiguous>
+										          : (decode_fn)fractional_decode_dim<decoder, dir, const_dim, layout_t::noncontiguous>;
+		}
+
 		template <typename decoder, int dir>
-		static decode_fn specialized_fractional_decode_fn_dir(int dim)
+		static decode_fn specialized_fractional_decode_fn_dir(int dim, layout_t layout)
 		{
 			// Specialize based on *exact* value of 'dim'.
 			// This is important for fractional decoder on reverse strand because
 			// its inner-most loop uses 'dim' when advancing the dst pointer.
 			switch (dim) {
-			case 1:  return (decode_fn)fractional_decode_dim<decoder, dir, 1>; // dim = 1
-			case 2:  return (decode_fn)fractional_decode_dim<decoder, dir, 2>; // dim = 2
-			case 3:  return (decode_fn)fractional_decode_dim<decoder, dir, 3>; // dim = 3
-			case 4:  return (decode_fn)fractional_decode_dim<decoder, dir, 4>; // dim = 4
+			case 1:  return specialized_fractional_decode_fn_dim<decoder, dir, 1>(layout); // dim = 1
+			case 2:  return specialized_fractional_decode_fn_dim<decoder, dir, 2>(layout); // dim = 2
+			case 3:  return specialized_fractional_decode_fn_dim<decoder, dir, 3>(layout); // dim = 3
+			case 4:  return specialized_fractional_decode_fn_dim<decoder, dir, 4>(layout); // dim = 4
 			}
 
 			// No specialization, generic version
@@ -712,10 +766,10 @@ private:
 		}
 
 		template <typename decoder>
-		static decode_fn specialized_fractional_decode_fn(int dim, int dir)
+		static decode_fn specialized_fractional_decode_fn(int dim, layout_t layout, int dir)
 		{
-			return dir == 1 ? specialized_fractional_decode_fn_dir<decoder,  1>(dim)
-			                : specialized_fractional_decode_fn_dir<decoder, -1>(dim);
+			return dir == 1 ? specialized_fractional_decode_fn_dir<decoder,  1>(dim, layout)
+			                : specialized_fractional_decode_fn_dir<decoder, -1>(dim, layout);
 		}
 
 
@@ -731,6 +785,7 @@ private:
 			enum { c_bits_per_encoded_datum = _bits_per_encoded_datum }; \
 			void init(int dim, int res) \
 			{ \
+				using enum layout_t; \
 				bits_per_encoded_datum = _bits_per_encoded_datum; \
 				bytes_per_encoded_word = detail::_sizeof<encoded_type>::size; \
 				range_min = any_t _range_min; \
@@ -740,33 +795,58 @@ private:
 				encoders[int8   ] = etype##_encoding::int8_encoder::as_encode_fn(dim); \
 				encoders[float16] = etype##_encoding::float16_encoder::as_encode_fn(dim); \
 				encoders[float32] = etype##_encoding::float32_encoder::as_encode_fn(dim); \
-				decoders[bool_  ][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, -1); \
-				decoders[bool_  ][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,  1); \
-				decoders[uint8  ][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, -1); \
-				decoders[uint8  ][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,  1); \
-				decoders[int8   ][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, -1); \
-				decoders[int8   ][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,  1); \
-				decoders[float16][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, -1); \
-				decoders[float16][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,  1); \
-				decoders[float32][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, -1); \
-				decoders[float32][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,  1); \
-				dfillers[bool_  ][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim, -1); \
-				dfillers[bool_  ][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim,  1); \
-				dfillers[uint8  ][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim, -1); \
-				dfillers[uint8  ][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim,  1); \
-				dfillers[int8   ][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim, -1); \
-				dfillers[int8   ][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim,  1); \
-				dfillers[float16][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim, -1); \
-				dfillers[float16][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim,  1); \
-				dfillers[float32][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim, -1); \
-				dfillers[float32][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim,  1); \
-				expanders[bool_  ] = specialized_expand_fn<bool   >(dim, res); \
-				expanders[uint8  ] = specialized_expand_fn<uint8_t>(dim, res); \
-				expanders[int8   ] = specialized_expand_fn<int8_t >(dim, res); \
-				expanders[float16] = specialized_expand_fn<half_t >(dim, res); \
-				expanders[float32] = specialized_expand_fn<float  >(dim, res); \
+				decoders[bool_  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[bool_  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[bool_  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[bool_  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[uint8  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[uint8  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[uint8  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[uint8  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[int8   ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[int8   ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[int8   ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[int8   ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[float16][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[float16][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[float16][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[float16][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[float32][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[float32][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[float32][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[float32][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				dfillers[bool_  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous, -1); \
+				dfillers[bool_  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous,  1); \
+				dfillers[bool_  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous, -1); \
+				dfillers[bool_  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous,  1); \
+				dfillers[uint8  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous, -1); \
+				dfillers[uint8  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous,  1); \
+				dfillers[uint8  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous, -1); \
+				dfillers[uint8  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous,  1); \
+				dfillers[int8   ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous, -1); \
+				dfillers[int8   ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous,  1); \
+				dfillers[int8   ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous, -1); \
+				dfillers[int8   ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous,  1); \
+				dfillers[float16][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous, -1); \
+				dfillers[float16][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous,  1); \
+				dfillers[float16][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous, -1); \
+				dfillers[float16][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous,  1); \
+				dfillers[float32][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous, -1); \
+				dfillers[float32][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous,  1); \
+				dfillers[float32][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous, -1); \
+				dfillers[float32][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous,  1); \
+				expanders[bool_  ][as_ordinal(   contiguous)] = specialized_expand_fn<bool   >(dim,    contiguous, res); \
+				expanders[bool_  ][as_ordinal(noncontiguous)] = specialized_expand_fn<bool   >(dim, noncontiguous, res); \
+				expanders[uint8  ][as_ordinal(   contiguous)] = specialized_expand_fn<uint8_t>(dim,    contiguous, res); \
+				expanders[uint8  ][as_ordinal(noncontiguous)] = specialized_expand_fn<uint8_t>(dim, noncontiguous, res); \
+				expanders[int8   ][as_ordinal(   contiguous)] = specialized_expand_fn<int8_t >(dim,    contiguous, res); \
+				expanders[int8   ][as_ordinal(noncontiguous)] = specialized_expand_fn<int8_t >(dim, noncontiguous, res); \
+				expanders[float16][as_ordinal(   contiguous)] = specialized_expand_fn<half_t >(dim,    contiguous, res); \
+				expanders[float16][as_ordinal(noncontiguous)] = specialized_expand_fn<half_t >(dim, noncontiguous, res); \
+				expanders[float32][as_ordinal(   contiguous)] = specialized_expand_fn<float  >(dim,    contiguous, res); \
+				expanders[float32][as_ordinal(noncontiguous)] = specialized_expand_fn<float  >(dim, noncontiguous, res); \
 				init_dict(); /* static dispatch to base class (no-op) or subclass specialization */ \
-			}
+			} \
 
 	#define GK_END_ENCODING \
 		};
@@ -804,7 +884,7 @@ private:
 
 	#define GK_NULL_DECODER(_decoded_type) \
 			GK_BEGIN_DECODER(_decoded_type) \
-				INLINE static decode_fn as_decode_fn(int dim, int dir) { return nullptr; } \
+				INLINE static decode_fn as_decode_fn(int dim, layout_t layout, int dir) { return nullptr; } \
 			GK_END_DECODER
 
 	#define GK_NULL_TRANSCODER(_decoded_type) \
@@ -826,29 +906,29 @@ private:
 		INLINE static encode_fn as_encode_fn(int dim)
 
 	#define GK_DECODER_FN \
-		INLINE static decode_fn as_decode_fn(int dim, int dir)
+		INLINE static decode_fn as_decode_fn(int dim, layout_t layout, int dir)
 
 	GK_BEGIN_ENCODING(m0, 0, void, (1, 1, 1, 1), (1, 1, 1, 1))
 		// No encoders for m0 -- treated as special case where anything in the genome-wide index gets decoded to 1
 		GK_NULL_ENCODER(bool_)
 		GK_BEGIN_DECODER(bool_)
-			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_NULL_ENCODER(uint8)
 		GK_BEGIN_DECODER(uint8)
-			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_NULL_ENCODER(int8)
 		GK_BEGIN_DECODER(int8)
-			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, dir); }  // deliberately share decoder to reduce binary size
+			GK_DECODER_FN    { return specialized_decode_m0_fn<uint8_decoder>(dim, layout, dir); }  // deliberately share decoder to reduce binary size
 		GK_END_DECODER
 		GK_NULL_ENCODER(float16)
 		GK_BEGIN_DECODER(float16)
-			GK_DECODER_FN    { return specialized_decode_m0_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_m0_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_NULL_ENCODER(float32)
 		GK_BEGIN_DECODER(float32)
-			GK_DECODER_FN    { return specialized_decode_m0_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_m0_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -861,7 +941,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(uint8)
 			GK_DECODER_APPLY { return (dst_t)y; }
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_NULL_TRANSCODER(int8)
 		GK_BEGIN_ENCODER(bool_)
@@ -869,7 +949,7 @@ private:
 			GK_ENCODER_FN    { return (encode_fn)fractional_encode<encoder_type>; }
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(bool_)
-			GK_DECODER_FN    { return uint8_decoder::as_decode_fn(dim, dir); }  // deliberately share decoder to reduce binary size
+			GK_DECODER_FN    { return uint8_decoder::as_decode_fn(dim, layout, dir); }  // deliberately share decoder to reduce binary size
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float16)
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(as_float(x), 0, 1); }
@@ -877,7 +957,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float16)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float32)
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(x, 0, 1); }
@@ -885,7 +965,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -898,7 +978,7 @@ private:
 		GK_END_ENCODER \
 		GK_BEGIN_DECODER(uint8) \
 			GK_DECODER_APPLY { return (dst_t)y; } \
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); } \
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); } \
 		GK_END_DECODER \
 		GK_NULL_TRANSCODER(int8) \
 		GK_BEGIN_ENCODER(float16) \
@@ -907,7 +987,7 @@ private:
 		GK_END_ENCODER  \
 		GK_BEGIN_DECODER(float16) \
 			GK_DECODER_APPLY { return dst_t(y); } \
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); } \
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); } \
 		GK_END_DECODER \
 		GK_BEGIN_ENCODER(float32) \
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(x, 0, (1<<nbits)-1); } \
@@ -915,7 +995,7 @@ private:
 		GK_END_ENCODER \
 		GK_BEGIN_DECODER(float32) \
 			GK_DECODER_APPLY { return dst_t(y); } \
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); } \
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); } \
 		GK_END_DECODER \
 	GK_END_ENCODING
 
@@ -933,7 +1013,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(uint8)  // TODO: use memcpy for non-reverse case
 			GK_DECODER_APPLY { return y; }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_NULL_TRANSCODER(int8)
 		GK_BEGIN_ENCODER(float16)
@@ -942,7 +1022,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float16)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float32)
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(x, 0, 255); }
@@ -950,7 +1030,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -961,7 +1041,7 @@ private:
 			GK_ENCODER_FN    { return u8_encoding::uint8_encoder::as_encode_fn(dim); }  // deliberately share encoder to reduce binary size
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(int8)
-			GK_DECODER_FN    { return u8_encoding::uint8_decoder::as_decode_fn(dim, dir); }  // deliberately share decoder to reduce binary size
+			GK_DECODER_FN    { return u8_encoding::uint8_decoder::as_decode_fn(dim, layout, dir); }  // deliberately share decoder to reduce binary size
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float16)
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(as_float(x), -128, 127); }
@@ -969,7 +1049,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float16)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float32)
 			GK_ENCODER_APPLY { GK_ENCODER_APPLY_RANGED(x, -128, 127); }
@@ -977,7 +1057,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return dst_t(y); }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -992,7 +1072,7 @@ private:
 		GK_END_ENCODER \
 		GK_BEGIN_DECODER(float16) \
 			GK_DECODER_APPLY { return dict[y]; } \
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); } \
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); } \
 		GK_END_DECODER \
 		GK_BEGIN_ENCODER(float32) \
 			GK_ENCODER_APPLY { return dict.encode(x); } \
@@ -1000,7 +1080,7 @@ private:
 		GK_END_ENCODER \
 		GK_BEGIN_DECODER(float32) \
 			GK_DECODER_APPLY { return dict[y]; } \
-			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, dir); } \
+			GK_DECODER_FN    { return specialized_fractional_decode_fn<decoder_type>(dim, layout, dir); } \
 		GK_END_DECODER \
 	GK_END_ENCODING
 
@@ -1020,7 +1100,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float16)
 			GK_DECODER_APPLY { return dict[y]; }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float32)
 			GK_ENCODER_APPLY { return dict.encode(x); }
@@ -1028,7 +1108,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return dict[y]; }
-			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -1042,7 +1122,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float16)  // TODO: use memcpy for non-reverse case
 			GK_DECODER_APPLY { return y; }
-			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 		GK_BEGIN_ENCODER(float32)
 			GK_ENCODER_APPLY { return half_t(x); }
@@ -1050,7 +1130,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return as_float(y); }
-			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -1065,7 +1145,7 @@ private:
 		GK_END_ENCODER
 		GK_BEGIN_DECODER(float32)
 			GK_DECODER_APPLY { return y; }
-			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, dir); }
+			GK_DECODER_FN    { return (decode_fn)specialized_decode_fn<decoder_type>(dim, layout, dir); }
 		GK_END_DECODER
 	GK_END_ENCODING
 
@@ -1321,7 +1401,7 @@ public:
 		INLINE const any_t&  sparsity_min_delta() const { return _sparsity_min_delta; }
 		INLINE const any_t&  default_value() const { return _h.default_value; }
 		INLINE const string& filename() const { return _outfile; }
-		INLINE bool supports_dtype(dtype_t dtype) const { return _encoding.decoders[dtype][as_ordinal(neg_strand)] != nullptr; }
+		INLINE bool supports_dtype(dtype_t dtype) const { return _encoding.supports_dtype(dtype); }
 		INLINE bool finalized() const { return _finalized; }
 
 		const chrom_names_t& chrom_names() const;

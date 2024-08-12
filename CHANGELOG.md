@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.1](https://github.com/deepgenomics/GenomeKit/compare/v5.2.0...v5.2.1) (2024-08-12)
+
+
+### Bug Fixes
+
+* **track:** segfault when decoding large dims ([#75](https://github.com/deepgenomics/GenomeKit/issues/75)) ([6f5c29e](https://github.com/deepgenomics/GenomeKit/commit/6f5c29ec610018994f0d451624edad0053013c15))
+* **track:** strided decoding ([#77](https://github.com/deepgenomics/GenomeKit/issues/77)) ([1fc1b37](https://github.com/deepgenomics/GenomeKit/commit/1fc1b378875a0376c7f7d41a1335a8cccc1b8325))
+
 ## [5.2.0](https://github.com/deepgenomics/GenomeKit/compare/v5.1.1...v5.2.0) (2024-08-01)
 
 

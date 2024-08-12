@@ -666,12 +666,12 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 		// Reverse the order so that it's written in reference-strand order.
 		// (The genome_track decoders always assumes blocks of
 		//  contiguous data are stored in reference-strand order.)
-		alt_data = std::make_unique<T[]>(size*dim);
+		alt_data = std::make_unique<T[]>((size_t)size*dim);
 		src = &alt_data[0];
 		if (reverse)
 			reverse_track_data(&alt_data[0], data, size, dim);
 		else
-			memcpy(&alt_data[0], data, size*dim*dtype_size[dtype]);
+			memcpy(&alt_data[0], data, (size_t)size*dim*dtype_size[dtype]);
 
 		// Transform the data if needed
 		if (_data_transform)
@@ -685,7 +685,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 		// This is important for allowing _sparsity_min_delta to attract a larger range of values
 		// than would normally be achieved by merely rounding to nearest encodable value.
 		if (sparsify)
-			for (int i = 0; i < size*dim; ++i)
+			for (size_t i = 0; i < (size_t)size*dim; ++i)
 				if (is_default(alt_data[i]))
 					alt_data[i] = _h.default_value.as<T>();
 	}
@@ -701,7 +701,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 		encoding::decode_fn decode = _encoding.decoders[dtype][as_ordinal(pos_strand)];  // decode forward, regardless of interval strand
 		GK_ASSERT(decode);  // should always be a decoder for dtype if there was an encoder
 		if (!alt_data)
-			alt_data = std::make_unique<T[]>(size*dim);
+			alt_data = std::make_unique<T[]>((size_t)size*dim);
 		decode(&alt_data[0], &dst[0], _encoding.dict.get<T>(), size, dim, 0, 0);  // Fill `alt_data` by decoding `dst`
 
 		// Now that we've decoded the encoded data, thereby quantizing the data as it would
@@ -716,7 +716,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 			// Find the next position where at least ONE element IS NOT default_value
 			while (start < size) {
 				int j = 0;
-				while (j < dim && is_default(alt_data[start*dim+j]))
+				while (j < dim && is_default(alt_data[(size_t)start*dim+j]))
 					++j;
 				if (j < dim)
 					break;
@@ -729,7 +729,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 			int end = start+1;
 			while (end < size) {
 				int j = 0;
-				while (j < dim && is_default(alt_data[end*dim+j]))
+				while (j < dim && is_default(alt_data[(size_t)end*dim+j]))
 					++j;
 
 				// At least one non-default value? If so, keep scanning
@@ -743,7 +743,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 				int next_start = end+1;
 				while (next_start < size) {
 					int k = 0;
-					while (k < dim && is_default(alt_data[next_start*dim+k]))
+					while (k < dim && is_default(alt_data[(size_t)next_start*dim+k]))
 						++k;
 					if (k < dim)
 						break;
@@ -761,7 +761,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 			auto sub_dst = std::make_unique<uint8_t[]>(_encoding.num_encoded_bytes(sub_span.size(), dim));
 
 			// Encode the sub-interval into the smaller dst buffer
-			encode(&sub_dst[0], &alt_data[start*dim], _encoding.dict, sub_span.size(), dim);
+			encode(&sub_dst[0], &alt_data[(size_t)start*dim], _encoding.dict, sub_span.size(), dim);
 
 			// Insert the sub-interval into the data block map, and leave the memory be
 			add_track_entry(adder, sub_span, std::move(sub_dst));

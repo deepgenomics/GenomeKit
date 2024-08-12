@@ -177,12 +177,14 @@ constexpr bool in_range(T x, V lo, V hi)
 	}
 
 template <typename T> struct int_traits { };
-GK_DEFINE_INT_TRAITS(unsigned char     ,                            0, 255u,                    void,          unsigned short     , unsigned char );
-GK_DEFINE_INT_TRAITS(         char     ,                         -128, 127,                     void,                   short     , unsigned char );
-GK_DEFINE_INT_TRAITS(unsigned short    ,                            0, 65535u,                  unsigned char, unsigned int       , unsigned short);
-GK_DEFINE_INT_TRAITS(         short    ,                       -32768, 32767,                            char,          int       , unsigned short);
+GK_DEFINE_INT_TRAITS(unsigned char     ,                            0, 255u,                    void,           unsigned short    , unsigned char );
+GK_DEFINE_INT_TRAITS(         char     ,                         -128, 127,                     void,                    short    , unsigned char );
+GK_DEFINE_INT_TRAITS(unsigned short    ,                            0, 65535u,                  unsigned char,  unsigned int      , unsigned short);
+GK_DEFINE_INT_TRAITS(         short    ,                       -32768, 32767,                            char,           int      , unsigned short);
 GK_DEFINE_INT_TRAITS(unsigned int      ,                            0, 4294967295u,             unsigned short, unsigned long long, unsigned int  );
 GK_DEFINE_INT_TRAITS(         int      ,                -2147483648ll, 2147483647,                       short,          long long, unsigned int  );
+GK_DEFINE_INT_TRAITS(unsigned long     ,                            0, 18446744073709551615ull, unsigned int,   void              , unsigned long );
+GK_DEFINE_INT_TRAITS(         long     ,       (long)0x800000000000ul, 9223372036854775807l,             int,   void              , unsigned long );
 GK_DEFINE_INT_TRAITS(unsigned long long,                            0, 18446744073709551615ull, unsigned int,   void              , unsigned long long);
 GK_DEFINE_INT_TRAITS(         long long, (long long)0x800000000000ull, 9223372036854775807ll,            int,   void              , unsigned long long);
 
@@ -319,9 +321,9 @@ private:
 
 ////////////////////////////////////////////////////
 
-template <typename T> INLINE T divup(T x, T denom) { return (x+denom-1) / denom;     }
-template <typename T> INLINE T rndup(T x, T align) { return divup(x, align) * align; }
-template <typename T> INLINE T rnddn(T x, T align) { return (x/align) * align;       }
+template <typename T, typename U> INLINE T divup(T x, U denom) { return (x+denom-1) / denom;     }
+template <typename T, typename U> INLINE T rndup(T x, U align) { return divup(x, align) * align; }
+template <typename T, typename U> INLINE T rnddn(T x, U align) { return (x/align) * align;       }
 
 // The udiv* functions are useful for dividing signed integers with
 // unsigned division. Unsigned division is faster when both 'a' and 'b'
@@ -339,20 +341,20 @@ template <typename T> INLINE T rnddn(T x, T align) { return (x/align) * align;  
 //
 // See discussion https://google.github.io/styleguide/cppguide.html#Integer_Types
 //
-template <typename T> INLINE T udivdn(T x, T denom)
+template <typename T, typename V> INLINE T udivdn(T x, V denom)
 {
 	using U = typename int_traits<T>::unsigned_type;
 	return T((U)x / (U)denom);  // Round down
 }
 
-template <typename T> INLINE T udivup(T x, T denom)
+template <typename T, typename V> INLINE T udivup(T x, V denom)
 {
 	using U = typename int_traits<T>::unsigned_type;
 	return T(((U)x+(U)denom-1) / (U)denom);  // Round up
 }
 
 // Unsigned modulus operator (%) applicable to signed types.
-template <typename T> INLINE T umod(T x, T denom)
+template <typename T, typename V> INLINE T umod(T x, V denom)
 {
 	using U = typename int_traits<T>::unsigned_type;
 	return T((U)x % (U)denom);  // Round down

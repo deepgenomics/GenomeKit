@@ -363,7 +363,7 @@ private:
 
 		// Decodes by applying decoder::apply repeatedly to each src element and storing the result in dst.
 		// Important to INLINE this function so that constant propagation of `dim` unrolls the inner loop.
-		template <typename decoder, int dir, int unroll>
+		template <typename decoder, int dir>
 		INLINE static int generic_decode(       typename decoder::dst_t* RESTRICT dst,
 		                                  const typename decoder::src_t* RESTRICT src,
 		                                  const typename decoder::dst_t* RESTRICT dict,
@@ -373,47 +373,43 @@ private:
 			// then it's safe to simply advance the pointers (no fractional src bytes to worry about).
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			GK_ASSERT(dim % unroll == 0);  // Ensure that unroll divides dim
 			dst += d*dim;
 			src += s*dim;
 			for (int i = 0; i < size; ++i)
-				for (int j = 0; j < dim; j += unroll)
-					for (int k = 0; k < unroll; ++k)
-						dst[i*dim*dir+j+k] = decoder::apply(src[i*dim+j+k], dict);
+				for (int j = 0; j < dim; ++j)
+					dst[i*dim*dir+j] = decoder::apply(src[i*dim+j], dict);
 			return size*dir;
 		}
 
-		template <typename dst_t, int dir, int unroll>
+		template <typename dst_t, int dir>
 		INLINE static int default_fill(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d)
 		{
 			GK_ASSERT(size > 0);
 			GK_ASSERT(dim > 0);
-			GK_ASSERT(dim % unroll == 0);  // Ensure that unroll divides dim
 			dst += d*dim;
 			dst_t x = fill.as<dst_t>();
 			for (int i = 0; i < size; ++i)
-				for (int j = 0; j < dim; j += unroll)
-					for (int k = 0; k < unroll; ++k)
-						dst[i*dim*dir+j+k] = x;
+				for (int j = 0; j < dim; ++j)
+					dst[i*dim*dir+j] = x;
 			return size*dir;
 		}
 
 		// Define some specializations where constant-propagation of 'dim' can reach the inner loops of the generic implementation
-		template <typename decoder, int dir, int unroll, int const_dim>
+		template <typename decoder, int dir, int const_dim>
 		static int generic_decode_dim(      typename decoder::dst_t* RESTRICT dst,
 		                              const typename decoder::src_t* RESTRICT src,
 		                              const typename decoder::dst_t* RESTRICT dict,
 		                              int size, int dim, int d, int s)
 		{
 			GK_DBASSERT(dim == const_dim);
-			return generic_decode<decoder, dir, unroll>(dst, src, dict, size, const_dim, d, s); // inline generic_decode with 'dim' constant-propagated into the inner loop
+			return generic_decode<decoder, dir>(dst, src, dict, size, const_dim, d, s); // inline generic_decode with 'dim' constant-propagated into the inner loop
 		}
 
-		template <typename dst_t, int dir, int unroll, int const_dim>
+		template <typename dst_t, int dir, int const_dim>
 		INLINE static int default_fill_dim(dst_t* RESTRICT dst, const any_t& fill, int size, int dim, int d)
 		{
 			GK_DBASSERT(dim == const_dim);
-			return default_fill<dst_t, dir, unroll>(dst, fill, size, const_dim, d); // inline default_fill with 'dim' constant-propagated into the inner loop
+			return default_fill<dst_t, dir>(dst, fill, size, const_dim, d); // inline default_fill with 'dim' constant-propagated into the inner loop
 		}
 
 		template <typename decoder, int dir>
@@ -422,18 +418,13 @@ private:
 			// Specialize based on *exact* value of 'dim', i.e. inner loop completely unrolled at compile time.
 			// Clang/GCC/MSVC isn't able/willing to unroll this for an extra 6.34% boost
 			switch (dim) {
-			case 1:  return (decode_fn)generic_decode_dim<decoder, dir, 1, 1>; // unroll = dim = 1
-			case 2:  return (decode_fn)generic_decode_dim<decoder, dir, 2, 2>; // unroll = dim = 2
-			case 3:  return (decode_fn)generic_decode_dim<decoder, dir, 3, 3>; // unroll = dim = 3
-			case 4:  return (decode_fn)generic_decode_dim<decoder, dir, 4, 4>; // unroll = dim = 4
+			case 1:  return (decode_fn)generic_decode_dim<decoder, dir, 1>;
+			case 2:  return (decode_fn)generic_decode_dim<decoder, dir, 2>;
+			case 3:  return (decode_fn)generic_decode_dim<decoder, dir, 3>;
+			case 4:  return (decode_fn)generic_decode_dim<decoder, dir, 4>;
 			}
 
-			// Specialize based on *divisor* of 'dim', i.e. inner loop can be partially unrolled at compile time.
-			if (dim % 5 == 0) return (decode_fn)generic_decode<decoder, dir, 5>; // unroll = 5
-			if (dim % 4 == 0) return (decode_fn)generic_decode<decoder, dir, 4>; // unroll = 4
-			if (dim % 3 == 0) return (decode_fn)generic_decode<decoder, dir, 3>; // unroll = 3
-			if (dim % 2 == 0) return (decode_fn)generic_decode<decoder, dir, 2>; // unroll = 2
-			else              return (decode_fn)generic_decode<decoder, dir, 1>; // unroll = 1, i.e. generic version
+			return (decode_fn)generic_decode<decoder, dir>;
 		}
 
 		template <typename decoder>
@@ -448,18 +439,13 @@ private:
 		{
 			// Specialize based on *exact* value of 'dim', i.e. inner loop completely unrolled at compile time.
 			switch (dim) {
-			case 1:  return (dfill_fn)default_fill_dim<dst_t, dir, 1, 1>; // unroll = dim = 1
-			case 2:  return (dfill_fn)default_fill_dim<dst_t, dir, 2, 2>; // unroll = dim = 2
-			case 3:  return (dfill_fn)default_fill_dim<dst_t, dir, 3, 3>; // unroll = dim = 3
-			case 4:  return (dfill_fn)default_fill_dim<dst_t, dir, 4, 4>; // unroll = dim = 4
+			case 1:  return (dfill_fn)default_fill_dim<dst_t, dir, 1>;
+			case 2:  return (dfill_fn)default_fill_dim<dst_t, dir, 2>;
+			case 3:  return (dfill_fn)default_fill_dim<dst_t, dir, 3>;
+			case 4:  return (dfill_fn)default_fill_dim<dst_t, dir, 4>;
 			}
 
-			// Specialize based on *divisor* of 'dim', i.e. inner loop can be partially unrolled at compile time.
-			if (dim % 5 == 0) return (dfill_fn)default_fill<dst_t, dir, 5>; // unroll = 5
-			if (dim % 4 == 0) return (dfill_fn)default_fill<dst_t, dir, 4>; // unroll = 4
-			if (dim % 3 == 0) return (dfill_fn)default_fill<dst_t, dir, 3>; // unroll = 3
-			if (dim % 2 == 0) return (dfill_fn)default_fill<dst_t, dir, 2>; // unroll = 2
-			else              return (dfill_fn)default_fill<dst_t, dir, 1>; // unroll = 1, i.e. generic version
+			return (dfill_fn)default_fill<dst_t, dir>;
 		}
 
 		template <typename dst_t>
@@ -471,7 +457,7 @@ private:
 
 		// See the documentation at end of genome_track::operator() for explanation of how this works.
 		// Important to INLINE this function so that constant propagation of `dim` optimizes away the 'dim' loops.
-		template <typename T, int unroll>
+		template <typename T>
 		INLINE static void generic_expand(T* RESTRICT dst, int size, int dim, int s, int res, int phase)
 		{
 			// restrict only tells the compiler the pointer will not alias
@@ -481,17 +467,16 @@ private:
 
 			#pragma GCC diagnostic push
 			#pragma GCC diagnostic ignored "-Wrestrict"
-			generic_expand_inner<T, unroll>(dst, dst, size, dim, s, res, phase);
+			generic_expand_inner<T>(dst, dst, size, dim, s, res, phase);
 			#pragma GCC diagnostic pop
 		}
-		template <typename T, int unroll>
+		template <typename T>
 		INLINE static void generic_expand_inner(T* RESTRICT dst, T* RESTRICT src, int size, int dim, int s, int res,
 												int phase)
 		{
 			GK_ASSERT(size > 0);
 			GK_ASSERT(res > 1);
 			GK_ASSERT(dim > 0);
-			GK_ASSERT(res % unroll == 0);  // Ensure that unroll divides res
 			GK_ASSERT(phase >= 0 && phase < res);
 
 			// Start moving items to the end of the array, so our new destination 'd' will be the end.
@@ -550,28 +535,27 @@ private:
 
 					// Inner loop is over resolution. Go from large addresses to smaller
 					// addresses to keep the memory access pattern in a consistent direction.
-					for (int r = res-1; r >= 0; r -= unroll)
-						for (int k = 0; k < unroll; ++k)
-							dst[(d+r-k)*dim+j] = x;
+					for (int r = res-1; r >= 0; --r)
+						dst[(d+r)*dim+j] = x;
 				}
 			}
 		}
 
 		// Define a specialization so that constant-propagation of 'dim=1' can optimize away the 'dim' loop of generic_expand().
-		template <typename T, int unroll, int const_dim>
+		template <typename T, int const_dim>
 		static void generic_expand_dim(T* RESTRICT dst, int size, int dim, int s, int res, int phase)
 		{
 			GK_DBASSERT(dim == const_dim);
-			generic_expand<T, unroll>(dst, size, const_dim, s, res, phase); // inline generic_expand with 'dim' constant-propagated into the inner loop
+			generic_expand<T>(dst, size, const_dim, s, res, phase); // inline generic_expand with 'dim' constant-propagated into the inner loop
 		}
 
-		template <typename T, int unroll>
+		template <typename T>
 		static expand_fn specialized_expand_fn_res(int dim)
 		{
 			// If 1-dimensional track, then specialize on dim to optimize away the dim loop.
 			// Since dim isn't inner-most loop, don't bother specializing on other values.
-			return (dim == 1) ? (expand_fn)generic_expand_dim<T, unroll, 1>  // dim = 1 at compile time
-			                  : (expand_fn)generic_expand<T, unroll>;        // generic dim
+			return (dim == 1) ? (expand_fn)generic_expand_dim<T, 1>  // dim = 1 at compile time
+			                  : (expand_fn)generic_expand<T>;        // generic dim
 		}
 
 		template <typename T>
@@ -579,12 +563,7 @@ private:
 		{
 			if (res == 0) return nullptr; // Possible if not set yet by genome_track::builder
 
-			// Specialize based on *divisor* of 'res', i.e. inner loop can be partially unrolled at compile time.
-			if (res % 5 == 0) return specialized_expand_fn_res<T, 5>(dim); // unroll = 5
-			if (res % 4 == 0) return specialized_expand_fn_res<T, 4>(dim); // unroll = 4
-			if (res % 3 == 0) return specialized_expand_fn_res<T, 3>(dim); // unroll = 3
-			if (res % 2 == 0) return specialized_expand_fn_res<T, 2>(dim); // unroll = 2
-			else              return specialized_expand_fn_res<T, 1>(dim); // unroll = 1, i.e. generic resolution
+			return specialized_expand_fn_res<T>(dim);
 		}
 
 		template <typename decoder, int dir>

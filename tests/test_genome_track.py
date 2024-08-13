@@ -310,7 +310,9 @@ class TestBuildTrack(unittest.TestCase):
             np.testing.assert_equal(out, np.ones((20, 1), np.float16))
             np.testing.assert_equal(res, np.ones((20, 1), np.float16))
 
-            res = track(interval, out=None)
+            out = np.zeros((20, 1), np.float32)
+            res = track(interval, out=out)
+            np.testing.assert_equal(out, np.ones((20, 1), np.float32))
 
             out = np.zeros((40, 1), np.float16)
             res = track(interval, out=out[::2])

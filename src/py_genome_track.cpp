@@ -406,20 +406,22 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 		return nullptr;
 
 	auto      c      = PyAsInterval(itv);
-	auto      dtype  = dtype_arg && dtype_arg != Py_None ? dtype_from_obj(dtype_arg) : self->track->dtype();
-	auto      stride = 0;
+	int       stride = 0;
 	PyObject* py_dst = nullptr;
+	std::optional<dtype_t> dtype;
 
 	if (!out || out == Py_None) {
 		// Create an output array of the right type, size, and dimensionality
 		npy_intp dims[2] = {c.size(), self->track->dim()};
-		py_dst           = PyArray_Empty(2, dims, PyArray_DescrFromType(py_dtypes[dtype]), 0);  // 0 => C_CONTIGUOUS
+		dtype            = dtype_arg && dtype_arg != Py_None ? dtype_from_obj(dtype_arg) : self->track->dtype();
+		py_dst           = PyArray_Empty(2, dims, PyArray_DescrFromType(py_dtypes[*dtype]), 0);  // 0 => C_CONTIGUOUS
 		if (!py_dst)
 			return nullptr;  // Propagate the error up to interpreter immediately
 	} else {
 		GK_CHECK(PyArray_Check(out), type, "out must be a numpy ndarray.");
 
 		auto out_array = rcast<PyArrayObject*>(out);
+
 		GK_CHECK(PyArray_NDIM(out_array) == 1 || PyArray_NDIM(out_array) == 2, value,
 				 "Dimension must be 1- or 2-dimensional: out is {}.", PyArray_NDIM(out_array));
 		GK_CHECK(PyArray_DIM(out_array, 0) == c.size(), value, "Row mismatch: out is {} but interval is {}",
@@ -429,14 +431,15 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 					 "Column mismatch: out is {} but track is {}", PyArray_DIM(out_array, 1), self->track->dim());
 		}
 		GK_CHECK(PyArray_ISBEHAVED(out_array), value, "out must be writable from C.");
-		stride = PyArray_STRIDE(out_array, 0) / PyArray_ITEMSIZE(out_array);
+		dtype  = dtype_from_py(PyArray_DTYPE(out_array)->type_num);
+		stride = int_cast<decltype(stride)>(PyArray_STRIDE(out_array, 0) / PyArray_ITEMSIZE(out_array));
 		py_dst = out;
 		Py_INCREF(py_dst);
 	}
 	GKPY_TAKEREF(py_dst);
 
 	// Decode the track data into the numpy array py_dst
-	(*self->track)(c, PyArray_DATA(rcast<PyArrayObject*>(py_dst)), dtype, stride);
+	(*self->track)(c, PyArray_DATA(rcast<PyArrayObject*>(py_dst)), *dtype, stride);
 
 	GKPY_FORGETREF(py_dst);
 	return py_dst;

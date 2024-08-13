@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.2](https://github.com/deepgenomics/GenomeKit/compare/v5.2.1...v5.2.2) (2024-08-13)
+
+
+### Bug Fixes
+
+* **track:** check inplace dtype ([#79](https://github.com/deepgenomics/GenomeKit/issues/79)) ([5a2cb38](https://github.com/deepgenomics/GenomeKit/commit/5a2cb3895565846ae0440d59da120ee7ca8bc6e0))
+
 ## [5.2.1](https://github.com/deepgenomics/GenomeKit/compare/v5.2.0...v5.2.1) (2024-08-12)
 
 

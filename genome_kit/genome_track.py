@@ -567,11 +567,13 @@ class GenomeTrack(_cxx.GenomeTrack):
         interval : :py:class:`~genome_kit.Interval`
             The stranded query interval.
         dtype : :py:class:`type`
-            Optional. The numpy dtype of the resulting array.
+            Optional. The numpy dtype of the resulting array. Ignored if out
+            is provided.
         out : :py:class:`~numpy.ndarray`
-            Optional. A numpy array to hold the result. If provided, it must 
-            have a shape that the inputs broadcast to. If not provided or 
-            None, a freshly-allocated array is returned. 
+            Optional. A numpy array to hold the result. If provided, it 
+            overrides ``dtype`` and it must have a shape that the inputs 
+            broadcast to. If not provided or None, a freshly-allocated array 
+            is returned. 
 
         Returns
         -------

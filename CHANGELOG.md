@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.3](https://github.com/deepgenomics/GenomeKit/compare/v5.2.2...v5.2.3) (2024-08-16)
+
+
+### Bug Fixes
+
+* assert that appris transcripts match the requested gene ([#70](https://github.com/deepgenomics/GenomeKit/issues/70)) ([fd93609](https://github.com/deepgenomics/GenomeKit/commit/fd93609f13d67d3eac84aae3591d30a833108c4f))
+
 ## [5.2.2](https://github.com/deepgenomics/GenomeKit/compare/v5.2.1...v5.2.2) (2024-08-13)
 
 

@@ -508,7 +508,11 @@ class Genome(_cxx.Genome):
             gene_idx = self.genes.index_of(gene)
             transcript_indices = self._appris_transcripts_by_gene[gene_idx]
 
-        return [self.transcripts[i] for i in transcript_indices]
+        transcripts = [self.transcripts[i] for i in transcript_indices]
+        if gene is not None:
+            for transcript in transcripts:
+                assert transcript.gene == gene, f"Unexpected gene {transcript.gene} for transcript {transcript}"
+        return transcripts
 
     def appris_principality(self, transcript, as_string=False):
         """Returns the APPRIS principality index (isoform specific number) for this transcript.

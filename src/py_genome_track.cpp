@@ -216,7 +216,8 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data)
 		size_t stride = genome_track::dtype_size[dtype];
 		for (int dim = ndim; dim > 0; --dim) {
 			GK_CHECK((size_t)PyArray_STRIDE(py_data, dim - 1) == stride, value,
-					 "Data must have stride=1, consider making a copy with `np.array`");
+					 "Data detected having stride!=1, possibly because it is transposed. "
+					 "Consider making a copy with `np.array` to get non-strided data.");
 			stride *= (size_t)PyArray_DIM(py_data, dim - 1);
 		}
 		data = PyArray_DATA(py_data);

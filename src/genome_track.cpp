@@ -561,7 +561,7 @@ std::vector<interval_t> genome_track::intervals() const
 		const auto starts     = rcast<const pos_t*>(ends + num_blocks);
 
 		for (std::decay_t<decltype(num_blocks)> i_block{}; i_block < num_blocks; ++i_block) {
-			ret[i_itv] = interval_t::from_dna0(k.chrom, starts[i_block], ends[i_block], k.other, _refg);
+			ret[i_itv] = interval_t::from_dna0(k.chrom, starts[i_block] * _res, ends[i_block] * _res, k.other, _refg);
 			++i_itv;
 		}
 	}

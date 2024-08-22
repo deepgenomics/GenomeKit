@@ -204,7 +204,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data)
 
 		// Check the data array to make sure it's contiguous, C-order, and 1- or 2-dimensions.
 		GK_CHECK(ndim == 1 || ndim == 2, value, "Data must be 1- or 2-dimensional");
-		GK_CHECK((int)PyArray_DIMS(py_data)[0]*res == interval.size(), value, "Data must have {} rows", interval.size());
+		GK_CHECK((int)PyArray_DIMS(py_data)[0]*res == interval.size(), value, "Data must have {} rows", (int)(interval.size()/res));
 		if (ndim > 1) {
 			GK_CHECK((int)PyArray_DIMS(py_data)[1] == self->builder->dim(), value, "Data must have {} columns", self->builder->dim());
 			GK_CHECK(PyArray_FLAGS(py_data) & NPY_ARRAY_CARRAY_RO, value, "Multi-dimensional data array must be C_CONTIGUOUS order");

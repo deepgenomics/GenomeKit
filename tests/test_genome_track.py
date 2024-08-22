@@ -297,6 +297,16 @@ class TestBuildTrack(unittest.TestCase):
         with GenomeTrack(self.tmpfile) as track:
             self.assertEqual(set(intervals), set(track.intervals))
 
+        builder = self.make_builder(strandedness="strand_aware", resolution=5)
+        intervals = [Interval('chr1', '+', 10, 30, builder.refg)]
+        intervals.append(intervals[0].as_opposite_strand().shift(5))
+        builder.set_data(intervals[0], np.zeros((20//5, 1), np.float16))
+        builder.set_data(intervals[1], np.ones((20//5, 1), np.float16))
+        builder.finalize()
+
+        with GenomeTrack(self.tmpfile) as track:
+            self.assertEqual(set(intervals), set(track.intervals))
+
     def test_out(self):
         # Build a valid .gtrack file for some tests
         builder = self.make_builder(strandedness="strand_aware")

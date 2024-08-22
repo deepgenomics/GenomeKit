@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.4](https://github.com/deepgenomics/GenomeKit/compare/v5.2.3...v5.2.4) (2024-08-22)
+
+
+### Bug Fixes
+
+* **track:** handle res&gt;1 for track interval interrogation ([#84](https://github.com/deepgenomics/GenomeKit/issues/84)) ([246a6dc](https://github.com/deepgenomics/GenomeKit/commit/246a6dc26f524aa70cb9c21c0c5ab9c2d0caeff5))
+
 ## [5.2.3](https://github.com/deepgenomics/GenomeKit/compare/v5.2.2...v5.2.3) (2024-08-16)
 
 

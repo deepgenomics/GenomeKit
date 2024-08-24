@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit._twobitutils &mdash; GenomeKit 5.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=89a6d609"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit._twobitutils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit._twobitutils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+
+<span class="c1"># Copied from twobitreader</span>
+<span class="k">def</span> <span class="nf">_true_long_type</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    OS X uses an 8-byte long, so make sure L (long) is the right size</span>
+<span class="sd">    and switch to I (int) if needed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">]:</span>
+        <span class="n">test_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">type_</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">long_size</span> <span class="o">=</span> <span class="n">test_array</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="k">if</span> <span class="n">long_size</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">type_</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t determine a valid 4-byte long type to use as </span><span class="se">\</span>
+<span class="s2">                       equivalent to _LONG&quot;</span><span class="p">)</span>
+
+
+<span class="n">_LONG</span> <span class="o">=</span> <span class="n">_true_long_type</span><span class="p">()</span>
+
+<span class="n">_TWOBIG_SIG_LILEND</span> <span class="o">=</span> <span class="mh">0x1A412743</span>
+<span class="n">_TWOBIG_SIG_BIGEND</span> <span class="o">=</span> <span class="mh">0x4327411A</span>
+<span class="n">_TWOBIG_VER_LILEND</span> <span class="o">=</span> <span class="mh">0x00000000</span>
+<span class="n">_TWOBIG_VER_BIGEND</span> <span class="o">=</span> <span class="mh">0x00000000</span>
+
+<span class="n">_BASES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span>
+
+<span class="n">_BASE_AS_BITS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;T&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;G&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_quad_as_bits</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Packs a string of up to four bases (TCAG) into a byte representation.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;N&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_BASE_AS_BITS</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span> <span class="o">|</span> \
+           <span class="n">_BASE_AS_BITS</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span> <span class="o">|</span> \
+           <span class="n">_BASE_AS_BITS</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span> <span class="o">|</span> \
+           <span class="n">_BASE_AS_BITS</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>  <span class="c1"># noqa</span>
+
+
+<span class="k">def</span> <span class="nf">_basecombos</span><span class="p">(</span><span class="n">reps</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">_BASES</span><span class="p">]</span> <span class="o">*</span> <span class="n">reps</span>  <span class="c1"># List of lists</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_find_blocks</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">includes</span><span class="p">):</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Loop over each position in the string, taking note of each</span>
+    <span class="c1"># transition from &quot;inside&quot; a block to &quot;outside&quot; a block</span>
+    <span class="n">was_inside</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+        <span class="n">is_inside</span> <span class="o">=</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">includes</span>
+        <span class="k">if</span> <span class="n">is_inside</span> <span class="o">!=</span> <span class="n">was_inside</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">was_inside</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">starts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">was_inside</span> <span class="o">=</span> <span class="n">is_inside</span>
+
+    <span class="k">if</span> <span class="n">was_inside</span><span class="p">:</span>
+        <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">-</span> <span class="n">starts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;starts&#39;</span><span class="p">:</span> <span class="n">starts</span><span class="p">,</span> <span class="s1">&#39;sizes&#39;</span><span class="p">:</span> <span class="n">sizes</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="write2bit">
+<a class="viewcode-back" href="../../api.html#genome_kit._twobitutils.write2bit">[docs]</a>
+<span class="k">def</span> <span class="nf">write2bit</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="n">seqs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a 2bit file containing the given DNA sequences.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outfile : str</span>
+<span class="sd">        The name of the output file.</span>
+<span class="sd">    seqs : dict</span>
+<span class="sd">        A dictionary of named DNA sequence strings each of which will be</span>
+<span class="sd">        represented by name. Sequence names can be arbitrary. Sequences may</span>
+<span class="sd">        contain a mix of upper/lower case ACGTN characters.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">      &gt;&gt;&gt; seqs={</span>
+<span class="sd">      ...   &quot;chr1&quot; : &quot;AAAANNnnCCAAaattTT&quot;,</span>
+<span class="sd">      ...   &quot;chr2&quot; : &quot;NNNnnnnggggGGGG&quot;,</span>
+<span class="sd">      ... }</span>
+<span class="sd">      &gt;&gt;&gt; write2bit(&#39;mydna.2bit&#39;, seqs)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Lookup table for all possible substrings of</span>
+    <span class="n">QUAD_AS_BITS</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">QUAD_AS_BITS</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">q</span><span class="p">:</span> <span class="n">_quad_as_bits</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">_basecombos</span><span class="p">(</span><span class="mi">4</span><span class="p">)})</span>
+    <span class="n">QUAD_AS_BITS</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">q</span><span class="p">:</span> <span class="n">_quad_as_bits</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">_basecombos</span><span class="p">(</span><span class="mi">3</span><span class="p">)})</span>
+    <span class="n">QUAD_AS_BITS</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">q</span><span class="p">:</span> <span class="n">_quad_as_bits</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">_basecombos</span><span class="p">(</span><span class="mi">2</span><span class="p">)})</span>
+    <span class="n">QUAD_AS_BITS</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">q</span><span class="p">:</span> <span class="n">_quad_as_bits</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">_basecombos</span><span class="p">(</span><span class="mi">1</span><span class="p">)})</span>
+
+    <span class="c1"># Convert each quad of 4 bases to a byte</span>
+    <span class="c1"># Pad the resulting byte list with 0s until it&#39;s a multiple of 4</span>
+    <span class="n">seq_to_bits</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">seq</span><span class="p">:</span> \
+        <span class="p">[</span><span class="n">QUAD_AS_BITS</span><span class="p">[</span><span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="mi">4</span><span class="p">)]</span> \
+        <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(((</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span><span class="o">+</span><span class="mi">3</span><span class="p">)</span><span class="o">//</span><span class="mi">4</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="c1"># header layout on disk:</span>
+    <span class="c1">#   signature      (4 bytes)</span>
+    <span class="c1">#   version        (4 bytes)</span>
+    <span class="c1">#   sequence_count (4 bytes)</span>
+    <span class="c1">#   reserved       (4 bytes)</span>
+    <span class="n">headsize</span> <span class="o">=</span> <span class="mi">16</span>
+
+    <span class="c1"># index layout on disk:</span>
+    <span class="c1">#   name_size     (1 byte)</span>
+    <span class="c1">#   name          (1 byte x name_size, no NULL terminator)</span>
+    <span class="c1">#   offset        (4 bytes)</span>
+    <span class="n">idxsize</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span>
+
+    <span class="c1"># record layout on disk:</span>
+    <span class="c1">#   dna_size      (4 bytes)</span>
+    <span class="c1">#   nblock_count  (4 bytes)</span>
+    <span class="c1">#   nblock_starts (4 bytes x number of nblocks)</span>
+    <span class="c1">#   nblock_sizes  (4 bytes x number of nblocks)</span>
+    <span class="c1">#   mask_count    (4 bytes)</span>
+    <span class="c1">#   mask_starts   (4 bytes x number of masks)</span>
+    <span class="c1">#   mask_sizes    (4 bytes x number of masks)</span>
+    <span class="c1">#   reserved      (4 bytes)</span>
+    <span class="c1">#   bits          ((dna_size+3//4) bytes)</span>
+    <span class="n">recsize</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">rec</span><span class="p">:</span> <span class="mi">4</span> <span class="o">+</span> \
+                          <span class="mi">4</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;nblocks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])</span> <span class="o">+</span> \
+                          <span class="mi">4</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])</span> <span class="o">+</span> \
+                          <span class="mi">4</span> <span class="o">+</span> \
+                          <span class="nb">len</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;bits&#39;</span><span class="p">])</span>  <span class="c1"># noqa</span>
+
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">seqs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">recs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">seqs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">rec</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;dnasize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;nblocks&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_blocks</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s1">&#39;Nn&#39;</span><span class="p">)</span>
+        <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_find_blocks</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="s2">&quot;acgtn&quot;</span><span class="p">)</span>
+        <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;bits&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seq_to_bits</span><span class="p">(</span><span class="n">seq</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="n">recs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="c1"># Write the header</span>
+        <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="n">_TWOBIG_SIG_LILEND</span><span class="p">,</span> <span class="n">_TWOBIG_VER_LILEND</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seqs</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Write the index, one entry for each sequence</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="n">rec_offset</span> <span class="o">=</span> <span class="n">headsize</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">idxsize</span><span class="p">,</span> <span class="n">names</span><span class="p">))</span> \
+                                  <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">recsize</span><span class="p">,</span> <span class="n">recs</span><span class="p">[:</span><span class="n">i</span><span class="p">]))</span>
+
+            <span class="c1"># Write the name of this sequence</span>
+            <span class="n">array</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="n">rec_offset</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Write the sequence records themselves</span>
+        <span class="k">for</span> <span class="n">rec</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+            <span class="c1"># Write the actual DNA sequence length</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;dnasize&#39;</span><span class="p">]])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Write the nblocks</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;nblocks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;nblocks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;nblocks&#39;</span><span class="p">][</span><span class="s1">&#39;sizes&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Write the masks</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">rec</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">][</span><span class="s1">&#39;starts&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">][</span><span class="s1">&#39;sizes&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Write reserved DWORD</span>
+            <span class="n">array</span><span class="p">(</span><span class="n">_LONG</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># reserved</span>
+
+            <span class="c1"># Write DNA bits (size rounded up to nearest byte)</span>
+            <span class="n">array</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="n">rec</span><span class="p">[</span><span class="s1">&#39;bits&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

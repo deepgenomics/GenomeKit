@@ -60,7 +60,7 @@ jobs:
             m2r2 \
             make \
             myst-parser \
-            sphinx \
+            sphinx<8 \
             sphinx_rtd_theme
           set +x
 

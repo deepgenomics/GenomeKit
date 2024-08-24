@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.genome &mdash; GenomeKit 5.2.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d1af48b7"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.genome</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.genome</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">weakref</span> <span class="kn">import</span> <span class="n">WeakValueDictionary</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">genome_annotation</span> <span class="k">as</span> <span class="n">_ga</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">interval</span> <span class="k">as</span> <span class="n">_interval</span>
+<span class="kn">from</span> <span class="nn">._apply_variants</span> <span class="kn">import</span> <span class="n">apply_variants</span><span class="p">,</span> <span class="n">check_variants_list</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span>
+<span class="kn">from</span> <span class="nn">._util</span> <span class="kn">import</span> <span class="n">reverse_complement</span>
+<span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span>
+
+
+<div class="viewcode-block" id="Genome">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Genome</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Genome</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize a reference genome and its corresponding resources (DNA, annotations, etc).</span>
+
+<span class="sd">    A genome object represents a reference genome and resources available for it,</span>
+<span class="sd">    such as DNA and annotations::</span>
+
+<span class="sd">        &gt;&gt;&gt; genome = Genome(&quot;gencode.v19&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; exon = genome.exons[0]                                # 1st annotated exon.</span>
+<span class="sd">        &gt;&gt;&gt; dna  = genome.dna(exon)                               # Extract DNA.</span>
+
+<span class="sd">    The initializer argument specifies a versioned resource::</span>
+
+<span class="sd">        # Access resources that are hg19</span>
+<span class="sd">        Genome(&quot;hg19&quot;)</span>
+
+<span class="sd">        # GENCODE v29 implies hg38</span>
+<span class="sd">        Genome(&quot;gencode.v29&quot;)</span>
+
+<span class="sd">    The currently recognized strings depend on the data made available by data_manager.</span>
+<span class="sd">    Some common ones are::</span>
+
+<span class="sd">        reference_genomes = [</span>
+<span class="sd">            &quot;hg19&quot;,</span>
+<span class="sd">            &quot;hg19.p13.plusMT&quot;,</span>
+<span class="sd">            &quot;hg38&quot;,</span>
+<span class="sd">            &quot;hg38.p12&quot;,</span>
+<span class="sd">            &quot;hg38.p13&quot;,</span>
+<span class="sd">            &quot;hg38.p14&quot;,</span>
+<span class="sd">            &quot;mm10.p6&quot;,</span>
+<span class="sd">            &quot;mm39&quot;,</span>
+<span class="sd">            &quot;rn6&quot;,</span>
+<span class="sd">            &quot;macFas5&quot;,</span>
+<span class="sd">            &quot;susScr11&quot;,</span>
+<span class="sd">        ]</span>
+
+<span class="sd">        annotations = [</span>
+<span class="sd">            &quot;gencode.v19&quot;,                  # implies hg19.p13.plusMT</span>
+<span class="sd">            &quot;gencode.v29&quot;,                  # implies hg38.p12</span>
+<span class="sd">            &quot;gencode.v29.basic&quot;,            # implies hg38.p12</span>
+<span class="sd">            &quot;gencode.v29lift37&quot;,            # implies hg19</span>
+<span class="sd">            &quot;gencode.v29lift37.basic&quot;,      # implies hg19</span>
+<span class="sd">            &quot;gencode.v41&quot;,                  # implies hg38.p13</span>
+<span class="sd">            &quot;gencode.v41.basic&quot;,            # implies hg38.p13</span>
+<span class="sd">            &quot;gencode.v41lift37&quot;,            # implies hg19</span>
+<span class="sd">            &quot;gencode.v41lift37.basic&quot;,      # implies hg19</span>
+<span class="sd">            &quot;ucsc_refseq.2017-06-25&quot;,       # implies hg19</span>
+<span class="sd">            &quot;ncbi_refseq.v105.20190906&quot;,    # implies hg19.p13.plusMT</span>
+<span class="sd">            &quot;ncbi_refseq.v109&quot;,             # implies hg38.p12</span>
+<span class="sd">            &quot;ncbi_refseq.v110&quot;,             # implies hg38.p14</span>
+<span class="sd">            &quot;gencode.vM19&quot;,                 # implies mm10.p6</span>
+<span class="sd">            &quot;gencode.vM19.basic&quot;,           # implies mm10.p6</span>
+<span class="sd">            &quot;gencode.vM30&quot;,                 # implies mm39</span>
+<span class="sd">            &quot;gencode.vM30.basic&quot;,           # implies mm39</span>
+<span class="sd">            &quot;gencode.vM31&quot;,                 # implies mm39</span>
+<span class="sd">            &quot;gencode.vM31.basic&quot;,           # implies mm39</span>
+<span class="sd">            &quot;ncbi_refseq.m39.v109&quot;,         # implies mm39</span>
+<span class="sd">            &quot;ensembl.Rnor_6.0.88&quot;,          # implies rn6</span>
+<span class="sd">            &quot;ncbi_refseq.Macfas_5.0.v101&quot;,  # implies macFas5</span>
+<span class="sd">            &quot;ensembl.Macfas_5.0.95&quot;,        # implies macFas5</span>
+<span class="sd">            &quot;ensembl.Sscrofa11.1.98&quot;,       # implies susScr11</span>
+<span class="sd">        ]</span>
+
+<span class="sd">    If a resource is requested after object creation, but the version</span>
+<span class="sd">    needed cannot be disambiguated from `config`, an exception is raised.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : :py:class:`str`</span>
+<span class="sd">        Identifies a versioned resource that this genome object is</span>
+<span class="sd">        expected to serve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Genome.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts_by_gene</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_principality_strings</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;PRINCIPAL:1&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:2&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:3&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:4&#39;</span><span class="p">,</span> <span class="s1">&#39;PRINCIPAL:5&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;ALTERNATIVE:1&#39;</span><span class="p">,</span> <span class="s1">&#39;ALTERNATIVE:2&#39;</span><span class="p">)</span></div>
+
+
+    <span class="n">genome_cache</span> <span class="o">=</span> <span class="n">WeakValueDictionary</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Genome.__reduce__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__reduce__">[docs]</a>
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Genome.__new__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__new__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">if</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">Genome</span><span class="p">:</span>
+            <span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="o">.</span><span class="n">genome_cache</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">genome</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">genome</span>
+
+        <span class="n">genome</span> <span class="o">=</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">Genome</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">cls</span> <span class="o">==</span> <span class="n">Genome</span><span class="p">:</span>  <span class="c1"># do not cache subclasses (like mocks)</span>
+            <span class="n">Genome</span><span class="o">.</span><span class="n">genome_cache</span><span class="p">[</span><span class="n">config</span><span class="p">]</span> <span class="o">=</span> <span class="n">genome</span>
+
+        <span class="k">return</span> <span class="n">genome</span></div>
+
+
+<div class="viewcode-block" id="Genome.interval">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shorthand method for creating an Interval with the same refg as the genome object called on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Genome.variant">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant_string</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shorthand method for creating a Variant with the same refg as the genome object called on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Variant</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">variant_string</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Genome.dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.dna">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">allow_outside_chromosome</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract DNA from a reference genome.</span>
+
+<span class="sd">        If `interval` is on the negative strand, the reverse complement sequence is returned.</span>
+<span class="sd">        If `interval` is outside the range of the chromosome, an :py:exc:`IndexError` is raised.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+<span class="sd">        allow_outside_chromosome : :py:class:`bool`</span>
+<span class="sd">            If False, does not allow the interval to be outside the range of the chromosome.</span>
+<span class="sd">            Attempting to pass an interval outside the chromosome range will raise an :py:exc:`IndexError`.</span>
+<span class="sd">            If not specified, defaults to True. Any base outside the chromosome range will be returned as an &#39;N&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The DNA sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Genome.variant_dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.variant_dna">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant_dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract DNA from a genome with specific variants applied to it.</span>
+
+<span class="sd">        Follows the same rules as :py:meth:`~genome_kit.VariantGenome.dna`.</span>
+<span class="sd">        Intended for applying sets of variants that may overlap `interval`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        variants : :py:class:`~genome_kit.Variant` | :py:class:`list` of (:py:class:`~genome_kit.Variant`)</span>
+<span class="sd">            Either a single variant or a list of variants. See :py:class:`~genome_kit.VariantGenome`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The variant DNA sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">apply_variants</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dna</span><span class="p">,</span> <span class="n">check_variants_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">),</span> <span class="n">interval</span><span class="p">)</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">annotation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotations.</span>
+
+<span class="sd">        A shorthand property `anno` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.GenomeAnnotation`</span>
+<span class="sd">            An object that provides access to annotated genes, transcripts, and exons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">GenomeAnnotation</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">genes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated genes.</span>
+
+<span class="sd">        This is shorthand for `annotation.genes`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.GeneTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated genes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">GeneTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated transcripts.</span>
+
+<span class="sd">        This is shorthand for `annotation.transcripts`.</span>
+
+<span class="sd">        A shorthand property `trans` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.TranscriptTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated transcripts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">TranscriptTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated exons.</span>
+
+<span class="sd">        This is shorthand for `annotation.exons`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.ExonTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated exons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">ExonTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">introns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated introns.</span>
+
+<span class="sd">        This is shorthand for `annotation.introns`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.IntronTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated introns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">IntronTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cdss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated coding sequences (CDSs).</span>
+
+<span class="sd">        This is shorthand for `annotation.cdss`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.CdsTable`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">CdsTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr5s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated UTR5 sequences.</span>
+
+<span class="sd">        This is shorthand for `annotation.utr5s`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr5Table`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">Utr5Table</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utr3s</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to annotated UTR3 sequences.</span>
+
+<span class="sd">        This is shorthand for `annotation.utr3s`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Utr3Table`</span>
+<span class="sd">           An object that supports looping or queries over annotated coding sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">_ga</span><span class="o">.</span><span class="n">Utr3Table</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Genome.find_motif">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.find_motif">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_motif</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a genomic motif in an interval on a :py:class:`~genome_kit.Genome`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            A genomic interval to search for the motif.</span>
+<span class="sd">        motif : :py:class:`str`</span>
+<span class="sd">            A genomic motif to search for.</span>
+<span class="sd">        match_position : :py:class:`int` | :py:class:`str`</span>
+<span class="sd">            Very often you want to find a position after a motif or in the middle</span>
+<span class="sd">            of a motif. For example, when you are searching for a ``AG`` core</span>
+<span class="sd">            acceptor site motif you want to match the 3p end of the ``AG`` motif to</span>
+<span class="sd">            return the position of the putative splice site.</span>
+<span class="sd">            To do this you can specify a match position as string with the values</span>
+<span class="sd">            ``&quot;3p&quot;`` or ``&quot;5p&quot;``, or you can pass an integer that indicates a position</span>
+<span class="sd">            in the motif with ``0 &lt;= match_position &lt;= len(motif)``.</span>
+<span class="sd">        find_overlapping_motifs : :py:class:`bool`</span>
+<span class="sd">            Whether to return matches for overlapping motifs. The default is to only</span>
+<span class="sd">            find non-overlapping motifs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            A list of all matches (length-0 intervals) found in the query interval.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------::</span>
+<span class="sd">            &gt;&gt;&gt; genome37 = Genome(&#39;hg19&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; interval = genome37.interval(&#39;chr1&#39;, &#39;+&#39;, 40000, 40080)</span>
+<span class="sd">            &gt;&gt;&gt; motif = &#39;AA&#39;</span>
+<span class="sd">            &gt;&gt;&gt; genome37.find_motif(interval, motif)  # doctest:+NORMALIZE_WHITESPACE</span>
+<span class="sd">            [Interval(&quot;chr1&quot;, &quot;+&quot;, 40031, 40031, &quot;hg19&quot;),</span>
+<span class="sd">             Interval(&quot;chr1&quot;, &quot;+&quot;, 40061, 40061, &quot;hg19&quot;)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Longterm we&#39;ll want to move towards a generator function to be more efficient</span>
+        <span class="c1"># TODO: on long intervals.</span>
+
+        <span class="k">if</span> <span class="n">match_position</span> <span class="o">==</span> <span class="s1">&#39;5p&#39;</span><span class="p">:</span>
+            <span class="n">match_position</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">match_position</span> <span class="o">==</span> <span class="s1">&#39;3p&#39;</span><span class="p">:</span>
+            <span class="n">match_position</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">motif</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">match_position</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">motif</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Require 0 &lt;= match_position &lt;= len(motif) [match_position=</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">match_position</span><span class="p">))</span>
+
+        <span class="n">strand</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span>
+
+        <span class="c1"># All motif finding is done on the reference strand. Therefore the motif</span>
+        <span class="c1"># is reverse complemented when the interval is on the reverse strand. As</span>
+        <span class="c1"># well, the match_position is recomputed to be applied from the end of the</span>
+        <span class="c1"># motif (such at it is correct on the reverse strand), e.g. &#39;5p&#39; means</span>
+        <span class="c1"># match_position = 0 on the forward strand and match_position = len(motif) on</span>
+        <span class="c1"># the reverse strand.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">strand</span><span class="p">:</span>
+            <span class="n">match_position</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">motif</span><span class="p">)</span> <span class="o">-</span> <span class="n">match_position</span>
+
+        <span class="n">motif</span> <span class="o">=</span> <span class="n">motif</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">dna_start</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">strand</span><span class="p">:</span>
+            <span class="n">motif</span> <span class="o">=</span> <span class="n">reverse_complement</span><span class="p">(</span><span class="n">motif</span><span class="p">)</span>
+
+        <span class="n">dna</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">as_positive_strand</span><span class="p">())</span>
+
+        <span class="n">motif_hits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">find_overlapping_motifs</span><span class="p">:</span>
+            <span class="n">offset_step</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offset_step</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">motif</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">dna</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">motif</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">pos_genome</span> <span class="o">=</span> <span class="n">dna_start</span> <span class="o">+</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">match_position</span>
+
+            <span class="n">hit</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">pos_genome</span><span class="p">,</span> <span class="n">pos_genome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+            <span class="n">motif_hits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hit</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">offset_step</span>
+
+        <span class="k">return</span> <span class="n">motif_hits</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the reference genome.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The name of the reference genome that any resources map to, e.g. &quot;hg19&quot; or &quot;hg38&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chromosomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of valid chromosome names for this genome.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Genome.chromosome_size">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.chromosome_size">[docs]</a>
+    <span class="k">def</span> <span class="nf">chromosome_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the size of the given chromosome, in bp.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The size of the given chromosome, as number of basepairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes</span><span class="p">()[</span><span class="n">chromosome</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;No such chromosome: </span><span class="si">%s</span><span class="s2">. </span><span class="se">\n</span><span class="s2">Supported values: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The configuration strings of this genome.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The config used to initialize this object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The data_dir from which resources are opened.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The path to where resource files are being opened.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Genome.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Genome(&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="si">}</span><span class="s1">&quot;)&#39;</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_chrom_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chrom_sizes_filename</span><span class="p">())</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chromosome_sizes</span>
+
+    <span class="k">def</span> <span class="nf">_chrom_sizes_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">gk_data</span>
+
+        <span class="c1"># If this Genome object has a custom data_dir resource, we must respect it.</span>
+        <span class="n">datafile_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="si">}</span><span class="s2">.chrom.sizes&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Before returning, ensure that the path resolves to an actual file</span>
+        <span class="c1"># on the local file system, pulling from store if necessary.</span>
+        <span class="k">return</span> <span class="n">gk_data</span><span class="o">.</span><span class="n">resolve_datafile_path</span><span class="p">(</span><span class="n">datafile_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_appris</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the APPRIS text file corresponding to this genome&#39;s annotations.&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">pickle</span>
+
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">gk_data</span>
+        <span class="kn">from</span> <span class="nn">._gk_data_config</span> <span class="kn">import</span> <span class="n">get_appris_filename</span>
+
+        <span class="c1"># Figure out which annotation version we should match with APPRIS</span>
+        <span class="n">datafile_name</span> <span class="o">=</span> <span class="n">get_appris_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">datafile_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">datafile_name</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datafile_path</span> <span class="o">=</span> <span class="n">gk_data</span><span class="o">.</span><span class="n">resolve_datafile_path</span><span class="p">(</span><span class="n">datafile_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ApprisNotAvailableError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;APPRIS not available for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">annotation</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">datafile_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="c1"># List of int, where item [i] is the principality index (0..6) for self.transcripts[i]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># List of Transcript indices, ordered by APPRIS index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># List of lists, where item [i] is a list of Transcript indices belonging to self.genes[i],</span>
+        <span class="c1"># ordered by APPRIS index.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts_by_gene</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Genome.appris_transcripts">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_transcripts">[docs]</a>
+    <span class="k">def</span> <span class="nf">appris_transcripts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gene</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of transcript objects ordered by our custom APPRIS index.</span>
+<span class="sd">        If a gene is provided, returns a list of transcripts for that gene ordered by decreasing priority.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gene : :py:class:`~genome_kit.Gene` | :py:class:`str`, optional</span>
+<span class="sd">            Restrict to a specific gene. If using `str`, use the geneID.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Transcript`</span>
+<span class="sd">            A list of transcripts that have APPRIS scores available. If a gene is provided as input, a list</span>
+<span class="sd">            of transcripts for that gene in the order from most to least principle; so the first transcript should</span>
+<span class="sd">            be used as the canonical.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ApprisNotAvailableError:</span>
+<span class="sd">            APPRIS data is not available for this genome&#39;s annotations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_appris</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">gene</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use all transcript indices ordered by principality.</span>
+            <span class="n">transcript_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gene</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="c1"># Get transcript indices ordered by APPRIS principality.</span>
+                <span class="n">gene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">[</span><span class="n">gene</span><span class="p">]</span>
+            <span class="n">gene_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+            <span class="n">transcript_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_transcripts_by_gene</span><span class="p">[</span><span class="n">gene_idx</span><span class="p">]</span>
+
+        <span class="n">transcripts</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">transcript_indices</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gene</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">transcript</span> <span class="ow">in</span> <span class="n">transcripts</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">transcript</span><span class="o">.</span><span class="n">gene</span> <span class="o">==</span> <span class="n">gene</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Unexpected gene </span><span class="si">{</span><span class="n">transcript</span><span class="o">.</span><span class="n">gene</span><span class="si">}</span><span class="s2"> for transcript </span><span class="si">{</span><span class="n">transcript</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">transcripts</span></div>
+
+
+<div class="viewcode-block" id="Genome.appris_principality">
+<a class="viewcode-back" href="../../api.html#genome_kit.Genome.appris_principality">[docs]</a>
+    <span class="k">def</span> <span class="nf">appris_principality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transcript</span><span class="p">,</span> <span class="n">as_string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the APPRIS principality index (isoform specific number) for this transcript.</span>
+<span class="sd">        An APPRIS principality index is an integer from 0..6 where 0 is considered most prinicpal and 6 considered least</span>
+<span class="sd">        principal.</span>
+<span class="sd">        In the original APPRIS database, the 7 principality levels are reported using strings, in the following order::</span>
+
+<span class="sd">            appris_index_names = [</span>
+<span class="sd">                &quot;PRINCIPAL:1&quot;,     # index 0</span>
+<span class="sd">                &quot;PRINCIPAL:2&quot;,     # index 1</span>
+<span class="sd">                &quot;PRINCIPAL:3&quot;,     # index 2</span>
+<span class="sd">                &quot;PRINCIPAL:4&quot;,     # index 3</span>
+<span class="sd">                &quot;PRINCIPAL:5&quot;,     # index 4</span>
+<span class="sd">                &quot;ALTERNATIVE:1&quot;,   # index 5</span>
+<span class="sd">                &quot;ALTERNATIVE:2&quot;,   # index 6</span>
+<span class="sd">            ]</span>
+
+<span class="sd">        See the `APPRIS database documentation &lt;http://appris.bioinfo.cnio.es/#/help/database/report&gt;`_ for details.</span>
+
+<span class="sd">        The APPRIS version defaults to `2017_05.v22` most annotations; see _build_appris.REMOTE_FILES for the rest.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transcript : :py:class:`~genome_kit.Transcript` | :py:class:`str`</span>
+<span class="sd">            A transcript to query.</span>
+<span class="sd">        as_string : :py:class:`bool`, optional</span>
+<span class="sd">            Toggle True if the APPRIS principality string (e.g. `&quot;PRINCIPAL:1&quot;`) is desired.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int` | :py:class:`str`</span>
+<span class="sd">            The APPRIS principality index [0..6] of this transcript, or the string representation if</span>
+<span class="sd">            `as_string=True`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ApprisNotAvailableError:</span>
+<span class="sd">            APPRIS data is not available for this genome&#39;s annotations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_appris</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">transcript</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="n">transcript</span><span class="p">]</span>
+
+        <span class="c1"># Index of transcript object</span>
+        <span class="n">tidx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transcripts</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="n">transcript</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">as_string</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_principality_strings</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span><span class="p">[</span><span class="n">tidx</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_appris_indices</span><span class="p">[</span><span class="n">tidx</span><span class="p">]</span></div>
+</div>
+
+
+<span class="k">class</span> <span class="nc">ApprisNotAvailableError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

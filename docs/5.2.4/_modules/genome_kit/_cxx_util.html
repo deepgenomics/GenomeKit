@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit._cxx_util &mdash; GenomeKit 5.2.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d1af48b7"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit._cxx_util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit._cxx_util</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+
+<div class="viewcode-block" id="mock">
+<a class="viewcode-back" href="../../api.html#genome_kit._cxx_util.mock">[docs]</a>
+<span class="k">def</span> <span class="nf">mock</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Marks a class, attribute, or method as being a &#39;mock&#39;.</span>
+
+<span class="sd">    When Python-defined class `A` inherits from C++-defined class `B`,</span>
+<span class="sd">    the attributes and methods `B` are only partially visible to the IDE.</span>
+
+<span class="sd">    The `mock` function allows the definition of `A` to mock the attributes</span>
+<span class="sd">    and methods of `B`, making them accessible the IDE (for autocomplete)</span>
+<span class="sd">    and to automatic doc extraction (e.g. sphinx).</span>
+
+<span class="sd">    For example, the C++-defined :py:class:`genome_kit._cxx.GeneTable` implements</span>
+<span class="sd">    `__getitem__`, which returns an instance of the Python-defined type</span>
+<span class="sd">    :py:class:`genome_kit.Gene`. The Python-defined class</span>
+<span class="sd">    :py:class:`genome_kit.GeneTable` is defined as::</span>
+
+<span class="sd">        @_cxx.register</span>
+<span class="sd">        class GeneTable(_cxx.GeneTable):</span>
+
+<span class="sd">            @mock</span>
+<span class="sd">            def __getitem__(self, index):</span>
+<span class="sd">                &quot;Returns a Gene object&quot;</span>
+<span class="sd">                return mock_result(Gene)</span>
+
+<span class="sd">    The IDE and autodocs ignore the ``@mock`` decorator, so they treat</span>
+<span class="sd">    this definition at face value and do static analysis, propagating</span>
+<span class="sd">    the return type (:py:class:`genome_kit.Gene`) when doing autocomplete::</span>
+
+<span class="sd">        for gene in genome.genes:      # genes is of type GeneTable</span>
+<span class="sd">            gene.&lt;autocomplete&gt;        # gene is of type Gene</span>
+
+<span class="sd">    When a class is registered with the C++ backend, all mock</span>
+<span class="sd">    properties and methods are deleted from the type, so that all</span>
+<span class="sd">    requests for those attributes will fall through directly to</span>
+<span class="sd">    the C++ implementation in the base class.</span>
+
+<span class="sd">    See the ``PyDeleteMockAttrs`` C++ function for the code that strips</span>
+<span class="sd">    some mock symbols from each registered type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">attr</span> <span class="o">=</span> <span class="n">arg</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">):</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">fget</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">staticmethod</span><span class="p">):</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="vm">__func__</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="s2">&quot;__mock__&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">arg</span></div>
+
+
+
+<div class="viewcode-block" id="mock_unreachable">
+<a class="viewcode-back" href="../../api.html#genome_kit._cxx_util.mock_unreachable">[docs]</a>
+<span class="k">def</span> <span class="nf">mock_unreachable</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prints an unreachable code warning message.</span>
+
+<span class="sd">    If a mock attribute or method is ever called, it means there&#39;s</span>
+<span class="sd">    some mismatch between a Python-defined type and a C++-defined type.</span>
+
+<span class="sd">    An alternative behaviour would be to raise an exception, but that</span>
+<span class="sd">    causes headaches when pylint and PyCharm try to warn about</span>
+<span class="sd">    unreachable code.</span>
+
+<span class="sd">    The reason this function is provided separately from `mock_result`</span>
+<span class="sd">    is that it allows the user to either return nothing::</span>
+
+<span class="sd">        def foo(self):</span>
+<span class="sd">            mock_unreachable()</span>
+
+<span class="sd">    or to return an object that provides more complex type hints::</span>
+
+<span class="sd">        def foo(self):</span>
+<span class="sd">            mock_unreachable()</span>
+<span class="sd">            return [str()]  # type: List[str]</span>
+
+<span class="sd">    See also: :py:func:`~genome_kit._cxx_util.mock_result`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make sure we print error message before trying to</span>
+    <span class="c1"># instantiate the type, because probably instantiation</span>
+    <span class="c1"># will fail with some error. Don&#39;t raise exception</span>
+    <span class="c1"># or quit(), so we avoid unreachable code warnings</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="k">if</span> <span class="s2">&quot;SPHINXBUILD&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mock implementation should be unreachable.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Name mismatch with C++ attribute/function?&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Call stack:&quot;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">traceback</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_stack</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;   &quot;</span> <span class="o">+</span> <span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">trace</span><span class="p">]))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mock_result">
+<a class="viewcode-back" href="../../api.html#genome_kit._cxx_util.mock_result">[docs]</a>
+<span class="k">def</span> <span class="nf">mock_result</span><span class="p">(</span><span class="n">result_type</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a mock result of one or more types.</span>
+
+<span class="sd">    This function is used to give IDEs a hint during static analysis.</span>
+
+<span class="sd">    This function merely calls :py:func:`~genome_kit._cxx.mock_unreachable`</span>
+<span class="sd">    before returning an instance of `result_type`. It&#39;s important to print</span>
+<span class="sd">    the error message before trying to instantiate the return type.</span>
+
+<span class="sd">    See also: :py:func:`~genome_kit._cxx_util.mock`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mock_unreachable</span><span class="p">()</span>
+
+    <span class="c1"># Do not try to provide more fancy functionality that simply returning the</span>
+    <span class="c1"># result_type directly. PyCharm gets easily confused by anything more flexible.</span>
+    <span class="k">return</span> <span class="n">result_type</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="strip_mock_bases">
+<a class="viewcode-back" href="../../api.html#genome_kit._cxx_util.strip_mock_bases">[docs]</a>
+<span class="k">def</span> <span class="nf">strip_mock_bases</span><span class="p">(</span><span class="n">subtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Strips the last base classes at runtime from the given type.</span>
+
+<span class="sd">    Given a class hierarchy `X-&gt;Y-&gt;Z` where `X` and `Z` are defined in Python</span>
+<span class="sd">    but `Y` is defined in C++, then the IDE does not know that `Z` inherits</span>
+<span class="sd">    from `X`, and so it cannot provide autocomplete for members of `X`.</span>
+
+<span class="sd">    This decorator is a hacky way to trick IDEs into statically parsing out</span>
+<span class="sd">    the inheritance structure, while removing the &#39;trick&#39; at runtime.</span>
+
+<span class="sd">    For example, the class hierarchy we want for `Gene` is simply::</span>
+
+<span class="sd">        @_cxx.register</span>
+<span class="sd">        class Gene(_cxx.Gene):  # Interval -&gt; _cxx.Gene -&gt; Gene</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    However, IDEs will not see that `Gene` inherits from `Interval`.</span>
+<span class="sd">    So, instead we declare `Gene` as follows::</span>
+
+<span class="sd">        @strip_mock_bases</span>
+<span class="sd">        @_cxx.register</span>
+<span class="sd">        class Gene(_cxx.Gene, Interval):</span>
+<span class="sd">            ...</span>
+
+<span class="sd">    The IDE will now think that `Gene` inherits `Interval` via multiple</span>
+<span class="sd">    inheritance, and will IDE autocomplete accordingly, even though at</span>
+<span class="sd">    runtime we&#39;ll get the linear inheritance scheme that we want.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">subtype</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">=</span> <span class="n">subtype</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">subtype</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">replace_mock_attr</span><span class="p">(</span><span class="n">objtype</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets an instance attribute, while also removing mock class</span>
+<span class="sd">    attribute if it still exists.</span>
+
+<span class="sd">    If the `objtype` argument is not specified, it is taken to be `type(obj)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If the instance&#39;s class still has its mock property, delete it.</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">objtype</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">objtype</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="c1">#if isinstance(attr, property):  # This case not currently used.</span>
+        <span class="c1">#    attr = attr.fget</span>
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="s2">&quot;__mock__&quot;</span><span class="p">)</span>
+        <span class="nb">delattr</span><span class="p">(</span><span class="n">objtype</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="c1"># Set the instance property in its place</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

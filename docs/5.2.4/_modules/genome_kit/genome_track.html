@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.genome_track &mdash; GenomeKit 5.2.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=d1af48b7"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.genome_track</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.genome_track</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span><span class="p">,</span> <span class="n">mock_unreachable</span>
+<span class="kn">from</span> <span class="nn">.interval</span> <span class="kn">import</span> <span class="n">Interval</span>
+
+<span class="c1">#########################################################################</span>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">GenomeTrackBuilder</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeTrackBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Builds a .gtrack file.</span>
+
+<span class="sd">    Creating a .gtrack file with :py:class:`~genome_kit.GenomeTrackBuilder`</span>
+<span class="sd">    generally involves four steps:</span>
+
+<span class="sd">    1. Open the file for writing.</span>
+<span class="sd">    2. Set further configuration options.</span>
+<span class="sd">    3. Set data on intervals, either as numpy arrays or from disk.</span>
+<span class="sd">    4. Call :py:meth:`~genome_kit.GenomeTrackBuilder.finalize`.</span>
+
+<span class="sd">    For example, assuming we had a list of genomic intervals and</span>
+<span class="sd">    corresponding data arrays we wanted to fill them with::</span>
+
+<span class="sd">        # 1. Open a .gtrack 8-bit encoding of floats in range [0, 1]</span>
+<span class="sd">        track = GenomeTrackBuilder(&quot;foo.gtrack&quot;, &quot;f8&quot;, &quot;single_stranded&quot;, Genome(&quot;hg19&quot;))</span>
+
+<span class="sd">        # 2. Configure the track further</span>
+<span class="sd">        track.set_default_value(0)          # Fill gaps in the data with 0</span>
+
+<span class="sd">        # 3. Set data for each interval</span>
+<span class="sd">        for interval, data in entries:</span>
+<span class="sd">            track.set_data(interval, data)</span>
+
+<span class="sd">        # 4. Finish writing the file</span>
+<span class="sd">        track.finalize()</span>
+
+<span class="sd">    Tracks can have any dimension (the `dim` argument) or resolution</span>
+<span class="sd">    (the `resolution` argument).</span>
+<span class="sd">    Resolution allows track data to be specified and stored at coarser</span>
+<span class="sd">    than 1bp resolution.</span>
+
+<span class="sd">    For example, a track with `resolution=5` can</span>
+<span class="sd">    load a WIG file with step/span of 5bp::</span>
+
+<span class="sd">       fixedStep chrom=chr1 start=1 step=5 span=5</span>
+<span class="sd">       0.57</span>
+<span class="sd">       0.23</span>
+<span class="sd">       ...</span>
+
+<span class="sd">    The resulting track is equivalent to the following::</span>
+
+<span class="sd">       0    1    2    3    4    5    6    7    8    9    ...  &lt;-- position</span>
+<span class="sd">       0.57 0.57 0.57 0.57 0.57 0.23 0.23 0.23 0.23 0.23 ...  &lt;-- decoded value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- ADDING SLOTS IS OK</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">etype</span><span class="p">,</span> <span class="n">strandedness</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .gtrack for writing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The .gtrack file to create.</span>
+<span class="sd">        etype : :py:class:`str`</span>
+<span class="sd">            The encoding format.</span>
+<span class="sd">            See :py:class:`~genome_kit.GenomeTrack` for details.</span>
+<span class="sd">        strandedness : :py:class:`str`</span>
+<span class="sd">            Determines the order by which the data is applied.</span>
+
+<span class="sd">            * ``&quot;single_stranded&quot;``: both strands share the same data. The data is applied in Interval coordinate (reference strand) order.</span>
+<span class="sd">            * ``&quot;strand_unaware&quot;``: ignores the Interval strand, data is applied in Interval coordinate (reference strand) order.</span>
+<span class="sd">            * ``&quot;strand_aware&quot;``: data is applied from 5&quot; end to 3&quot; end (sense strand order).</span>
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome for the track data to build.</span>
+<span class="sd">        dim : :py:class:`int`</span>
+<span class="sd">            Optional. The number of dimensions in the resulting track.</span>
+<span class="sd">        resolution : :py:class:`int`</span>
+<span class="sd">            Optional. The resolution of the track data, in genomic positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_default_value">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_default_value">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_default_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the fill value for gaps in the track.</span>
+
+<span class="sd">        The default value does not need to be encodable.</span>
+<span class="sd">        For example, a default value of -1.0 for a dictionary that</span>
+<span class="sd">        does not contain -1.0 is fine.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : :py:class:`float`</span>
+<span class="sd">            The value to fill gaps with.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_sparsity">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_sparsity">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_run</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enable automatic sparsification of data intervals.</span>
+
+<span class="sd">        Reduces file size of tracks that are dominated by `default_value`,</span>
+<span class="sd">        with non-default values appearing at sparse intervals.</span>
+<span class="sd">        *Highly recommended for variableStep WIG files.*</span>
+
+<span class="sd">        The default behaviour of a track is to encode all data</span>
+<span class="sd">        passed to :py:meth:`~genome_kit.GenomeTrackBuilder.set_data`.</span>
+<span class="sd">        After calling :py:meth:`~genome_kit.GenomeTrackBuilder.set_sparsity`,</span>
+<span class="sd">        the encoder will analyze the data arrays passed in and avoid</span>
+<span class="sd">        encoding runs of `default_value`.</span>
+
+<span class="sd">        Specifically, if there exists a run of at least `min_run`</span>
+<span class="sd">        values such that each ``abs(data[i] - default_value) &lt;= min_delta``,</span>
+<span class="sd">        then that entire run will be treated as `default_value` and</span>
+<span class="sd">        not explicitly stored in the file.</span>
+
+<span class="sd">        Note that, in order to exclude a run from the track, a 12-byte entry</span>
+<span class="sd">        must be addd to the track index, so setting `min_run` to very small values</span>
+<span class="sd">        can actually increase file size and will definitely increase query time.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min_run : :py:class:`int`</span>
+<span class="sd">            Optional. The minimum length of a run before it&#39;s excluded.</span>
+<span class="sd">        min_delta : :py:class:`float`</span>
+<span class="sd">            Optional. The minimum delta for a value to be considered distinct</span>
+<span class="sd">            from `default_value`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_clamping">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_clamping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_clamping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clamp all values to the encodable range.</span>
+
+<span class="sd">        By default, a value outside the encodable range will trigger</span>
+<span class="sd">        an error, to notify the user that his/her data may not be encoded</span>
+<span class="sd">        properly by the current format.</span>
+
+<span class="sd">        Calling this method shows intent that values should be clamped</span>
+<span class="sd">        to the encodable range. Currently allowed only for f-type encodings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_dict">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_dict">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the dictionary for etypes `f2..8`.</span>
+
+<span class="sd">        The dictionary must be a float16/32 numpy array.</span>
+<span class="sd">        For etype f&lt;n&gt;, there must be `2**n` entries in the array.</span>
+<span class="sd">        Numerical values must be in non-decreasing order.</span>
+<span class="sd">        The last entry in `dict` can be :py:data:`np.nan`</span>
+<span class="sd">        if you wish to be able to encode NaN at specific positions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dict : :py:class:`np.ndarray`</span>
+<span class="sd">            The array of values comprising the dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_transform">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_transform">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform data from range `[a, b]` to range `[c, d]`.</span>
+
+<span class="sd">        This specifies that any time data is about to be encoded, it</span>
+<span class="sd">        will undergo an affine transformation from numeric range `[a, b]`</span>
+<span class="sd">        to range `[c, d]`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a,b : :py:class:`float`</span>
+<span class="sd">            The source range.</span>
+<span class="sd">        c,d : :py:class:`float`</span>
+<span class="sd">            The target range.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_restriction">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_restriction">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_restriction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">restriction</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict data to a specific interval.</span>
+
+<span class="sd">        The restriction interval acts as a allowed region, so that all</span>
+<span class="sd">        data outside that region is either ignored or cropped away by</span>
+<span class="sd">        :py:meth:`~genome_kit.GenomeTrackBuilder.set_data`.</span>
+
+<span class="sd">        The restriction interval&#39;s strand is ignored, i.e. the restriction</span>
+<span class="sd">        always allows data on either strand.</span>
+
+<span class="sd">        This method is useful for making small version of full-sized data pipeline,</span>
+<span class="sd">        for the sake of creating unit tests or iterating faster during development.</span>
+
+<span class="sd">        If the restriction interval is not aligned with the track resolution, some</span>
+<span class="sd">        then the restriction interval will be expanded until it is aligned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        restriction : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval on which to keep data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the track data on a specific interval.</span>
+
+<span class="sd">        If the interval overlaps a previously-specified interval,</span>
+<span class="sd">        an error is raised.</span>
+
+<span class="sd">        The `dtype` of the data array must be compatible with the</span>
+<span class="sd">        `etype` of the track being built.</span>
+
+<span class="sd">        Normally, `data` must be an NxM array where N is</span>
+<span class="sd">        the length of `interval` and M is `dim`.</span>
+
+<span class="sd">        If track resolution R is greater than 1, then `data`</span>
+<span class="sd">        must be (N/R)xM where N is the length of `interval`.</span>
+<span class="sd">        The start and end of `interval` must be aligned to R.</span>
+<span class="sd">        In other words, data is supplied (and stored) at</span>
+<span class="sd">        a coarsened resolution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval to fill with data.</span>
+<span class="sd">        data : :py:class:`np.ndarray`</span>
+<span class="sd">            The data array, ordered according to the strandedness argument passed to the</span>
+<span class="sd">            builder&#39;s constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_wig">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_wig">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_data_from_wig</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_strand_file</span><span class="p">,</span> <span class="n">neg_strand_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .wig or .wig.gz file.</span>
+
+<span class="sd">        Loads all data from a fixedStep or variableStep WIG file.</span>
+
+<span class="sd">        If the track is stranded, then the negative strand</span>
+<span class="sd">        track data will be loaded from the second file.</span>
+
+<span class="sd">        The number of data columns in the WIG must match the track dimension.</span>
+<span class="sd">        The span of the data must match the track resolution, with the exception</span>
+<span class="sd">        of the very last datum on a chromosome.</span>
+
+<span class="sd">        Adjacent WIG intervals will automatically be merged into a single GTRACK</span>
+<span class="sd">        interval, with different data encoded for each spanned position.</span>
+<span class="sd">        Consider calling :py:meth:`~genome_kit.GenomeTrackBuilder.set_sparsity`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos_strand_file : :py:class:`str`</span>
+<span class="sd">            Path to the .wig file for positive strand.</span>
+<span class="sd">        neg_strand_file : :py:class:`str`</span>
+<span class="sd">            Optional. Path to the .wig file for negative strand, if stranded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bedgraph">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bedgraph">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_data_from_bedgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_strand_file</span><span class="p">,</span> <span class="n">neg_strand_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .bedgraph or .bedgraph.gz file.</span>
+
+<span class="sd">        Loads all data from a BEDGRAPH file.</span>
+<span class="sd">        A direct analogue of :py:meth:`~genome_kit.GenomeTrackBuilder.set_data_from_wig`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pos_strand_file : :py:class:`str`</span>
+<span class="sd">            Path to the .bedgraph file for positive strand.</span>
+<span class="sd">        neg_strand_file : :py:class:`str`</span>
+<span class="sd">            Optional. Path to the .bedgraph file for negative strand, if stranded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.set_data_from_bed">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.set_data_from_bed">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">set_data_from_bed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bedfile</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load all data from a .bed or .bed.gz file.</span>
+
+<span class="sd">        Loads each interval from a BED file and incorporates it into the track.</span>
+
+<span class="sd">        If `categories` is not specified, then the value contained in the `score`</span>
+<span class="sd">        column of the BED file will be stored in the corresponding interval.</span>
+
+<span class="sd">        If `categories` is specified, then the `name` column of the BED file</span>
+<span class="sd">        determines the value stored on each interval. The interval&#39;s `name` will</span>
+<span class="sd">        be used to find an index in `categories`, and that index will be stored.</span>
+
+<span class="sd">        The strandedness of the track must match the BED file (i.e. an unstranded</span>
+<span class="sd">        track expects the `strand` column to contain ``&#39;.&#39;``).</span>
+<span class="sd">        The track dimension must be 1.</span>
+<span class="sd">        The start and end of each interval must match the track resolution,</span>
+<span class="sd">        with the exception of the very last position of a chromosome.</span>
+
+<span class="sd">        Adjacent BED intervals will automatically be merged into a single contiguous</span>
+<span class="sd">        GTRACK interval.</span>
+<span class="sd">        In a GTRACK file, the data value of an interval is repeated for the size of the</span>
+<span class="sd">        interval, unlike in a BED file where it&#39;s specified only once per interval.</span>
+<span class="sd">        This can result in large GTRACK files, especially when at 1bp resolution (the default).</span>
+<span class="sd">        Consider using :py:meth:`~genome_kit.GenomeTrackBuilder.set_default_value`</span>
+<span class="sd">        and :py:meth:`~genome_kit.GenomeTrackBuilder.set_sparsity` to manage file size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bedfile : :py:class:`str`</span>
+<span class="sd">            Path to the .bed file.</span>
+<span class="sd">        categories : :py:class:`list` of :py:class:`str`</span>
+<span class="sd">            Optional. List of categories to match with the `name` column</span>
+<span class="sd">            in the BED file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.flush">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.flush">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flush the currently accumulated data to disk.</span>
+
+<span class="sd">        This function can free up memory while building a track,</span>
+<span class="sd">        but should only be called immediately after an entire chromosome</span>
+<span class="sd">        has had its data set. Once this is called all chromosomes</span>
+<span class="sd">        that currently have *any* data on them become fixed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrackBuilder.finalize">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.finalize">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Finish writing the file and close it.</span>
+
+<span class="sd">        This function must be called last, to complete creation of the GTRACK file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The dimensionality of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of columns in each returned array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The resolution of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of genomic positions spanned by each datum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The strandedness of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">           Whether the negative strand stores data unique from the positive strand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">etype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The encoding type of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           A string identifying the encoding type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The default dtype for the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`type`</span>
+<span class="sd">           The numpy dtype that this track will decode to by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the reference genome the track will be mapped to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The name of the reference genome, e.g. &quot;hg38&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to `.gtrack` file being written to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the file, e.g. &quot;/data/phastcons.gtrack&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of positions spanned by data in the GTRACK file.</span>
+
+<span class="sd">        If sparsity is disabled, the data size is the number of positions</span>
+<span class="sd">        spanned by data via</span>
+<span class="sd">        :py:meth:`~genome_kit.GenomeTrackBuilder.set_data`.</span>
+
+<span class="sd">        Enabling sparsity may decrease the data size.</span>
+
+<span class="sd">        Using resolution &gt; 1bp will also decrease the data size, since data is</span>
+<span class="sd">        encoded into a coarse coordinate system, not at full genomic resolution.</span>
+
+<span class="sd">        The number of bits that the data occupies in the GTRACK file is</span>
+<span class="sd">        approximately `data_size * dim * bits_per_datum`, but the exact</span>
+<span class="sd">        computation is non-trivial, so portion of GTRACK file dedicated</span>
+<span class="sd">        to data may be higher or lower than this rough estimate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of data spanned by encoded data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of separate intervals in the GTRACK index.</span>
+
+<span class="sd">        If sparsity is disabled, the index size is the number of times</span>
+<span class="sd">        :py:meth:`~genome_kit.GenomeTrackBuilder.set_data` was called.</span>
+
+<span class="sd">        Enabling sparsity may increase the index size.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of unique intervals in the index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GenomeTrackBuilder.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrackBuilder.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrackBuilder &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">#########################################################################</span>
+
+
+<div class="viewcode-block" id="GenomeTrack">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">GenomeTrack</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">GenomeTrack</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to a genomic data track.</span>
+
+<span class="sd">    A :py:class:`~genome_kit.GenomeTrack` provides a read-only view of a `.gtrack` file.</span>
+<span class="sd">    A track can be easily opened and queried::</span>
+
+<span class="sd">        &gt;&gt;&gt; interval = Interval(&#39;chr17&#39;, &#39;+&#39;, 41246881, 41246886, &#39;hg19&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; track = GenomeTrack(&quot;hg19.phastcons_mammal.f4.gtrack&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; track(interval)</span>
+<span class="sd">        array([[ 1.   ],</span>
+<span class="sd">               [ 0.857],</span>
+<span class="sd">               [ 0.571],</span>
+<span class="sd">               [ 0.357],</span>
+<span class="sd">               [ 0.286]], dtype=float16)</span>
+
+<span class="sd">        &gt;&gt;&gt; track(interval.as_opposite_strand())</span>
+<span class="sd">        array([[ 0.286],</span>
+<span class="sd">               [ 0.357],</span>
+<span class="sd">               [ 0.571],</span>
+<span class="sd">               [ 0.857],</span>
+<span class="sd">               [ 1.   ]], dtype=float16)</span>
+
+<span class="sd">    You can also open a track with a specific scope::</span>
+
+<span class="sd">        &gt;&gt;&gt; with GenomeTrack(&quot;foo.gtrack&quot;) as track:</span>
+<span class="sd">        ...     values = track(interval)</span>
+
+<span class="sd">    Tracks can be encoded in formats called `etypes`.</span>
+<span class="sd">    The available etypes trade representation power</span>
+<span class="sd">    for storage size and query speed::</span>
+
+<span class="sd">        etypes = [  # DECODABLE TYPES          RANGE                ENCODED TYPE</span>
+<span class="sd">            &quot;m0&quot;,   # float16/32, uint8, bool  {1}                  0-bit (mask)</span>
+<span class="sd">            &quot;u1&quot;,   # float16/32, uint8, bool  {0..1}               1-bit</span>
+<span class="sd">            &quot;u2&quot;,   # float16/32, uint8        {0..3}               2-bit</span>
+<span class="sd">            &quot;u3&quot;,   # float16/32, uint8        {0..7}               3-bit</span>
+<span class="sd">            &quot;u4&quot;,   # float16/32, uint8        {0..15}              4-bit</span>
+<span class="sd">            &quot;u5&quot;,   # float16/32, uint8        {0..31}              5-bit</span>
+<span class="sd">            &quot;u6&quot;,   # float16/32, uint8        {0..63}              6-bit</span>
+<span class="sd">            &quot;u8&quot;,   # float16/32, uint8        {0..255}             8-bit</span>
+<span class="sd">            &quot;i8&quot;,   # float16/32, int8         {-128..127}          8-bit</span>
+<span class="sd">            &quot;f2&quot;,   # float16/32               [-65504,65504]       2-bit dictionary</span>
+<span class="sd">            &quot;f3&quot;,   # float16/32               [-65504,65504]       3-bit dictionary</span>
+<span class="sd">            &quot;f4&quot;,   # float16/32               [-65504,65504]       4-bit dictionary</span>
+<span class="sd">            &quot;f5&quot;,   # float16/32               [-65504,65504]       5-bit dictionary</span>
+<span class="sd">            &quot;f6&quot;,   # float16/32               [-65504,65504]       6-bit dictionary</span>
+<span class="sd">            &quot;f8&quot;,   # float16/32               [-65504,65504]       8-bit dictionary</span>
+<span class="sd">            &quot;f16&quot;,  # float16/32               [-65504,65504]       16-bit float</span>
+<span class="sd">            &quot;f32&quot;,  # float16/32               [-1.2e-38, 3.4e38]   32-bit float</span>
+<span class="sd">        ]</span>
+
+<span class="sd">    The default dictionary for `f2..8` types is the range [0,1] computed</span>
+<span class="sd">    as ``np.linspace(0.0, 1.0, 2**num_bits, dtype=np.float16)``.</span>
+
+<span class="sd">    Decoded types are called `dtypes`, and are indeed represented by</span>
+<span class="sd">    numpy dtypes::</span>
+
+<span class="sd">        dtypes = [</span>
+<span class="sd">            np.bool_,    # {False, True}</span>
+<span class="sd">            np.uint8,    # {0..255}</span>
+<span class="sd">            np.int8,     # {-128..127}</span>
+<span class="sd">            np.float16,  # [-65504, 65504] IEEE 754 half-precision</span>
+<span class="sd">            np.float32,  # [-1.2e-38, 3.4e38]</span>
+<span class="sd">        ]</span>
+
+<span class="sd">    New tracks can be can created using :py:class:`~genome_kit.GenomeTrackBuilder`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- ADDING SLOTS IS OK</span>
+
+<div class="viewcode-block" id="GenomeTrack.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .gtrack file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The .gtrack file to open.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrack.__call__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__call__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract data from a genomic track.</span>
+
+<span class="sd">        Data is always returned in sense-strand order, meaning it is</span>
+<span class="sd">        always sensitive to the strand of the interval,</span>
+<span class="sd">        even on an unstranded track.</span>
+
+<span class="sd">        You can optionally specify the dtype that a track should be</span>
+<span class="sd">        decoded to.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The stranded query interval.</span>
+<span class="sd">        dtype : :py:class:`type`</span>
+<span class="sd">            Optional. The numpy dtype of the resulting array. Ignored if </span>
+<span class="sd">            ``out`` is provided.</span>
+<span class="sd">        out : :py:class:`~numpy.ndarray`</span>
+<span class="sd">            Optional. A numpy array to hold the result. If provided, it </span>
+<span class="sd">            overrides ``dtype`` and it must have a shape that the inputs </span>
+<span class="sd">            broadcast to. If not provided or None, a freshly-allocated array </span>
+<span class="sd">            is returned. </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~numpy.ndarray`</span>
+<span class="sd">            The decoded track data with ``len(interval)`` rows and ``dim`` columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The dimensionality of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of columns in each returned array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The resolution of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The number of genomic positions spanned by each datum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The strandedness of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">           Whether the negative strand stores data unique from the positive strand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">etype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The encoding type of the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           A string identifying the encoding type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The default dtype for the track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`type`</span>
+<span class="sd">           The numpy dtype that this track will decode to by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the reference genome this track is mapped to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The name of the reference genome, e.g. &quot;hg38&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to `.gtrack` file from which data is extracted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the file, e.g. &quot;/data/phastcons.gtrack&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GenomeTrack.intervals">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.intervals">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of intervals covered by this track.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">           The list of intervals with data in this track.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrack.histogram">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.histogram">[docs]</a>
+    <span class="k">def</span> <span class="nf">histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">separate_dims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a histogram of the values in the track.</span>
+
+<span class="sd">        Returns a dictionary where each key is a float appearing</span>
+<span class="sd">        at least once in the track, and each value is a count of the</span>
+<span class="sd">        number of times it occurred. NaN values are omitted.</span>
+
+<span class="sd">        If `region` is a :py:class:`~genome_kit.Genome`, computes</span>
+<span class="sd">        a genome-wide histogram.</span>
+<span class="sd">        If `region` is an interval or list of intervals, computes the</span>
+<span class="sd">        histogram over that region only.</span>
+
+<span class="sd">        If `separate_dims` is true, returns a list of</span>
+<span class="sd">        :py:attr:`~genome_kit.GenomeTrack.dim` histograms,</span>
+<span class="sd">        one for each track dimension.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        region : :py:class:`~genome_kit.Genome` | :py:class:`~genome_kit.Interval` | \</span>
+<span class="sd">                :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Specific interval(s) upon which to compute</span>
+<span class="sd">            the histogram.</span>
+<span class="sd">        separate_dims : :py:class:`bool`</span>
+<span class="sd">            Optional. Whether to generate a single histogram over all</span>
+<span class="sd">            dimensions, or to return a separate histogram for each.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`dict` | :py:class:`list` of :py:class:`dict`</span>
+<span class="sd">            A dictionary ``{ value : count }`` where the `value`</span>
+<span class="sd">            appearing in the track `count` times. Zero</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get `intervals` list from the `interval` arg</span>
+        <span class="kn">from</span> <span class="nn">.genome</span> <span class="kn">import</span> <span class="n">Genome</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">Genome</span><span class="p">):</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intervals_for_genome</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">region</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="n">region</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expected region to be a Genome, Interval, or list of Interval&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Build an array where counters[i,j] is the number of times in dimension i that</span>
+        <span class="c1"># the float16 value represented by j=0..2^16 appeared.</span>
+        <span class="n">counters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+            <span class="n">counters</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_counters_for_interval</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+
+        <span class="c1"># Collapse each dimension into one single histogram by summing up the counts unless separate_dims=True</span>
+        <span class="k">if</span> <span class="n">separate_dims</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_histogram_dict_from_counters</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">counters</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogram_dict_from_counters</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_intervals_for_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of intervals, one for each chromosome, which effectively partition the entire reference genome</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">genome</span><span class="o">.</span><span class="n">refg</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Track reference genome &#39;</span><span class="si">{}</span><span class="s2">&#39; does not match argument &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">refg</span><span class="p">))</span>
+        <span class="n">strands</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stranded</span> <span class="k">else</span> <span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="p">)</span>
+        <span class="n">genome_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chrom</span> <span class="ow">in</span> <span class="n">genome</span><span class="o">.</span><span class="n">chromosomes</span><span class="p">:</span>
+            <span class="n">chrom_size</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">chromosome_size</span><span class="p">(</span><span class="n">chrom</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">strand</span> <span class="ow">in</span> <span class="n">strands</span><span class="p">:</span>
+                <span class="n">genome_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">chrom_size</span><span class="p">,</span> <span class="n">genome</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">genome_intervals</span>
+
+    <span class="k">def</span> <span class="nf">_histogram_counters_for_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">slice_size</span><span class="o">=</span><span class="mi">100000</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an int64 array `counters` of size (dim, 2**16) where `counters[i,j]` is</span>
+<span class="sd">        the number of times float16 value indexed by j appeared in dimension i in the</span>
+<span class="sd">        given interval.&quot;&quot;&quot;</span>
+        <span class="n">counters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>  <span class="c1"># int64 for compatibility with np.bincount</span>
+
+        <span class="c1"># Outer loop partitions each interval into chunks, to keep peak memory consistent</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">slice_size</span><span class="p">):</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">slice_size</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+            <span class="c1"># build an interval for this particular slice, and read the track values for it.</span>
+            <span class="n">interval_slice</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+            <span class="n">slice_data_float16</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">interval_slice</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">slice_data_uint16</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span>
+                    <span class="nb">memoryview</span><span class="p">(</span><span class="n">slice_data_float16</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">slice_data_float16</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">slice_data_uint16</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">getbuffer</span><span class="p">(</span><span class="n">slice_data_float16</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">slice_data_float16</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+            <span class="c1"># increment the appropriate key in counters (int_indexes[dim_index]) for each dimension</span>
+            <span class="c1"># corresponding to the value of the track for that dimension</span>
+            <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
+                <span class="n">counters</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">slice_data_uint16</span><span class="p">[:,</span> <span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span> <span class="n">minlength</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">counters</span>
+
+    <span class="k">def</span> <span class="nf">_histogram_dict_from_counters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">counters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts a counters array into a dict, where each key is a float and each value is a non zero count.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># counters[i] is the number of times the float16 value float_keys[i]</span>
+        <span class="c1"># appeared, for i=0..65536. Build a histogram of all non-nan keys.</span>
+
+        <span class="c1"># merge the count for -0.0 into the count for +0.0</span>
+        <span class="n">pos_zero_index</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># index of +0.0</span>
+        <span class="n">neg_zero_index</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">15</span>  <span class="c1"># index of -0.0</span>
+        <span class="n">counters</span><span class="p">[</span><span class="n">pos_zero_index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">counters</span><span class="p">[</span><span class="n">neg_zero_index</span><span class="p">]</span>
+        <span class="n">counters</span><span class="p">[</span><span class="n">neg_zero_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># generate key for all 65536 possible float16 values, so that</span>
+        <span class="c1"># float_keys[i] is the float16 value counted by counters[i].</span>
+        <span class="n">int_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">16</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">float_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="nb">memoryview</span><span class="p">(</span><span class="n">int_keys</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">float_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">getbuffer</span><span class="p">(</span><span class="n">int_keys</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+
+        <span class="c1"># make dict of all non-nan keys and all non-zero values</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">float_keys</span><span class="p">),</span> <span class="n">counters</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">histogram</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">float_keys</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">counters</span><span class="p">[</span><span class="n">mask</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">histogram</span>
+
+<div class="viewcode-block" id="GenomeTrack.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.close">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
+
+<span class="sd">        Note that if you use a `with` statement the file handle is automatically closed::</span>
+
+<span class="sd">            # Open the file</span>
+<span class="sd">            with GenomeTrack(&#39;foo.gtrack&#39;) as track:</span>
+<span class="sd">                ...</span>
+<span class="sd">            # &lt;-- File is now closed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="GenomeTrack.gtrack_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.gtrack_version">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">gtrack_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `gtrack` file format version that this build supports.</span>
+
+<span class="sd">        Attempting to open a `gtrack` file of a mismatched version will raise an :py:exc:`IOError`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The version number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="GenomeTrack.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.GenomeTrack.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;GenomeTrack &#39;</span><span class="si">{}</span><span class="s2">&#39;&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit._apply_variants &mdash; GenomeKit 5.2.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=be5e5c63"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit._apply_variants</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit._apply_variants</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">interval</span> <span class="k">as</span> <span class="n">_interval</span>
+<span class="kn">from</span> <span class="nn">._util</span> <span class="kn">import</span> <span class="n">reverse_complement</span>
+<span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="n">_not_actgn</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^ACGTN]&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">check_variants_list</span><span class="p">(</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">variants</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic input validation for a &quot;list of variants&quot; type argument.</span>
+
+<span class="sd">    Checks that each item is a :py:class:`~genome_kit.Variant`,</span>
+<span class="sd">    and is defined on the correct reference genome.</span>
+<span class="sd">    Converts a single variant into a list with that variant.</span>
+<span class="sd">    Does not compare variant `ref` attributes to `reference_genome` sequence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference_genome : :py:class:`~genome_kit.Genome`</span>
+<span class="sd">        The genome on which the variants are expected to be defined.</span>
+
+<span class="sd">    variants : :py:class:`~genome_kit.Variant` | :py:class:`list` of (:py:class:`~genome_kit.Variant`)</span>
+<span class="sd">        Either a single variant or a list of variants.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">        The variants as a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">Variant</span><span class="p">):</span>
+        <span class="n">variants</span> <span class="o">=</span> <span class="p">[</span><span class="n">variants</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The &#39;variants&#39; argument must be a Variant object &quot;</span>
+                        <span class="s2">&quot;or a list/tuple of Variant objects. Received: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">variants</span><span class="p">)))</span>
+
+    <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Variant</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;An element of variants is not a Variant object. Got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">variants</span><span class="p">)))</span>
+
+    <span class="n">refg</span> <span class="o">=</span> <span class="n">reference_genome</span><span class="o">.</span><span class="n">refg</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">reference_genome</span> <span class="o">!=</span> <span class="n">refg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&#39;s genome doesn&#39;t match the reference genome.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">_not_actgn</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">alt</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid ALT sequence &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">alt</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">variants</span>
+
+
+<div class="viewcode-block" id="apply_variants">
+<a class="viewcode-back" href="../../api.html#genome_kit._apply_variants.apply_variants">[docs]</a>
+<span class="k">def</span> <span class="nf">apply_variants</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply variants to a sequence interval.</span>
+
+<span class="sd">    This function ignores the interval&#39;s strand attribute and always returns</span>
+<span class="sd">    the sequence on the reference strand.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sequence : :py:class:`~genome_kit.GenomeDNA`</span>
+<span class="sd">        The source from which to extract DNA.</span>
+
+<span class="sd">    variants : :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">        A list of variants.</span>
+
+<span class="sd">    interval : :py:class:`~genome_kit.Interval` | :py:class:`~genome_kit.Coordinate`</span>
+<span class="sd">        An anchored interval/coordinate specifying what to extract.</span>
+
+<span class="sd">    reference_alignment : :py:class:`bool`</span>
+<span class="sd">        Whether to compute the alignment between the variant and reference sequence.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :py:class:`str`</span>
+<span class="sd">        The variant DNA sequence.</span>
+
+<span class="sd">    :py:class:`list`</span>
+<span class="sd">        The alignment of the variant sequence with the reference sequence</span>
+<span class="sd">        (if ``reference_alignment=True``).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: How are anchor_offsets greater than the length of an insertion handled?</span>
+    <span class="c1"># The anchor offset should just implicitly be truncated to the length of the insertion.</span>
+    <span class="c1"># Need to test this.</span>
+
+    <span class="n">variants</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">vv</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_normalized_variant</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variants</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">chrom</span> <span class="o">==</span> <span class="n">interval</span><span class="o">.</span><span class="n">chrom</span><span class="p">)</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+
+    <span class="n">anchor</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor</span>
+
+    <span class="k">if</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># When anchor is None, the sequence is allowed to change length</span>
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">_apply_variants_no_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment</span> <span class="o">=</span> <span class="n">var_sequence</span>
+    <span class="k">elif</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">anchor</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="c1"># When the anchor falls inside the interval, we split the interval up</span>
+        <span class="c1"># and apply the variant separately on the left and the right half, then</span>
+        <span class="c1"># join the sequences together again.</span>
+
+        <span class="n">interval_left</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span>
+                                           <span class="n">interval</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="n">interval_right</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span>
+                                            <span class="n">interval</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="n">var_sequence_left</span> <span class="o">=</span> <span class="n">_apply_variants_right_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval_left</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="n">var_sequence_right</span> <span class="o">=</span> <span class="n">_apply_variants_left_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval_right</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="n">var_sequence_left</span><span class="p">,</span> <span class="n">alignment_left</span> <span class="o">=</span> <span class="n">var_sequence_left</span>
+            <span class="n">var_sequence_right</span><span class="p">,</span> <span class="n">alignment_right_tmp</span> <span class="o">=</span> <span class="n">var_sequence_right</span>
+
+            <span class="c1"># We need to join the reference alignments for the left and the right side,</span>
+            <span class="c1"># but they both start at zero. Therefore we need to figure out what index</span>
+            <span class="c1"># we need to add to all the elements in the right reference alignment.</span>
+            <span class="n">alignment_right</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">alignment_left</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">insert_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">offset</span><span class="p">,</span> <span class="n">insert_offset</span> <span class="o">=</span> <span class="n">offset</span>
+                <span class="n">insert_offset</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">alignment_right_tmp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">insert_offset</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="n">offset</span>
+                    <span class="n">insert_offset</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">alignment_right</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment_left</span> <span class="o">+</span> <span class="n">alignment_right</span>
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">var_sequence_left</span> <span class="o">+</span> <span class="n">var_sequence_right</span>
+
+    <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="n">start</span><span class="p">:</span>
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">_apply_variants_left_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment</span> <span class="o">=</span> <span class="n">var_sequence</span>
+    <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="n">end</span><span class="p">:</span>
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">_apply_variants_right_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment</span> <span class="o">=</span> <span class="n">var_sequence</span>
+    <span class="k">elif</span> <span class="n">anchor</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="c1"># When the anchor falls outside the interval we just extend the interval up</span>
+        <span class="c1"># to the anchor and crop it later. TODO: Eventually we&#39;ll want to improve this.</span>
+
+        <span class="c1"># This method is inefficient since it takes extracts all the sequence</span>
+        <span class="c1"># up to the anchor.</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+
+        <span class="n">tmp_interval</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span>
+                                          <span class="n">interval</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">_apply_variants_right_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">tmp_interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment</span> <span class="o">=</span> <span class="n">var_sequence</span>
+            <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span><span class="p">[:</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">]</span>
+
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">var_sequence</span><span class="p">[:</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">anchor</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+
+        <span class="n">tmp_interval</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span>
+                                          <span class="n">interval</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">_apply_variants_left_anchor</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">tmp_interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="c1"># When we truncate the reference alignment we need to modify the</span>
+            <span class="c1"># indices so they start at zero.</span>
+            <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment_tmp</span> <span class="o">=</span> <span class="n">var_sequence</span>
+            <span class="n">alignment_tmp</span> <span class="o">=</span> <span class="n">alignment_tmp</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">):]</span>
+
+            <span class="n">alignment</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">alignment_tmp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">alignment_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">-=</span> <span class="n">alignment_tmp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">alignment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">var_sequence</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">):]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Should never be reached&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interval</span><span class="o">.</span><span class="n">is_positive_strand</span><span class="p">():</span>
+        <span class="n">var_sequence</span> <span class="o">=</span> <span class="n">reverse_complement</span><span class="p">(</span><span class="n">var_sequence</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Reference alignment only work on forward strand.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">var_sequence</span><span class="p">,</span> <span class="n">alignment</span>
+    <span class="k">return</span> <span class="n">var_sequence</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_apply_variants_no_anchor</span><span class="p">(</span><span class="n">dna</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+
+    <span class="n">v_interval</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+    <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">dna</span><span class="p">(</span><span class="n">v_interval</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="n">alignment</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">))</span>
+
+    <span class="c1"># Apply the variants from end to avoid reindexing (changing relative start)</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">variants</span><span class="p">):</span>
+        <span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">alt</span>
+        <span class="n">v_start_rel</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="n">v_end_rel</span> <span class="o">=</span> <span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">v_start_rel</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">v_end_rel</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">v_start_rel</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Clip left side of variant</span>
+            <span class="n">v_offset</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_start</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+            <span class="n">v_start_rel</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">v_end_rel</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">):</span>
+            <span class="c1"># Clip right side of variant</span>
+            <span class="n">v_offset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span> <span class="o">-</span> <span class="n">v_end_rel</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="n">v_offset</span><span class="p">]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="n">v_offset</span><span class="p">]</span>
+            <span class="n">v_end_rel</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">v_end_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">v_start_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_start_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">variant_sequence</span><span class="p">[:</span><span class="n">v_start_rel</span><span class="p">]</span> <span class="o">+</span> <span class="n">alt</span> <span class="o">+</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Deletion</span>
+                <span class="k">del</span> <span class="n">alignment</span><span class="p">[</span><span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span><span class="n">v_end_rel</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Insertion</span>
+                <span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="p">[(</span><span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">))]</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">variant_sequence</span><span class="p">,</span> <span class="n">alignment</span>
+
+    <span class="k">return</span> <span class="n">variant_sequence</span>
+
+
+<span class="k">def</span> <span class="nf">_apply_variants_right_anchor</span><span class="p">(</span><span class="n">dna</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+    <span class="n">original_start</span> <span class="o">=</span> <span class="n">start</span>
+
+    <span class="n">variants_processed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Search from anchor to start for variants extended before original interval</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">variants</span><span class="p">):</span>
+        <span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">alt</span>
+        <span class="n">v_end</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="c1"># Variant falls outside of interval</span>
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">&gt;=</span> <span class="n">end</span> <span class="ow">and</span> <span class="n">v_end</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">v_end</span> <span class="o">&lt;=</span> <span class="n">start</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="n">v_start</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ref</span><span class="p">:</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">]</span>
+
+        <span class="c1"># Clip variant if it overlaps the anchor</span>
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">&lt;</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">v_end</span><span class="p">:</span>
+            <span class="n">v_len</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">v_start</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="n">v_len</span><span class="p">]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="n">v_len</span><span class="p">]</span>
+
+        <span class="c1"># Clip if variant overlaps the start</span>
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+            <span class="n">v_offset</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="p">(</span><span class="n">v_start</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">))</span>
+            <span class="n">v_start</span> <span class="o">+=</span> <span class="nb">min</span><span class="p">(</span><span class="n">v_offset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">))</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+
+        <span class="c1"># Move the start to accommodate the variant</span>
+        <span class="n">start</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+        <span class="n">variants_processed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="c1"># need an extra element for insertion at end</span>
+        <span class="n">alignment</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">original_start</span><span class="p">,</span> <span class="n">end</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">original_start</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">v_interval</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+    <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">dna</span><span class="p">(</span><span class="n">v_interval</span><span class="p">)</span>
+
+    <span class="c1"># Apply the variants from end to avoid reindexing (changing relative start)</span>
+    <span class="k">for</span> <span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="n">variants_processed</span><span class="p">:</span>
+        <span class="n">v_start_rel</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="n">v_end_rel</span> <span class="o">=</span> <span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">v_end_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">v_start_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_start_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">variant_sequence</span><span class="p">[:</span><span class="n">v_start_rel</span><span class="p">]</span> <span class="o">+</span> <span class="n">alt</span> <span class="o">+</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Deletion</span>
+                <span class="k">del</span> <span class="n">alignment</span><span class="p">[</span><span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span><span class="n">v_end_rel</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Insertion</span>
+                <span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="p">[(</span><span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">))]</span>
+
+    <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="p">:]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">variant_sequence</span><span class="p">,</span> <span class="n">alignment</span>
+
+    <span class="k">return</span> <span class="n">variant_sequence</span>
+
+
+<span class="k">def</span> <span class="nf">_apply_variants_left_anchor</span><span class="p">(</span><span class="n">dna</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">reference_alignment</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+    <span class="n">original_end</span> <span class="o">=</span> <span class="n">end</span>
+
+    <span class="n">variants_processed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Search from anchor to end  for variants extended after original interval</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
+        <span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">alt</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">v_start</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ref</span><span class="p">:</span>
+            <span class="c1"># Handle anchor_offset cases separately</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[</span><span class="n">interval</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">:]</span>
+            <span class="c1"># Clip if variant overlaps the end</span>
+            <span class="k">if</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+                <span class="n">v_clip</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">end</span>
+                <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="o">-</span><span class="n">v_clip</span><span class="p">]</span>
+                <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="o">-</span><span class="n">v_clip</span><span class="p">]</span>
+            <span class="n">variants_processed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="n">v_end</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="c1"># Variant falls outside of interval</span>
+        <span class="k">if</span> <span class="n">v_end</span> <span class="o">&lt;=</span> <span class="n">start</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">v_end</span><span class="p">:</span>
+            <span class="c1"># Variant overlaps the anchor</span>
+            <span class="n">v_offset</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_start</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[</span><span class="n">v_offset</span><span class="p">:]</span>
+            <span class="n">v_start</span> <span class="o">=</span> <span class="n">start</span>
+
+        <span class="c1"># Clip if variant overlaps the end</span>
+        <span class="k">if</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">v_clip</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">end</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="o">-</span><span class="n">v_clip</span><span class="p">]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="o">-</span><span class="n">v_clip</span><span class="p">]</span>
+
+        <span class="n">variants_processed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">))</span>
+        <span class="n">end</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="n">alignment</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">original_end</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="o">-</span> <span class="n">start</span><span class="p">))</span>
+
+    <span class="n">v_interval</span> <span class="o">=</span> <span class="n">_interval</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+    <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">dna</span><span class="p">(</span><span class="n">v_interval</span><span class="p">)</span>
+
+    <span class="c1"># Apply the variants from end to avoid reindexing (changing relative start)</span>
+    <span class="k">for</span> <span class="n">v_start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">variants_processed</span><span class="p">):</span>
+        <span class="n">v_start_rel</span> <span class="o">=</span> <span class="n">v_start</span> <span class="o">-</span> <span class="n">start</span>
+        <span class="n">v_end_rel</span> <span class="o">=</span> <span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">v_start_rel</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">v_end_rel</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">):</span>
+            <span class="c1"># Clip variant if it extends beyond the sequence</span>
+            <span class="n">v_clip</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span> <span class="o">-</span> <span class="n">v_start_rel</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="n">v_clip</span><span class="p">]</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="n">v_clip</span><span class="p">]</span>
+            <span class="n">v_end_rel</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_start_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">ref</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">variant_sequence</span><span class="p">[:</span><span class="n">v_start_rel</span><span class="p">]</span> <span class="o">+</span> <span class="n">alt</span> <span class="o">+</span> <span class="n">variant_sequence</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Deletion</span>
+                <span class="k">del</span> <span class="n">alignment</span><span class="p">[</span><span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span><span class="n">v_end_rel</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):</span>
+                <span class="c1"># Insertion</span>
+                <span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">:</span><span class="n">v_end_rel</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="p">[(</span><span class="n">alignment</span><span class="p">[</span><span class="n">v_end_rel</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">))]</span>
+
+    <span class="n">variant_sequence</span> <span class="o">=</span> <span class="n">variant_sequence</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)]</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant_sequence</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_alignment</span><span class="p">:</span>
+        <span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">variant_sequence</span><span class="p">,</span> <span class="n">alignment</span>
+
+    <span class="k">return</span> <span class="n">variant_sequence</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

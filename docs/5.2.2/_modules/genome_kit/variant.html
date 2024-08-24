@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.variant &mdash; GenomeKit 5.2.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=be5e5c63"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.variant</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.variant</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect_left</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">zip</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span><span class="p">,</span> <span class="n">mock_unreachable</span><span class="p">,</span> <span class="n">strip_mock_bases</span>
+<span class="kn">from</span> <span class="nn">.interval</span> <span class="kn">import</span> <span class="n">Interval</span>
+
+<span class="n">_NUCLEOTIDE_SYMBOLS</span> <span class="o">=</span> <span class="s1">&#39;ACGTWSMKRYBDHVNZ&#39;</span>
+
+
+<div class="viewcode-block" id="Variant">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Variant</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Variant</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A variant.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Variant.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a variant from a DNA0 position.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (&#39;chr1&#39;, ...).</span>
+
+<span class="sd">        start : :py:class:`int`</span>
+<span class="sd">            The start of the reference genome spanned by `ref` (inclusive, 0-based).</span>
+
+<span class="sd">        ref : :py:class:`str`</span>
+<span class="sd">            The reference allele.</span>
+
+<span class="sd">        alt : :py:class:`str`</span>
+<span class="sd">            The alternate allele.</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome. See :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this variant in the reference genome.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Variant` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this variant&#39;s `ref` sequence in the reference genome.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The integer position of the start (inclusive, 0-based).</span>
+
+<span class="sd">        This property is a synonym for `start` and is provided for</span>
+<span class="sd">        historical reasons.  For consistency with other interval-based</span>
+<span class="sd">        objects, prefer the `start` property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The start position of this interval within the reference genome.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The reference allele as a DNA string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The sequence of the reference allele that is altered by this variant.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The alternate allele as a DNA string.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The sequence of the alternate allele that this variant represents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Variant.as_variant_string">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant.as_variant_string">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_variant_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a string representation of the variant.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :py:meth:`~genome_kit.Variant.from_string`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The variant in the format ``&quot;chromosome:start:ref:alt&quot;``, where</span>
+<span class="sd">            start is in DNA1 coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Variant.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Variant </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span></div>
+
+
+    <span class="fm">__str__</span> <span class="o">=</span> <span class="n">as_variant_string</span>
+
+<div class="viewcode-block" id="Variant.from_string">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant.from_string">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_string</span><span class="p">(</span><span class="n">variant</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a variant object from a variant string.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        variant : :py:class:`str`</span>
+<span class="sd">            A variant in the format ``&quot;chromosome:start:ref:alt&quot;`` where start is in DNA1 coordinates.</span>
+
+<span class="sd">        reference_genome : :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome that `variant` diverges from.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :py:meth:`~genome_kit.Variant.as_variant_string`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">components</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">SyntaxError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid variant: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variant</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">components</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variant must have exactly four components: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variant</span><span class="p">))</span>
+
+        <span class="n">chromosome</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">components</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Allow position to have comma separators</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid position in variant: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">variant</span><span class="p">))</span>
+
+        <span class="n">chromosome</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">Variant</span><span class="o">.</span><span class="n">_preprocess_variant</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span>
+        <span class="n">variant_obj</span> <span class="o">=</span> <span class="n">Variant</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">variant_obj</span><span class="o">.</span><span class="n">_validate_variant</span><span class="p">(</span><span class="n">reference_genome</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Variant string was invalid: </span><span class="si">{</span><span class="n">variant</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="n">variant_obj</span></div>
+
+
+<div class="viewcode-block" id="Variant.spanning">
+<a class="viewcode-back" href="../../api.html#genome_kit.Variant.spanning">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">spanning</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extends :meth:`~genome_kit.Interval.spanning` such that it is aware</span>
+<span class="sd">        of variants and anchors.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from genome_kit import Genome, Variant, Interval</span>
+<span class="sd">            &gt;&gt;&gt; hg19 = Genome(&quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; v = Variant(&quot;chr1&quot;, 100, &quot;&quot;, 10 * &quot;N&quot;, hg19)</span>
+<span class="sd">            &gt;&gt;&gt; a = Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 150, hg19, 100)</span>
+<span class="sd">            &gt;&gt;&gt; b = Interval(&quot;chr1&quot;, &quot;+&quot;, 200, 250, hg19)</span>
+<span class="sd">            &gt;&gt;&gt; Interval.spanning(a, b)</span>
+<span class="sd">            Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 250, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; Variant.spanning(a, b, [v])</span>
+<span class="sd">            Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 260, &quot;hg19&quot;, 100)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            an interval</span>
+
+<span class="sd">        y : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            another interval</span>
+
+<span class="sd">        variants : :class:`list` of :class:`~genome_kit.Variant` or None, optional</span>
+<span class="sd">            variants to apply to `x` and `y`; variants cannot overlap.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting spanning interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Interval</span><span class="o">.</span><span class="n">spanning</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">variants</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Anchored intervals (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) require a list of variants.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+        <span class="c1"># verify input</span>
+        <span class="n">chrom</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">chrom</span>
+        <span class="k">if</span> <span class="n">chrom</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">chrom</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Both intervals must be on the same chromosome, got: </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">chrom</span><span class="p">))</span>
+
+        <span class="n">strand</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">strand</span>
+        <span class="k">if</span> <span class="n">strand</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">strand</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Both intervals must be on the same strand, got: </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">strand</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">strand</span><span class="p">))</span>
+
+        <span class="n">refg</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">refg</span>
+        <span class="k">if</span> <span class="n">refg</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">refg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Both intervals must on on the same reference genome, got: </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">refg</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">refg</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor_offset</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)):</span>
+            <span class="c1"># simplify with x being the leftmost anchor</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span>
+
+        <span class="n">anchor</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor</span>
+        <span class="n">anchor_offset</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor_offset</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">anchor</span> <span class="o">&lt;</span> <span class="n">start</span> <span class="ow">or</span> <span class="n">anchor</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Outside anchors are unsupported: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">clamp_anchor_offset</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">starts</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">anchor</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="ow">and</span> <span class="n">starts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">anchor</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">variants</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">ref</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">anchor_offset</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">alt</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">variants</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">vv</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">_normalized_variant</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">chrom</span> <span class="o">==</span> <span class="n">chrom</span><span class="p">)</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">n</span><span class="p">),</span>
+                          <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">anchor_offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">]</span>
+            <span class="n">anchor_offset</span> <span class="o">=</span> <span class="n">clamp_anchor_offset</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">starts</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="c1"># map y into x&#39;s anchored interval and then union</span>
+        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">anchor</span><span class="p">:</span>
+                <span class="n">length</span> <span class="o">=</span> <span class="n">Variant</span><span class="o">.</span><span class="n">_get_variant_length</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">refg</span><span class="p">))</span>
+                <span class="n">length</span> <span class="o">+=</span> <span class="n">anchor_offset</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">anchor</span> <span class="o">-</span> <span class="n">length</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">end</span> <span class="o">&gt;</span> <span class="n">anchor</span><span class="p">:</span>
+                <span class="n">length</span> <span class="o">=</span> <span class="n">Variant</span><span class="o">.</span><span class="n">_get_variant_length</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">refg</span><span class="p">))</span>
+                <span class="n">length</span> <span class="o">-=</span> <span class="n">anchor_offset</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">anchor</span> <span class="o">+</span> <span class="n">length</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">refg</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="c1"># map y&#39;s anchor (such that x.anchor + length = y.anchor)</span>
+        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="o">&lt;</span> <span class="n">y</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span> <span class="o">&gt;</span> <span class="n">y</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Outside anchors are unsupported: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="n">Variant</span><span class="o">.</span><span class="n">_get_variant_length</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">refg</span><span class="p">))</span>
+        <span class="n">length</span> <span class="o">-=</span> <span class="n">anchor_offset</span>
+        <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor_offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">starts</span><span class="p">:</span>
+                <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">]</span>
+            <span class="n">length</span> <span class="o">+=</span> <span class="n">clamp_anchor_offset</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">starts</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+
+        <span class="n">delta_y_anchor</span> <span class="o">=</span> <span class="n">anchor</span> <span class="o">+</span> <span class="n">length</span> <span class="o">-</span> <span class="n">y</span><span class="o">.</span><span class="n">anchor</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">delta_y_anchor</span> <span class="o">+</span> <span class="n">y</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">delta_y_anchor</span> <span class="o">+</span> <span class="n">y</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">refg</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_normalized_variant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">))</span>
+
+        <span class="c1"># strip padding</span>
+        <span class="n">left_pad</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">))</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">y</span><span class="p">),</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[</span><span class="n">left_pad</span><span class="p">:]</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[</span><span class="n">left_pad</span><span class="p">:]</span>
+        <span class="n">overlap</span> <span class="o">-=</span> <span class="n">left_pad</span>
+        <span class="n">right_pad</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">ref</span><span class="p">),</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">alt</span><span class="p">))))),</span> <span class="n">overlap</span><span class="p">)</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">right_pad</span><span class="p">]</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="n">right_pad</span><span class="p">]</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">left_pad</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span> <span class="k">if</span> <span class="n">ref</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_ref</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">)]</span>
+
+        <span class="c1"># Split up complex variants into a substitution</span>
+        <span class="c1"># plus an insertion or deletion</span>
+        <span class="c1"># Also used to normalize Clinvar variants</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">):</span>
+            <span class="c1"># Split into substitution and insertion</span>
+            <span class="n">insertion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_ref</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">),</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alt</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">):])</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">insertion</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_with_ref</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)]),</span> <span class="n">insertion</span><span class="p">]</span>
+
+        <span class="c1"># Split into substitution and deletion</span>
+        <span class="n">deletion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_ref</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">),</span> <span class="n">ref</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">):],</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">deletion</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">alt</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_with_ref</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)],</span> <span class="n">alt</span><span class="p">),</span> <span class="n">deletion</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_with_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Variant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_preprocess_variant</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">chromosome</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;chr&#39;</span><span class="p">):</span>
+            <span class="n">chromosome</span> <span class="o">=</span> <span class="s1">&#39;chr&#39;</span> <span class="o">+</span> <span class="n">chromosome</span>
+
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">in</span> <span class="s1">&#39;-.&#39;</span><span class="p">:</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">alt</span> <span class="ow">in</span> <span class="s1">&#39;-.&#39;</span><span class="p">:</span>
+            <span class="n">alt</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span>
+
+    <span class="k">def</span> <span class="nf">_validate_variant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NUCLEOTIDE_SYMBOLS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid nucleotide in ref allele: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NUCLEOTIDE_SYMBOLS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid nucleotide in alt allele: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)))</span>
+
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">),</span> <span class="n">genome</span><span class="p">)</span>
+        <span class="n">wt_seq</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">wt_seq</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variant&#39;s ref sequence does not match the genome (</span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wt_seq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_variant_length</span><span class="p">(</span><span class="n">sorted_normalized_variants</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+
+        <span class="c1"># Match ordering used in _apply_variants_no_anchor</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">sorted_normalized_variants</span><span class="p">):</span>
+            <span class="n">v_start_rel</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">start</span>
+            <span class="k">if</span> <span class="n">v_start_rel</span> <span class="o">&gt;=</span> <span class="n">length</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">v_end_rel</span> <span class="o">=</span> <span class="n">v_start_rel</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v_end_rel</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">alt_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v_start_rel</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Clip left side of variant</span>
+                <span class="n">alt_length</span> <span class="o">+=</span> <span class="n">v_start_rel</span>
+                <span class="n">v_start_rel</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="n">v_end_rel</span> <span class="o">&gt;</span> <span class="n">length</span><span class="p">:</span>  <span class="c1"># Clip right side of variant</span>
+                <span class="n">alt_length</span> <span class="o">-=</span> <span class="n">length</span> <span class="o">-</span> <span class="n">v_end_rel</span>
+                <span class="n">v_end_rel</span> <span class="o">=</span> <span class="n">length</span>
+
+            <span class="k">assert</span> <span class="n">v_end_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+            <span class="k">assert</span> <span class="n">v_start_rel</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+            <span class="n">length</span> <span class="o">+=</span> <span class="n">alt_length</span> <span class="o">-</span> <span class="p">(</span><span class="n">v_end_rel</span> <span class="o">-</span> <span class="n">v_start_rel</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">length</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">refg</span><span class="p">,</span> <span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">ref</span><span class="p">,</span> <span class="n">alt</span><span class="p">,</span> <span class="n">refg</span><span class="p">)</span></div>
+
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="VariantTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">VariantTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VariantTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="VariantTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [v for v in variants if v.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            All variants that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VariantTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to all variants.</span>
+
+<span class="sd">        Allows iteration over all variants in the table::</span>
+
+<span class="sd">            for variant in table:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Variant`</span>
+<span class="sd">           The variant at the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Variant</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.where">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.where">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter variants by numpy mask.</span>
+
+<span class="sd">        Fast extraction of table elements based on a mask::</span>
+
+<span class="sd">            # Intended to be used like this.</span>
+<span class="sd">            variants = table.where(mask)</span>
+
+<span class="sd">            # It is faster but equivalent to this.</span>
+<span class="sd">            variants = [table[i] for i in np.where(mask)[0]]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : :py:class:`ndarray`</span>
+<span class="sd">            A boolean mask the same size as the table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">           A list of variants selected by the mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Variant</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="VariantTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VariantTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;VariantTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

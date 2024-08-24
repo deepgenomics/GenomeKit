@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anchors &mdash; GenomeKit 5.2.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=be5e5c63"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Documentation" href="api.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.2
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Anchors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intervals-without-anchors">Intervals without anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deletions-with-an-anchored-interval">Deletions with an anchored interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#specifying-anchors">Specifying anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#insertions-with-an-anchored-interval">Insertions with an anchored interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deletions-at-the-anchor">Deletions at the anchor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#insertions-at-the-anchor">Insertions at the anchor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#anchors-outside-an-interval">Anchors outside an interval</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Anchors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/anchors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="anchors">
+<span id="id1"></span><h1>Anchors<a class="headerlink" href="#anchors" title="Link to this heading"></a></h1>
+<p>When applying variants to a genome and extracting features (most importantly DNA sequence) from the resulting
+<a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a>, there needs to be some notion of alignment between the wild-type and mutant
+sequences when variants change the length of the sequence.  Furthermore, many machine learning methods expect
+fixed-length inputs so there needs to a predictable and unambiguous mechanism of how variants affect the alignment.</p>
+<p>GenomeKit solves this problem through a mechanism called <em>anchors</em>. Rather than allowing arbitrary alignments, the
+alignment is fixed at a single coordinate. Usually this is a position of interest such as a splice site. It is
+important to understand the anchor concept to understand the objects and sequences returned by GenomeKit, but in
+practice it is rarely necessary to set anchors manually as functions that return
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> typically set the anchor appropriately.</p>
+<p>Conceptually, an anchor is a coordinate (a <em>“gap”</em> between two bases) that will always align between the wild-type
+and mutant sequence. Consider the interval <code class="docutils literal notranslate"><span class="pre">Interval(&quot;chr7&quot;,</span> <span class="pre">&quot;+&quot;,</span> <span class="pre">117231977,</span> <span class="pre">117231997,</span> <span class="pre">&quot;hg19&quot;)</span></code> which is a short
+window of size 20 around the acceptor site of exon 13 on CFTR:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">117</span><span class="p">,</span><span class="mi">231</span><span class="p">,</span><span class="mi">977</span>                   <span class="mi">117</span><span class="p">,</span><span class="mi">231</span><span class="p">,</span><span class="mi">987</span>                <span class="mi">117</span><span class="p">,</span><span class="mi">231</span><span class="p">,</span><span class="mi">996</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+</pre></div>
+</div>
+<p>The first line shows the genomic coordinates of the first and last elements in the sequence as well as the coordinate
+of the splice site in the middle of the interval.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this chapter we stick to the GenomeKit convention of zero-based genomic coordinates. However, any coordinates in
+variants strings like <code class="docutils literal notranslate"><span class="pre">'chr7:117,231,993:TCT:T'</span></code> are in one-based coordinates as in the Clinvar variant format.</p>
+</div>
+<p>Now consider we are going to apply a length changing variant to this interval. Consider the variant
+<code class="docutils literal notranslate"><span class="pre">chr7:117,231,993:TCT:T</span></code> which deletes the <code class="docutils literal notranslate"><span class="pre">CT</span></code> dinucleotide at position 16.</p>
+<section id="intervals-without-anchors">
+<h2>Intervals without anchors<a class="headerlink" href="#intervals-without-anchors" title="Link to this heading"></a></h2>
+<p>The default behaviour of <a class="reference internal" href="api.html#genome_kit.VariantGenome.dna" title="genome_kit.VariantGenome.dna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">genome_kit.VariantGenome.dna()</span></code></a> is to apply the variant naïvely (without an anchor)
+and allow the length of the sequence to change:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117,231,993:TCT:T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;TATCTTAAAGCTGTGTGT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">var_seq</span><span class="p">)</span>
+<span class="go">18</span>
+</pre></div>
+</div>
+<p>As you can see two bases were removed and the resulting mutant sequence is shorter than the wild-type.</p>
+</section>
+<section id="deletions-with-an-anchored-interval">
+<h2>Deletions with an anchored interval<a class="headerlink" href="#deletions-with-an-anchored-interval" title="Link to this heading"></a></h2>
+<p>If we set an anchor, we can specify to keep the wild-type and mutant sequences aligned at the splice site and expand
+the mutant sequence to keep its length constant:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117,231,993:TCT:T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Anchor set at the splice site</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="mi">117231987</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;TATCTTAAAGCTGTGTGTAA&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">var_seq</span><span class="p">)</span>
+<span class="go">20</span>
+</pre></div>
+</div>
+<p>What happened here is best understood when looking at the aligned wild-type and mutant sequences:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>
+    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="o">.</span>  <span class="o">.</span>  <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<p>The vertical bars indicate the anchor. Since the deletion occurred on the right side of the anchor, the interval is
+extended on the right side to include extra sequence equal to the length of the deletion.</p>
+</section>
+<section id="specifying-anchors">
+<h2>Specifying anchors<a class="headerlink" href="#specifying-anchors" title="Link to this heading"></a></h2>
+<p>An anchor is always an integer coordinate on the chromosome. The anchor can be at the start or end of an interval,
+anywhere inside the interval, or even outside the interval (we’ll look at this case in <a class="reference internal" href="#insertions-at-the-anchor"><span class="std std-ref">Insertions at the anchor</span></a>).
+However, <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> allows to set the anchor by passing one of the strings <code class="docutils literal notranslate"><span class="pre">'5p'</span></code>, <code class="docutils literal notranslate"><span class="pre">'3p'</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">'center'</span></code> to set the anchor more conveniently.</p>
+</section>
+<section id="insertions-with-an-anchored-interval">
+<h2>Insertions with an anchored interval<a class="headerlink" href="#insertions-with-an-anchored-interval" title="Link to this heading"></a></h2>
+<p>Now we consider an insertion to the left side of the anchor. Whereas the deletion <em>pulled in</em> extra sequence to keep
+the length constant, the insertion will <em>push out</em> sequence from the interval:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="mi">117231987</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert GGG at 117,231,982</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117,231,982:T:TGGG&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;CTGGGTAAAGCTGTGTCTGT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">var_seq</span><span class="p">)</span>
+<span class="go">20</span>
+</pre></div>
+</div>
+<p>What happens is more easily seen when looking at the alignment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">G</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+    <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<p>As in the first example, the anchor coordinates stay aligned and the left or right side of the interval grow or shrink
+to accommodate the length change.</p>
+</section>
+<section id="deletions-at-the-anchor">
+<h2>Deletions at the anchor<a class="headerlink" href="#deletions-at-the-anchor" title="Link to this heading"></a></h2>
+<p>Since the anchor is an idealized coordinate or <em>“gap”</em>, the mechanism still works even when a deletion occurs right
+around the anchor. For example, if a five deletion overlaps the anchor and three bases are to the left of the anchor
+and two bases are to the right of the anchor, then the interval start will be extended by three bases and the end by
+two bases to accommodate the deletion. Coming back to our previous example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="mi">117231987</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Delete five bases at 117,231,984</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117,231,984:AAAGCT:A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;TTATATCTTAGTGTCTGTAA&#39;</span>
+</pre></div>
+</div>
+<p>Let’s examine the concrete alignment again, so see what happened:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>             <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span>          <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>
+    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<p>As explained above the five deletions were split between the left and right side to the anchor and the sequence was
+expanded accordingly to keep the length constant.</p>
+</section>
+<section id="insertions-at-the-anchor">
+<span id="id2"></span><h2>Insertions at the anchor<a class="headerlink" href="#insertions-at-the-anchor" title="Link to this heading"></a></h2>
+<p>The last case is slightly more complicated. When insertions occur directly at the anchor, it is not clear whether
+the insertion should occur on the left or ride side of the anchor. There is also the special case when we would like to
+align a coordinate <em>within the insertion</em>. This case is actually important to distinguish, <em>i.e.</em> when an insertion
+contains an entire core splice site motif and we would like to align this de-novo splice site with a coordinate on
+the reference genome. To handle of these cases, there is an additional argument to <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">genome_kit.Interval</span></code></a>
+and <a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">genome_kit.VariantGenome</span></code></a>, called the <code class="docutils literal notranslate"><span class="pre">anchor_offset</span></code> that specifies <em>where to align within an
+insertion</em>.</p>
+<p>First consider the default case. If we do not pass the argument, by default <code class="docutils literal notranslate"><span class="pre">anchor_offset=0</span></code> and <strong>insertions will
+occur right of the anchor</strong>. Here is an example where we insert <code class="docutils literal notranslate"><span class="pre">TTT</span></code> directly at the anchor coordinate:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert TTT at 117,231,987</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Implies anchor_offset=0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="mi">117231987</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117231987:G:GTTT&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;TATCTTAAAGTTTCTGTGTC&#39;</span>
+</pre></div>
+</div>
+<p>When you study the alignment you can see that the insertion occurred on the right side of the anchor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="o">|</span> <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>
+    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<p>The opposite case is when we want to insert on the left of the anchor instead, which we can achieve by setting
+<code class="docutils literal notranslate"><span class="pre">anchor_offset=len(insertion)</span></code>. Using the same variant as before we now get a different result when we set the
+anchor offset:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert TTT at 117,231,987</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117231987:G:GTTT&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;CTTAAAGTTTCTGTGTCTGT&#39;</span>
+</pre></div>
+</div>
+<p>By examining the alignment we can see that the insertion now occurred on the left side of the anchor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="o">.</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span> <span class="o">|</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+             <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<p>Of course we can also set the anchor offset to other values. In the above example if we want one base to be
+inserted to the left and two bases to be inserted to the right of the anchor we can set <code class="docutils literal notranslate"><span class="pre">anchor_offset=1</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert TTT at 117,231,987</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117231987:G:GTTT&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;ATCTTAAAGTTTCTGTGTCT&#39;</span>
+</pre></div>
+</div>
+<p>The alignment confirms this is what happened:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="o">.</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+<span class="n">WT</span><span class="p">:</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span>  <span class="o">.</span> <span class="o">|</span> <span class="o">.</span>  <span class="o">.</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>
+<span class="n">MT</span><span class="p">:</span> <span class="o">.</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span>  <span class="n">T</span> <span class="o">|</span> <span class="n">T</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>
+       <span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="o">|</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In general, anchors are not specific to a particular variant. An interval or coordinate with a set anchor and/or
+anchor offset can be applied to any reference or variant genome. Anchor offsets are most often used to achieve an
+alignment of a coordinate in a particular insertion with the reference genome but are in principle independent of
+any variant, It is more likely that unintended results are returned when intervals that have an anchor offset are
+applied to different variants. Therefore, the following should be kept in mind:</p>
+<ol class="arabic simple">
+<li><p>Anchor offsets only have an effect when applying an insertion directly at the anchor. An insertion at any other
+position is not affected by the anchor offset.</p></li>
+<li><p>The effective anchor offset cannot be greater than the length of the insertion. For example, if an anchor offset
+of ten is set and the interval is given an insertion of length five, then only an anchor offset of five is
+applied, <em>i.e.</em> the insertion is done on the left side of the anchor (so you could even set the anchor offset to
+<code class="docutils literal notranslate"><span class="pre">MAX_INT</span></code> if you always wanted to insert on the left of the anchor).</p></li>
+</ol>
+</div>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>Unittest that the code is correct for <code class="docutils literal notranslate"><span class="pre">anchor_offset</span> <span class="pre">&gt;</span> <span class="pre">len(interval)</span></code>.</p>
+</div>
+</section>
+<section id="anchors-outside-an-interval">
+<span id="id4"></span><h2>Anchors outside an interval<a class="headerlink" href="#anchors-outside-an-interval" title="Link to this heading"></a></h2>
+<p>It is even possible to define an anchor outside of an interval. This is primarily done for completeness to allow an
+interval to have its length or coordinates modified, but still work for feature extraction when the anchor stays the
+same. Conceptually, defining an anchor outside an interval is equivalent to extending the interval up to the anchor,
+extracting the sequence, and then trimming the returned sequence by the same amount it was first extended.</p>
+<p>When the anchor falls outside the interval, it is possible that indels outside the interval affect the returned
+sequence. Consider our previous interval, but now we set the anchor at 117,231,967, ten bases before the start of the
+interval. Then we apply a deletion between the anchor and the start of the interval:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Insert TTT at 117,231,987</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117231977</span><span class="p">,</span> <span class="mi">117231997</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="mi">117231967</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="s1">&#39;chr7:117231970:TGT:T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var_seq</span>
+<span class="go">&#39;TCTTAAAGCTGTGTCTGTAA&#39;</span>
+</pre></div>
+</div>
+<p>Again, let’s check alignment. Here we denote the anchor by the vertical line and the interval by parentheses:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="o">|-</span><span class="mi">10</span> <span class="o">-</span><span class="mi">9</span> <span class="o">-</span><span class="mi">8</span> <span class="o">-</span><span class="mi">7</span> <span class="o">-</span><span class="mi">6</span> <span class="o">-</span><span class="mi">5</span> <span class="o">-</span><span class="mi">4</span> <span class="o">-</span><span class="mi">3</span> <span class="o">-</span><span class="mi">2</span> <span class="o">-</span><span class="mi">1</span><span class="p">[</span><span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span><span class="p">]</span>
+<span class="n">WT</span><span class="p">:</span><span class="o">|</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span> <span class="p">[</span><span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span> <span class="p">]</span>
+<span class="n">MT</span><span class="p">:</span><span class="o">|</span> <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">T</span>  <span class="n">A</span> <span class="p">[</span><span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">A</span>  <span class="n">G</span> <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">C</span>  <span class="n">T</span>  <span class="n">G</span>  <span class="n">T</span>  <span class="n">A</span>  <span class="n">A</span> <span class="p">]</span>
+                                        <span class="p">[</span><span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span> <span class="mi">10</span> <span class="mi">11</span> <span class="mi">12</span> <span class="mi">13</span> <span class="mi">14</span> <span class="mi">15</span> <span class="mi">16</span> <span class="mi">17</span> <span class="mi">18</span> <span class="mi">19</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The returned sequence is the same as if we had first extended the start of the interval up to the anchor by ten
+bases, then applied the interval to the variant genome and trimmed the first ten bases off the start of the returned
+sequence again.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

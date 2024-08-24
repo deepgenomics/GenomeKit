@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.vcf_table &mdash; GenomeKit 5.2.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1a26d87a"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.vcf_table</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.vcf_table</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">distutils.spawn</span> <span class="kn">import</span> <span class="n">find_executable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span><span class="p">,</span> <span class="n">mock_unreachable</span><span class="p">,</span> <span class="n">strip_mock_bases</span>
+<span class="kn">from</span> <span class="nn">.genome</span> <span class="kn">import</span> <span class="n">Genome</span>
+<span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span>
+
+
+<span class="k">def</span> <span class="nf">as_vcf_chrom</span><span class="p">(</span><span class="n">chrom</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">chrom</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;chrM&quot;</span><span class="p">,</span> <span class="s2">&quot;chrMT&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">_dump_fasta</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">chrom_mapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dumps a FASTA containing the DNA sequence of refg, indexes it, and returns a context</span>
+<span class="sd">    that can be treated as the path to the fasta. The temporaries are deleted once the</span>
+<span class="sd">    context is closed.&quot;&quot;&quot;</span>
+    <span class="n">samtools</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s2">&quot;samtools&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">samtools</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;samtools must be installed in order to normalize VCFs&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_&quot;</span> <span class="o">%</span> <span class="n">genome</span><span class="o">.</span><span class="n">refg</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.fasta&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">chrom</span> <span class="ow">in</span> <span class="n">genome</span><span class="o">.</span><span class="n">chromosomes</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">chrom_size</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">chromosome_size</span><span class="p">(</span>
+                    <span class="n">chrom</span><span class="p">)</span>  <span class="c1"># Currently may error out or may miss chromosomes for non-human species</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">chrom_size</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">10000</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&gt;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">chrom_mapper</span><span class="p">(</span><span class="n">chrom</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">chrom_size</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+                <span class="n">interval</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">chunk_size</span><span class="p">,</span> <span class="n">chrom_size</span><span class="p">))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="n">samtools</span><span class="p">,</span> <span class="s2">&quot;faidx&quot;</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">))</span>  <span class="c1"># pragma: no cover</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.fai&quot;</span><span class="p">)</span>  <span class="c1"># Also clean up index</span>
+
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span> <span class="nf">_dump_vcfbuild_script</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">,</span> <span class="n">refg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dumps a python script that will build a specific vcfbin file from stdin.</span>
+<span class="sd">    Used to redirect output of `bcftools norm` directly to VCFTable.build_vcfbin.</span>
+<span class="sd">    (It is not easy to redirect to stdin of the current process, yet redirecting</span>
+<span class="sd">    is important. Creating a temporary VCF file is too large or too slow (gzip).&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;w+&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;genomekit_from_vcf_&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.py&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script</span><span class="p">:</span>
+        <span class="n">script</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">import sys</span>
+<span class="s2">from genome_kit import Genome, VCFTable, Interval</span>
+<span class="s2">vcfbinpath = &#39;</span><span class="si">{</span><span class="n">vcfbinpath</span><span class="si">}</span><span class="s2">&#39;</span>
+<span class="s2">refg = Genome(&#39;</span><span class="si">{</span><span class="n">refg</span><span class="o">.</span><span class="n">config</span><span class="si">}</span><span class="s2">&#39;)</span>
+<span class="s2">VCFTable.build_vcfbin(vcfbinpath,</span>
+<span class="s2">                      sys.stdin,</span>
+<span class="s2">                      refg,</span>
+<span class="s2">                      </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="si">}{</span><span class="s2">&quot;,&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">args</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="si">}</span>
+<span class="s2">                      </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())</span><span class="si">}</span><span class="s2">)&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">script</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">yield</span> <span class="n">script</span><span class="o">.</span><span class="n">name</span>
+
+
+<div class="viewcode-block" id="VCFVariant">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">VCFVariant</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFVariant</span><span class="p">,</span> <span class="n">Variant</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A VCF variant. Scalar INFO/FORMAT fields can be accessed as a dynamic</span>
+<span class="sd">    attribute, eg. ``variant.AD``.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Variant`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="VCFVariant.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+
+<div class="viewcode-block" id="VCFVariant.as_variant_string">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.as_variant_string">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_variant_string</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a string representation of the variant.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :py:meth:`~genome_kit.Variant.from_string`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The variant in the format ``&quot;chromosome:start:ref:alt&quot;``, where</span>
+<span class="sd">            start is in DNA1 coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div>
+
+
+    <span class="fm">__str__</span> <span class="o">=</span> <span class="n">as_variant_string</span>
+
+<div class="viewcode-block" id="VCFVariant.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFVariant.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;VCFVariant </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="VCFTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">VCFTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a ``.vcfbin`` file for querying.</span>
+
+<span class="sd">    See the VCF section of :ref:`quickstart` for examples of how to use this class,</span>
+<span class="sd">    or see ``demos/query_vcf.py``.</span>
+
+<span class="sd">    To convert from ``.vcf[.gz]`` see :py:meth:`~genome_kit.VCFTable.build_vcfbin`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infile : :py:class:`str`</span>
+<span class="sd">        The path to the ``.vcfbin`` file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_mask_indices&quot;</span><span class="p">,)</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="VCFTable.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.from_vcf">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.from_vcf">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_vcf</span><span class="p">(</span><span class="n">vcfpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">reference_genome</span><span class="p">:</span> <span class="n">Genome</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                 <span class="n">normalize</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;EBI&quot;</span><span class="p">,</span> <span class="s2">&quot;UCSC&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">vcfbinpath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VCFTable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a :py:class:`~genome_kit.VCFTable` object opened to a VCF file.</span>
+
+<span class="sd">        The function internally converts the VCF to a binary format and then returns a `VCFTable` object</span>
+<span class="sd">        for fast access to the variants and fields within. By default the binary file (`.vcf.bin`) will be</span>
+<span class="sd">        written adjacent to the input file.</span>
+
+<span class="sd">        It is intended to be used as follows::</span>
+
+<span class="sd">            def open_clinvar(vcfpath):</span>
+<span class="sd">                return VCFTable.from_vcf(vcfpath, &quot;hg19&quot;, info_ids=[&quot;AF_EXAC&quot;, &quot;CLNSIG&quot;])</span>
+
+<span class="sd">            vcf = open_clinvar(&quot;clinvar_20180128.vcf.gz&quot;)</span>
+<span class="sd">            variants = vcf.find_within(brca1_interval)</span>
+<span class="sd">            ...</span>
+
+<span class="sd">        If the input VCF contains multi-allelic sites, then use `normalize` to automatically</span>
+<span class="sd">        split them on conversion. This step requires `samtools` and `bcftools` to be installed.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        :py:meth:`~genome_kit.VCFTable.build_vcfbin` for all the possible parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vcfpath</span>
+<span class="sd">            Path to input `.vcf or `.vcf.gz` file.</span>
+
+<span class="sd">        reference_genome</span>
+<span class="sd">            The reference genome (e.g. `&quot;hg19&quot;`). Forwarded to :py:meth:`~genome_kit.VCFTable.build_vcfbin`.</span>
+
+<span class="sd">        args</span>
+<span class="sd">            Parameters forwarded to :py:meth:`~genome_kit.VCFTable.build_vcfbin`.</span>
+
+<span class="sd">        normalize</span>
+<span class="sd">            Whether to normalize the VCF during conversion (if applicable).</span>
+<span class="sd">            If `True`, `bcftools` is used for normalization of all the EBI</span>
+<span class="sd">            (Ensembl) chromosomes; alternatively, `EBI` or `UCSC` can be used</span>
+<span class="sd">            to specify the naming scheme used by the VCF (eg. GTEx uses the</span>
+<span class="sd">            UCSC format).</span>
+<span class="sd">            Unsupported on Windows due to bcftools and samtools lack of support.</span>
+
+<span class="sd">        cache</span>
+<span class="sd">            Whether to re-use the binary or to re-generate it from `vcfpath`.</span>
+
+<span class="sd">        vcfbinpath</span>
+<span class="sd">            Path to the intermediate binary. Default is adjacent to `vcfpath`.</span>
+
+<span class="sd">        kwargs</span>
+<span class="sd">            Parameters forwarded to :py:meth:`~genome_kit.VCFTable.build_vcfbin`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.VCFTable`</span>
+<span class="sd">            The opened VCF file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If user doesn&#39;t specify path for binary output file, write it adjacent to the vcf</span>
+        <span class="k">if</span> <span class="n">vcfbinpath</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vcfbinpath</span> <span class="o">=</span> <span class="n">vcfpath</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.gz&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.bin&quot;</span>  <span class="c1"># pragma: no cover</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">vcfpath</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: </span><span class="si">%s</span><span class="s2"> older than </span><span class="si">%s</span><span class="s2"> in VCFTable.from_vcf.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vcfbinpath</span><span class="p">,</span> <span class="n">vcfpath</span><span class="p">))</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+                <span class="c1"># Check requirements</span>
+                <span class="n">bcftools</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s2">&quot;bcftools&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">bcftools</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bcftools must be installed to normalize VCFs&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+
+                <span class="k">if</span> <span class="n">normalize</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;EBI&quot;</span><span class="p">,</span> <span class="s2">&quot;UCSC&quot;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;normalize must be in [True, &quot;EBI&quot;, &quot;UCSC&quot;]&#39;</span><span class="p">)</span>
+                <span class="n">chrom_mapper</span> <span class="o">=</span> <span class="n">as_vcf_chrom</span> <span class="k">if</span> <span class="n">normalize</span> <span class="o">!=</span> <span class="s2">&quot;UCSC&quot;</span> <span class="k">else</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+                <span class="n">regions</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">chrom_mapper</span><span class="p">,</span> <span class="n">reference_genome</span><span class="o">.</span><span class="n">chromosomes</span><span class="p">))</span>
+
+                <span class="c1"># Start one subprocess to normalize the VCF using the genome&#39;s fasta, and pipe the</span>
+                <span class="c1"># stdout of that into another subprocess that directly builds the vcfbin.</span>
+                <span class="k">with</span> <span class="n">_dump_fasta</span><span class="p">(</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">chrom_mapper</span><span class="p">)</span> <span class="k">as</span> <span class="n">fasta</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">_dump_vcfbuild_script</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">script</span><span class="p">:</span>
+                        <span class="n">norm</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                            <span class="p">[</span><span class="n">bcftools</span><span class="p">,</span> <span class="s2">&quot;norm&quot;</span><span class="p">,</span> <span class="s2">&quot;-r&quot;</span><span class="p">,</span> <span class="n">regions</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;wx&quot;</span><span class="p">,</span> <span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="n">fasta</span><span class="p">,</span> <span class="n">vcfpath</span><span class="p">],</span>
+                            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+                        <span class="n">vcfbin</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;python&quot;</span><span class="p">,</span> <span class="n">script</span><span class="p">],</span>
+                                                  <span class="n">stdin</span><span class="o">=</span><span class="n">norm</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span>
+                                                  <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                  <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+                        <span class="n">norm</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                        <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">vcfbin</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">vcfbin</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">norm</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bcftools failed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">norm</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">VCFTable</span><span class="o">.</span><span class="n">build_vcfbin</span><span class="p">(</span>
+                    <span class="n">vcfbinpath</span><span class="p">,</span>
+                    <span class="n">vcfpath</span><span class="p">,</span>
+                    <span class="n">reference_genome</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Open the binary file</span>
+        <span class="k">return</span> <span class="n">VCFTable</span><span class="p">(</span><span class="n">vcfbinpath</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_aligned">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_aligned">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_5p_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 5&#39; end within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.end5 in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that have 5&#39; end falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_3p_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that have 3&#39; end within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.end3 in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that have 3&#39; end falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_within">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_overlapping">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.find_exact">[docs]</a>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all variants that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [variant for variant in vcf if variant.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">            All variants that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masked_results</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VCFTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__getitem__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to all variants.</span>
+
+<span class="sd">        Allows iteration over all variants::</span>
+
+<span class="sd">            for variant in variants:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested variant.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">           The variant object identified by the given index.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The VCFVariant will be invalidated after this table has been closed via :py:meth:`~.close` or</span>
+<span class="sd">        a ``with`` statement.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.__len__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__len__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.where">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.where">[docs]</a>
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter variants by numpy mask.</span>
+
+<span class="sd">        Fast extraction of table elements based on a mask::</span>
+
+<span class="sd">            # Intended to be used like this.</span>
+<span class="sd">            variants = vcf.where(mask)</span>
+
+<span class="sd">            # It is faster but equivalent to this.</span>
+<span class="sd">            variants = [vcf[i] for i in np.where(mask)[0]]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : :py:class:`ndarray`</span>
+<span class="sd">            A boolean mask the same size as the table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">           A list of variants selected by the mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span>
+            <span class="n">mask</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.masked">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.masked">[docs]</a>
+    <span class="k">def</span> <span class="nf">masked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new VCFTable which is filtered by a numpy mask</span>
+
+<span class="sd">        For example, to do a random downsample::</span>
+
+<span class="sd">            downsampled = vcf.masked(np.random.binomial(1, 0.1, len(vcf)).astype(bool))</span>
+
+<span class="sd">        Or to subset by only ABCA4 genes::</span>
+
+<span class="sd">            abca4_vcf = vcf.masked(vcf.index_of(v) for v in vcf.find_overlapping(gene))</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The masked VCFTable does not share resources with the original, so :meth:`~genome_kit.VCFTable.close`</span>
+<span class="sd">        should be called on both instances when required.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mask : :class:`ndarray` of :class:`bool` or :class:`ndarray` of :class:`int`</span>
+<span class="sd">            A boolean mask the same size as the table or a list of indices.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.VCFVariant`</span>
+<span class="sd">           A list of variants selected by the mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">VCFTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">bool</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span>
+                <span class="n">mask</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">,</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_masked_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">,</span> <span class="n">assume_unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+
+    <span class="c1"># values for GT (as per cyvcf2)</span>
+    <span class="n">GT_HOMOZYGOUS_REF</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant indicating a ``0/0`` in GT format value.&quot;&quot;&quot;</span>
+    <span class="n">GT_HETEROZYGOUS</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant indicating a ``0/1`` in GT format value.&quot;&quot;&quot;</span>
+    <span class="n">GT_HOMOZYGOUS_ALT</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant indicating a ``1/1`` in GT format value.&quot;&quot;&quot;</span>
+    <span class="n">GT_UNKNOWN</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant indicating a ``?/?`` in GT format value.&quot;&quot;&quot;</span>
+
+    <span class="c1"># values for SVTYPE</span>
+    <span class="n">SVTYPE_NA</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant indicating the SVTYPE was missing.&quot;&quot;&quot;</span>
+    <span class="n">SVTYPE_DEL</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">SVTYPE_INS</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">SVTYPE_DUP</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">SVTYPE_INV</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">SVTYPE_CNV</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">SVTYPE_BND</span> <span class="o">=</span> <span class="mi">6</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of samples represented in the VCF.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            Number of samples represented in the VCF file, for which FORMAT data was provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sample_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The names of the samples represented in the VCF if it was encoded with format IDs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of the sample IDs in the same order as the original VCF. The indices correspond to the format values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">info_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The INFO fields available for :py:meth:`~.info` that were encoded in :meth:`~.build_vcfbin` or</span>
+<span class="sd">        :meth:`~.from_vcf`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of INFO ids that can be passed into :py:meth:`~.info`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VCFTable.info">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.info">[docs]</a>
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The full per-variant data array associated with an INFO field. String INFO fields</span>
+<span class="sd">        are accessed by :class:`~.VCFVariant` attribute, eg. ``variant.CIGAR``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        info_id : :py:class:`str`</span>
+<span class="sd">            The INFO ID from the VCF, such as `AD` or `DP`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~numpy.ndarray`</span>
+<span class="sd">            A complete array of INFO data values associated with `info_id`.</span>
+
+<span class="sd">            If there is one value per variant, the results is 1-dimensional::</span>
+
+<span class="sd">                INFO</span>
+<span class="sd">                DP=1</span>
+<span class="sd">                DP=4</span>
+
+<span class="sd">                [1 4]</span>
+
+<span class="sd">            If there are multiple values per variant, the results is 2-dimensional::</span>
+
+<span class="sd">                INFO</span>
+<span class="sd">                AD=0,1</span>
+<span class="sd">                AD=2,2</span>
+
+<span class="sd">                [[0 1]</span>
+<span class="sd">                 [2 2]]</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            Raised if `info_id` is unrecognized, because it was not in the original VCF</span>
+<span class="sd">            or included by :py:meth:`~genome_kit.VCFTable.build_vcfbin`</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            Raised if `info_id` refers to a String valued column. String values are</span>
+<span class="sd">            accessed by :class:`~.VCFVariant` attribute.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">format_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The INFO fields available for :py:meth:`~.format` that were encoded in :meth:`~.build_vcfbin` or</span>
+<span class="sd">        :meth:`~.from_vcf`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`str`</span>
+<span class="sd">            A list of FORMAT ids that can be passed into :py:meth:`~.format`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="VCFTable.format">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.format">[docs]</a>
+    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_id</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The full per-variant per-sample data matrix associated with a FORMAT field.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        format_id : :py:class:`str`</span>
+<span class="sd">            The FORMAT ID from the VCF, such as `AD` or `GT`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~numpy.ndarray`</span>
+<span class="sd">            A complete array of FORMAT data values associated with `format_id`.</span>
+
+<span class="sd">            If there is one value per variant and per sample, the results is 2-dimensional::</span>
+
+<span class="sd">                sample1 sample2 sample3</span>
+<span class="sd">                1       2       3</span>
+<span class="sd">                4       5       6</span>
+
+<span class="sd">                [[1 2 3]</span>
+<span class="sd">                 [4 5 6]]</span>
+
+<span class="sd">            If there are multiple values per variant and per sample, the results is 3-dimensional::</span>
+
+<span class="sd">                sample1 sample2 sample3</span>
+<span class="sd">                1,2     3,4     5,6</span>
+<span class="sd">                7,8     9,10    11,12</span>
+
+<span class="sd">                [[[1 2] [3 4]  [5  6 ]]</span>
+<span class="sd">                 [[7 8] [9 10] [11 12]]]</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            Raised if `format_id` is unrecognized, either because it was not in the original VCF</span>
+<span class="sd">            or included by :py:meth:`~genome_kit.VCFTable.build_vcfbin`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.build_vcfbin">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.build_vcfbin">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_vcfbin</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span>
+                     <span class="n">infile</span><span class="p">,</span>
+                     <span class="n">reference_genome</span><span class="p">,</span>
+                     <span class="n">info_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">fmt_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">allow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">ancestral</span><span class="o">=</span><span class="s2">&quot;error&quot;</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds a binary ``.vcfbin`` file from a ``.vcf[.gz]``.</span>
+
+<span class="sd">        The resulting file can be opened by :py:class:`~genome_kit.VCFTable`.</span>
+
+<span class="sd">        **VCF normalization.** The input VCF should be normalized, and multi-allelic sites must be split.</span>
+<span class="sd">        Consider running `infile` through ``bcftools norm -m - -f``. Examples::</span>
+
+<span class="sd">            REF    ALT</span>
+<span class="sd">            CT     CAT     # FAIL (not normalized)</span>
+<span class="sd">                   A       # OK</span>
+<span class="sd">            .      A       # OK</span>
+<span class="sd">            -      A       # OK</span>
+<span class="sd">            C      CA      # OK</span>
+<span class="sd">            C      A,G     # FAIL (multi-allelic)</span>
+
+<span class="sd">        **Extracting INFO/FORMAT columns.** By default, INFO and FORMAT columns such as DP and AD are omitted.</span>
+<span class="sd">        Use `info_ids` and `fmt_ids` arguments to specify which columns you want included::</span>
+
+<span class="sd">            [&quot;GT&quot;, &quot;AD&quot;]                        # Keep GT and AD (as int8 and int32 respectively)</span>
+<span class="sd">            {&quot;GT&quot; : None, &quot;AD&quot; : None}          # Same</span>
+<span class="sd">            {&quot;GT&quot; : None, &quot;AD&quot; : -1}            # Same, but store -1 for any missing AD value</span>
+<span class="sd">            {&quot;GT&quot; : None, &quot;AD&quot; : np.int16(0) }  # Keep GT and AD (as int8 and int16 respectively)</span>
+
+<span class="sd">        The GT (genotype) FORMAT and SVTYPE (structural variant type) INFO columns are special. They default to</span>
+<span class="sd">        :py:class:`~numpy.int8`, and the string values are stored as integer constants:</span>
+
+<span class="sd">        ***GT***</span>
+
+<span class="sd">        * ``0/0`` is stored as :const:`VCFTable.GT_HOMOZYGOUS_REF` (0)</span>
+<span class="sd">        * ``0/1`` is stored as :const:`VCFTable.GT_HETEROZYGOUS` (1)</span>
+<span class="sd">        * ``1/1`` is stored as :const:`VCFTable.GT_HOMOZYGOUS_ALT` (2)</span>
+<span class="sd">        * ``?/?`` is stored as :const:`VCFTable.GT_UNKNOWN` (3)</span>
+
+<span class="sd">        ***SVTYPE***</span>
+
+<span class="sd">        * A missing SVTYPE is represented as :py:const:`VCFTable.SVTYPE_NA` (0)</span>
+<span class="sd">        * ``DEL`` is stored as :const:`VCFTable.SVTYPE_DEL` (1)</span>
+<span class="sd">        * ``INS`` is stored as :const:`VCFTable.SVTYPE_INS` (2)</span>
+<span class="sd">        * ``DUP`` is stored as :const:`VCFTable.SVTYPE_DUP` (3)</span>
+<span class="sd">        * ``INV`` is stored as :const:`VCFTable.SVTYPE_INV` (4)</span>
+<span class="sd">        * ``CNV`` is stored as :const:`VCFTable.SVTYPE_CNV` (5)</span>
+<span class="sd">        * ``BND`` is stored as :const:`VCFTable.SVTYPE_BND` (6)</span>
+
+<span class="sd">        The ID INFO column is stored as an INFO ID. If it is required (e.g., you need to find a MATEID pair), pass</span>
+<span class="sd">        `&quot;ID&quot;` into `info_ids`.</span>
+
+<span class="sd">        Missing values are also treated differently: GT values must be specified as a diploid.</span>
+<span class="sd">        If a single missing allele (e.g. ``0/.``, ``./0``, ``1/.``, or ``./1``) should be encoded as a *possible*</span>
+<span class="sd">        :py:const:`VCFTable.GT_HETEROZYGOUS` instead of :py:const:`VCFTable.GT_UNKNOWN`, the missing value should</span>
+<span class="sd">        be set to :py:const:`VCFTable.GT_HETEROZYGOUS`. ``./.`` will still be interpreted as</span>
+<span class="sd">        :py:const:`VCFTable.GT_UNKNOWN`::</span>
+
+<span class="sd">            {&quot;GT&quot; : np.int8(VCFTable.GT_HETEROZYGOUS)}</span>
+
+<span class="sd">        All other columns default to :py:class:`~numpy.int32`, :py:class:`~numpy.float32`, or :py:class:`str` as defined</span>
+<span class="sd">        by the VCF Type header (can override bitwidth for performance or to save disk space.)</span>
+<span class="sd">        For integer/float columns, only constant value dimensions are currently supported.</span>
+<span class="sd">        By default, a missing value is substituted with 0, 0.0, or &quot;&quot;. If missing integer values must be</span>
+<span class="sd">        distinguishable, consider using ``-(2**31)`` to ``(2**31+7)`` as these are reserved by VCF.</span>
+
+<span class="sd">        **String-valued columns** String values can be accessed by attribute (``variant.CIGAR``).</span>
+<span class="sd">        Unlike numeric columns, a string column cannot be accessed as a numpy array.</span>
+
+<span class="sd">        Caveats: Multi-dimensional values are not split, and ASCII-encoded VCF values,</span>
+<span class="sd">        eg. ``%3A`` for ``:``, will not be decoded. ``.`` are not decoded as empty strings</span>
+<span class="sd">        unless it is the sole value.</span>
+
+<span class="sd">        **Value multiplicity.** Each INFO/FORMAT field has an expected number of values per sample,</span>
+<span class="sd">        following the VCF 4.2 Specification sections 1.4.2 and 1.6.2. For example::</span>
+
+<span class="sd">            ##FORMAT=&lt;ID=GT,Number=1,Type=String,Description=&quot;Genotype&quot;&gt;</span>
+<span class="sd">            ##FORMAT=&lt;ID=AD,Number=R,Type=Integer,Description=&quot;Allelic depths&quot;&gt;</span>
+
+<span class="sd">        Here, a FORMAT value of ``0/1:5,8`` for a single sample would be valid because we expect one</span>
+<span class="sd">        GT value per (``Number=1``) and two AD values (``Number=R``).</span>
+
+<span class="sd">        FORMAT values with multiple samples or INFO/FORMAT values that are multidimensional can only</span>
+<span class="sd">        be accessed via :meth:`~.info` or :meth:`~format` and cannot be accessed by :class:`~.VCFVariant`</span>
+<span class="sd">        attributes.</span>
+
+<span class="sd">        Beware VCF headers that incorrectly specify ``Number=.`` instead of ``R``, as their</span>
+<span class="sd">        multi-allelic variants will be split incorrectly by ``bcftools``.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The binary output file. This file can then be opened by :py:class:`~genome_kit.VCFTable`.</span>
+
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The path to the source ``.vcf[.gz]`` file.</span>
+
+<span class="sd">        reference_genome : :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome that `infile` uses as ``#reference`` field.</span>
+<span class="sd">            The parameter is not validated against the VCF, so it is up to the caller to ensure it is correct.</span>
+<span class="sd">            For example, a ``#reference=b37.fa`` or ``=NCBI37`` is a match to ``&quot;hg19&quot;``.</span>
+
+<span class="sd">        info_ids: :py:class:`list` of :py:class:`str` | :py:class:`dict` of :py:class:`str` to :py:class:`object`, \</span>
+<span class="sd">                optional</span>
+<span class="sd">            Controls how INFO columns are preserved in `outfile`. See above.</span>
+
+<span class="sd">        fmt_ids: :py:class:`list` of :py:class:`str` | :py:class:`dict` of :py:class:`str` to :py:class:`object`, \</span>
+<span class="sd">                optional</span>
+<span class="sd">            Controls how FORMAT columns are preserved in `outfile`. See above.</span>
+
+<span class="sd">        validate: :py:class:`bool`, optional</span>
+<span class="sd">            Whether to validate `REF` sequences against the reference genome. Default is True.</span>
+
+<span class="sd">        exclude : :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Optional. Variants within these intervals will be excluded.</span>
+
+<span class="sd">        allow : :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Optional. Only variants within these intervals will be included,</span>
+<span class="sd">            so long as they are not excluded.</span>
+
+<span class="sd">        ancestral: :py:class:`str`</span>
+<span class="sd">            Behaviour when encountering ancestral alleles. Valid values are &quot;error&quot;, &quot;warn&quot;, and &quot;exclude&quot;. Defaults</span>
+<span class="sd">            to &quot;error&quot;.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Under the following conditions:</span>
+
+
+<span class="sd">                * The VCF is malformed.</span>
+<span class="sd">                * A row in `infile` does not contain every FORMAT ID specified by `fmt_ids`.</span>
+<span class="sd">                * An INFO/FORMAT ID is unsupported.</span>
+<span class="sd">                * A `REF` or `ALT` sequence contained a VCF non-standard nucleotide code.</span>
+<span class="sd">                * A `REF` sequence failed to validate.</span>
+<span class="sd">                * An INFO/FORMAT field type is incompatible with the VCF Type header definition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.vcfbin_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.vcfbin_version">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">vcfbin_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `vcfbin` file format version that this build supports.</span>
+
+<span class="sd">        Attempting to open an `vcfbin` file of a mismatched version will raise an :py:exc:`IOError`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The version number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.sequence_variations">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.sequence_variations">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequence_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find variants that could affect the given `interval`&#39;s DNA sequence.</span>
+<span class="sd">        When specified with an `anchor`, deletion variants will increase the</span>
+<span class="sd">        interval&#39;s span; this can be overestimated (due to overlapping</span>
+<span class="sd">        deletions), but the spurious variants will be filtered during DNA</span>
+<span class="sd">        sequence retrieval.</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :class:`~.Interval`</span>
+<span class="sd">            The dna sequence interval. Anchoring will expand the</span>
+<span class="sd">            interval when deletion variants are encountered.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`~.VCFVariant`</span>
+<span class="sd">            A list of variants that possibly affect the given `interval`&#39;s DNA</span>
+<span class="sd">            sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;masked variants are not yet supported.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">sequence_variations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.variant_combinations">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.variant_combinations">[docs]</a>
+    <span class="k">def</span> <span class="nf">variant_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">heterozygous_alt_af_threshold</span><span class="o">=</span><span class="mf">0.90</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a list of all possible applications of the specified</span>
+<span class="sd">        variants. This is useful when the variants are not phased (difficult</span>
+<span class="sd">        to determine the consensus sequence.)</span>
+
+<span class="sd">        If this ``VCFTable`` contains ``GT`` FORMAT and</span>
+<span class="sd">        ``AF`` INFO fields, that call information will be used to filter out</span>
+<span class="sd">        some unobserved variants (unobserved REF).</span>
+<span class="sd">        The ``GT`` value is the primary filter, but when there are split</span>
+<span class="sd">        multiallelic rows, ``AF`` is used to determine if ``REF`` has been</span>
+<span class="sd">        observed. Note that :const:`~.GT_UNKNOWN` calls will</span>
+<span class="sd">        be filtered out, so the allele unknown encoding should be defined for</span>
+<span class="sd">        ``GT`` as required; see: :meth:`~.build_vcfbin`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        variants : :class:`list` of :class:`~.VCFVariant`</span>
+<span class="sd">            The variants to create combinations. The variants must have come</span>
+<span class="sd">            from this ``VCFTable``.</span>
+
+<span class="sd">        heterozygous_alt_af_threshold : :class:`float`</span>
+<span class="sd">            The ``AF`` threshold for overlapping variants to be considered</span>
+<span class="sd">            ``GT`` ``1/2`` when combined. This will then remove any combination</span>
+<span class="sd">            sequences that retains ``REF``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`list` of :class:`tuple` of :class:`~.VCFVariant`</span>
+<span class="sd">            A list of all possible variant combinations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;masked variants are not yet supported.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_cxx</span><span class="o">.</span><span class="n">VCFTable</span><span class="o">.</span><span class="n">variant_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variants</span><span class="p">,</span> <span class="n">heterozygous_alt_af_threshold</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VCFTable.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.close">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
+
+<span class="sd">        Note that if you use a `with` statement the file handle is automatically closed::</span>
+
+<span class="sd">            # Open the file</span>
+<span class="sd">            with VCFTable(&#39;foo.vcfbin&#39;) as vcfbin:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">            # &lt;-- File is now closed</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Closing this table will invalidate all VCFVariants previously accessed via __getitem__.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to the file from which FORMAT field matrices are retrieved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the VCF file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="VCFTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.VCFTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;VCFTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

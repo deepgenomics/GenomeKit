@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.ralign &mdash; GenomeKit 5.2.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1a26d87a"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.ralign</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.ralign</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock_result</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock_unreachable</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">strip_mock_bases</span>
+<span class="kn">from</span> <span class="nn">.genome</span> <span class="kn">import</span> <span class="n">Genome</span>
+<span class="kn">from</span> <span class="nn">.interval</span> <span class="kn">import</span> <span class="n">Interval</span>
+<span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span><span class="p">,</span> <span class="n">VariantTable</span>
+
+<span class="c1">#########################################################################</span>
+
+
+<div class="viewcode-block" id="ReadAlignments">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">ReadAlignments</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">ReadAlignments</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to read alignments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="ReadAlignments.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .ralign file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The .ralign file to open.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IOError</span>
+<span class="sd">            Occurs when `infile` refers to an incompatible ralign file for this version of ``genome_kit``.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">junctions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to junctions inferred from read alignments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.JunctionTable`</span>
+<span class="sd">            A table with optimized methods to query over all junctions by position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alignments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to read alignments, i.e. a row in BAM file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.AlignmentTable`</span>
+<span class="sd">            A table with optimized methods to query over all read alignments by position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">AlignmentTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to aligned regions of read alignments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.AlignmentMatchTable`</span>
+<span class="sd">            A table with optimized methods to query over all aligned regions by position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">AlignmentMatchTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to variants observed by read alignments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.VariantTable`</span>
+<span class="sd">            A table where each element (each row) is a variant that was observed</span>
+<span class="sd">            in at least one read alignment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">VariantTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to the file from which read alignments are retrieved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the file, e.g. &quot;/mnt/data/sample000132.ralign&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReadAlignments.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.close">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
+
+<span class="sd">        Note that if you use a `with` statement the file handle is automatically closed::</span>
+
+<span class="sd">            # Open the file</span>
+<span class="sd">            with ReadAlignments(&#39;my_file.ralign&#39;) as raligns:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">            # &lt;-- File is now closed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ReadAlignments.ralign_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.ralign_version">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ralign_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `ralign` file format version that this build supports.</span>
+
+<span class="sd">        Attempting to open an `ralign` file of a mismatched version will raise an :py:exc:`IOError`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The version number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReadAlignments.build_ralign">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.build_ralign">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_ralign</span><span class="p">(</span>
+            <span class="n">outfile</span><span class="p">,</span>
+            <span class="n">infiles</span><span class="p">,</span>
+            <span class="n">reference_genome</span><span class="p">,</span>
+            <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">allow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">include_duplicates</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">library_format</span><span class="o">=</span><span class="s1">&#39;U&#39;</span><span class="p">,</span>
+    <span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an `ralign` file from one or more `SAM` files.</span>
+
+<span class="sd">        If multiple input files are specified, their junctions and alignments will be pooled.</span>
+
+<span class="sd">        Once an `ralign` file is created, it can be opened by creating</span>
+<span class="sd">        a :py:class:`~genome_kit.ReadAlignments` object.</span>
+
+<span class="sd">        **Alignments on the reference genome.**</span>
+<span class="sd">        All junction, alignment, match, and variant intervals in the resulting file</span>
+<span class="sd">        are on the reference genome.</span>
+
+<span class="sd">        For example, an alignment starting at reference genome position 2</span>
+<span class="sd">        and with CIGAR string ``1M1D1M2N1M``</span>
+<span class="sd">        is matched to the reference genome as::</span>
+
+<span class="sd">            0 1 2 3 4 5 6 7 8 9     &lt;-- reference genome coordinates</span>
+<span class="sd">                M D M - - M M       &lt;-- M = match, D = deletion</span>
+
+
+<span class="sd">        This results in one alignment (2:9), two matches (2:5, 7:9),</span>
+<span class="sd">        one junction (5:7), and one variant (3:4).</span>
+
+<span class="sd">        Similarly for insertions, with CIGAR string ``1M1I1M2N1M`` aligns as::</span>
+
+<span class="sd">            0 1 2 3 4 5 6 7 8 9</span>
+<span class="sd">                M M - - M M</span>
+<span class="sd">                 ^</span>
+<span class="sd">                 I                  &lt;-- I = insertion between</span>
+
+<span class="sd">        This results in one alignment (2:8), two matches (2:4, 6:8),</span>
+<span class="sd">        one junction (4:6), and one variant (3:3).</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The path to the destination `rdist` file.</span>
+
+<span class="sd">        infiles : :py:class:`list` of :py:class:`str` | :py:class:`file`</span>
+<span class="sd">            The paths to the source `SAM` files, or a reference to ``sys.stdin``.</span>
+<span class="sd">            Streaming lines from stdin is useful for reading directly from BAM</span>
+<span class="sd">            via ``samtools view -h``. Be sure to use ``-h`` so that</span>
+<span class="sd">            the reference genome can be inferred from the header lines.</span>
+
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome of the data in ``infiles``.</span>
+<span class="sd">            If the genome contains annotations, junction strands will be</span>
+<span class="sd">            inferred and validated against the introns annotations.</span>
+
+<span class="sd">        exclude : :py:class:`list` of :py:class:`~genome_kit.Interval`, optional</span>
+<span class="sd">            Junctions within these intervals will be excluded.</span>
+
+<span class="sd">        allow : :py:class:`list` of :py:class:`~genome_kit.Interval`, optional</span>
+<span class="sd">            Only junctions within these intervals will be included,</span>
+<span class="sd">            so long as they are not excluded.</span>
+
+<span class="sd">        include_duplicates : :py:class:`bool`, optional</span>
+<span class="sd">            Includes duplicates when `True`. Defaults to `False`. See</span>
+<span class="sd">            https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf</span>
+<span class="sd">            subsection 1.4.2</span>
+
+<span class="sd">        library_format : :class:`str`, optional</span>
+<span class="sd">            Specifies to infer junction strands via the library format string.</span>
+<span class="sd">            &quot;SF&quot; implies the first read is the sense strand, whereas &quot;SR&quot;</span>
+<span class="sd">            implies the second read is the sense strand. (the default is &#39;U&#39;,</span>
+<span class="sd">            which represents unstranded [no strand inference]).</span>
+<span class="sd">            See https://salmon.readthedocs.io/en/stable/library_type.html.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+    <span class="n">PILEUP_A</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">PILEUP_C</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">PILEUP_G</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">PILEUP_T</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">PILEUP_DEL</span> <span class="o">=</span> <span class="mi">4</span>
+
+<div class="viewcode-block" id="ReadAlignments.pileup">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.pileup">[docs]</a>
+    <span class="k">def</span> <span class="nf">pileup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the DNA sequence pileup for body reads in this `ReadAlignments`</span>
+<span class="sd">        as a 5-track. The pileup is variant-aware, so the track counts</span>
+<span class="sd">        the alternate sequences, instead of the reference, on any alignment</span>
+<span class="sd">        matches with variants.</span>
+
+<span class="sd">        Currently, only acgtACGT substitutions and deletions variants are</span>
+<span class="sd">        supported.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            A positive interval to query over all the read alignments.</span>
+<span class="sd">        dtype : :py:class:`~numpy.dtype`, optional</span>
+<span class="sd">            The data type for the returned counts.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~numpy.ndarray`</span>
+<span class="sd">            An array of ``shape`` (len(`interval`), 5) where the second</span>
+<span class="sd">            dimension is indexed via ``PILEUP_A``, ``PILEUP_C``, ``PILEUP_G``,</span>
+<span class="sd">            ``PILEUP_T``, and ``PILEUP_DEL``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># &quot;matches&quot; refers to aligned regions: this includes mismatches.</span>
+        <span class="c1"># increment all the aligned regions and then fix-up for variant regions</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">),</span> <span class="mi">5</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ref_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="o">.</span><span class="n">find_overlapping</span><span class="p">(</span><span class="n">interval</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">end</span><span class="p">)</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">ref_counts</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">match</span><span class="o">.</span><span class="n">variants</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">as_positive_strand</span><span class="p">())):</span>
+                <span class="c1"># ignore inserts for now</span>
+                <span class="n">diff_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">alt</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">diff_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">interval</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+                <span class="n">count_start</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">count_end</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">ref_counts</span><span class="p">[</span><span class="n">count_start</span><span class="p">:</span><span class="n">count_end</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">position_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">count_start</span><span class="p">,</span> <span class="n">count_end</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">diff_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">alt</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">alt</span><span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="n">variant</span><span class="o">.</span><span class="n">start</span><span class="p">:</span><span class="n">end</span> <span class="o">-</span> <span class="n">variant</span><span class="o">.</span><span class="n">start</span><span class="p">]</span>
+                    <span class="n">n_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span>
+                    <span class="n">pileup_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dna_as_pileup_index</span><span class="p">(</span><span class="n">alt</span><span class="p">),</span> <span class="n">n_indices</span><span class="p">)</span>
+                    <span class="n">counts</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">position_indices</span><span class="p">,</span> <span class="n">n_indices</span><span class="p">),</span> <span class="n">pileup_indices</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="n">diff_len</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="ow">not</span> <span class="n">variant</span><span class="o">.</span><span class="n">alt</span>  <span class="c1"># normalized to only include deleted region (no padding)</span>
+                    <span class="n">counts</span><span class="p">[</span><span class="n">position_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PILEUP_DEL</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">assert</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ref_counts</span><span class="p">[</span><span class="n">ref_counts</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">any</span><span class="p">())</span>
+        <span class="n">dna_str</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">)</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="o">.</span><span class="n">as_positive_strand</span><span class="p">())</span>
+        <span class="n">n_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dna_str</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span>
+        <span class="n">position_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)),</span> <span class="n">n_indices</span><span class="p">)</span>
+        <span class="n">pileup_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dna_as_pileup_index</span><span class="p">(</span><span class="n">dna_str</span><span class="p">),</span> <span class="n">n_indices</span><span class="p">)</span>
+        <span class="n">ref_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">ref_counts</span><span class="p">,</span> <span class="n">n_indices</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">position_indices</span><span class="p">,</span> <span class="n">pileup_indices</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ref_counts</span>
+        <span class="k">return</span> <span class="n">counts</span></div>
+
+
+    <span class="n">DNA_TO_INDEX</span> <span class="o">=</span> <span class="p">[</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xFF</span><span class="s1">&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">256</span>
+    <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
+    <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\1</span><span class="s1">&#39;</span>
+    <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;g&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;G&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\2</span><span class="s1">&#39;</span>
+    <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;t&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">DNA_TO_INDEX</span><span class="p">[</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\3</span><span class="s1">&#39;</span>
+    <span class="n">DNA_TO_INDEX</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DNA_TO_INDEX</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_dna_as_pileup_index</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dna_str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a case-insensitive DNA string (ACGT) into an array of uint8 indices</span>
+<span class="sd">        in range {0,1,2,3}. Non-ACGT characters will be converted to index 255.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">dna_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">DNA_TO_INDEX</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="p">),</span> <span class="n">buffer</span><span class="o">=</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ReadAlignments.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ReadAlignments.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;ReadAlignments &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+<span class="c1">#   Junction, JunctionTable</span>
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Junction">
+<a class="viewcode-back" href="../../api.html#genome_kit.Junction">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Junction</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Junction</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A Junction represents a gap in a read alignment when compared to the reference genome.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Junction.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Junction.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this junction.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Junction` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this junction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_num_alignments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">_get_alignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Alignment</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">_AlignmentsTupleAccessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="vm">__slots__</span> <span class="o">=</span> <span class="s1">&#39;_junction&#39;</span>
+
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">junction</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_junction</span> <span class="o">=</span> <span class="n">junction</span>
+
+        <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_junction</span><span class="o">.</span><span class="n">_num_alignments</span>
+
+        <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_junction</span><span class="o">.</span><span class="n">_get_alignment</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alignments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The read alignments across this junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            The read alignments across this junction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_AlignmentsTupleAccessor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Junction.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Junction.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Junction </span><span class="si">{}</span><span class="s1">, len(alignments) = </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_alignments</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="JunctionTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">JunctionTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JunctionTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="JunctionTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end5 == interval.end5]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end3 == interval.end3]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junction that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.overlaps(interval)]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.interval == interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Junction`</span>
+<span class="sd">            All junctions that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Junction</span><span class="p">()]</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JunctionTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a junction by index</span>
+
+<span class="sd">        Allows iteration over all junctions::</span>
+
+<span class="sd">            for junc in junctions:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Junction`</span>
+<span class="sd">           The junction object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Junction</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JunctionTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;JunctionTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+<span class="c1">#   Alignment, AlignmentTable</span>
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="Alignment">
+<a class="viewcode-back" href="../../api.html#genome_kit.Alignment">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Alignment</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Alignment</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A read alignment</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="Alignment.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Alignment.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this read alignment.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.Alignment` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this read alignment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The matching regions of this read alignment</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            A list of matching regions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span>
+
+<div class="viewcode-block" id="Alignment.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Alignment.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;Alignment </span><span class="si">{}</span><span class="s1">, len(matches) = </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AlignmentTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">AlignmentTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">AlignmentTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="AlignmentTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.end5 == interval.end5]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.end3 == interval.end3]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignment that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.overlaps(interval)]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all read alignments that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [read for read in reads if read.interval == interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">            All read alignments that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Alignment</span><span class="p">()]</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AlignmentTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup a read alignment by index</span>
+
+<span class="sd">        Allows iteration over all read alignments::</span>
+
+<span class="sd">            for read in reads:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested read alignment.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Alignment`</span>
+<span class="sd">           The read alignment object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Alignment</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AlignmentTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;AlignmentTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+<span class="c1">#   AlignmentMatch, AlignmentMatchTable</span>
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="AlignmentMatch">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatch">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">AlignmentMatch</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">AlignmentMatch</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A matching region a read alignment</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="AlignmentMatch.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatch.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by the matching region of a read alignment.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.AlignmentMatch` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this alignment match.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of variants observed in this matching region of an alignment.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            A tuple of variants that this matching region of an alignment contains</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Variant</span><span class="p">(),</span> <span class="p">)</span>
+
+<div class="viewcode-block" id="AlignmentMatch.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatch.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;AlignmentMatch </span><span class="si">{}</span><span class="s1">, len(variants) = </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AlignmentMatchTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">AlignmentMatchTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">AlignmentMatchTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.end5 == interval.end5]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.end3 == interval.end3]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignments matches that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match in interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.overlaps(interval)]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all alignment matches that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [match for match in matches if match.interval == interval]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">            All alignment matches that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">AlignmentMatch</span><span class="p">()]</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AlignmentMatchTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lookup an alignment match by index</span>
+
+<span class="sd">        Allows iteration over all alignment matches::</span>
+
+<span class="sd">            for match in matches:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested alignment match.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.AlignmentMatch`</span>
+<span class="sd">           The alignment match object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">AlignmentMatch</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AlignmentMatchTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.AlignmentMatchTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;AlignmentMatchTable, len = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

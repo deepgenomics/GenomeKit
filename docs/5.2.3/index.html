@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenomeKit &mdash; GenomeKit 5.2.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1a26d87a"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GenomeKit</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="genomekit">
+<h1>GenomeKit<a class="headerlink" href="#genomekit" title="Link to this heading"></a></h1>
+<section id="what-is-genomekit">
+<h2>What is GenomeKit?<a class="headerlink" href="#what-is-genomekit" title="Link to this heading"></a></h2>
+<p>GenomeKit is Deep Genomics’ Python library for fast and easy access to
+genomic resources such as sequence, data tracks, and annotations.
+The goal is to let machine learning researchers build data sets
+easily, and to be creative about how those data sets are designed.</p>
+<p>GenomeKit is also designed to work with genome variants, giving users
+a powerful way to extract features for different genotypes.</p>
+<p>In the future it will include other useful resources like
+secondary structure, conservation, and more.</p>
+<section id="useful-features">
+<h3>Useful Features<a class="headerlink" href="#useful-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fast querying of DNA sequence and genomic tracks.</p></li>
+<li><p>Fast querying and structured access for annotations (GENCODE, RefSeq, …).</p></li>
+<li><p>Fast querying and structured access for short read alignments (SAM/BAM files).</p></li>
+<li><p>Fast querying and filtering for variants (VCF files).</p></li>
+<li><p>Interval and Variant objects that are convenient, lightweight, and standardized.</p></li>
+<li><p>Scan the genome for motifs.</p></li>
+</ul>
+</section>
+<section id="resources-available">
+<h3>Resources Available<a class="headerlink" href="#resources-available" title="Link to this heading"></a></h3>
+<p>Available reference genomes and annotations depend on the data made available by data_manager.
+You can get a list of all available genomes and annotations by calling <code class="docutils literal notranslate"><span class="pre">gk_data.data_manager.list_available_genomes()</span></code>.</p>
+<p>Some commonly used ones are listed below.</p>
+<ul class="simple">
+<li><p>Reference genomes:</p>
+<ul>
+<li><p>hg19 (unpatched GRCh37)</p></li>
+<li><p>hg19.p13.plusMT (patch 13 with rCRS MT)</p></li>
+<li><p>hg38 (unpatched GRCh38)</p></li>
+<li><p>hg38.p12</p></li>
+<li><p>hg38.p13</p></li>
+<li><p>hg38.p14</p></li>
+<li><p>mm10.p6 (GRCm38)</p></li>
+<li><p>mm39 (unpatched GRCm39)</p></li>
+<li><p>rn6 (unpatched RGSC 6.0)</p></li>
+<li><p>macFas5 (unpatched Macaca_fascicularis_5.0)</p></li>
+<li><p>susScr11 (unpatched SGSC Sscrofa11.1)</p></li>
+</ul>
+</li>
+<li><p>Annotations:</p>
+<ul>
+<li><p>GENCODE v19, v29, v41, vM19, vM30, vM31 (basic; comprehensive)</p></li>
+<li><p>UCSC RefSeq (snapshots)</p></li>
+<li><p>NCBI RefSeq v105.20190906, v109, v110, m39.v109, Macfas_5.0.v101</p></li>
+<li><p>ENSEMBL Rnor_6.0.88, Macfas_5.0.95, Sscrofa11.1.98</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="next-steps">
+<h3>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h3>
+<p>Read the <a class="reference internal" href="quickstart.html#quickstart"><span class="std std-ref">Quickstart</span></a> tutorial to get started with GenomeKit and study the
+<a class="reference internal" href="api.html#api"><span class="std std-ref">API Documentation</span></a> for details. GenomeKit also uses a convention called <em>anchors</em> to
+disambiguate the alignment of reference and variant sequences that is explained
+in detail in <a class="reference internal" href="anchors.html#anchors"><span class="std std-ref">Anchors</span></a>.</p>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#tracks">Tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#annotations">Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#working-with-intervals">Working with Intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#feature-extraction-basics">Feature extraction basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#variants">Variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#variants-from-vcf-files">Variants from VCF Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#feature-extraction-with-variants">Feature Extraction with Variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#variant-genomes">Variant genomes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#length-changing-variants">Length-changing variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#motif-finding">Motif finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#sharing-new-data-files">Sharing new data files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#logging-and-troubleshooting">Logging and troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#intervals-without-anchors">Intervals without anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#deletions-with-an-anchored-interval">Deletions with an anchored interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#specifying-anchors">Specifying anchors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#insertions-with-an-anchored-interval">Insertions with an anchored interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#deletions-at-the-anchor">Deletions at the anchor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#insertions-at-the-anchor">Insertions at the anchor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="anchors.html#anchors-outside-an-interval">Anchors outside an interval</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#interval">Interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#variant">Variant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#genome">Genome</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#variantgenome">VariantGenome</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#tracks">Tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#annotations">Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#read-alignments">Read Alignments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#junction-read-alignments">Junction Read Alignments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#vcf-tables">VCF Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#data-access">Data Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#internals">Internals</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="genomes.html">Genomes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="genomes.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#setting-up">Setting up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#jetbrains-clion-setup">Jetbrains CLion setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#making-changes">Making changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#adding-tests">Adding tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#building-data-files">Building data files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="develop.html#releasing-genomekit">Releasing GenomeKit</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

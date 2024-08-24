@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; GenomeKit 5.2.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1a26d87a"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Anchors" href="anchors.html" />
+    <link rel="prev" title="GenomeKit" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-via-conda">Install via conda</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#basics">Basics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#initial-data-access">Initial Data Access</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tracks">Tracks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#annotations">Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-intervals">Working with Intervals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-extraction-basics">Feature extraction basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variants">Variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variants-from-vcf-files">Variants from VCF Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-extraction-with-variants">Feature Extraction with Variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variant-genomes">Variant genomes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#length-changing-variants">Length-changing variants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#motif-finding">Motif finding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sharing-new-data-files">Sharing new data files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging-and-troubleshooting">Logging and troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<span id="id1"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<p>Here is a quick tutorial covering GenomeKit’s most important functionality.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="install-via-conda">
+<h3>Install via conda<a class="headerlink" href="#install-via-conda" title="Link to this heading"></a></h3>
+<p>The best way to install GenomeKit is via the pre-compiled conda packages
+available from <a class="reference external" href="https://anaconda.org/conda-forge/genomekit">https://anaconda.org/conda-forge/genomekit</a>.</p>
+<p>You can install GenomeKit with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">genomekit</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Link to this heading"></a></h2>
+<section id="initial-data-access">
+<h3>Initial Data Access<a class="headerlink" href="#initial-data-access" title="Link to this heading"></a></h3>
+<p>Data, such as assemblies, annotations, tracks, etc, are stored in custom-built binary files.</p>
+<p>These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
+APIs for building these files are provided as part of the API.</p>
+<p><code class="docutils literal notranslate"><span class="pre">starter/build.sh</span></code> is a bash script that builds a few assemblies and annotations and places
+them in the local data directory, to get you started. It also serves as a good example of how
+to build your own data files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">env</span><span class="o">-</span><span class="k">with</span><span class="o">-</span><span class="n">genomekit</span>
+<span class="n">curl</span> <span class="o">-</span><span class="n">O</span> <span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">deepgenomics</span><span class="o">/</span><span class="n">GenomeKit</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">starter</span><span class="o">/</span><span class="n">build</span><span class="o">.</span><span class="n">sh</span>
+<span class="n">chmod</span> <span class="o">+</span><span class="n">x</span> <span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span>
+<span class="o">./</span><span class="n">starter_build</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+<p>A larger selection of pre-built data files is provided in a public Google Cloud Storage bucket,
+which is set as the default data source.</p>
+<p>The bucket is configured with <a class="reference external" href="https://cloud.google.com/storage/docs/requester-pays">“requester pays”</a>
+enabled, so you will need to</p>
+<ul>
+<li><p><a class="reference external" href="https://cloud.google.com/sdk/docs/install">install gcloud</a></p></li>
+<li><p>set up your <a class="reference external" href="https://cloud.google.com/sdk/docs/authorizing">gcloud credentials</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gcloud</span> <span class="n">auth</span> <span class="n">application</span><span class="o">-</span><span class="n">default</span> <span class="n">login</span>
+</pre></div>
+</div>
+</li>
+<li><p>set the <code class="docutils literal notranslate"><span class="pre">GENOMEKIT_GCS_BILLING_PROJECT</span></code> env var to your Google Cloud project:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">GENOMEKIT_GCS_BILLING_PROJECT</span><span class="o">=</span><span class="s2">&quot;your-project-id&quot;</span>
+<span class="c1"># required depending on your local gcloud configuration</span>
+<span class="n">export</span> <span class="n">GOOGLE_CLOUD_PROJECT</span><span class="o">=</span><span class="s2">&quot;your-project-id&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>For more details on creating your own data source, see <a class="reference external" href="sharingdata">the section on Sharing data files</a>.</p>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h3>
+<p>Import the <code class="xref py py-mod docutils literal notranslate"><span class="pre">genome_kit</span></code> package into your project:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">genome_kit</span> <span class="k">as</span> <span class="nn">gk</span>
+</pre></div>
+</div>
+<p>For brevity, this tutorial assumes you’ve imported several core types
+directly into your namespace:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genome_kit</span> <span class="kn">import</span> <span class="n">Genome</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genome_kit</span> <span class="kn">import</span> <span class="n">Interval</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>Most GenomeKit code will need two core object types:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> - an interval on a reference genome</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a> - resources available for a reference genome</p></li>
+</ul>
+<p>An <cite>interval</cite> is initialized from five values:
+<cite>chromosome</cite>, <cite>strand</cite>, <cite>start</cite>, <cite>end</cite>, and <cite>reference_genome</cite></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117120016</span><span class="p">,</span> <span class="mi">117120201</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Irrespective of strand, an interval always has <cite>start &lt;= end</cite>.
+The span of an interval excludes the <cite>end</cite> position, so the number of bases
+spanned by an interval is <cite>end – start</cite>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">185</span>
+</pre></div>
+</div>
+<p>GenomeKit intervals can be described as “0-based, exclusive end”,
+whereas UCSC browser positions are “1-based, inclusive end”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span><span class="o">.</span><span class="n">as_ucsc</span><span class="p">()</span>
+<span class="go">&#39;chr7:117120017-117120201&#39;</span>
+</pre></div>
+</div>
+<p>A <cite>genome</cite> provides convenient access to resources associated with a
+reference genome:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">)</span>  <span class="c1"># Equivalently &quot;hg19&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;AATTGGAAGCAAA...AACTTTTTTTCAG&#39;</span>
+</pre></div>
+</div>
+<p>Some resources are versioned and are only accessible if the intended
+version is unambiguous from the configuration strings. For example,
+specifying a GENCODE version enables annotations:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>             <span class="c1"># Implies &quot;hg19&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gene</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="p">[</span><span class="s2">&quot;ENSG00000001626.10&quot;</span><span class="p">]</span>  <span class="c1"># Gene object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tran</span> <span class="o">=</span> <span class="n">gene</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>                 <span class="c1"># Transcript object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span> <span class="o">=</span> <span class="n">tran</span><span class="o">.</span><span class="n">exons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                       <span class="c1"># Exon object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">exon</span><span class="p">)</span>
+<span class="go">&#39;AATTGGAAGCAAA...AACTTTTTTTCAG&#39;</span>
+</pre></div>
+</div>
+<p>The above exon has the same interval that we defined earlier,
+plus several other attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span><span class="o">.</span><span class="n">interval</span>
+<span class="go">Interval(&quot;chr7&quot;, &quot;+&quot;, 117120016, 117120201, &quot;hg19&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span><span class="o">.</span><span class="n">index</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span><span class="o">.</span><span class="n">transcript</span>
+<span class="go">&lt;Transcript ENST00000003084.6 of CFTR&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span><span class="o">.</span><span class="n">cds</span>
+<span class="go">&lt;Cds in Exon 1/27 of ENST00000003084.6&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span><span class="o">.</span><span class="n">next_exon</span>
+<span class="go">&lt;Exon 2/27 of ENST00000003084.6&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tracks">
+<h2>Tracks<a class="headerlink" href="#tracks" title="Link to this heading"></a></h2>
+<p>GenomeKit users can also build tracks via
+<a class="reference internal" href="api.html#genome_kit.GenomeTrackBuilder" title="genome_kit.GenomeTrackBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenomeTrackBuilder</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When building a track, data is ordered according to the strandedness argument
+passed to the builder’s constructor:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;single_stranded&quot;</span></code>: both strands share the same data. The data is applied in Interval coordinate (reference strand) order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;strand_unaware&quot;</span></code>: ignores the Interval strand, data is applied in Interval coordinate (reference strand) order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;strand_aware&quot;</span></code>: data is applied from 5” end to 3” end (sense strand order).</p></li>
+</ul>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">track</span> <span class="o">=</span> <span class="n">GenomeTrackBuilder</span><span class="p">(</span><span class="s2">&quot;neg.gtrack&quot;</span><span class="p">,</span> <span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="s2">&quot;strand_unaware&quot;</span><span class="p">,</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span> <span class="o">=</span> <span class="n">GenomeTrack</span><span class="p">(</span><span class="s2">&quot;neg.gtrack&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[4],</span>
+<span class="go">       [3],</span>
+<span class="go">       [2],</span>
+<span class="go">       [1],</span>
+<span class="go">       [0]], dtype=uint8)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span> <span class="o">=</span> <span class="n">GenomeTrackBuilder</span><span class="p">(</span><span class="s2">&quot;neg.gtrack&quot;</span><span class="p">,</span> <span class="s2">&quot;u3&quot;</span><span class="p">,</span> <span class="s2">&quot;strand_aware&quot;</span><span class="p">,</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span> <span class="o">=</span> <span class="n">GenomeTrack</span><span class="p">(</span><span class="s2">&quot;neg.gtrack&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">track</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">array([[0],</span>
+<span class="go">       [1],</span>
+<span class="go">       [2],</span>
+<span class="go">       [3],</span>
+<span class="go">       [4]], dtype=uint8)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="annotations">
+<h2>Annotations<a class="headerlink" href="#annotations" title="Link to this heading"></a></h2>
+<p>GenomeKit provides access to GENCODE and RefSeq annotations.</p>
+<p>Walking the structure of an annotation is straight-forward:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="p">:</span>          <span class="c1"># Each gene</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tran</span> <span class="ow">in</span> <span class="n">gene</span><span class="o">.</span><span class="n">transcripts</span><span class="p">:</span>  <span class="c1"># Each transcript on the gene</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  &quot;</span><span class="p">,</span> <span class="n">tran</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">exon</span> <span class="ow">in</span> <span class="n">tran</span><span class="o">.</span><span class="n">exons</span><span class="p">:</span>    <span class="c1"># Each exon on the transcript</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;     &quot;</span><span class="p">,</span> <span class="n">exon</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can run the above example from the GenomeKit directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python demos/walk_annotations.py
+&lt;Gene ENSG00000223972.4 (DDX11L1)&gt;
+   &lt;Transcript ENST00000456328.2 of DDX11L1&gt;
+      &lt;Exon 1/3 of ENST00000456328.2&gt;
+      &lt;Exon 2/3 of ENST00000456328.2&gt;
+      &lt;Exon 3/3 of ENST00000456328.2&gt;
+...
+</pre></div>
+</div>
+<p>Annotations are accessible via following attributes:
+<a class="reference internal" href="api.html#genome_kit.Genome.genes" title="genome_kit.Genome.genes"><code class="xref py py-attr docutils literal notranslate"><span class="pre">genes</span></code></a>,
+<a class="reference internal" href="api.html#genome_kit.Genome.transcripts" title="genome_kit.Genome.transcripts"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transcripts</span></code></a>,
+<a class="reference internal" href="api.html#genome_kit.Genome.exons" title="genome_kit.Genome.exons"><code class="xref py py-attr docutils literal notranslate"><span class="pre">exons</span></code></a>,
+<a class="reference internal" href="api.html#genome_kit.Genome.introns" title="genome_kit.Genome.introns"><code class="xref py py-attr docutils literal notranslate"><span class="pre">introns</span></code></a>, and
+<a class="reference internal" href="api.html#genome_kit.Genome.cdss" title="genome_kit.Genome.cdss"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cdss</span></code></a>.
+Each of these can be thought of as an indexed table, like in a database.
+For example, <cite>exons</cite> is an instance of type
+<a class="reference internal" href="api.html#genome_kit.ExonTable" title="genome_kit.ExonTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExonTable</span></code></a> and each row in that table is an instance of
+<a class="reference internal" href="api.html#genome_kit.Exon" title="genome_kit.Exon"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exon</span></code></a>, with the fields you’d expect.</p>
+<p>Most importantly, each annotation table is indexed for fast
+positional queries:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># First exon of a CFTR transcript</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="s2">&quot;ENST00000003084.6&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">exons</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="o">.</span><span class="n">find_overlapping</span><span class="p">(</span><span class="n">exon</span><span class="p">)</span>
+<span class="go">[&lt;Exon 1/27 of ENST00000003084.6&gt;,</span>
+<span class="go"> &lt;Exon 1/26 of ENST00000454343.1&gt;,</span>
+<span class="go"> &lt;Exon 1/26 of ENST00000426809.1&gt;]</span>
+</pre></div>
+</div>
+<p>The following methods take a single <cite>interval</cite> argument and are available
+for every element table:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_overlapping" title="genome_kit.ExonTable.find_overlapping"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_overlapping()</span></code></a> - elements overlapping
+<cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_within" title="genome_kit.ExonTable.find_within"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_within()</span></code></a> - elements falling
+within <cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_exact" title="genome_kit.ExonTable.find_exact"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_exact()</span></code></a> - elements exactly spanning <cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_5p_aligned" title="genome_kit.ExonTable.find_5p_aligned"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_5p_aligned()</span></code></a> - elements with 5’ end
+aligned to the 5’ end of <cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_3p_aligned" title="genome_kit.ExonTable.find_3p_aligned"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_3p_aligned()</span></code></a> - elements with 3’ end
+aligned to the 3’ end of <cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_5p_within" title="genome_kit.ExonTable.find_5p_within"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_5p_within()</span></code></a> - elements with 5’-most
+position within <cite>interval</cite>.</p></li>
+<li><p><a class="reference internal" href="api.html#genome_kit.ExonTable.find_3p_within" title="genome_kit.ExonTable.find_3p_within"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_3p_within()</span></code></a> - elements with 3’-most
+position within <cite>interval</cite>.</p></li>
+</ul>
+<p>These methods are useful for mapping positions to annotation elements.
+See <a class="reference internal" href="api.html#genome_kit.GenomeAnnotation" title="genome_kit.GenomeAnnotation"><code class="xref py py-class docutils literal notranslate"><span class="pre">GenomeAnnotation</span></code></a> for the top-level object that
+ultimately owns all the annotation tables.</p>
+</section>
+<section id="working-with-intervals">
+<h2>Working with Intervals<a class="headerlink" href="#working-with-intervals" title="Link to this heading"></a></h2>
+<p>GenomeKit uses the following convention for
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>:</p>
+<ol class="arabic simple">
+<li><p>intervals are always stranded (+ or –),</p></li>
+<li><p>positions are internally 0-based, and</p></li>
+<li><p>the span of an interval excludes its <cite>end</cite> position.</p></li>
+</ol>
+<p>Intervals are initialized using what is called the <cite>DNA0</cite> convention where,
+irrespective of strand, where <cite>start &lt;= end</cite>.
+Intervals can be empty (<cite>start == end</cite>).
+The resulting interval spans the same positions in the genome
+as a Python slice operation <cite>[start:end]</cite>.</p>
+<p>For example, an interval with <cite>start=3</cite> and <cite>end=7</cite> spans
+the four over-lined positions below, irrespective of strand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="p">[</span><span class="n">__________</span><span class="p">]</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span>
+</pre></div>
+</div>
+<p>To see what we can do with intervals, let’s create a few:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#  0123456789</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#  aaaaabbbbb</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     cccc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>  <span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>  <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">(5, 5, 4, 1)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">a</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">d</span><span class="p">),</span> <span class="n">d</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">(False, False, True, True)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">a</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">(False, True)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">dnstream_of</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">(True, True)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">dnstream_of</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">(False, False)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">==</span> <span class="n">d</span>
+<span class="go">(False, False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">!=</span> <span class="n">d</span>
+<span class="go">(True, True)</span>
+</pre></div>
+</div>
+<p>Intervals on opposite strands effectively live in different universes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1">#  0123456789</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#  xxxxxyyyyy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     zzzz</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1">#     w</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 0, 5, &quot;hg38&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 5, 10, &quot;hg38&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 3, 7, &quot;hg38&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 3, 4, &quot;hg38&quot;)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># opposite strands</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>  <span class="c1"># opposite strands</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">(False, True)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">==</span> <span class="n">a</span>   <span class="c1"># opposite strands</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Given an interval, you can also build new intervals centered around its
+5’ end (upstream) and 3’ end (downstream),
+which depends on strand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span>  <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span><span class="o">.</span><span class="n">end5</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 8, 8, &quot;hg38&quot;)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span><span class="o">.</span><span class="n">end3</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 4, 4, &quot;hg38&quot;)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span><span class="o">.</span><span class="n">end3</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">Interval(&quot;chr1&quot;, &quot;-&quot;, 1, 6, &quot;hg38&quot;)</span>
+</pre></div>
+</div>
+<p>Notice that the <cite>end5</cite> and <cite>end3</cite> attributes return empty (length-0) intervals.
+This is a general convention in GenomeKit: <em>an empty interval denotes the
+space between two consecutive positions in the genome</em>.
+This convention is useful for defining alignments or defining new intervals
+relative to the empty one via <a class="reference internal" href="api.html#genome_kit.Interval.expand" title="genome_kit.Interval.expand"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expand()</span></code></a>.
+For example, the intervals in the above code example can be visualized
+as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="p">[</span><span class="n">__________</span><span class="p">]</span>           <span class="c1"># Interval(&quot;chr1&quot;, &quot;-&quot;, 4,  8, &quot;hg38&quot;)</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span>
+
+                      <span class="p">[]</span>          <span class="c1"># interval.end5</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span>
+
+          <span class="p">[]</span>                      <span class="c1"># interval.end3</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span>
+
+  <span class="p">[</span><span class="n">_____________</span><span class="p">]</span>                 <span class="c1"># interval.end3.expand(2, 3)</span>
+<span class="mi">0</span>  <span class="mi">1</span>  <span class="mi">2</span>  <span class="mi">3</span>  <span class="mi">4</span>  <span class="mi">5</span>  <span class="mi">6</span>  <span class="mi">7</span>  <span class="mi">8</span>  <span class="mi">9</span>  <span class="mi">10</span>
+</pre></div>
+</div>
+</section>
+<section id="feature-extraction-basics">
+<h2>Feature extraction basics<a class="headerlink" href="#feature-extraction-basics" title="Link to this heading"></a></h2>
+<p>GenomeKit currently provides DNA sequence, accessible via the
+<cite>dna</cite> attribute of <a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a>. The extracted DNA is
+automatically reverse-complemented according to strand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117120016</span><span class="p">,</span> <span class="mi">117120201</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">&#39;AATTGGAAGCAAA...AACTTTTTTTCAG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">&#39;CTGAAAAAAAGTT...TTTGCTTCCAATT&#39;</span>
+</pre></div>
+</div>
+<p>GenomeKit makes it easy to extract features that correspond to annotated
+elements, and to filter those elements by their attributes.
+For example, we could extract DNA from all acceptor sites that meet certain
+criteria:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">has_coding_seq</span><span class="p">(</span><span class="n">e</span><span class="p">):</span> <span class="k">return</span> <span class="n">e</span><span class="o">.</span><span class="n">cds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>   <span class="c1"># Has CDS?</span>
+<span class="k">def</span> <span class="nf">has_good_level</span><span class="p">(</span><span class="n">e</span><span class="p">):</span> <span class="k">return</span> <span class="n">e</span><span class="o">.</span><span class="n">tran</span><span class="o">.</span><span class="n">level</span> <span class="o">&lt;=</span> <span class="mi">2</span>   <span class="c1"># Is level 1 or 2?</span>
+<span class="k">def</span> <span class="nf">not_first_exon</span><span class="p">(</span><span class="n">e</span><span class="p">):</span> <span class="k">return</span> <span class="n">e</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span>         <span class="c1"># Is not first exon?</span>
+
+<span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>                    <span class="c1"># 1196293 exons</span>
+<span class="n">exons</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">has_coding_seq</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="p">)</span>      <span class="c1">#  724078 remaining</span>
+<span class="n">exons</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">has_good_level</span><span class="p">,</span> <span class="n">exons</span><span class="p">)</span>             <span class="c1">#  605573 remaining</span>
+<span class="n">exons</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">not_first_exon</span><span class="p">,</span> <span class="n">exons</span><span class="p">)</span>             <span class="c1">#  558099 remaining</span>
+<span class="n">sites</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exon</span><span class="o">.</span><span class="n">end5</span> <span class="k">for</span> <span class="n">exon</span> <span class="ow">in</span> <span class="n">exons</span><span class="p">)</span>          <span class="c1">#  198992 unique</span>
+
+<span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>The above outputs the following 10nt sequences surrounding acceptor sites:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TGCAGGGAAC</span>   <span class="c1"># Note they are all sense-strand (AG)</span>
+<span class="n">TTCAGCTGCT</span>   <span class="c1"># because exon.end5 knows the strand.</span>
+<span class="n">TGTAGGAAAC</span>
+<span class="n">TCCAGGCTAT</span>
+<span class="n">GCCAGAGGAC</span>
+<span class="n">GACAGAACCA</span>
+<span class="n">CCCAGATTGG</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>GenomeKit also make it easy to map positions to the nearest annotated
+element. For example, we could map branch sites to their nearest downstream
+acceptor site:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>
+
+<span class="c1"># We want to map each of these to an acceptor at most 100nt downstream</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Interval</span><span class="o">.</span><span class="n">from_dna0_coord</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span>  <span class="mi">91661</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">),</span>
+           <span class="n">Interval</span><span class="o">.</span><span class="n">from_dna0_coord</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">169295</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">),</span>
+           <span class="n">Interval</span><span class="o">.</span><span class="n">from_dna0_coord</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">320861</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">)</span> <span class="p">]</span>
+
+<span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">coord</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>                <span class="c1"># Find all exons with</span>
+    <span class="n">exons</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">exons</span><span class="o">.</span><span class="n">find_5p_within</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>  <span class="c1"># acceptor in window</span>
+    <span class="k">for</span> <span class="n">exon</span> <span class="ow">in</span> <span class="n">exons</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">coord</span><span class="o">.</span><span class="n">as_ucsc</span><span class="p">(),</span> <span class="s2">&quot;--&gt;&quot;</span><span class="p">,</span> <span class="n">exon</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above outputs the following mappings:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chr1</span><span class="p">:</span><span class="mi">91662</span><span class="o">-</span><span class="mi">91662</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">Exon</span> <span class="mi">4</span><span class="o">/</span><span class="mi">4</span> <span class="n">of</span> <span class="n">ENST00000466430</span><span class="mf">.1</span><span class="o">&gt;</span>
+<span class="n">chr1</span><span class="p">:</span><span class="mi">169296</span><span class="o">-</span><span class="mi">169296</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">Exon</span> <span class="mi">3</span><span class="o">/</span><span class="mi">8</span> <span class="n">of</span> <span class="n">ENST00000466557</span><span class="mf">.2</span><span class="o">&gt;</span>
+<span class="n">chr1</span><span class="p">:</span><span class="mi">320862</span><span class="o">-</span><span class="mi">320862</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">Exon</span> <span class="mi">2</span><span class="o">/</span><span class="mi">3</span> <span class="n">of</span> <span class="n">ENST00000432964</span><span class="mf">.1</span><span class="o">&gt;</span>  <span class="c1"># 1st candidate</span>
+<span class="n">chr1</span><span class="p">:</span><span class="mi">320862</span><span class="o">-</span><span class="mi">320862</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">Exon</span> <span class="mi">2</span><span class="o">/</span><span class="mi">4</span> <span class="n">of</span> <span class="n">ENST00000601486</span><span class="mf">.1</span><span class="o">&gt;</span>  <span class="c1"># 2nd candidate</span>
+<span class="n">chr1</span><span class="p">:</span><span class="mi">320862</span><span class="o">-</span><span class="mi">320862</span> <span class="o">--&gt;</span> <span class="o">&lt;</span><span class="n">Exon</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="n">of</span> <span class="n">ENST00000599771</span><span class="mf">.2</span><span class="o">&gt;</span>  <span class="c1"># 3rd candidate</span>
+</pre></div>
+</div>
+</section>
+<section id="variants">
+<h2>Variants<a class="headerlink" href="#variants" title="Link to this heading"></a></h2>
+<p>Individual genomic variants are represented by a <a class="reference internal" href="api.html#genome_kit.Variant" title="genome_kit.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">genome_kit</span> <span class="kn">import</span> <span class="n">Variant</span>
+</pre></div>
+</div>
+<p>A variant is defined by a chromosome, 0-based position (DNA0), reference allele,
+alternate allele, and reference genome:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span> <span class="o">=</span> <span class="n">Variant</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="mi">117120148</span><span class="p">,</span> <span class="s2">&quot;AT&quot;</span><span class="p">,</span> <span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span>
+<span class="go">&lt;Variant chr7:117120148:AT:G:hg19&gt;</span>
+</pre></div>
+</div>
+<p>A variant is a subclass of <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>, and also has an
+<a class="reference internal" href="api.html#genome_kit.Variant.interval" title="genome_kit.Variant.interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">interval</span></code></a> attribute.
+The interval spans the reference allele:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">variant</span><span class="p">)</span>
+<span class="go">(117120148, 117120150, 2)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span><span class="o">.</span><span class="n">interval</span>
+<span class="go">Interval(&quot;chr7&quot;, &quot;+&quot;, 117120148, 117120150, &quot;hg19&quot;)</span>
+</pre></div>
+</div>
+<p>Variants may also be created from a string where the position is 1-based (DNA1),
+which is the convention of UCSC and Clinvar:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="s2">&quot;chr7:117,120,149:AT:G&quot;</span><span class="p">)</span>               <span class="c1"># First way</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span> <span class="o">=</span> <span class="n">Variant</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;chr7:117,120,149:AT:G&#39;</span><span class="p">,</span> <span class="n">genome</span><span class="p">)</span>  <span class="c1"># Second way</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span>
+<span class="go">&lt;Variant chr7:117120148:AT:G:hg19&gt;</span>
+</pre></div>
+</div>
+<p>A variant created from a string is always validated against the reference genome,
+raising an exception if the reference allele does not match.</p>
+<p>ENSEMBL-style chromosome names (without leading <code class="docutils literal notranslate"><span class="pre">chr</span></code>) are also allowed and are
+automatically converted.</p>
+<p>The GenomeKit variant format includes, but is more general than, the Clinvar variant convention when
+it comes to insertion and deletions. Clinvar does not allow an empty ref or alt allele (requiring the
+allele before the indel to be repeated), while empty alleles are allowed in GenomeKit. For example, the
+variants <code class="docutils literal notranslate"><span class="pre">chr7:117,120,150:A:-</span></code> and <code class="docutils literal notranslate"><span class="pre">chr7:117,120,149:CA:C</span></code> are interpreted identically by GenomeKit.</p>
+<p>Empty alleles can be specified by <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;-&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;.&quot;</span></code>.</p>
+</section>
+<section id="variants-from-vcf-files">
+<h2>Variants from VCF Files<a class="headerlink" href="#variants-from-vcf-files" title="Link to this heading"></a></h2>
+<p>GenomeKit provides a binary VCF format that is compact, indexed by position.
+The binary files can be opened by <a class="reference internal" href="api.html#genome_kit.VCFTable" title="genome_kit.VCFTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">VCFTable</span></code></a>, which returns
+convenient <a class="reference internal" href="api.html#genome_kit.Variant" title="genome_kit.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a>-based objects:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">genome_kit</span> <span class="kn">import</span> <span class="n">VCFTable</span>
+</pre></div>
+</div>
+<p>Suppose you have the following VCF saved as <code class="docutils literal notranslate"><span class="pre">test.vcf.gz</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">##fileformat=VCFv4.2</span>
+<span class="c1">##reference=GRCh37</span>
+<span class="c1">##INFO=&lt;ID=AF,Number=A,Type=Float,Description=&quot;Allele frequency&quot;&gt;</span>
+<span class="c1">##FORMAT=&lt;ID=GT,Number=1,Type=String,Description=&quot;Genotype&quot;&gt;</span>
+<span class="c1">##FORMAT=&lt;ID=AD,Number=R,Type=Integer,Description=&quot;Allelic depths&quot;&gt;</span>
+<span class="c1">#CHROM POS     ID REF ALT QUAL FILTER INFO    FORMAT sample1  sample2  sample3</span>
+<span class="mi">1</span>      <span class="mi">949523</span>  <span class="o">.</span>  <span class="n">C</span>   <span class="n">T</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.00</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span>
+<span class="mi">1</span>      <span class="mi">949608</span>  <span class="o">.</span>  <span class="n">G</span>   <span class="n">A</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.01</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span>
+<span class="mi">1</span>      <span class="mi">949696</span>  <span class="o">.</span>  <span class="o">-</span>   <span class="n">G</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.02</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">9</span>
+<span class="mi">1</span>      <span class="mi">949739</span>  <span class="o">.</span>  <span class="n">G</span>   <span class="n">TC</span>  <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.03</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">11</span> <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">12</span>
+<span class="mi">1</span>      <span class="mi">977028</span>  <span class="o">.</span>  <span class="n">G</span>   <span class="n">T</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.04</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">13</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">14</span> <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">15</span>
+<span class="mi">1</span>      <span class="mi">977330</span>  <span class="o">.</span>  <span class="n">T</span>   <span class="n">C</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.05</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">0</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">16</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">17</span> <span class="o">./.</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">18</span>
+<span class="mi">1</span>      <span class="mi">977516</span>  <span class="o">.</span>  <span class="o">-</span>   <span class="n">C</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.06</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">19</span> <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span> <span class="o">./.</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">21</span>
+<span class="mi">1</span>      <span class="mi">977570</span>  <span class="o">.</span>  <span class="n">G</span>   <span class="n">A</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.07</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">22</span> <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">23</span> <span class="o">./.</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">24</span>
+<span class="mi">1</span>      <span class="mi">978604</span>  <span class="o">.</span>  <span class="n">CT</span>  <span class="o">-</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.08</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">25</span> <span class="mi">1</span><span class="o">/</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">26</span> <span class="o">./.</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="mi">27</span>
+<span class="mi">1</span>      <span class="mi">978628</span>  <span class="o">.</span>  <span class="n">C</span>   <span class="n">T</span>   <span class="o">.</span>    <span class="o">.</span>      <span class="n">AF</span><span class="o">=</span><span class="mf">0.09</span> <span class="n">GT</span><span class="p">:</span><span class="n">AD</span>  <span class="o">./.</span><span class="p">:</span><span class="mi">28</span><span class="p">,</span><span class="mi">0</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span><span class="p">:</span><span class="mi">29</span><span class="p">,</span><span class="mi">0</span> <span class="o">./.</span><span class="p">:</span><span class="mi">30</span><span class="p">,</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>Open the VCF, making sure to carry over the <cite>AF</cite>, <cite>GT</cite>, and <cite>AD</cite> data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vcf</span> <span class="o">=</span> <span class="n">VCFTable</span><span class="o">.</span><span class="n">from_vcf</span><span class="p">(</span><span class="s2">&quot;test.vcf.gz&quot;</span><span class="p">,</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">),</span> <span class="n">info_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AF&quot;</span><span class="p">],</span> <span class="n">fmt_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GT&quot;</span><span class="p">,</span> <span class="s2">&quot;AD&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcf</span>
+<span class="go">&lt;VCFTable, len() = 10&gt;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&lt;VCFVariant chr1:949522:C:T:hg19&gt;</span>
+</pre></div>
+</div>
+<p>Get a variant’s INFO attribute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vcf</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">AF</span>
+<span class="go">0.0500000007451</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vcf</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;AF&quot;</span><span class="p">)</span>
+<span class="go">array([ 0.  ,  0.01,  0.02,  ..., 0.07,  0.08,  0.09], dtype=float32)</span>
+</pre></div>
+</div>
+<p>Query an interval:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">vcf</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>   <span class="c1"># chr1:977030-977630</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variants</span> <span class="o">=</span> <span class="n">vcf</span><span class="o">.</span><span class="n">find_within</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variants</span>
+<span class="go">[&lt;VCFVariant chr1:977329:T:C:hg19&gt;,</span>
+<span class="go"> &lt;VCFVariant chr1:977515::C:hg19&gt;,</span>
+<span class="go"> &lt;VCFVariant chr1:977569:G:A:hg19&gt;]</span>
+</pre></div>
+</div>
+<p>Get indices of variants returned by a query:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">vcf</span><span class="o">.</span><span class="n">index_of</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">indices</span>
+<span class="go">[5, 6, 7]</span>
+</pre></div>
+</div>
+<p>Get per-sample genotype and allelic depth for specific variants:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gt</span> <span class="o">=</span> <span class="n">vcf</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;GT&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gt</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(10L, 3L)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gt</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+<span class="go">array([[1, 0, 0],</span>
+<span class="go">       [2, 2, 0],</span>
+<span class="go">       [2, 2, 0]], dtype=int8)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ad</span> <span class="o">=</span> <span class="n">vcf</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;AD&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ad</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(10L, 3L)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ad</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+<span class="go">array([[[ 0, 16],</span>
+<span class="go">        [ 0, 17],</span>
+<span class="go">        [ 0, 18]],</span>
+
+<span class="go">       [[ 0, 19],</span>
+<span class="go">        [ 0, 20],</span>
+<span class="go">        [ 0, 21]],</span>
+
+<span class="go">       [[ 0, 22],</span>
+<span class="go">        [ 0, 23],</span>
+<span class="go">        [ 0, 24]]], dtype=int32)</span>
+</pre></div>
+</div>
+<p>The fastest way to filter variants by FORMAT columns is to use numpy on the entire array:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">ad</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Find variants with at least one</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variants</span> <span class="o">=</span> <span class="n">vcf</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>                   <span class="c1"># sample having ad &gt;= 20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variants</span>
+<span class="go">[&lt;VCFVariant chr1:977515::C:hg19&gt;,</span>
+<span class="go"> &lt;VCFVariant chr1:977569:G:A:hg19&gt;,</span>
+<span class="go"> &lt;VCFVariant chr1:978603:CT::hg19&gt;,</span>
+<span class="go"> &lt;VCFVariant chr1:978627:C:T:hg19&gt;]</span>
+</pre></div>
+</div>
+<p>You can run the above examples with <code class="docutils literal notranslate"><span class="pre">$python</span> <span class="pre">demos/query_vcf.py</span></code> from the GenomeKit directory.</p>
+</section>
+<section id="feature-extraction-with-variants">
+<h2>Feature Extraction with Variants<a class="headerlink" href="#feature-extraction-with-variants" title="Link to this heading"></a></h2>
+<p>Besides reference genomes (<a class="reference internal" href="api.html#genome_kit.Genome" title="genome_kit.Genome"><code class="xref py py-class docutils literal notranslate"><span class="pre">Genome</span></code></a>), GenomeKit can also represent
+a genome that has variants applied to it (<a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a>).
+The idea is that you can pass either a reference genome or a variant genome
+to your feature extraction code, and both cases will work transparently.</p>
+<p><a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a> will accept either a single <a class="reference internal" href="api.html#genome_kit.Variant" title="genome_kit.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a> object,
+a variant string, or a list which can contain a mixture of both. When a <cite>Variant</cite> object
+is passed it is checked that it is defined on the same reference genome as the <cite>VariantGenome</cite>.
+When a string is supplied, as <cite>Variant</cite> object is created on the same reference genome as
+the <cite>VariantGenome</cite>.</p>
+<p>Consider a toy example, where the only feature we extract is
+the DNA sequence flanking the 5’ end of a CFTR transcript:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">extract_features</span><span class="p">(</span><span class="n">genome</span><span class="p">):</span>
+    <span class="n">tran</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="s2">&quot;ENST00000426809.1&quot;</span><span class="p">]</span>   <span class="c1"># CFTR transcript</span>
+    <span class="n">span</span> <span class="o">=</span> <span class="n">tran</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>                    <span class="c1"># 7nt span at 5&#39; end</span>
+    <span class="k">return</span> <span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">span</span><span class="p">)</span>                          <span class="c1"># extract DNA</span>
+
+<span class="n">ref</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v19&quot;</span><span class="p">)</span>
+<span class="n">variants</span> <span class="o">=</span> <span class="p">[</span><span class="n">Variant</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s2">&quot;chr7:117120149:A:G&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="p">),</span>     <span class="c1"># rs397508328</span>
+            <span class="n">Variant</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s2">&quot;chr7:117120151:G:T&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="p">)]</span>     <span class="c1"># rs397508657</span>
+<span class="n">var</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">variants</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">extract_features</span><span class="p">(</span><span class="n">ref</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">extract_features</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The above outputs reference DNA, and a variant DNA:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CCATGCA</span>
+<span class="n">CCGTTCA</span>
+</pre></div>
+</div>
+<p>However, unless one plans to only support SNVs and not INDELs,
+it is important to specify how each query interval should be aligned with
+respect to insertions/deletions. Read on and learn about
+<a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a> and about the concept of “anchors”.</p>
+</section>
+<section id="variant-genomes">
+<h2>Variant genomes<a class="headerlink" href="#variant-genomes" title="Link to this heading"></a></h2>
+<p>Variant genomes are made by applying a zero or more variants to a reference
+genome via the <a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a> class.
+If a list of variants is given, they are <cite>all</cite> applied as if they were a
+single complex variant:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="n">var1</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="s2">&quot;chr7:117120188:A:T&quot;</span><span class="p">))</span>    <span class="c1"># rs397508673 (A&gt;T)</span>
+<span class="n">var2</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="s2">&quot;chr7:117120190:A:-&quot;</span><span class="p">))</span>    <span class="c1"># rs397508710 (delA)</span>
+<span class="n">var3</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;chr7:117120188:A:T&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;chr7:117120190:A:-&quot;</span><span class="p">]])</span>  <span class="c1"># both variants together</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Variants are currently specified using string format <code class="docutils literal notranslate"><span class="pre">chromosome:position:ref:alt</span></code> where the position is DNA1,
+just like in ClinVar or the UCSC browser (technically VCF 4.0/4.1 standard). Clinvar also has a special format to
+denote indels that includes the    preceding base as padding, such as in <code class="docutils literal notranslate"><span class="pre">'chr7:117,231,993:TCT:T'</span></code>. GenomeKit
+can handle this format but it is optional. Therefore <code class="docutils literal notranslate"><span class="pre">'chr7:117,231,994:CT:'</span></code> would be equivalent to the
+previous variant. GenomeKit also allows either <code class="docutils literal notranslate"><span class="pre">-</span></code>, or <code class="docutils literal notranslate"><span class="pre">.</span></code> to denote an empty <em>ref</em> or <em>alt</em> field
+(<em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">'chr7:117,231,994:CT:.'</span></code>). When the padding base in supplied, GenomeKit trims it off internally.
+GenomeKit also allows comma separators in the variant position (<em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">'117,231,993'</span></code>), as well as both
+UCSC (<code class="docutils literal notranslate"><span class="pre">'chr7'</span></code>) and ENSEMBL-style (<code class="docutils literal notranslate"><span class="pre">'7'</span></code>) chromosome names (only for nuclear chromosomes 1–23, X, and Y).</p>
+</div>
+<p>Given a query interval, the variant genome’s
+<a class="reference internal" href="api.html#genome_kit.VariantGenome.dna" title="genome_kit.VariantGenome.dna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dna()</span></code></a>
+method returns the variant sequence, rather than the reference sequence:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117120185</span><span class="p">,</span> <span class="mi">117120192</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ref</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;CCAAACT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var1</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>   <span class="c1"># (A&gt;T)</span>
+<span class="go">&#39;CCTAACT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var2</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>   <span class="c1"># (delA)</span>
+<span class="go">&#39;CCAACT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var3</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>   <span class="c1"># (A&gt;T, delA)</span>
+<span class="go">&#39;CCTACT&#39;</span>
+</pre></div>
+</div>
+<p>Notice that when a length-changing variant falls within the query interval,
+the length of the result changes. This is only the default behaviour.
+The next section explains how to control alignment for feature extraction
+by ‘anchoring’ an interval.</p>
+</section>
+<section id="length-changing-variants">
+<h2>Length-changing variants<a class="headerlink" href="#length-changing-variants" title="Link to this heading"></a></h2>
+<p>Variants that insert or delete positions (INDELs) effectively change the
+coordinate system of the variant genome. If an interval is specified on the
+reference genome, and there are variants falling within that interval, then
+the manner in which it should be lifted to the variant genome is ambiguous.
+This section explains how you can control the lifting behaviour to
+suit your feature extraction needs.</p>
+<p>The mechanism that GenomeKit provides is <cite>anchored</cite> intervals.
+The idea is that the user indicates a position within the reference interval
+that remains aligned when the interval is lifted over to the variant genome.</p>
+<p>For example, you may want to anchor your interval to its 5’ or 3’ end:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr7&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">117120185</span><span class="p">,</span> <span class="mi">117120192</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anchored_5p</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">with_anchor</span><span class="p">(</span><span class="s2">&quot;5p&quot;</span><span class="p">)</span>  <span class="c1"># Anchored to its 5&#39; end</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">anchored_3p</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">with_anchor</span><span class="p">(</span><span class="s2">&quot;3p&quot;</span><span class="p">)</span>  <span class="c1"># Anchored to its 3&#39; end</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ref</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;hg19&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="s2">&quot;chr7:117120190:A:-&quot;</span><span class="p">))</span>  <span class="c1"># rs397508710 (delA)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ref</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;CCAAACT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>     <span class="c1"># (shrink 3&#39; end)</span>
+<span class="go">&#39;CCAACT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">anchored_5p</span><span class="p">)</span>  <span class="c1"># (fill 3&#39; end)</span>
+<span class="go">&#39;CCAACTT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">anchored_3p</span><span class="p">)</span>  <span class="c1"># (fill 5&#39; end)</span>
+<span class="go">&#39;TCCAACT&#39;</span>
+</pre></div>
+</div>
+<p>Besides the <cite>“5p”</cite> and <cite>“3p”</cite> modes, there are other ways to anchor
+your intervals.
+See <a class="reference internal" href="anchors.html#anchors"><span class="std std-ref">Anchors</span></a> for a more in-depth explanation.</p>
+</section>
+<section id="motif-finding">
+<h2>Motif finding<a class="headerlink" href="#motif-finding" title="Link to this heading"></a></h2>
+<p>GenomeKit can find motifs in both reference and mutant sequences for you. This
+is based on string matching, not PWMs.</p>
+<p>The example shows how to search for motifs on both the reference and a variant
+genome using the <a class="reference internal" href="api.html#genome_kit.Genome.find_motif" title="genome_kit.Genome.find_motif"><code class="xref py py-meth docutils literal notranslate"><span class="pre">genome_kit.Genome.find_motif()</span></code></a> and
+<a class="reference internal" href="api.html#genome_kit.VariantGenome.find_motif" title="genome_kit.VariantGenome.find_motif"><code class="xref py py-meth docutils literal notranslate"><span class="pre">genome_kit.VariantGenome.find_motif()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s1">&#39;hg19&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Short sequence from CFTR</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s1">&#39;chr7&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="mi">117231957</span><span class="p">,</span> <span class="mi">117232030</span><span class="p">,</span> <span class="n">genome</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;TTGATATTTATATGTTTTTATATCTTAAAGCTGTGTCTGTAAACTGATGGCTAACAAAACTAGGATTTTGGTC&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">motif</span> <span class="o">=</span> <span class="s1">&#39;AACAA&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">find_motif</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span>
+<span class="go">[Interval(&quot;chr7&quot;, &quot;+&quot;, 117232009, 117232009, &quot;hg19&quot;, 117232009)]</span>
+</pre></div>
+</div>
+<p>The returned interval is empty but can be expanded
+for feature extraction:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">Interval(&quot;chr7&quot;, &quot;+&quot;, 117232004, 117232014, &quot;hg19&quot;, 117232009)</span>
+</pre></div>
+</div>
+<p>The returned interval always has its anchor set equal to its position. This means
+that the interval will always stay aligned
+to the same position on the reference genome when variants are applied.</p>
+<p>The default is to return the empty interval upstream of the
+first nucleotide of the motif matches, <em>i.e.</em> the motif is
+immediately downstream.
+But in many cases we would like to change that behaviour. For example, when we
+match the acceptor core splice site motif <code class="docutils literal notranslate"><span class="pre">AG</span></code>, we usually want the match
+to be aligned to the 3’ end of the <code class="docutils literal notranslate"><span class="pre">AG</span></code> motif. For
+this reason, <a class="reference internal" href="api.html#genome_kit.Genome.find_motif" title="genome_kit.Genome.find_motif"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_motif()</span></code></a> supports the
+<code class="docutils literal notranslate"><span class="pre">match_position</span></code> argument. The default is <code class="docutils literal notranslate"><span class="pre">match_position=0</span></code> (equivalently
+<code class="docutils literal notranslate"><span class="pre">match_position='5p'</span></code>), which aligns the match to the 5’ end of the motif.
+In the above case of searching for acceptor motifs, we can set
+<code class="docutils literal notranslate"><span class="pre">match_position='3p'</span></code> to return potential splice sites:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">motif</span> <span class="o">=</span> <span class="s1">&#39;AG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">find_motif</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">match_position</span><span class="o">=</span><span class="s1">&#39;3p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span>
+<span class="go">[Interval(&quot;chr7&quot;, &quot;+&quot;, 117231987, 117231987, &quot;hg19&quot;, 117231987),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232020, 117232020, &quot;hg19&quot;, 117232020)]</span>
+</pre></div>
+</div>
+<p>We can verify that the <code class="docutils literal notranslate"><span class="pre">AG</span></code> is now immediately upstream of the returned
+empty intervals:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">]</span>
+<span class="go">[&#39;AG&#39;, &#39;AG&#39;]</span>
+</pre></div>
+</div>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">match_position</span></code> can also be an integer: <code class="docutils literal notranslate"><span class="pre">match_position=0</span></code>
+is equivalent to <code class="docutils literal notranslate"><span class="pre">match_position='5p'</span></code>, <code class="docutils literal notranslate"><span class="pre">match_position=len(motif)</span></code> is
+equivalent to <code class="docutils literal notranslate"><span class="pre">match_position='3p'</span></code> and integers within that range match
+positions within the motif.</p>
+<p>By default <a class="reference internal" href="api.html#genome_kit.Genome.find_motif" title="genome_kit.Genome.find_motif"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_motif()</span></code></a> returns only <em>non
+overlapping</em> matches, but this can be configured with the
+<code class="docutils literal notranslate"><span class="pre">find_overlapping_matches</span></code> parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">interval</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s1">&#39;chr7&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="mi">117231957</span><span class="p">,</span> <span class="mi">117232030</span><span class="p">,</span> <span class="n">genome</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">motif</span> <span class="o">=</span> <span class="s1">&#39;TT&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+<span class="go">&#39;TTGATATTTATATGTTTTTA&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">find_motif</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">[Interval(&quot;chr7&quot;, &quot;+&quot;, 117231957, 117231957, &quot;hg19&quot;, 117231957),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231963, 117231963, &quot;hg19&quot;, 117231963),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231971, 117231971, &quot;hg19&quot;, 117231971),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231973, 117231973, &quot;hg19&quot;, 117231973),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231981, 117231981, &quot;hg19&quot;, 117231981),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232022, 117232022, &quot;hg19&quot;, 117232022),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232024, 117232024, &quot;hg19&quot;, 117232024)]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span><span class="o">.</span><span class="n">find_motif</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span> <span class="n">find_overlapping_motifs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[Interval(&quot;chr7&quot;, &quot;+&quot;, 117231957, 117231957, &quot;hg19&quot;, 117231957),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231963, 117231963, &quot;hg19&quot;, 117231963),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231964, 117231964, &quot;hg19&quot;, 117231964),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231971, 117231971, &quot;hg19&quot;, 117231971),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231972, 117231972, &quot;hg19&quot;, 117231972),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231973, 117231973, &quot;hg19&quot;, 117231973),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231974, 117231974, &quot;hg19&quot;, 117231974),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231981, 117231981, &quot;hg19&quot;, 117231981),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232022, 117232022, &quot;hg19&quot;, 117232022),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232023, 117232023, &quot;hg19&quot;, 117232023),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232024, 117232024, &quot;hg19&quot;, 117232024)]</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="api.html#genome_kit.VariantGenome.find_motif" title="genome_kit.VariantGenome.find_motif"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_motif()</span></code></a> works the same on
+<a class="reference internal" href="api.html#genome_kit.VariantGenome" title="genome_kit.VariantGenome"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariantGenome</span></code></a> as on the reference genome:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">variant</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="s2">&quot;chr7:117231980::TTAGTT&quot;</span><span class="p">)</span>  <span class="c1"># Insertion</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">variant_genome</span> <span class="o">=</span> <span class="n">VariantGenome</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">motif</span> <span class="o">=</span> <span class="s1">&#39;AG&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span> <span class="o">=</span> <span class="n">variant_genome</span><span class="o">.</span><span class="n">find_motif</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">motif</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">match_position</span><span class="o">=</span><span class="s1">&#39;3p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matches</span>
+<span class="go">[Interval(&quot;chr7&quot;, &quot;+&quot;, 117231979, 117231979, &quot;hg19&quot;, 117231979, 4),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117231987, 117231987, &quot;hg19&quot;, 117231987),</span>
+<span class="go"> Interval(&quot;chr7&quot;, &quot;+&quot;, 117232020, 117232020, &quot;hg19&quot;, 117232020)]</span>
+</pre></div>
+</div>
+<p>The result are the previous two matches plus a third one where we inserted
+the motif into the reference sequence. This is a special case since the
+<em>position within the insertion</em> has no alignment to the reference genome.
+In this case the interval has its <code class="docutils literal notranslate"><span class="pre">anchor_offset</span></code> attribute set to four
+to indicate that the motif matches at the fourth position in the insertion.</p>
+</section>
+<section id="sharing-new-data-files">
+<span id="sharing-data"></span><h2>Sharing new data files<a class="headerlink" href="#sharing-new-data-files" title="Link to this heading"></a></h2>
+<p>Data such as assemblies, annotations, tracks, etc is stored in custom-built binary files.
+APIs for building these files are provided as part of the API.
+GenomeKit first searches for data files in the directory specified by the environment variable
+<code class="docutils literal notranslate"><span class="pre">GENOMEKIT_DATA_DIR</span></code>, defaulting to <code class="docutils literal notranslate"><span class="pre">appdirs.user_data_dir(&quot;genome_kit&quot;)</span></code>.
+If the file is not found, by default GenomeKit attempts to download it from a public read-only
+Google Cloud Storage bucket.</p>
+<p>You can use your own GCS bucket by setting the environment variable <code class="docutils literal notranslate"><span class="pre">GENOMEKIT_GCS_BUCKET</span></code>,
+allowing you to upload and share your data files.</p>
+<p>If you wish to use a different mechanism to store remote data files, you can provide an
+implementation of <a class="reference internal" href="api.html#genome_kit.DataManager" title="genome_kit.data_manager.DataManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">genome_kit.data_manager.DataManager</span></code></a> and register it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyDataManager</span><span class="p">(</span><span class="n">DataManager</span><span class="p">):</span>
+        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="o">...</span>
+
+        <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="o">...</span>
+
+        <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="o">...</span>
+
+<span class="n">gk</span><span class="o">.</span><span class="n">gk_data</span><span class="o">.</span><span class="n">data_manager</span> <span class="o">=</span> <span class="n">MyDataManager</span><span class="p">()</span>
+
+<span class="c1"># Alternatively, you can install a plugin package that advertises a DataManager implementation</span>
+<span class="c1"># endpoint under the &quot;genomekit.plugins.data_manager&quot; group. GenomeKit will automatically</span>
+<span class="c1"># use the plugin&#39;s data manager.</span>
+<span class="c1"># (see https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins)</span>
+</pre></div>
+</div>
+</section>
+<section id="logging-and-troubleshooting">
+<h2>Logging and troubleshooting<a class="headerlink" href="#logging-and-troubleshooting" title="Link to this heading"></a></h2>
+<p>Set the <code class="docutils literal notranslate"><span class="pre">GENOMEKIT_QUIET</span></code> to any value to suppress logging output.</p>
+<p>Set the <code class="docutils literal notranslate"><span class="pre">GENOMEKIT_TRACE</span></code> to any value to enable trace logging.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="GenomeKit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="anchors.html" class="btn btn-neutral float-right" title="Anchors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

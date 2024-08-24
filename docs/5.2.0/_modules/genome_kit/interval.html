@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.interval &mdash; GenomeKit 5.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=2dde5210"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.interval</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.interval</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span><span class="p">,</span> <span class="n">mock_result</span>
+
+
+<div class="viewcode-block" id="Interval">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A genomic interval.</span>
+
+<span class="sd">    An Interval represents a contiguous stranded genomic interval, identified</span>
+<span class="sd">    by a chromosome, strand, start position, end position, and reference genome.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- DO NOT EXTEND BASE CLASS SLOTS</span>
+
+    <span class="c1"># __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+    <span class="c1"># __getattribute__       # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># __setattribute__       # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+
+<div class="viewcode-block" id="Interval.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize an interval from a DNA0 position.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (&#39;chr1&#39;, ...).</span>
+
+<span class="sd">        strand : :py:class:`chr`</span>
+<span class="sd">            The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        start : :py:class:`int`</span>
+<span class="sd">            The start position of the interval (inclusive, 0-based).</span>
+
+<span class="sd">        end : :py:class:`int`</span>
+<span class="sd">            The end position of the interval (exclusive, 0-based).</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome in which the interval is defined,</span>
+<span class="sd">            for example &quot;hg19&quot;. If a genome object is given, its reference</span>
+<span class="sd">            genome will be used.</span>
+
+<span class="sd">        anchor : :py:class:`int` | :py:class:`str` | :py:class:`~genome_kit.Interval` | None, optional</span>
+<span class="sd">            The anchor is only relevant when extracting DNA from a</span>
+<span class="sd">            `VariantGenome` and specifies how length-changing variants are</span>
+<span class="sd">            applied. Conceptually, the anchor defines a fixed point when the</span>
+<span class="sd">            sequence changes length. See (TODO: link) for the details.</span>
+<span class="sd">            The anchor can be any position in the interval. If anchor is</span>
+<span class="sd">            `None`, then length-changing variants will change the length of the</span>
+<span class="sd">            interval. Anchor can be a string: `5p` or `3p` sets the anchor to</span>
+<span class="sd">            the respective end of the interval, respecting the sense strand.</span>
+<span class="sd">            `start` or `end` set the anchor to the start or end of the interval</span>
+<span class="sd">            on the forward strand. When anchor is `center` then the anchor is</span>
+<span class="sd">            set to the middle position of the interval (if the interval has odd</span>
+<span class="sd">            length, the position is rounded towards the 5p end of the interval,</span>
+<span class="sd">            respecting the sense strand). If anchor is an integer or an empty</span>
+<span class="sd">            interval, the anchor is set to that position.</span>
+
+<span class="sd">        anchor_offset : :py:class:`int`, optional</span>
+<span class="sd">            The anchor offset is a shift that&#39;s applied to the anchor only on</span>
+<span class="sd">            the variant genome. The purpose is to align a position on the</span>
+<span class="sd">            reference genome with a position *inside* an insertion. The anchor</span>
+<span class="sd">            itself would only allow to align with the beginning or end of the</span>
+<span class="sd">            insertion.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s1">&#39;start&#39;</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">start</span>
+            <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s1">&#39;end&#39;</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">end</span>
+            <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s1">&#39;5p&#39;</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">start</span> <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="k">else</span> <span class="n">end</span>
+            <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s1">&#39;3p&#39;</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">end</span> <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="k">else</span> <span class="n">start</span>
+            <span class="k">elif</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s1">&#39;center&#39;</span><span class="p">:</span>
+                <span class="n">anchor</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="k">if</span> <span class="n">strand</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span> <span class="k">else</span> \
+                         <span class="n">end</span>   <span class="o">-</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># noqa</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized string &#39;</span><span class="si">{}</span><span class="s2">&#39; for anchor&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">anchor</span><span class="p">))</span>
+
+        <span class="c1"># Deliberately skip overhead of super(Interval, self) wrapper</span>
+        <span class="n">_cxx</span><span class="o">.</span><span class="n">Interval</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="p">)</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">chromosome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The chromosome name.</span>
+
+<span class="sd">        A shorthand property `chrom` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The name of the chromosome this interval is defined on  (e.g. &quot;chr1&quot;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`chr`</span>
+<span class="sd">            The strand this interval is defined on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">chr</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The integer position of the start (inclusive, 0-based).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The start position of this interval within the reference genome.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The integer position of the end (exclusive, 0-based).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The end position of the this interval within the reference genome.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end5</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The 5p end of this interval, which is a length-0 interval.</span>
+
+<span class="sd">        Not to be confused with the `end` attribute, which</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The length-0 interval at the 5p end of the interval, i.e. the gap preceding</span>
+<span class="sd">            the most upstream base in the interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The 3p end of this interval, which is a length-0 interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The length-0 interval at the 3p end of the interval, i.e. the gap succeeding</span>
+<span class="sd">            the most downstream base in the interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The reference genome (assembly name in UCSC format).</span>
+
+<span class="sd">        A shorthand property `refg` is also available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            The name of the reference genome this interval is defined in.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">anchor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The anchor position.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int` | :py:data:`None`</span>
+<span class="sd">            The anchor position associated with this interval, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">anchor_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The anchor offset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The anchor offset associated with this interval, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Interval.shift">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.shift">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval shifted upstream/downstream.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        amount : :py:class:`int`</span>
+<span class="sd">            The amount by which to shift the start and end positions.</span>
+<span class="sd">            A positive amount shifts downstream according to the current strand,</span>
+<span class="sd">            and a negative amount shifts the position upstream.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The shifted interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.expand">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.expand">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upstream</span><span class="p">,</span> <span class="n">dnstream</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval expanded upstream/downstream.</span>
+
+<span class="sd">        Can also be called with a single argument, in which case</span>
+<span class="sd">        upstream and dnstream take on the same value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        upstream : :py:class:`int`</span>
+<span class="sd">            Number of upstream positions to add to the interval.</span>
+
+<span class="sd">        dnstream : :py:class:`int`</span>
+<span class="sd">            Number of downstream positions to add to the interval.</span>
+<span class="sd">            If not specified, defaults to `upstream` (i.e. symmetric).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            An interval containing `upstream` + `downstream` + 1 positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.intersect">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.intersect">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval intersecting both intervals.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :class:`~genome_kit.Interval`</span>
+<span class="sd">            interval to intersect with this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`~genome_kit.Interval` | :data:`None`</span>
+<span class="sd">            The intersecting interval (possibly empty) or `None` if the</span>
+<span class="sd">            intervals are disjoint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.subtract">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.subtract">[docs]</a>
+    <span class="k">def</span> <span class="nf">subtract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Interval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Interval</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of intervals, representing this interval with the its</span>
+<span class="sd">        intersection of another interval removed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other</span>
+<span class="sd">            interval to subtract its intersection from this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Sequence[Interval]</span>
+<span class="sd">            The intervals after subtraction. If the intervals were disjoint,</span>
+<span class="sd">            returns [self].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intersection</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">intersection</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">intersection</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">&gt;</span> <span class="n">intersection</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">intersection</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Interval.is_positive_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.is_positive_strand">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">is_positive_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if this interval is on the positive strand.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if `strand` is equal to &#39;+&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_positive_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_positive_strand">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">as_positive_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The same interval on the positive strand.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The same interval, but on the positive (&#39;+&#39;) strand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_negative_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_negative_strand">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">as_negative_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The same interval on the negative strand.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The same interval, but on the negative (&#39;-&#39;) strand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_opposite_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_opposite_strand">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">as_opposite_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The same interval on the opposite strand.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The same interval, but on the opposite strand.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.upstream_of">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.upstream_of">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">upstream_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if this interval is strictly upstream of `other`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Any coordinate or interval subclass defined on the same</span>
+<span class="sd">            reference genome and strand as this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if this interval is strictly upstream of `other`, with no overlap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.dnstream_of">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.dnstream_of">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">dnstream_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if this interval is strictly downstream of `other`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Any coordinate or interval subclass defined on the same</span>
+<span class="sd">            reference genome and strand as this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if this interval is strictly downstream of `other`, with no overlap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.contains">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.contains">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if `other` lies within the extents of this interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Any coordinate or interval subclass defined on the same</span>
+<span class="sd">            reference genome and strand as this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if `other` lies entirely within the extents of this interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.within">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if this interval lies within the extents of `other`.</span>
+
+<span class="sd">        Use of ``interval in other`` expressions is also available.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Any coordinate or interval subclass defined on the same</span>
+<span class="sd">            reference genome and strand as this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if this interval lies within the extents of `other`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.overlaps">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.overlaps">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test if this interval overlaps the extents of `other`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Any coordinate or interval subclass defined on the same</span>
+<span class="sd">            reference genome and strand as this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            True if this interval overlaps the extents of `other`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.from_dna0_coord">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.from_dna0_coord">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_dna0_coord</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an interval spanning a single DNA0 position.</span>
+
+<span class="sd">        Equivalent to</span>
+<span class="sd">        ``Interval(chromosome, strand, position, position+1, reference_genome)``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (e.g. &quot;chr1&quot;).</span>
+
+<span class="sd">        strand : :py:class:`int`</span>
+<span class="sd">            The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        position : :py:class:`int`</span>
+<span class="sd">            The position the interval should span (0-based).</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome in which the interval is defined,</span>
+<span class="sd">            for example &quot;hg19&quot;. If a genome object is given, its reference</span>
+<span class="sd">            genome will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting length-1 interval spanning `position`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">position</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.from_dna0">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.from_dna0">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_dna0</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an interval from DNA0 positions.</span>
+
+<span class="sd">        Equivalent to calling :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (e.g. &quot;chr1&quot;).</span>
+
+<span class="sd">        strand : :py:class:`int`</span>
+<span class="sd">            The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        start : :py:class:`int`</span>
+<span class="sd">            The start position of the interval (inclusive, 0-based).</span>
+
+<span class="sd">        end : :py:class:`int`</span>
+<span class="sd">            The end position of the interval (exclusive, 0-based).</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome in which the interval is defined,</span>
+<span class="sd">            for example &quot;hg19&quot;. If a genome object is given, its reference</span>
+<span class="sd">            genome will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.from_dna1">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.from_dna1">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_dna1</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an interval from DNA1 positions.</span>
+
+<span class="sd">        Positions are automatically converted to DNA0 as (start-1, end).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (e.g. &quot;chr1&quot;).</span>
+
+<span class="sd">        strand : :py:class:`int`</span>
+<span class="sd">            The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        start : :py:class:`int`</span>
+<span class="sd">            The start position of the interval (inclusive, 1-based).</span>
+
+<span class="sd">        end : :py:class:`int`</span>
+<span class="sd">            The end position of the interval (inclusive, 1-based).</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome in which the interval is defined,</span>
+<span class="sd">            for example &quot;hg19&quot;. If a genome object is given, its reference</span>
+<span class="sd">            genome will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.from_rna1">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.from_rna1">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_rna1</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an interval from RNA1 positions.</span>
+
+<span class="sd">        The start/end positions are automatically converted to DNA0 as</span>
+<span class="sd">        `min(abs(start),abs(end))-1` and `max(abs(start), abs(end)))` respectively.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chromosome : :py:class:`str`</span>
+<span class="sd">            The chromosome name (e.g. &quot;chr1&quot;).</span>
+
+<span class="sd">        strand : :py:class:`int`</span>
+<span class="sd">            The strand (&quot;+&quot; or &quot;-&quot;).</span>
+
+<span class="sd">        start : :py:class:`int`</span>
+<span class="sd">            The start position of the interval (signed, inclusive, 1-based).</span>
+
+<span class="sd">        end : :py:class:`int`</span>
+<span class="sd">            The end position of the interval (signed, inclusive, 1-based).</span>
+
+<span class="sd">        reference_genome : :py:class:`str` | :py:class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome in which the interval is defined,</span>
+<span class="sd">            for example &quot;hg19&quot;. If a genome object is given, its reference</span>
+<span class="sd">            genome will be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">strand</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span> <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span>
+
+        <span class="c1"># verify input</span>
+        <span class="k">if</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Start position needs to be &lt;= end (</span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">start</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">end</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Start and end must have the same sign: &quot;</span> <span class="s2">&quot;(</span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+
+        <span class="c1"># check if it&#39;s single position or interval</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">end</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">end</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">reference_genome</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.spanning">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.spanning">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">spanning</span><span class="p">(</span><span class="n">interval1</span><span class="p">,</span> <span class="n">interval2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the smallest interval spanning the given pair of existing intervals,</span>
+<span class="sd">        or raise an exception if given intervals not on the same chromosome, strand,</span>
+<span class="sd">        and reference genome. The given intervals are not required to be overlapping,</span>
+<span class="sd">        and may both be of zero length.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            &gt;&gt;&gt; a = Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 150, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; b = Interval(&quot;chr1&quot;, &quot;+&quot;, 200, 250, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; Interval.spanning(a, b)</span>
+<span class="sd">            Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 250, &quot;hg19&quot;)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            This method is not anchor aware, since that requires a list of variants for context.</span>
+<span class="sd">            See :func:`~genome_kit.Variant.spanning` for that use case.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval1 : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            an interval</span>
+
+<span class="sd">        interval2 : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            another interval</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The resulting spanning interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">interval1</span><span class="o">.</span><span class="n">check_same_chromosome</span><span class="p">(</span><span class="n">interval2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">interval1</span><span class="o">.</span><span class="n">strand</span> <span class="o">!=</span> <span class="n">interval2</span><span class="o">.</span><span class="n">strand</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Spanning intervals on opposite strands, got: </span><span class="si">{</span><span class="n">interval1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">interval2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">interval1</span><span class="p">,</span> <span class="n">interval2</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Spanning anchored intervals (should use Variant.spanning), got:&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">interval1</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">interval2</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">interval2</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">interval2</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="n">interval1</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="n">interval1</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">interval1</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">midpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify the midpoint of an interval.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            &gt;&gt;&gt; Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 150, &quot;hg19&quot;).midpoint</span>
+<span class="sd">            Interval(&quot;chr1&quot;, &quot;+&quot;, 125, 125, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 151, &quot;hg19&quot;).midpoint</span>
+<span class="sd">            Interval(&quot;chr1&quot;, &quot;+&quot;, 125, 126, &quot;hg19&quot;)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanning the midpoint of the interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Interval.distance">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.distance">[docs]</a>
+    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;midpoint&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The distance this interval and another.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            &gt;&gt;&gt; interval_a = Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 150, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; interval_b = Interval(&quot;chr1&quot;, &quot;+&quot;, 200, 300, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; interval_c = Interval(&quot;chr1&quot;, &quot;+&quot;, 400, 500, &quot;hg19&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; interval_a.distance(interval_b)</span>
+<span class="sd">            125.0</span>
+<span class="sd">            &gt;&gt;&gt; interval_a.distance([interval_b, interval_c])</span>
+<span class="sd">            [125.0, 325.0]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : :py:class:`~genome_kit.Interval` or :py:class:`~list`</span>
+<span class="sd">            an interval or list of intervals</span>
+<span class="sd">        method : :py:class:`str`</span>
+<span class="sd">            determines which (point) attribute of this and the other interval to</span>
+<span class="sd">            use when computing the distance.</span>
+<span class="sd">            Must be one of `midpoint`, `end5`, or `end3`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`float` or :py:class:`~list`</span>
+<span class="sd">            Distance to the interval. If other is of type Interval, return distance as a float;</span>
+<span class="sd">            otherwise, a list of distances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">midpoint_as_float</span><span class="p">(</span><span class="n">interval</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">midpoint</span>
+            <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;midpoint&#39;</span><span class="p">:</span>
+            <span class="n">getter</span> <span class="o">=</span> <span class="n">midpoint_as_float</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;end5&#39;</span><span class="p">,</span> <span class="s1">&#39;end3&#39;</span><span class="p">]:</span>
+            <span class="n">getter</span> <span class="o">=</span> <span class="n">attrgetter</span><span class="p">(</span><span class="n">method</span> <span class="o">+</span> <span class="s1">&#39;.start&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`method` must be in [&#39;midpoint&#39;, &#39;end5&#39;, &#39;end3&#39;]&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">validated</span><span class="p">(</span><span class="n">interval</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_same_chromosome</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span> <span class="o">!=</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Distancing intervals on opposite strands, got: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">interval</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Distancing anchored intervals is not supported, got: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">,&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">interval</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">interval</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">getter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="n">getter</span><span class="p">(</span><span class="n">validated</span><span class="p">(</span><span class="n">other</span><span class="p">))))</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">getter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">getter</span><span class="p">(</span><span class="n">validated</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_dna0">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_dna0">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_dna0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns (start, end) positions using DNA0 convention.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple`</span>
+<span class="sd">            The positions ``(start, end)`` using DNA0 convention.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_dna1">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_dna1">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_dna1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns (start, end) positions using DNA1 convention.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple`</span>
+<span class="sd">            The positions ``(start, end)`` using DNA1 convention.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty intervals cannot be represented using DNA1 convention.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_rna1">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_rna1">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_rna1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns (start, end) positions using RNA1 convention.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple`</span>
+<span class="sd">            The positions ``(start, end)`` using RNA1 convention.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Empty intervals cannot be represented using RNA1 convention.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_positive_strand</span><span class="p">():</span>  <span class="c1"># Forward strand</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Reverse strand</span>
+            <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.as_ucsc">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.as_ucsc">[docs]</a>
+    <span class="k">def</span> <span class="nf">as_ucsc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns this interval as a UCSC browser coordinate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">            A string in UCSC browser convention, e.g. ``&quot;chr5:500201-5002010&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.with_anchor">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.with_anchor">[docs]</a>
+    <span class="k">def</span> <span class="nf">with_anchor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span> <span class="n">anchor_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an anchored version of this interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            An anchored version of this interval.</span>
+<span class="sd">            The previous anchor, if any, is ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span> <span class="n">anchor</span><span class="p">,</span>
+                        <span class="n">anchor_offset</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">check_same_chromosome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Interval</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">chromosome</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Both intervals must be on the same chromosome, got: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Both intervals must be on the same reference genome, got: </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">,&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="Interval.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">anchor_args</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">anchor_args</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anchor</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">:</span>
+                <span class="n">anchor_args</span> <span class="o">+=</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">anchor_offset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;Interval(&quot;</span><span class="si">{}</span><span class="s1">&quot;, &quot;</span><span class="si">{}</span><span class="s1">&quot;, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, &quot;</span><span class="si">{}</span><span class="s1">&quot;</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chrom</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refg</span><span class="p">,</span>
+                                                             <span class="n">anchor_args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Interval.__str__">
+<a class="viewcode-back" href="../../api.html#genome_kit.Interval.__str__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

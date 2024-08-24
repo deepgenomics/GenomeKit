@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.data_manager &mdash; GenomeKit 5.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=2dde5210"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.data_manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.data_manager</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">google.cloud</span> <span class="kn">import</span> <span class="n">storage</span>
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">tqdm.utils</span> <span class="kn">import</span> <span class="n">ObjectWrapper</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ProgressPercentage">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage">[docs]</a>
+<span class="k">class</span> <span class="nc">ProgressPercentage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display a progress bar on a text terminal showing file being transferred, completion</span>
+<span class="sd">    percentage, estimated transfer time and throughput.</span>
+
+<span class="sd">    ```Progress &quot;myfile.bin&quot; [ 20.0 B/ 20.0 B] 100% |###############| ETA:  0:00:00 147.8 B/s```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ProgressPercentage.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">filesize</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress_msg</span><span class="o">=</span><span class="s1">&#39;Progress&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : :py:class:`str`</span>
+<span class="sd">            file name to display, will be truncated for display if necessary</span>
+
+<span class="sd">        filesize : :py:class:`int`</span>
+<span class="sd">            file size in bytes</span>
+
+<span class="sd">        progress_msg : :py:class:`str`</span>
+<span class="sd">            message to display before filename, e.g. &quot;[MyPackage] downloading&quot;, defaults to &quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">34</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">34</span><span class="p">:]</span>
+            <span class="n">progress_msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
+                             <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">unit_divisor</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+                             <span class="n">miniters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">total</span><span class="o">=</span><span class="n">filesize</span><span class="p">,</span>
+                             <span class="n">postfix</span><span class="o">=</span><span class="p">{</span><span class="n">progress_msg</span><span class="p">:</span> <span class="n">filename</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="ProgressPercentage.__call__">
+<a class="viewcode-back" href="../../api.html#genome_kit.ProgressPercentage.__call__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bytes_amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bytes_amount</span><span class="p">)</span></div>
+</div>
+
+
+<span class="n">_GCS_BUCKET</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GENOMEKIT_GCS_BUCKET&quot;</span><span class="p">,</span> <span class="s2">&quot;genomekit-public-dg&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_hashfile</span><span class="p">(</span><span class="n">afile</span><span class="p">,</span> <span class="n">hasher</span><span class="p">,</span> <span class="n">blocksize</span><span class="o">=</span><span class="mi">65536</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Memory efficient file hashing function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    afile : :py:class:`file`</span>
+<span class="sd">        An open file handle to read from.</span>
+
+<span class="sd">    hasher : :py:class:`_hashlib.HASH`</span>
+<span class="sd">        A hash function, e.g. hashlib.sha256().</span>
+
+<span class="sd">    blocksize : :py:class:`int`</span>
+<span class="sd">        The size of each hash update (speed only).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :py:class:`str`</span>
+<span class="sd">        The hash string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">afile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">hasher</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">afile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">blocksize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hasher</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DataManager">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager">[docs]</a>
+<span class="k">class</span> <span class="nc">DataManager</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="DataManager.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implementations should accept a data directory.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            data_dir: location where local files are cached</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">data_dir</span></div>
+
+
+<div class="viewcode-block" id="DataManager.get_file">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.get_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get path to a managed data file and download if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename</span>
+<span class="sd">            A single filename, without a path.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            The path to the local version of the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement get_file&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataManager.upload_file">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.upload_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Upload a file to make it available in GenomeKit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filepath</span>
+<span class="sd">            Full path to the file to be uploaded.</span>
+
+<span class="sd">        filename</span>
+<span class="sd">            The remote filename.</span>
+
+<span class="sd">        metadata</span>
+<span class="sd">            Extra metadata to attach to the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement upload_file&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DataManager.list_available_genomes">
+<a class="viewcode-back" href="../../api.html#genome_kit.DataManager.list_available_genomes">[docs]</a>
+    <span class="k">def</span> <span class="nf">list_available_genomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List all available genomes in the data manager&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Descendant classes must implement list_available_genomes&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">_remote_equal</span><span class="p">(</span><span class="n">blob</span><span class="p">:</span> <span class="n">storage</span><span class="o">.</span><span class="n">Blob</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">remote_checksum</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">md5_hash</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">local_checksum</span> <span class="o">=</span> <span class="n">_hashfile</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">remote_checksum</span> <span class="o">==</span> <span class="n">local_checksum</span>
+
+
+<span class="k">class</span> <span class="nc">CallbackIOWrapper</span><span class="p">(</span><span class="n">ObjectWrapper</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">stream</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CallbackIOWrapper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+
+        <span class="n">write</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s2">&quot;write&quot;</span><span class="p">)</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">write</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapped_write</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrapper_setattr</span><span class="p">(</span><span class="s2">&quot;write&quot;</span><span class="p">,</span> <span class="n">wrapped_write</span><span class="p">)</span>
+
+        <span class="n">read</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">)</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">read</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapped_read</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">callback</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrapper_setattr</span><span class="p">(</span><span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="n">wrapped_read</span><span class="p">)</span>
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">FileIO</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">quiet</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="n">disable</span><span class="o">=</span><span class="n">quiet</span><span class="p">,</span>
+                <span class="n">total</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+                <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span>
+                <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">unit_divisor</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+                <span class="n">miniters</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="n">desc</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
+            <span class="n">decorated</span> <span class="o">=</span> <span class="n">CallbackIOWrapper</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">fp</span>
+            <span class="p">)</span>
+            <span class="k">yield</span> <span class="n">decorated</span>
+
+<span class="k">class</span> <span class="nc">DefaultDataManager</span><span class="p">(</span><span class="n">DataManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A minimal data manager implementation that retrieves files from the GCS samples bucket.</span>
+<span class="sd">    Uploads are not supported&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            data_dir: location where local files are cached</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_bucket&quot;</span><span class="p">):</span>
+            <span class="n">gcloud_client</span> <span class="o">=</span> <span class="n">storage</span><span class="o">.</span><span class="n">Client</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span> <span class="o">=</span> <span class="n">gcloud_client</span><span class="o">.</span><span class="n">bucket</span><span class="p">(</span><span class="n">_GCS_BUCKET</span><span class="p">,</span> <span class="n">user_project</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GENOMEKIT_GCS_BILLING_PROJECT&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># give the user a hint in case of permission errors</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bucket</span>
+
+    <span class="k">def</span> <span class="nf">get_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">local_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; not found in the GCS bucket&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;GENOMEKIT_TRACE&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+                <span class="c1"># give the user a hint in case of permission errors</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># form a temporary filename to make the download safe</span>
+        <span class="n">temp_file</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.part&quot;</span><span class="p">)</span>
+        <span class="n">temp_file_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">temp_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">FileIO</span><span class="p">(</span><span class="n">temp_file_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">download_to_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">temp_file_path</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="c1"># atomically (on POSIX) rename the file to the real one</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">temp_file_path</span><span class="p">,</span> <span class="n">local_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">blob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">blob</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">blob</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">_remote_equal</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; already exists in the GCS bucket and is identical, skipping.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="s2">&quot;GK_UPLOAD_ALLOW_OVERWRITE&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; already exists in the GCS bucket.&quot;</span>
+                                 <span class="s2">&quot;Set GK_UPLOAD_ALLOW_OVERWRITE=1 to overwrite.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overwriting &#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; on the server.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">blob</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">blob</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+
+        <span class="k">with</span> <span class="n">FileIO</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">blob</span><span class="o">.</span><span class="n">upload_from_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span> <span class="nf">list_available_genomes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">blobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">match_glob</span><span class="o">=</span><span class="s2">&quot;*.{2bit,cfg}&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

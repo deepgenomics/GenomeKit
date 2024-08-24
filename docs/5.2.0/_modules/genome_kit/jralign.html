@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.jralign &mdash; GenomeKit 5.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=2dde5210"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                5.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.jralign</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.jralign</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_cxx</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock_result</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">mock_unreachable</span>
+<span class="kn">from</span> <span class="nn">._cxx_util</span> <span class="kn">import</span> <span class="n">strip_mock_bases</span>
+<span class="kn">from</span> <span class="nn">.interval</span> <span class="kn">import</span> <span class="n">Interval</span>
+<span class="kn">from</span> <span class="nn">.variant</span> <span class="kn">import</span> <span class="n">Variant</span><span class="p">,</span> <span class="n">VariantTable</span>
+
+<span class="c1">#########################################################################</span>
+
+
+<div class="viewcode-block" id="JunctionReadAlignment">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">JunctionReadAlignment</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAlign</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A junction read alignment.</span>
+
+<span class="sd">    The `left` and `right` overhangs are positive integers representing the number</span>
+<span class="sd">    of matched positions on either side of the junction.</span>
+
+<span class="sd">    Overhangs are counted on the private genome from which the data was sequenced,</span>
+<span class="sd">    and may not map to reference genome coordinates.</span>
+<span class="sd">    As such, one should not expect meaningful reference genome coordinates by</span>
+<span class="sd">    adding overhangs to the junction start/end.</span>
+
+<span class="sd">    If `strand` is positive, then the read started `left` positions before the</span>
+<span class="sd">    first intronic position on the private genome.</span>
+<span class="sd">    If `strand` is negative, then the read started</span>
+<span class="sd">    `right` positions after the last intronic position on the private genome.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">left</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The left overhang relative to the junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The number of matched positions left of the junction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">right</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The right overhang relative to the junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The number of matched positions right of the junction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">strand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The strand (&quot;+&quot; or &quot;-&quot;) that this read was aligned to.</span>
+
+<span class="sd">        Not to be confused with the strand of the junction itself, which may or</span>
+<span class="sd">        may not have been inferred.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`chr`</span>
+<span class="sd">            The strand the read was aligned to by the original aligner.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">chr</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of variants observed in this read alignment.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The number of variants in the alignment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JunctionReadAlignment.variants">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.variants">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A list of variants observed in this read alignment.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`tuple` of :py:class:`~genome_kit.Variant`</span>
+<span class="sd">            A tuple of variants that this read contains</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Variant</span><span class="p">(),</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignment.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignment.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignment (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_variants</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="JunctionReadAlignments">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments">[docs]</a>
+<span class="nd">@strip_mock_bases</span>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">JunctionReadAlignments</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAligns</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A set of read alignments across a junction.</span>
+
+<span class="sd">    Bases: :py:class:`~genome_kit.Interval`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+    <span class="c1"># noinspection PyMissingConstructor</span>
+<div class="viewcode-block" id="JunctionReadAlignments.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span>  <span class="c1"># Stub to prevent Interval.__init__ from being accessible to docs</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The interval spanned by this junction.</span>
+
+<span class="sd">        Note: All junction intervals are on the reference strand, even if they comprise reads that were mapped to the</span>
+<span class="sd">        reverse strand.</span>
+<span class="sd">        When querying junctions, your query intervals must therefore (currently) be on the positive strand.</span>
+
+<span class="sd">        Note that :py:class:`~genome_kit.JunctionReadAlignments` also inherits from :py:class:`~genome_kit.Interval`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The interval spanned by this junction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">Interval</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_reads</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of reads across this junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">            The number of reads across this junction, equivalent to the `len` of this object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JunctionReadAlignments.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to a junction read alignment.</span>
+
+<span class="sd">        Allows iteration over all read alignments across this junction::</span>
+
+<span class="sd">            for align in junction:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested alignment entry.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.JunctionReadAlignment`</span>
+<span class="sd">           The junction read alignment identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionReadAlignment</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignments.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignments.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JunctionReadAlignments </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1"> reads)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_ucsc</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_reads</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">JunctionReadAlignmentsTable</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JRAlignsTable</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39; end aligned with 5&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end5 == interval.end5]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that have 5&#39; end aligned to the 5&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_aligned">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_aligned">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_aligned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39; end aligned with 3&#39; end of `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end3 == interval.end3]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that have 3&#39; end aligned to the 3&#39; end of `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_5p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_5p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_5p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 5&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end5.expand(0, 1) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that have 5&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_3p_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_3p_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_3p_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that have 3&#39;-most position within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.end3.expand(1, 0) in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that have 3&#39;-most position falling entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_within">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_within">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that fall entirely within `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc in interval]</span>
+
+<span class="sd">        The results will also be sorted by 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that fall entirely within `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_overlapping">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_overlapping">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_overlapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that overlap `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.overlaps(interval)]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that overlap `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.find_exact">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.find_exact">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">find_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all junctions that span exactly `interval`.</span>
+
+<span class="sd">        This function is a faster version of the brute-force filter::</span>
+
+<span class="sd">            [junc for junc in junctions if junc.interval == interval]</span>
+
+<span class="sd">        The results will also be sorted by 5&#39; and then 3&#39;.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval : :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            The query interval.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`list` of :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">            All junctions that span exactly `interval`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">JunctionReadAlignments</span><span class="p">()]</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stranded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If `True` then the strand is significant when calling the `find_x` methods.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`bool`</span>
+<span class="sd">            Whether this table can contain negative stranded intervals.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__getitem__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to all junctions.</span>
+
+<span class="sd">        Allows iteration over all junctions in the read distribution table::</span>
+
+<span class="sd">            for junc in junctions:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        The results will be ordered as in the source file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : :py:class:`int`</span>
+<span class="sd">            The integer index of the requested junction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.JunctionReadAlignments`</span>
+<span class="sd">           The junction read alignment object identified by the given index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionReadAlignments</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JunctionReadAlignmentsTable.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JunctionReadAlignmentsTable.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;JunctionReadAlignmentsTable, len() = </span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+
+
+<div class="viewcode-block" id="JReadAlignments">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments">[docs]</a>
+<span class="nd">@_cxx</span><span class="o">.</span><span class="n">register</span>
+<span class="k">class</span> <span class="nc">JReadAlignments</span><span class="p">(</span><span class="n">_cxx</span><span class="o">.</span><span class="n">JReadAlignments</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Access to read alignments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>  <span class="c1"># &lt;--- NEW SLOTS OK</span>
+    <span class="c1"># def __new__(self):  pass   # &lt;--- DO NOT OVERRIDE BASE CLASS IMPLEMENTATION</span>
+    <span class="c1"># def __del__(self):  pass   # &lt;--- DO NOT IMPLEMENT</span>
+
+<div class="viewcode-block" id="JReadAlignments.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__init__">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">infile</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open a .jralign file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        infile : :py:class:`str`</span>
+<span class="sd">            The .jralign file to open.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">junctions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to read alignments that are split across junctions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.JunctionReadAlignmentsTable`</span>
+<span class="sd">             An object that supports looping or queries over junctions, where</span>
+<span class="sd">             each junction provides a read distribution.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The returned table. junctions, and child objects should not be accessed</span>
+<span class="sd">        after this JReadAlignments has been closed via :meth:`~.close`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">JunctionReadAlignmentsTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">variants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Access to variants observed over all read alignments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`~genome_kit.VariantTable`</span>
+<span class="sd">            A table where each element (each row) is a variant that was observed</span>
+<span class="sd">            in at least one read alignment.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The returned table and variants should not be accessed after this</span>
+<span class="sd">        JReadAlignments has been closed via :meth:`~.close`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="n">VariantTable</span><span class="p">)</span>
+
+    <span class="nd">@mock</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The path to the file from which read alignments are retrieved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`str`</span>
+<span class="sd">           The path to the file, e.g. &quot;/mnt/data/sample000132.jralign&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="JReadAlignments.close">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.close">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the file handle.</span>
+
+<span class="sd">        Note that if you use a `with` statement the file handle is automatically closed::</span>
+
+<span class="sd">            # Open the file</span>
+<span class="sd">            with JReadAlignments(&#39;my_file.jralign&#39;) as jraligns:</span>
+<span class="sd">                ...</span>
+
+<span class="sd">            # &lt;-- File is now closed</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Closing this JReadAlignments will invalidate all tables and objects previously accessed via</span>
+<span class="sd">        :meth:`~.junctions` and :meth:`~.variants`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="JReadAlignments.jralign_version">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.jralign_version">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">jralign_version</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The `jralign` file format version that this build supports.</span>
+
+<span class="sd">        Attempting to open an `jralign` file of a mismatched version will raise an :py:exc:`IOError`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :py:class:`int`</span>
+<span class="sd">           The version number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">mock_result</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="JReadAlignments.build_jralign">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.build_jralign">[docs]</a>
+    <span class="nd">@mock</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_jralign</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span>
+                      <span class="n">infiles</span><span class="p">,</span>
+                      <span class="n">reference_genome</span><span class="p">,</span>
+                      <span class="n">min_reads</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">min_overhang</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">allow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">include_variants</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">include_duplicates</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">library_format</span><span class="o">=</span><span class="s1">&#39;U&#39;</span><span class="p">,</span>
+                      <span class="n">overhang_error</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an `jralign` file from one or more `SAM` files.</span>
+
+<span class="sd">        If multiple input files are specified, their junctions and read alignments will be pooled.</span>
+
+<span class="sd">        Once an `jralign` file is created, it can be opened by creating</span>
+<span class="sd">        a :py:class:`~genome_kit.JReadAlignments` object.</span>
+
+<span class="sd">        Below are some details on how SAM alignments are processed, which are</span>
+<span class="sd">        important for understanding how a CIGAR strings containing insertions/deletions</span>
+<span class="sd">        (`5M8D5M`) or multiple splits (`5M100N10M50N5M`) are processed:</span>
+
+<span class="sd">        * **Multi-split alignments.**</span>
+<span class="sd">          If a read maps across multiple junctions, its CIGAR string will</span>
+<span class="sd">          contain multiple ``N`` blocks. The read will then contribute a</span>
+<span class="sd">          separate (left, right) alignment to *each* junction that it spans.</span>
+
+<span class="sd">          For example, consider ``1S2M2N1M1N1M`` where the first match is</span>
+<span class="sd">          aligned to start position 2::</span>
+
+<span class="sd">              0 1 2 3 4 5 6 7 8 9</span>
+<span class="sd">                S M M - - M - M</span>
+
+<span class="sd">          This read will contribute a separate alignment to each junction.</span>
+<span class="sd">          The `left` and `right` overhang is the sum of all alignment matches</span>
+<span class="sd">          before/after that particular junction.</span>
+<span class="sd">          In the above example, the resulting alignments would be</span>
+<span class="sd">          be as if two separate reads were aligned as follows::</span>
+
+<span class="sd">              0 1 2 3 4 5 6 7 8 9</span>
+<span class="sd">                S M M - - M M        &lt;-- alignment for 1st junction</span>
+<span class="sd">                    S M M M - M      &lt;-- alignment for 2nd junction</span>
+
+<span class="sd">          In this scenario, the read would not actually match the reference genome</span>
+<span class="sd">          in the above alignments, but this scheme facilitates counting of relative</span>
+<span class="sd">          junction usage (assuming usage of the two junctions is independent)</span>
+<span class="sd">          and also is allows positional bootstrap to be applied correctly</span>
+<span class="sd">          without modification.</span>
+
+<span class="sd">        * **Overhang filter.**</span>
+<span class="sd">          The ``min_overhang`` filter is applied on a per-junction bases.</span>
+<span class="sd">          For example, if ``min_overhang=5`` then a read mapped across</span>
+<span class="sd">          two junctions ``20M100N10M100N3M`` will contribute an alignment</span>
+<span class="sd">          only to the first, because the second has a right overhang of 3.</span>
+
+<span class="sd">        * **Counting insertions/deletions.**</span>
+<span class="sd">          Only alignment matches are counted. Other CIGAR types (e.g.,</span>
+<span class="sd">          insertions, deletions, clippings) are not relevant when filtering</span>
+<span class="sd">          for alignment quality.</span>
+
+<span class="sd">          For example, a read starting at reference genome position 2</span>
+<span class="sd">          and with CIGAR string ``1M1D1M2N1M``</span>
+<span class="sd">          is matched to the reference genome as::</span>
+
+<span class="sd">              0 1 2 3 4 5 6 7 8 9     &lt;-- reference genome coordinates</span>
+<span class="sd">                  M D M - - M         &lt;-- M = match, D = deletion</span>
+
+<span class="sd">          so the start of the junction is 2+1+1+1 = 5, but the</span>
+<span class="sd">          the left overhang is only 2, because the deleted base</span>
+<span class="sd">          doesn&#39;t exist in the private genome.</span>
+
+<span class="sd">          Similarly for insertions, with CIGAR string ``1M1I1M2N1M``::</span>
+
+<span class="sd">              0 1 2 3 4 5 6 7 8 9</span>
+<span class="sd">                  M M - - M</span>
+<span class="sd">                   ^</span>
+<span class="sd">                   I                &lt;-- I = insertion between</span>
+
+<span class="sd">           the start of the junction is 2+1+1 = 4, but the left</span>
+<span class="sd">           overhang is actually 2, because the inserted base exists</span>
+<span class="sd">           only in the private genome.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        outfile : :py:class:`str`</span>
+<span class="sd">            The path to the destination `rdist` file.</span>
+
+<span class="sd">        infiles : :py:class:`list` of :py:class:`str` | :py:class:`file`</span>
+<span class="sd">            The paths to the source `SAM` files, or a reference to ``sys.stdin``.</span>
+<span class="sd">            Streaming lines from stdin is useful for reading directly from BAM</span>
+<span class="sd">            via ``samtools view -h``. Be sure to use ``-h`` so that</span>
+<span class="sd">            the reference genome can be inferred from the header lines.</span>
+
+<span class="sd">        reference_genome : :class:`~genome_kit.Genome`</span>
+<span class="sd">            The reference genome of the data in ``infiles``.</span>
+<span class="sd">            If the genome contains annotations, junction strands will be</span>
+<span class="sd">            inferred and validated against the introns annotations.</span>
+
+<span class="sd">        min_reads : :py:class:`int`</span>
+<span class="sd">            Optional. The minimum number of reads across a junction to</span>
+<span class="sd">            be considered for inclusion in the output file.</span>
+
+<span class="sd">        min_overhang : :py:class:`int`</span>
+<span class="sd">            Optional. The minimum overhang for a read to be included.</span>
+
+<span class="sd">        exclude : :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Optional. Junctions within these intervals will be excluded.</span>
+
+<span class="sd">        allow : :py:class:`list` of :py:class:`~genome_kit.Interval`</span>
+<span class="sd">            Optional. Only junctions within these intervals will be included,</span>
+<span class="sd">            so long as they are not excluded.</span>
+
+<span class="sd">        include_variants : :py:class`bool`</span>
+<span class="sd">            Optional. True if variants are to be included in the output file.</span>
+<span class="sd">            Default will exclude all variants.</span>
+
+<span class="sd">        include_duplicates : :py:class:`bool`, optional</span>
+<span class="sd">            Includes duplicates when `True`. Defaults to `False`. See</span>
+<span class="sd">            https://github.com/samtools/hts-specs/blob/master/SAMv1.pdf</span>
+<span class="sd">            subsection 1.4.2</span>
+
+<span class="sd">        library_format : :class:`str`, optional</span>
+<span class="sd">            Specifies to infer junction strands via the library format string.</span>
+<span class="sd">            &quot;SF&quot; implies the first read is the sense strand, whereas &quot;SR&quot;</span>
+<span class="sd">            implies the second read is the sense strand. (the default is &#39;U&#39;,</span>
+<span class="sd">            which represents unstranded [no strand inference]).</span>
+<span class="sd">            See https://salmon.readthedocs.io/en/stable/library_type.html.</span>
+
+<span class="sd">        overhang_error: : :class:`str`</span>
+<span class="sd">            Determines how build_jralign handles reads with &gt;255 length</span>
+<span class="sd">            overhangs. &quot;error&quot; stops and reports the error. &quot;clamp&quot; limits</span>
+<span class="sd">            the read to the maximum 255 positions on each side.</span>
+<span class="sd">            This only affects overhangs and will not clip or filter variants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_unreachable</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="JReadAlignments.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.JReadAlignments.__repr__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;JReadAlignments &quot;</span><span class="si">{}</span><span class="s1">&quot;&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1">########################################################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

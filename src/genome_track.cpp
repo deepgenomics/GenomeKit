@@ -51,7 +51,7 @@ genome_track::dtype_t genome_track::etype_default_dtype[genome_track::num_etype]
 	genome_track::float32,  // f32
 };
 
-const char* genome_track::dtype_as_cstr[genome_track::num_dtype] = {
+const char* genome_track::dtype_as_cstr[as_ordinal(genome_track::num_dtype)] = {
 	"bool",
 	"uint8",
 	"int8",
@@ -59,7 +59,7 @@ const char* genome_track::dtype_as_cstr[genome_track::num_dtype] = {
 	"float32",
 };
 
-int genome_track::dtype_size[genome_track::num_dtype] = {
+int genome_track::dtype_size[as_ordinal(genome_track::num_dtype)] = {
 	sizeof(bool),    // bool_
 	sizeof(uint8_t), // uint8
 	sizeof(int8_t),  // int8
@@ -69,7 +69,7 @@ int genome_track::dtype_size[genome_track::num_dtype] = {
 
 genome_track::dtype_t genome_track::as_dtype(const char* s)
 {
-	for (int i = 0; i < genome_track::num_dtype; ++i)
+	for (int i = 0; i < as_ordinal(genome_track::num_dtype); ++i)
 		if (!strcmp(s, dtype_as_cstr[i]))
 			return (genome_track::dtype_t)i;
 	GK_THROW(value, "Unrecognized dtype '{}'", s);
@@ -77,7 +77,7 @@ genome_track::dtype_t genome_track::as_dtype(const char* s)
 
 genome_track::etype_t genome_track::as_etype(const char* s)
 {
-	for (int i = 0; i < genome_track::num_etype; ++i)
+	for (int i = 0; i < as_ordinal(genome_track::num_etype); ++i)
 		if (!strcmp(s, etype_as_cstr[i]))
 			return (genome_track::etype_t)i;
 	GK_THROW(value, "Unrecognized etype '{}'", s);
@@ -127,9 +127,9 @@ void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype, 
 	const int layout = as_ordinal(stride == dim() ? encoding::layout_t::contiguous : encoding::layout_t::noncontiguous);
 
 	// Get callbacks that are specialized to decode and default fill for this dtype and strand direction.
-	encoding::decode_fn decode = _encoding.decoders[dtype][layout][as_ordinal(c.strand)];
-	encoding::dfill_fn  dfill  = _encoding.dfillers[dtype][layout][as_ordinal(c.strand)];
-	GK_CHECK(decode, type, "Cannot decode as {} from encoded type {}", dtype_as_cstr[dtype], etype_as_cstr[_encoding.etype]);
+	encoding::decode_fn decode = _encoding.decoders[as_ordinal(dtype)][layout][as_ordinal(c.strand)];
+	encoding::dfill_fn  dfill  = _encoding.dfillers[as_ordinal(dtype)][layout][as_ordinal(c.strand)];
+	GK_CHECK(decode, type, "Cannot decode as {} from encoded type {}", dtype_as_cstr[as_ordinal(dtype)], etype_as_cstr[_encoding.etype]);
 	GK_DBASSERT(dfill);
 
 	static constexpr track_index_t null_index{};
@@ -533,7 +533,7 @@ done:
 			if (phase == _res)
 				phase = 0;
 		}
-		_encoding.expanders[dtype][layout](dst, c.size(), dim, ce-cs, _res, phase, stride);
+		_encoding.expanders[as_ordinal(dtype)][layout](dst, c.size(), dim, ce-cs, _res, phase, stride);
 	}
 }
 

@@ -1,23 +1,19 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import annotations
 
-import os
 import gc
-from tempfile import mkstemp
+import os
+import unittest
 from collections import Counter
 from itertools import product
+from pathlib import Path
+from tempfile import mkstemp
 
 import numpy as np
-import unittest
 
-from genome_kit import GenomeTrack
-from genome_kit import GenomeTrackBuilder
-from genome_kit import Interval
+from genome_kit import GenomeTrack, GenomeTrackBuilder, Interval
 
-from . import MiniGenome
-from . import dumptext
+from . import MiniGenome, dumptext
 
 
 # Generate a data block of numbers for a given interval
@@ -350,6 +346,34 @@ class TestBuildTrack(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Negative"):
                 out = np.zeros((20, 1), np.float16)
                 track(interval, out=out[::-1])
+
+    def test_sparsity(self):
+        def test(dim):
+            builder = self.make_builder(strandedness="strand_aware", dim=dim)
+            interval = Interval("chr1", "+", 10, 60, builder.refg)
+            data = np.ones(50 * dim, dtype=np.float16).reshape((50, dim))
+
+            builder.set_data(interval, data)
+            builder.finalize()
+
+            full_size = Path(self.tmpfile).stat().st_size
+            with GenomeTrack(self.tmpfile) as track:
+                res = track(interval)
+                np.testing.assert_equal(res, data)
+
+            builder = self.make_builder(strandedness="strand_aware", dim=dim)
+            builder.set_default_value(1)
+            builder.set_sparsity(48)
+            builder.set_data(interval, data)
+            builder.finalize()
+
+            self.assertLess(Path(self.tmpfile).stat().st_size, full_size)
+            with GenomeTrack(self.tmpfile) as track:
+                res = track(interval)
+                np.testing.assert_equal(res, data)
+
+        for dim in range(1, 6):
+            test(dim)
 
     def _try_parse_wig(self,
                        dim,

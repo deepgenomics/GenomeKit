@@ -651,8 +651,8 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 	dtype_t dtype = dtype_traits<T>::dtype;
 	int dim = _h.dim;
 	auto dst = std::make_unique<uint8_t[]>(_encoding.num_encoded_bytes(size, dim));
-	encoding::encode_fn encode = _encoding.encoders[dtype];
-	GK_CHECK(encode, type, "Cannot encode as {} using decoded type {}", etype_as_cstr[_encoding.etype], dtype_as_cstr[dtype]);
+	encoding::encode_fn encode = _encoding.encoders[as_ordinal(dtype)];
+	GK_CHECK(encode, type, "Cannot encode as {} using decoded type {}", etype_as_cstr[_encoding.etype], dtype_as_cstr[as_ordinal(dtype)]);
 
 	// The source pointer we'll 'encode' from, which may be original data or
 	// may be redirected to transformed data.
@@ -671,7 +671,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 		if (reverse)
 			reverse_track_data(&alt_data[0], data, size, dim);
 		else
-			memcpy(&alt_data[0], data, (size_t)size*dim*dtype_size[dtype]);
+			memcpy(&alt_data[0], data, (size_t)size*dim*dtype_size[as_ordinal(dtype)]);
 
 		// Transform the data if needed
 		if (_data_transform)
@@ -698,7 +698,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 
 	// If sparsify mode enabled, decode the data block and re-encode only the chunks that are not default_value
 	if (_sparsity_min_run) {
-		encoding::decode_fn decode = _encoding.decoders[dtype][as_ordinal(encoding::layout_t::contiguous)][as_ordinal(pos_strand)];  // decode forward, regardless of interval strand
+		encoding::decode_fn decode = _encoding.decoders[as_ordinal(dtype)][as_ordinal(encoding::layout_t::contiguous)][as_ordinal(pos_strand)];  // decode forward, regardless of interval strand
 		GK_ASSERT(decode);  // should always be a decoder for dtype if there was an encoder
 		if (!alt_data)
 			alt_data = std::make_unique<T[]>((size_t)size*dim);

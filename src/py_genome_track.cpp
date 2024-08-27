@@ -15,7 +15,7 @@ using etype_t                  = genome_track::dtype_t;
 using dtype_t                  = genome_track::dtype_t;
 static const dtype_t num_dtype = genome_track::num_dtype;
 
-static int py_dtypes[num_dtype] = {
+static int py_dtypes[as_ordinal(num_dtype)] = {
 	NPY_BOOL,  // bool_
 	NPY_UINT8, // uint8
 	NPY_INT8,  // int8
@@ -25,19 +25,19 @@ static int py_dtypes[num_dtype] = {
 
 static PyTypeObject* py_dtype_type(dtype_t dtype)
 {
-	static PyTypeObject* _types[num_dtype] = {
+	static PyTypeObject* _types[as_ordinal(num_dtype)] = {
 		&PyBoolArrType_Type,  // bool_
 		&PyUInt8ArrType_Type, // uint8
 		&PyInt8ArrType_Type,  // int8
 		&PyHalfArrType_Type,  // float16
 		&PyFloatArrType_Type, // float32
 	};
-	return _types[dtype];
+	return _types[as_ordinal(dtype)];
 }
 
 static dtype_t dtype_from_py(int py_dtype)
 {
-	for (int dtype = 0; dtype < num_dtype; ++dtype)
+	for (int dtype = 0; dtype < as_ordinal(num_dtype); ++dtype)
 		if (py_dtypes[dtype] == py_dtype)
 			return (dtype_t)dtype;
 	GK_THROW(type, "data array had unrecognized dtype; try np.bool_, np.uint8, np.int8, np.float16, or np.float32");
@@ -213,7 +213,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data)
 		// Set the data for the given interval using the numpy dtype, if it's supported
 		dtype = dtype_from_py(PyArray_TYPE(py_data));
 		// TODO: handle strided date during encoding
-		size_t stride = genome_track::dtype_size[dtype];
+		size_t stride = genome_track::dtype_size[as_ordinal(dtype)];
 		for (int dim = ndim; dim > 0; --dim) {
 			GK_CHECK((size_t)PyArray_STRIDE(py_data, dim - 1) == stride, value,
 					 "Data must have stride=1, consider making a copy with `np.array`");
@@ -414,7 +414,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 		// Create an output array of the right type, size, and dimensionality
 		npy_intp dims[2] = {c.size(), self->track->dim()};
 		dtype            = dtype_arg && dtype_arg != Py_None ? dtype_from_obj(dtype_arg) : self->track->dtype();
-		py_dst           = PyArray_Empty(2, dims, PyArray_DescrFromType(py_dtypes[*dtype]), 0);  // 0 => C_CONTIGUOUS
+		py_dst           = PyArray_Empty(2, dims, PyArray_DescrFromType(py_dtypes[as_ordinal(*dtype)]), 0);  // 0 => C_CONTIGUOUS
 		if (!py_dst)
 			return nullptr;  // Propagate the error up to interpreter immediately
 	} else {

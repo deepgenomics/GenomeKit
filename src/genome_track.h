@@ -111,7 +111,7 @@ public:
 		num_etype
 	};
 	// Decoding formats.
-	enum dtype_t {
+	enum class dtype_t : int8_t {
 		bool_,   // bool
 		uint8,   // uint8_t
 		int8,    // int8_t
@@ -121,11 +121,12 @@ public:
 		//       g_reverse_track_data, any_t, py_dtypes, genome_track::builder::set_data, PyGenomeTrackBuilder::set_data
 		num_dtype
 	};
+	using enum dtype_t;
 
 	static const char* etype_as_cstr[num_etype];
 	static dtype_t     etype_default_dtype[num_etype];
-	static const char* dtype_as_cstr[num_dtype];
-	static int         dtype_size[num_dtype];
+	static const char* dtype_as_cstr[as_ordinal(num_dtype)];
+	static int         dtype_size[as_ordinal(num_dtype)];
 	static dtype_t     as_dtype(const char* name);
 	static etype_t     as_etype(const char* name);
 
@@ -321,10 +322,11 @@ private:
 		// Function pointers to implement encode, decode, default fill, and expand.
 		// Each pointer is specialized by etype, dtype, and possibly dim and strand.
 		// The pointers are initialized by init().
-		encode_fn encoders[num_dtype];
-		decode_fn decoders[num_dtype][as_ordinal(layout_t::amount)][num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
-		dfill_fn  dfillers[num_dtype][as_ordinal(layout_t::amount)][num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
-		expand_fn expanders[num_dtype][as_ordinal(layout_t::amount)];
+		encode_fn encoders[as_ordinal(num_dtype)];
+		decode_fn decoders[as_ordinal(num_dtype)][as_ordinal(layout_t::amount)][num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
+		dfill_fn dfillers[as_ordinal(num_dtype)][as_ordinal(layout_t::amount)]
+						 [num_strand];  // [neg_strand] = reverse, [pos_strand] = forward
+		expand_fn expanders[as_ordinal(num_dtype)][as_ordinal(layout_t::amount)];
 
 		// Parameters of this particular encoding.
 		int bits_per_encoded_datum;  // 1-8 or 16
@@ -338,7 +340,7 @@ private:
 		void init(etype_t etype, int dim, int res, any_t default_value);
 		void init_dict();
 
-		bool supports_dtype(dtype_t dtype) const { return decoders[dtype][0][0] != nullptr; }
+		bool supports_dtype(dtype_t dtype) const { return decoders[as_ordinal(dtype)][0][0] != nullptr; }
 
 		INLINE size_t num_required_bits(int size, int dim) const
 		{
@@ -790,61 +792,61 @@ private:
 				bytes_per_encoded_word = detail::_sizeof<encoded_type>::size; \
 				range_min = any_t _range_min; \
 				range_max = any_t _range_max; \
-				encoders[bool_  ] = etype##_encoding::bool__encoder::as_encode_fn(dim); \
-				encoders[uint8  ] = etype##_encoding::uint8_encoder::as_encode_fn(dim); \
-				encoders[int8   ] = etype##_encoding::int8_encoder::as_encode_fn(dim); \
-				encoders[float16] = etype##_encoding::float16_encoder::as_encode_fn(dim); \
-				encoders[float32] = etype##_encoding::float32_encoder::as_encode_fn(dim); \
-				decoders[bool_  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous, -1); \
-				decoders[bool_  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous,  1); \
-				decoders[bool_  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous, -1); \
-				decoders[bool_  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous,  1); \
-				decoders[uint8  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous, -1); \
-				decoders[uint8  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous,  1); \
-				decoders[uint8  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous, -1); \
-				decoders[uint8  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous,  1); \
-				decoders[int8   ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous, -1); \
-				decoders[int8   ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous,  1); \
-				decoders[int8   ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous, -1); \
-				decoders[int8   ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous,  1); \
-				decoders[float16][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous, -1); \
-				decoders[float16][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous,  1); \
-				decoders[float16][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous, -1); \
-				decoders[float16][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous,  1); \
-				decoders[float32][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous, -1); \
-				decoders[float32][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous,  1); \
-				decoders[float32][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous, -1); \
-				decoders[float32][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous,  1); \
-				dfillers[bool_  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous, -1); \
-				dfillers[bool_  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous,  1); \
-				dfillers[bool_  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous, -1); \
-				dfillers[bool_  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous,  1); \
-				dfillers[uint8  ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous, -1); \
-				dfillers[uint8  ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous,  1); \
-				dfillers[uint8  ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous, -1); \
-				dfillers[uint8  ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous,  1); \
-				dfillers[int8   ][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous, -1); \
-				dfillers[int8   ][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous,  1); \
-				dfillers[int8   ][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous, -1); \
-				dfillers[int8   ][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous,  1); \
-				dfillers[float16][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous, -1); \
-				dfillers[float16][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous,  1); \
-				dfillers[float16][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous, -1); \
-				dfillers[float16][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous,  1); \
-				dfillers[float32][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous, -1); \
-				dfillers[float32][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous,  1); \
-				dfillers[float32][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous, -1); \
-				dfillers[float32][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous,  1); \
-				expanders[bool_  ][as_ordinal(   contiguous)] = specialized_expand_fn<bool   >(dim,    contiguous, res); \
-				expanders[bool_  ][as_ordinal(noncontiguous)] = specialized_expand_fn<bool   >(dim, noncontiguous, res); \
-				expanders[uint8  ][as_ordinal(   contiguous)] = specialized_expand_fn<uint8_t>(dim,    contiguous, res); \
-				expanders[uint8  ][as_ordinal(noncontiguous)] = specialized_expand_fn<uint8_t>(dim, noncontiguous, res); \
-				expanders[int8   ][as_ordinal(   contiguous)] = specialized_expand_fn<int8_t >(dim,    contiguous, res); \
-				expanders[int8   ][as_ordinal(noncontiguous)] = specialized_expand_fn<int8_t >(dim, noncontiguous, res); \
-				expanders[float16][as_ordinal(   contiguous)] = specialized_expand_fn<half_t >(dim,    contiguous, res); \
-				expanders[float16][as_ordinal(noncontiguous)] = specialized_expand_fn<half_t >(dim, noncontiguous, res); \
-				expanders[float32][as_ordinal(   contiguous)] = specialized_expand_fn<float  >(dim,    contiguous, res); \
-				expanders[float32][as_ordinal(noncontiguous)] = specialized_expand_fn<float  >(dim, noncontiguous, res); \
+				encoders[as_ordinal(bool_  )] = etype##_encoding::bool__encoder::as_encode_fn(dim); \
+				encoders[as_ordinal(uint8  )] = etype##_encoding::uint8_encoder::as_encode_fn(dim); \
+				encoders[as_ordinal(int8   )] = etype##_encoding::int8_encoder::as_encode_fn(dim); \
+				encoders[as_ordinal(float16)] = etype##_encoding::float16_encoder::as_encode_fn(dim); \
+				encoders[as_ordinal(float32)] = etype##_encoding::float32_encoder::as_encode_fn(dim); \
+				decoders[as_ordinal(bool_  )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[as_ordinal(bool_  )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[as_ordinal(bool_  )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[as_ordinal(bool_  )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::bool__decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[as_ordinal(uint8  )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[as_ordinal(uint8  )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[as_ordinal(uint8  )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[as_ordinal(uint8  )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::uint8_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[as_ordinal(int8   )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[as_ordinal(int8   )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[as_ordinal(int8   )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[as_ordinal(int8   )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::int8_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[as_ordinal(float16)][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[as_ordinal(float16)][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[as_ordinal(float16)][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[as_ordinal(float16)][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float16_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				decoders[as_ordinal(float32)][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous, -1); \
+				decoders[as_ordinal(float32)][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim,    contiguous,  1); \
+				decoders[as_ordinal(float32)][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous, -1); \
+				decoders[as_ordinal(float32)][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = etype##_encoding::float32_decoder::as_decode_fn(dim, noncontiguous,  1); \
+				dfillers[as_ordinal(bool_  )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous, -1); \
+				dfillers[as_ordinal(bool_  )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim,    contiguous,  1); \
+				dfillers[as_ordinal(bool_  )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous, -1); \
+				dfillers[as_ordinal(bool_  )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<bool   >(dim, noncontiguous,  1); \
+				dfillers[as_ordinal(uint8  )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous, -1); \
+				dfillers[as_ordinal(uint8  )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim,    contiguous,  1); \
+				dfillers[as_ordinal(uint8  )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous, -1); \
+				dfillers[as_ordinal(uint8  )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<uint8_t>(dim, noncontiguous,  1); \
+				dfillers[as_ordinal(int8   )][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous, -1); \
+				dfillers[as_ordinal(int8   )][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim,    contiguous,  1); \
+				dfillers[as_ordinal(int8   )][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous, -1); \
+				dfillers[as_ordinal(int8   )][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<int8_t >(dim, noncontiguous,  1); \
+				dfillers[as_ordinal(float16)][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous, -1); \
+				dfillers[as_ordinal(float16)][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim,    contiguous,  1); \
+				dfillers[as_ordinal(float16)][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous, -1); \
+				dfillers[as_ordinal(float16)][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<half_t >(dim, noncontiguous,  1); \
+				dfillers[as_ordinal(float32)][as_ordinal(   contiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous, -1); \
+				dfillers[as_ordinal(float32)][as_ordinal(   contiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim,    contiguous,  1); \
+				dfillers[as_ordinal(float32)][as_ordinal(noncontiguous)][as_ordinal(neg_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous, -1); \
+				dfillers[as_ordinal(float32)][as_ordinal(noncontiguous)][as_ordinal(pos_strand)] = specialized_default_fill_fn<float  >(dim, noncontiguous,  1); \
+				expanders[as_ordinal(bool_  )][as_ordinal(   contiguous)] = specialized_expand_fn<bool   >(dim,    contiguous, res); \
+				expanders[as_ordinal(bool_  )][as_ordinal(noncontiguous)] = specialized_expand_fn<bool   >(dim, noncontiguous, res); \
+				expanders[as_ordinal(uint8  )][as_ordinal(   contiguous)] = specialized_expand_fn<uint8_t>(dim,    contiguous, res); \
+				expanders[as_ordinal(uint8  )][as_ordinal(noncontiguous)] = specialized_expand_fn<uint8_t>(dim, noncontiguous, res); \
+				expanders[as_ordinal(int8   )][as_ordinal(   contiguous)] = specialized_expand_fn<int8_t >(dim,    contiguous, res); \
+				expanders[as_ordinal(int8   )][as_ordinal(noncontiguous)] = specialized_expand_fn<int8_t >(dim, noncontiguous, res); \
+				expanders[as_ordinal(float16)][as_ordinal(   contiguous)] = specialized_expand_fn<half_t >(dim,    contiguous, res); \
+				expanders[as_ordinal(float16)][as_ordinal(noncontiguous)] = specialized_expand_fn<half_t >(dim, noncontiguous, res); \
+				expanders[as_ordinal(float32)][as_ordinal(   contiguous)] = specialized_expand_fn<float  >(dim,    contiguous, res); \
+				expanders[as_ordinal(float32)][as_ordinal(noncontiguous)] = specialized_expand_fn<float  >(dim, noncontiguous, res); \
 				init_dict(); /* static dispatch to base class (no-op) or subclass specialization */ \
 			} \
 

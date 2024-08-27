@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.5](https://github.com/deepgenomics/GenomeKit/compare/v5.2.4...v5.2.5) (2024-08-27)
+
+
+### Bug Fixes
+
+* **track:** sparse encoding broken ([#88](https://github.com/deepgenomics/GenomeKit/issues/88)) ([c8f6732](https://github.com/deepgenomics/GenomeKit/commit/c8f6732e1be4325e56675c958c852a24a652056b))
+
 ## [5.2.4](https://github.com/deepgenomics/GenomeKit/compare/v5.2.3...v5.2.4) (2024-08-22)
 
 

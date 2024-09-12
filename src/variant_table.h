@@ -95,7 +95,7 @@ public:
 		pooled,
 	};
 
-	enum gt_t { gt_homozygous_ref, gt_heterozygous, gt_homozygous_alt, gt_unknown };
+	enum gt_t { gt_homozygous_ref, gt_heterozygous_unphased, gt_homozygous_alt, gt_unknown, gt_heterozygous_phased_0_1, gt_heterozygous_phased_1_0 };
 
 	enum struct svtype_t : uint8_t {
 		na,

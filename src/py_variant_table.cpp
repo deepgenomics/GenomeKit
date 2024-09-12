@@ -658,116 +658,6 @@ GKPY_METHOD_BEGIN_ONEARG(VCFTable, sequence_variations)
 	return variants.release();
 GKPY_METHOD_END
 
-static vt::gt_t get_gt(const vcf_table::field_col_t& gt, size_t index)
-{
-	GK_ASSERT(gt.dtype == vt::int8);
-	return vt::gt_t(rcast<const uint8_t*>(gt.data)[index]);
-}
-
-static float add_af(const vcf_table::field_col_t& af, index_t index_x, index_t index_y)
-{
-	float freq = 0;
-	switch (af.dtype) {
-	case vt::float16: {
-		const auto* afs = rcast<const half_t*>(af.data);
-		freq            = as_float(afs[index_x]) + as_float(afs[index_y]);
-		break;
-	}
-	case vt::float32: {
-		const auto* afs = rcast<const float*>(af.data);
-		freq            = afs[index_x] + afs[index_y];
-		break;
-	}
-	default: GK_THROW(value, "AF column must be defined as a float type.");
-	}
-	return freq;
-}
-
-GKPY_OMETHOD_BEGIN(VCFTable, variant_combinations)
-	static char* kwlist[]  = { "variants", "heterozygous_alt_af_threshold", nullptr };
-	PyObject* variants_seq = nullptr;
-	float threshold        = 0.9f;
-	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|f", kwlist, &variants_seq, &threshold))
-		return nullptr;
-	GK_CHECK(PySequence_Check(variants_seq), type, "variants must be a sequence.");
-
-	Py_ssize_t variants_len = PySequence_Length(variants_seq);
-	// rough upperbound: sum(nCi)<=2^n for i=0..n
-	GK_CHECK(variants_len < (Py_ssize_t)sizeof(size_t) * CHAR_BIT - 1, value,
-			 "Too many variants: count {} is greater than maximum count {}.", variants_len,
-			 sizeof(size_t) * CHAR_BIT - 1);
-
-	vector<PyVCFVariant*> variants(variants_len);
-	for (Py_ssize_t i = 0; i < variants_len; ++i) {
-		PyAutoRef item(PySequence_ITEM(variants_seq, i));
-		GKPY_TYPECHECK(item.get(), PyVCFVariant::DefaultType);
-		variants[i] = (PyVCFVariant*)item.get(); // ref incremented in combos below
-	}
-
-	const auto& table = *self->table;
-	auto gt_cols      = table.fmt_fields().get("GT");
-	auto af_cols      = table.info_fields().get("AF");
-
-	// nCr variants, with additional filtering
-	vector<bool> selection_mask;
-	vector<PyObject*> combination; // vector is faster than PyTuple if combination is invalid
-	PyAutoRef combos(PyList_New(0));
-	for (Py_ssize_t r = 1; r <= variants_len; ++r) {
-		selection_mask.clear();
-		selection_mask.resize(r, true);
-		selection_mask.resize(variants_len);
-
-		do {
-			combination.clear();
-			for (size_t i = 0; i < variants.size(); ++i) {
-				const packed_variant& variant = variants[i]->value();
-				int table_index               = table.index_of(variants[i]->value());
-
-				vt::gt_t gt = gt_cols ? get_gt(*gt_cols, table_index) : vt::gt_heterozygous;
-
-				bool impossible_combo = false;
-				// filter out independent conditions first
-				if ((selection_mask[i] && gt != vt::gt_heterozygous && gt != vt::gt_homozygous_alt)
-					|| (!selection_mask[i] && gt == vt::gt_homozygous_alt)) {
-					impossible_combo = true;
-				} else if (gt == vt::gt_heterozygous || gt == vt::gt_homozygous_alt) {
-					// conditions dependent on overlapping variants
-					for (size_t j = i + 1; j < variants.size(); ++j) {
-						const packed_variant& next = variants[j]->value();
-						if (!variant.overlaps(next))
-							continue;
-
-						if ((selection_mask[i] && selection_mask[j])
-							// check for split heterozygous_alt; no representation in vcf:
-							// https://github.com/samtools/hts-specs/issues/77
-							|| (!selection_mask[i] && !selection_mask[j] && variant.pos5 == next.pos5 && af_cols
-								&& add_af(*af_cols, table_index, table.index_of(next)) >= threshold)) {
-							impossible_combo = true;
-							break;
-						}
-					}
-				}
-				if (impossible_combo) {
-					combination.clear();
-					break;
-				} else if (selection_mask[i])
-					combination.push_back(variants[i]);
-			}
-			if (!combination.empty()) {
-				PyAutoRef combo(PyTuple_New((Py_ssize_t)combination.size()));
-				for (size_t i = 0; i < combination.size(); ++i) {
-					PyTuple_SET_ITEM(combo.get(), (Py_ssize_t)i, combination[i]);
-					Py_INCREF(combination[i]);
-				}
-				if (PyList_Append(combos.get(), combo.get()) != 0)
-					return nullptr;
-				combo.release();
-			}
-		} while (prev_permutation(selection_mask.begin(), selection_mask.end()));
-	}
-	return combos.release();
-GKPY_OMETHOD_END
-
 GKPY_METHODS_BEGIN(VCFTable)
 	GKPY_METHOD_ENTRY(VCFTable, vcfbin_version, METH_VARARGS | METH_STATIC, nullptr)
 	GKPY_METHOD_ENTRY(VCFTable, build_vcfbin, METH_VARARGS | METH_KEYWORDS | METH_STATIC, nullptr)
@@ -775,7 +665,6 @@ GKPY_METHODS_BEGIN(VCFTable)
 	GKPY_METHOD_ENTRY(VCFTable, format, METH_VARARGS | METH_KEYWORDS, nullptr)
 	GKPY_METHOD_ENTRY(VCFTable, close, METH_NOARGS, nullptr)
 	GKPY_METHOD_ENTRY(VCFTable, sequence_variations, METH_O, nullptr)
-	GKPY_METHOD_ENTRY(VCFTable, variant_combinations, METH_VARARGS | METH_KEYWORDS, nullptr)
 GKPY_METHODS_END
 
 GKPY_SUBTYPEOBJ_BEGIN(VCFTable)

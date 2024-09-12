@@ -1190,19 +1190,6 @@ class TestVCFTable(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "alternative allele"):
             self.make_vcfbin()
 
-    def test_too_many_variant_combinations(self):
-        # can't use a signal to timeout due to GIL
-        num_variants = 64
-        variant_str = "1	%d	.	GT	C	123	.	AF=1;DP=123	GT:ADR:AD	0/0:123,123:123,1	0/1:123,123:132,2	1/1:123,123:123,3\n"
-        dumptext(self.tmpvcf, vcf_header1, "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1	samp2	samp3\n",
-                 "".join([variant_str % (i + 1) for i in range(num_variants)]))
-
-        genome = self.make_vcfbin()
-
-        with VCFTable(self.tmpbin) as vt:
-            with self.assertRaisesRegex(ValueError, "greater than maximum"):
-                vt.variant_combinations(vt.sequence_variations(Interval("chr1", "+", 0, 100000, genome)))
-
     def test_sequence_variations_no_hit(self):
         dumptext(
             self.tmpvcf, vcf_header1, """
@@ -1308,187 +1295,6 @@ class TestVCFTable(unittest.TestCase):
                             for x in vt.sequence_variations(Interval("chr1", "+", 104, 106, genome, anchor='5p'))]
         self.assertEqual(vcf_variants, variants[2:])
 
-    def test_variant_combinations_heterozygous(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=0.5	GT	0/1
-            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "", "T"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[0]],
-                    [variants[1]],
-                    [variants[2]],
-                    [variants[0], variants[1]],
-                    [variants[0], variants[2]],
-                    [variants[1], variants[2]],
-                    [variants[0], variants[1], variants[2]]]  # yapf: disable
-
-        genome = self.make_vcfbin()
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_homozygous_ref(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=0.0	GT	0/0
-            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "", "T"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[1]],
-                    [variants[2]],
-                    [variants[1], variants[2]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_homozygous_alt(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=1.0	GT	1/1
-            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "", "T"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[0]],
-                    [variants[0], variants[1]],
-                    [variants[0], variants[2]],
-                    [variants[0], variants[1], variants[2]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_split_heterozygous_alt(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=0.5	GT	0/1
-            1	102	.	AG	AT	.	.	AF=0.5	GT	0/1
-            1	102	.	AG	AC	.	.	AF=0.5	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "G", "T"), ("chr1", 102, "G", "C"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[1]],
-                    [variants[2]],
-                    [variants[0], variants[1]],
-                    [variants[0], variants[2]],
-                    [variants[1], variants[3]],
-                    [variants[2], variants[3]],
-                    [variants[0], variants[1], variants[3]],
-                    [variants[0], variants[2], variants[3]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_heterozygous_alt_below_threshold(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=0.5	GT	0/1
-            1	102	.	AG	AT	.	.	AF=0.45	GT	0/1
-            1	102	.	AG	AC	.	.	AF=0.45	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "G", "T"), ("chr1", 102, "G", "C"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[0]],
-                    [variants[1]],
-                    [variants[2]],
-                    [variants[3]],
-                    [variants[0], variants[1]],
-                    [variants[0], variants[2]],
-                    [variants[0], variants[3]],
-                    [variants[1], variants[3]],
-                    [variants[2], variants[3]],
-                    [variants[0], variants[1], variants[3]],
-                    [variants[0], variants[2], variants[3]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants, 0.95)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_unknown(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGC	A	.	.	AF=1.0	GT	1/.
-            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
-            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GC", ""), ("chr1", 102, "", "T"), ("chr1", 104, "GC", "T")]
-        expected = [[variants[1]],
-                    [variants[2]],
-                    [variants[1], variants[2]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
-    def test_variant_combinations_multiple_overlap(self):
-        dumptext(
-            self.tmpvcf, vcf_header1, """
-            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
-            1	100	.	AGAGAGAGA	AC	.	.	AF=0.5	GT	0/1
-            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
-            1	104	.	AGA	AT	.	.	AF=0.5	GT	0/1
-            1	106	.	AGA	ATC	.	.	AF=0.5	GT	0/1
-            """)
-
-        variants = [("chr1", 100, "GAGAGAGA", "C"), ("chr1", 102, "", "T"), ("chr1", 104, "GA", "T"),
-                    ("chr1", 106, "GA", "TC")]
-        expected = [[variants[0]],
-                    [variants[1]],
-                    [variants[2]],
-                    [variants[3]],
-                    [variants[1], variants[2]],
-                    [variants[1], variants[3]],
-                    [variants[2], variants[3]],
-                    [variants[1], variants[2], variants[3]]]  # yapf: disable
-
-        genome = self.make_vcfbin(info_ids=["AF"], fmt_ids=["GT"])
-        with VCFTable(self.tmpbin) as vt:
-            found_variants = vt.sequence_variations(Interval("chr1", "+", 100, 107, genome))
-            vcf_variants = [[(x.chromosome, x.start, x.ref, x.alt) for x in p]
-                            for p in vt.variant_combinations(found_variants)]
-        self.assertEqual(vcf_variants, expected)
-
     def test_masked(self):
         dumptext(
             self.tmpvcf, vcf_header1, """
@@ -1509,7 +1315,7 @@ class TestVCFTable(unittest.TestCase):
                 np.testing.assert_equal(index_masked.info('AF'), np.array([0.2, 0.3, 0.4], dtype=np.float32))
                 np.testing.assert_equal(
                     index_masked.format('GT'),
-                    [[VCFTable.GT_HOMOZYGOUS_REF], [VCFTable.GT_HETEROZYGOUS], [VCFTable.GT_HOMOZYGOUS_ALT]])
+                    [[VCFTable.GT_HOMOZYGOUS_REF], [VCFTable.GT_HETEROZYGOUS_UNPHASED], [VCFTable.GT_HOMOZYGOUS_ALT]])
                 with index_masked.masked(np.array([True, False, True])) as bitmasked:
                     np.testing.assert_equal([x.start for x in bitmasked], [102, 106])
                     np.testing.assert_equal(bitmasked.info('AF'), np.array([0.2, 0.4], dtype=np.float32))
@@ -1530,6 +1336,71 @@ class TestVCFTable(unittest.TestCase):
                     np.testing.assert_equal(index_masked.format('GT'),
                                             [[VCFTable.GT_HOMOZYGOUS_REF], [VCFTable.GT_HOMOZYGOUS_ALT]])
 
+    def test_phased(self):
+        dumptext(
+            self.tmpvcf, vcf_header1, """
+            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
+            1	100	.	AGC	A	.	.	AF=0.1	GT	.
+            1	102	.	AGC	A	.	.	AF=0.2	GT	0/0
+            1	104	.	AGC	A	.	.	AF=0.3	GT	1/0
+            1	106	.	AGC	A	.	.	AF=0.3	GT	0/1
+            1	108	.	AGC	A	.	.	AF=0.4	GT	1/1
+            1	110	.	AGC	A	.	.	AF=0.5	GT	0|0
+            1	112	.	AGC	A	.	.	AF=0.3	GT	1|0
+            1	114	.	AGC	A	.	.	AF=0.3	GT	0|1
+            1	116	.	AGC	A	.	.	AF=0.4	GT	1|1
+            """)
+
+        genome = MiniGenome("hg19")
+
+        VCFTable.build_vcfbin(self.tmpbin, self.tmpvcf, genome, info_ids=["AF"], fmt_ids=["GT"], validate=False)
+        with VCFTable(self.tmpbin) as vt:
+            variants = vt.find_within(genome.interval('chr1', '+', 100, 120))
+            self.assertEqual(VCFTable.GT_UNKNOWN, variants[0].GT)
+            self.assertEqual(VCFTable.GT_HOMOZYGOUS_REF, variants[1].GT)
+            self.assertEqual(VCFTable.GT_HETEROZYGOUS_UNPHASED, variants[2].GT)
+            self.assertEqual(VCFTable.GT_HETEROZYGOUS_UNPHASED, variants[3].GT)
+            self.assertEqual(VCFTable.GT_HOMOZYGOUS_ALT, variants[4].GT)
+            self.assertEqual(VCFTable.GT_HOMOZYGOUS_REF, variants[5].GT)
+            self.assertEqual(VCFTable.GT_HETEROZYGOUS_PHASED_1_0, variants[6].GT)
+            self.assertEqual(VCFTable.GT_HETEROZYGOUS_PHASED_0_1, variants[7].GT)
+            self.assertEqual(VCFTable.GT_HOMOZYGOUS_ALT, variants[8].GT)
+
+
+    def test_phased_unknown(self):
+        dumptext(
+            self.tmpvcf, vcf_header1, """
+            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
+            1	102	.	AGC	A	.	.	AF=0.2	GT	0/.
+            1	104	.	AGC	A	.	.	AF=0.3	GT	1/.
+            1	106	.	AGC	A	.	.	AF=0.4	GT	./0
+            1	108	.	AGC	A	.	.	AF=0.5	GT	./1
+            1	112	.	AGC	A	.	.	AF=0.7	GT	0|.
+            1	114	.	AGC	A	.	.	AF=0.8	GT	1|.
+            1	116	.	AGC	A	.	.	AF=0.9	GT	.|0
+            1	118	.	AGC	A	.	.	AF=0.1	GT	.|1
+            1	110	.	AGC	A	.	.	AF=0.6	GT	./.
+            1	120	.	AGC	A	.	.	AF=0.2	GT	.|.
+            """)
+
+        genome = MiniGenome("hg19")
+
+        VCFTable.build_vcfbin(self.tmpbin, self.tmpvcf, genome, info_ids=["AF"], fmt_ids=["GT"], validate=False)
+        with VCFTable(self.tmpbin) as vt:
+            variants = vt.find_within(genome.interval('chr1', '+', 100, 122))
+            for i in range(10):
+                self.assertEqual(VCFTable.GT_UNKNOWN, variants[i].GT)
+
+        VCFTable.build_vcfbin(self.tmpbin, self.tmpvcf, genome, info_ids=["AF"], fmt_ids={"GT": np.int32(VCFTable.GT_HETEROZYGOUS_UNPHASED)}, validate=False)
+        with VCFTable(self.tmpbin) as vt:
+            variants = vt.find_within(genome.interval('chr1', '+', 100, 122))
+            for i in range(4): # unphased, default value used
+                self.assertEqual(VCFTable.GT_HETEROZYGOUS_UNPHASED, variants[i].GT)
+            self.assertEqual(VCFTable.GT_UNKNOWN, variants[4].GT)
+            for i in range(4, 8): # phased, default value ignored
+                self.assertEqual(VCFTable.GT_UNKNOWN, variants[i].GT)
+            for i in range(8, 10): # ./. and .|.
+                self.assertEqual(VCFTable.GT_UNKNOWN, variants[i].GT)
 
 if __name__ == "__main__":
     unittest.main()

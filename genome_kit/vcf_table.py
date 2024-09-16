@@ -516,17 +516,17 @@ class VCFTable(_cxx.VCFTable):
         return _cxx.VCFTable.where(self, mask)
 
     # values for GT (as per cyvcf2)
-    GT_HOMOZYGOUS_REF = 0
+    GT_HOMOZYGOUS_REF = np.int8(0)
     """Constant indicating a ``0/0`` or ``0|0`` in GT format value."""
-    GT_HETEROZYGOUS_UNPHASED = 1
+    GT_HETEROZYGOUS_UNPHASED = np.int8(1)
     """Constant indicating a ``0/1`` in GT format value."""
-    GT_HOMOZYGOUS_ALT = 2
+    GT_HOMOZYGOUS_ALT = np.int8(2)
     """Constant indicating a ``1/1`` or ``1|1`` in GT format value."""
-    GT_UNKNOWN = 3
+    GT_UNKNOWN = np.int8(3)
     """Constant indicating a ``?/?`` or ``?|?`` in GT format value."""
-    GT_HETEROZYGOUS_PHASED_0_1 = 4
+    GT_HETEROZYGOUS_PHASED_0_1 = np.int8(4)
     """Constant indicating a ``0|1`` in GT format value."""
-    GT_HETEROZYGOUS_PHASED_1_0 = 5
+    GT_HETEROZYGOUS_PHASED_1_0 = np.int8(5)
     """Constant indicating a ``1|0`` in GT format value."""
 
     # values for SVTYPE
@@ -743,7 +743,7 @@ class VCFTable(_cxx.VCFTable):
         be set to :py:const:`VCFTable.GT_HETEROZYGOUS_UNPHASED`. ``./.`` will still be interpreted as
         :py:const:`VCFTable.GT_UNKNOWN`::
 
-            {"GT" : np.int32(VCFTable.GT_HETEROZYGOUS_UNPHASED)}
+            {"GT" : VCFTable.GT_HETEROZYGOUS_UNPHASED}
 
         For phased values, the default value is ignored. For example, ``.|1`` will be encoded as
         :py:const:`VCFTable.GT_UNKNOWN`.

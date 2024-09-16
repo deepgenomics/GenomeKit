@@ -550,11 +550,11 @@ void vcf_table::builder::collect_fmt(const char* id, optional<dtype_t> dtype, co
 	if (strcmp(id, "GT") == 0) {
 		auto val = (int)gt_unknown;
 		if (default_value) {
-			if (*dtype == int32) {
+			if (*dtype == int8) {
 				val = *(const int*)default_value;
 			}
-			GK_CHECK(*dtype == int32 && (val == (int)gt_unknown || val == (int)gt_heterozygous_unphased), value,
-					 "FORMAT ID GT must be one of GT_UNKNOWN or GT_HETEROZYGOUS_UNPHASED.");
+			GK_CHECK(*dtype == int8 && (val == (int)gt_unknown || val == (int)gt_heterozygous_unphased), value,
+					 "FORMAT ID GT default value must be one of GT_UNKNOWN or GT_HETEROZYGOUS_UNPHASED.");
 		}
 		optional<int> depth;
 		if (!contains_if(_fmt_values, [](const auto& x) { return x.id == "PS"; })) {

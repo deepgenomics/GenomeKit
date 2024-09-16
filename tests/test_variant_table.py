@@ -1391,7 +1391,7 @@ class TestVCFTable(unittest.TestCase):
             for i in range(10):
                 self.assertEqual(VCFTable.GT_UNKNOWN, variants[i].GT)
 
-        VCFTable.build_vcfbin(self.tmpbin, self.tmpvcf, genome, info_ids=["AF"], fmt_ids={"GT": np.int32(VCFTable.GT_HETEROZYGOUS_UNPHASED)}, validate=False)
+        VCFTable.build_vcfbin(self.tmpbin, self.tmpvcf, genome, info_ids=["AF"], fmt_ids={"GT": VCFTable.GT_HETEROZYGOUS_UNPHASED}, validate=False)
         with VCFTable(self.tmpbin) as vt:
             variants = vt.find_within(genome.interval('chr1', '+', 100, 122))
             for i in range(4): # unphased, default value used

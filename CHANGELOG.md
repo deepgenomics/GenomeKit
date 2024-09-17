@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0](https://github.com/deepgenomics/GenomeKit/compare/v5.2.5...v6.0.0) (2024-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **vcfbin:** VCFTable.GT_HETEROZYGOUS is replaced with VCFTable.GT_HETEROZYGOUS_UNPHASED
+
+### Features
+
+* **vcfbin:** support phased VCF ([#92](https://github.com/deepgenomics/GenomeKit/issues/92)) ([a1f0b2a](https://github.com/deepgenomics/GenomeKit/commit/a1f0b2ad8a86b21dcf68134e9e8c87ce9f79d665))
+
 ## [5.2.5](https://github.com/deepgenomics/GenomeKit/compare/v5.2.4...v5.2.5) (2024-08-27)
 
 

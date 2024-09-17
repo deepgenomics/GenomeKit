@@ -50,10 +50,12 @@ enum vcf_col_t {
 
 // For diploids, assume GT of the form 00, 01, 10, 11 only
 // 		Convert gts strings to a 2-bit encoding
-// 		00 -> 0     (gt_homozygous_ref)
-// 		01 -> 1     (gt_heterozygous)
-// 		11 -> 2     (gt_homozygous_alt)
-// 		?? -> 3     (gt_unknown)
+// 		0/0, 0|0 -> 0     (gt_homozygous_ref)
+// 		0/1, 1/0 -> 1     (gt_heterozygous)
+// 		1/1, 1|1 -> 2     (gt_homozygous_alt)
+// 		??       -> 3     (gt_unknown)
+// 		0|1      -> 4     (gt_heterozygous_phased_0_1)
+// 		1|0      -> 5     (gt_heterozygous_phased_1_0)
 static vcf_table::gt_t as_gt_t(string_view gts, bool strict_gt = false)
 {
 	static const int diploid_gts_length = 3;
@@ -69,10 +71,20 @@ static vcf_table::gt_t as_gt_t(string_view gts, bool strict_gt = false)
 				 "GT component must an allelic index or '.': {}.", gts);
 		GK_CHECK(delim == '/' || delim == '|', value, "Expected `/` or `|` as separator for GT field, Found {}", delim);
 
-		if (strict_gt && (first == '.' || second == '.'))
+		const auto phased = delim == '|';
+
+		if ((strict_gt || phased) && (first == '.' || second == '.'))
+			// phased values ignore user-specified GT default values
 			return vcf_table::gt_unknown;
-		if (first != second)
-			return vcf_table::gt_heterozygous;
+		if (first != second) {
+			if (!phased) {
+				return vcf_table::gt_heterozygous_unphased;
+			}
+			if (first == '0') {
+				return vcf_table::gt_heterozygous_phased_0_1;
+			}
+			return vcf_table::gt_heterozygous_phased_1_0;
+		}
 		if (first == '0')
 			return vcf_table::gt_homozygous_ref;
 		if (first == '.')
@@ -538,11 +550,11 @@ void vcf_table::builder::collect_fmt(const char* id, optional<dtype_t> dtype, co
 	if (strcmp(id, "GT") == 0) {
 		auto val = (int)gt_unknown;
 		if (default_value) {
-			if (*dtype == int32) {
+			if (*dtype == int8) {
 				val = *(const int*)default_value;
 			}
-			GK_CHECK(*dtype == int32 && (val == (int)gt_unknown || val == (int)gt_heterozygous), value,
-					 "FORMAT ID GT must be one of GT_UNKNOWN or GT_HETEROZYGOUS.");
+			GK_CHECK(*dtype == int8 && (val == (int)gt_unknown || val == (int)gt_heterozygous_unphased), value,
+					 "FORMAT ID GT default value must be one of GT_UNKNOWN or GT_HETEROZYGOUS_UNPHASED.");
 		}
 		optional<int> depth;
 		if (!contains_if(_fmt_values, [](const auto& x) { return x.id == "PS"; })) {

@@ -516,14 +516,18 @@ class VCFTable(_cxx.VCFTable):
         return _cxx.VCFTable.where(self, mask)
 
     # values for GT (as per cyvcf2)
-    GT_HOMOZYGOUS_REF = 0
-    """Constant indicating a ``0/0`` in GT format value."""
-    GT_HETEROZYGOUS = 1
+    GT_HOMOZYGOUS_REF = np.int8(0)
+    """Constant indicating a ``0/0`` or ``0|0`` in GT format value."""
+    GT_HETEROZYGOUS_UNPHASED = np.int8(1)
     """Constant indicating a ``0/1`` in GT format value."""
-    GT_HOMOZYGOUS_ALT = 2
-    """Constant indicating a ``1/1`` in GT format value."""
-    GT_UNKNOWN = 3
-    """Constant indicating a ``?/?`` in GT format value."""
+    GT_HOMOZYGOUS_ALT = np.int8(2)
+    """Constant indicating a ``1/1`` or ``1|1`` in GT format value."""
+    GT_UNKNOWN = np.int8(3)
+    """Constant indicating a ``?/?`` or ``?|?`` in GT format value."""
+    GT_HETEROZYGOUS_PHASED_0_1 = np.int8(4)
+    """Constant indicating a ``0|1`` in GT format value."""
+    GT_HETEROZYGOUS_PHASED_1_0 = np.int8(5)
+    """Constant indicating a ``1|0`` in GT format value."""
 
     # values for SVTYPE
     SVTYPE_NA = 0
@@ -713,10 +717,12 @@ class VCFTable(_cxx.VCFTable):
 
         ***GT***
 
-        * ``0/0`` is stored as :const:`VCFTable.GT_HOMOZYGOUS_REF` (0)
-        * ``0/1`` is stored as :const:`VCFTable.GT_HETEROZYGOUS` (1)
-        * ``1/1`` is stored as :const:`VCFTable.GT_HOMOZYGOUS_ALT` (2)
-        * ``?/?`` is stored as :const:`VCFTable.GT_UNKNOWN` (3)
+        * ``0/0`` and ``0|0`` are stored as :const:`VCFTable.GT_HOMOZYGOUS_REF` (0)
+        * ``0/1`` is stored as :const:`VCFTable.GT_HETEROZYGOUS_UNPHASED` (1)
+        * ``1/1`` and ``1|1`` are stored as :const:`VCFTable.GT_HOMOZYGOUS_ALT` (2)
+        * ``?/?`` and ``?|?`` are stored as :const:`VCFTable.GT_UNKNOWN` (3)
+        * ``0|1`` is stored as :const:`VCFTable.GT_HETEROZYGOUS_PHASED_0_1` (4)
+        * ``1|0`` is stored as :const:`VCFTable.GT_HETEROZYGOUS_PHASED_1_0` (5)
 
         ***SVTYPE***
 
@@ -733,11 +739,14 @@ class VCFTable(_cxx.VCFTable):
 
         Missing values are also treated differently: GT values must be specified as a diploid.
         If a single missing allele (e.g. ``0/.``, ``./0``, ``1/.``, or ``./1``) should be encoded as a *possible*
-        :py:const:`VCFTable.GT_HETEROZYGOUS` instead of :py:const:`VCFTable.GT_UNKNOWN`, the missing value should
-        be set to :py:const:`VCFTable.GT_HETEROZYGOUS`. ``./.`` will still be interpreted as
+        :py:const:`VCFTable.GT_HETEROZYGOUS_UNPHASED` instead of :py:const:`VCFTable.GT_UNKNOWN`, the missing value should
+        be set to :py:const:`VCFTable.GT_HETEROZYGOUS_UNPHASED`. ``./.`` will still be interpreted as
         :py:const:`VCFTable.GT_UNKNOWN`::
 
-            {"GT" : np.int8(VCFTable.GT_HETEROZYGOUS)}
+            {"GT" : VCFTable.GT_HETEROZYGOUS_UNPHASED}
+
+        For phased values, the default value is ignored. For example, ``.|1`` will be encoded as
+        :py:const:`VCFTable.GT_UNKNOWN`.
 
         All other columns default to :py:class:`~numpy.int32`, :py:class:`~numpy.float32`, or :py:class:`str` as defined
         by the VCF Type header (can override bitwidth for performance or to save disk space.)
@@ -858,40 +867,6 @@ class VCFTable(_cxx.VCFTable):
         if self._mask_indices is not None:
             raise NotImplementedError("masked variants are not yet supported.")
         return _cxx.VCFTable.sequence_variations(self, interval)
-
-    def variant_combinations(self, variants, heterozygous_alt_af_threshold=0.90):
-        """Creates a list of all possible applications of the specified
-        variants. This is useful when the variants are not phased (difficult
-        to determine the consensus sequence.)
-
-        If this ``VCFTable`` contains ``GT`` FORMAT and
-        ``AF`` INFO fields, that call information will be used to filter out
-        some unobserved variants (unobserved REF).
-        The ``GT`` value is the primary filter, but when there are split
-        multiallelic rows, ``AF`` is used to determine if ``REF`` has been
-        observed. Note that :const:`~.GT_UNKNOWN` calls will
-        be filtered out, so the allele unknown encoding should be defined for
-        ``GT`` as required; see: :meth:`~.build_vcfbin`.
-
-        Parameters
-        ----------
-        variants : :class:`list` of :class:`~.VCFVariant`
-            The variants to create combinations. The variants must have come
-            from this ``VCFTable``.
-
-        heterozygous_alt_af_threshold : :class:`float`
-            The ``AF`` threshold for overlapping variants to be considered
-            ``GT`` ``1/2`` when combined. This will then remove any combination
-            sequences that retains ``REF``.
-
-        Returns
-        -------
-        :class:`list` of :class:`tuple` of :class:`~.VCFVariant`
-            A list of all possible variant combinations.
-        """
-        if self._mask_indices is not None:
-            raise NotImplementedError("masked variants are not yet supported.")
-        return _cxx.VCFTable.variant_combinations(self, variants, heterozygous_alt_af_threshold)
 
     @mock
     def close(self):  # pragma: no cover

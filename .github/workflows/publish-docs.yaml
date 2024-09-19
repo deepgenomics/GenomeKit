@@ -3,7 +3,7 @@ run-name: build and publish API docs
 on:
   push:
     # only build and publish docs on release-please tags
-    tags: ["v*"]
+    branches: ["debug-doc-build"]
     paths:
       - "docs/**"
       - "genome_kit/**"
@@ -49,13 +49,11 @@ jobs:
         shell: bash -l -e {0}
         run: |
           set -x
-          pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
-          pkg_name=$(basename ${pkg_name})
-          pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
-          pkg_name=${pkg_name%%-[0-9]*}
+          pkg_name=genomekit
+          pkg_version=6.0.0
           micromamba activate build
           conda index ~/conda-bld
-          mamba create -n doc-build -c file://${HOME}/conda-bld \
+          mamba create -n doc-build -vvv --debug -c file://${HOME}/conda-bld \
             ${pkg_name}=${pkg_version} \
             m2r2 \
             make \

@@ -209,6 +209,10 @@ class TestGenome(unittest.TestCase):
 
         self.assertEqual(genome.variant_dna(interval, variant), "G")
 
+        interval = Interval("chr2", "+", -10, 110, genome)
+
+        self.assertEqual(genome.variant_dna(interval, variant)[-1], "G")
+
     def test_appris_simple(self):
         genome = MiniGenome("gencode.v29")
         self.assertTrue(set(genome.appris_transcripts()).issubset(set(genome.transcripts)))

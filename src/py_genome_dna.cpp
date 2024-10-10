@@ -60,13 +60,13 @@ GKPY_SETATTRO_END
 GKPY_OMETHOD_BEGIN(GenomeDNA, Call)
 	char* arg_names[] = { "interval", "allow_outside_chromosome", nullptr };
 	PyObject* interval_arg;
-	int allow_outside_chromosome = 0;
+	int allow_outside_chromosome = 1;
 	if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|p", arg_names, &interval_arg, &allow_outside_chromosome))
 		 return nullptr;
 
 	// Extract DNA for an Interval arg
 	const interval_t& c = PyAsInterval(interval_arg);
-	return PyString_FromSV((*self->dna)(c, allow_outside_chromosome));
+	return PyString_FromSV((*self->dna)(c, allow_outside_chromosome != 0));
 GKPY_OMETHOD_END
 
 GKPY_TYPEOBJ_BEGIN(GenomeDNA)

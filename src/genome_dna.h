@@ -20,7 +20,7 @@ public:
 	INLINE bool is_open()     const { return _fmap.is_open(); }
 	INLINE void ensure_open() const { if (!is_open()) open_on_demand(); }  // Fast check if file / indices already loaded
 
-	dnastr operator()(const interval_t& c, bool allow_outside_chromosome=false) const;
+	dnastr operator()(const interval_t& c, bool allow_outside_chromosome=true) const;
 	void   operator()(const interval_t& c, char* dst, bool allow_outside_chromosome) const;
 
 	INLINE void enable_mask()  { _want_mask = true; }

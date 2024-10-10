@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from functools import partial
 from weakref import WeakValueDictionary
 
 from . import _cxx
@@ -145,7 +146,7 @@ class Genome(_cxx.Genome):
         """
         return mock_result(str)
 
-    def variant_dna(self, interval, variants):
+    def variant_dna(self, interval, variants, allow_outside_chromosome=True):
         """Extract DNA from a genome with specific variants applied to it.
 
         Follows the same rules as :py:meth:`~genome_kit.VariantGenome.dna`.
@@ -164,7 +165,11 @@ class Genome(_cxx.Genome):
         :py:class:`str`
             The variant DNA sequence.
         """
-        return apply_variants(self.dna, check_variants_list(self, variants), interval)
+        return apply_variants(
+            partial(self.dna, allow_outside_chromosome=allow_outside_chromosome),
+            check_variants_list(self, variants),
+            interval,
+        )
 
     @mock
     @property

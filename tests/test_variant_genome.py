@@ -264,3 +264,12 @@ class TestVariantGenome(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             VariantGenome(self.genome, ["chr1:15:G:T"])
+
+    def test_allow_outside_chromsome(self):
+        variant = VariantGenome(
+            self.genome, Variant.from_string("chr1:15:G:T", self.genome)
+        )
+        sequence = variant.dna(variant.interval("chr1", "+", -10, 20))
+        self.assertEqual(len(sequence), 30)
+        self.assertEqual(sequence[0], "N")
+        self.assertEqual(sequence[-5], "T")

@@ -36,7 +36,7 @@ them in the local data directory, to get you started. It also serves as a good e
 to build your own data files::
 
     conda activate env-with-genomekit
-    curl -O starter_build.sh https://raw.githubusercontent.com/deepgenomics/GenomeKit/main/starter/build.sh
+    curl -o starter_build.sh https://raw.githubusercontent.com/deepgenomics/GenomeKit/main/starter/build.sh
     chmod +x starter_build.sh
     ./starter_build.sh
 

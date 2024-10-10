@@ -132,6 +132,11 @@ class ExtractTest(unittest.TestCase):
         self.assertEqual(f"{'N'*10}{first50bases}", actual[:60])
         self.assertEqual(f"{last50bases}{'N'*10}", actual[-60:])
 
+        # defaults to True
+        actual = dna(
+            Interval("chr2", "+", -10, chr2size + 10, genome),
+        )
+        self.assertEqual(len(actual), 10 + chr2size + 10)
 
 
 ########################################################

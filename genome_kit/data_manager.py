@@ -209,7 +209,7 @@ class DefaultDataManager(DataManager):
             if "GENOMEKIT_TRACE" in os.environ:
                 # give the user a hint in case of permission errors
                 print(e, file=sys.stderr)
-                raise
+            raise
 
         # form a temporary filename to make the download safe
         temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")

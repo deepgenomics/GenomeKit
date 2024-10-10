@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/deepgenomics/GenomeKit/compare/v6.0.0...v6.0.1) (2024-10-10)
+
+
+### Bug Fixes
+
+* **data:** exception raising was dependent on an envvar before ([#99](https://github.com/deepgenomics/GenomeKit/issues/99)) ([3d461c1](https://github.com/deepgenomics/GenomeKit/commit/3d461c184d71eaca48bebc60f1f40dcba95fcafe))
+
 ## [6.0.0](https://github.com/deepgenomics/GenomeKit/compare/v5.2.5...v6.0.0) (2024-09-17)
 
 

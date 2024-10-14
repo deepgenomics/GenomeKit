@@ -37,6 +37,8 @@ if __name__ == "__main__":
             "License :: OSI Approved :: Apache Software License",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         license="Apache License 2.0",

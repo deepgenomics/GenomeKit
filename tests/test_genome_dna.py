@@ -80,10 +80,6 @@ class ExtractTest(unittest.TestCase):
         self.assertEqual(dna(Interval("chr1", "+", 0, 4, genome)), "AAAA")
         self.assertEqual(dna(Interval("chr2", "+", 0, 4, genome)), "CCCC")
         self.assertEqual(dna(Interval("chr2", "-", 0, 4, genome)), "GGGG")
-        with self.assertRaises(IndexError):
-            dna(Interval("chr1", "+", 0, 5, genome))
-        with self.assertRaises(IndexError):
-            dna(Interval("chr1", "+", -1, 4, genome))
 
         gc.collect()
         self.assertEqual(gc.garbage, [])

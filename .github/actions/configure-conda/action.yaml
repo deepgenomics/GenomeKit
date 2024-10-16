@@ -13,7 +13,7 @@ runs:
         set -x
         if [ ! -e "${HOME}/.condarc" ]; then
           micromamba activate ${{ inputs.env }}
-          conda config --set always_yes yes --set changeps1 no --set auto_update_conda no --set channel_priority flexible
+          conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
           # cache additional pkgs separately from docker pre-install
           conda config --prepend pkgs_dirs ${HOME}/micromamba/envs/${{ inputs.env }}/pkgs
           # fallback to docker pre-installed packages

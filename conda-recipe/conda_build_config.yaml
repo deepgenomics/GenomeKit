@@ -7,6 +7,5 @@ c_stdlib_version:
 numpy:
 - '1.22'
 python:
-- '3.8'
 - '3.9'
 - '3.10'

@@ -30,7 +30,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: [["38", "3.8"], ["39", "3.9"], ["310", "3.10"]]
+        python-version: [["39", "3.9"], ["310", "3.10"]]
         platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:

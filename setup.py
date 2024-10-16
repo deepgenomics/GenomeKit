@@ -31,11 +31,10 @@ if __name__ == "__main__":
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
-        python_requires=">=3.8, <4",
+        python_requires=">=3.9, <4",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "License :: OSI Approved :: Apache Software License",
-            "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
         ],

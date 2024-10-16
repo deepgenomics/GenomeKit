@@ -1,9 +1,11 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 from __future__ import absolute_import
-from . import interval as _interval
-from ._apply_variants import apply_variants
-from ._apply_variants import check_variants_list
+
+from functools import partial
+
 from . import _util
+from . import interval as _interval
+from ._apply_variants import apply_variants, check_variants_list
 
 
 class VariantGenome(object):
@@ -42,7 +44,7 @@ class VariantGenome(object):
         self.genome = reference_genome
         self.variants = check_variants_list(self.genome, variants)
 
-    def dna(self, interval):
+    def dna(self, interval, allow_outside_chromosome=True):
         """Extract variant DNA for an anchored interval or coordinate.
 
         Parameters
@@ -58,7 +60,11 @@ class VariantGenome(object):
             The variant DNA sequence.
         """
 
-        return apply_variants(self.genome.dna, self.variants, interval)
+        return apply_variants(
+            partial(self.genome.dna, allow_outside_chromosome=allow_outside_chromosome),
+            self.variants,
+            interval,
+        )
 
     def find_motif(self, interval, motif, match_position=0, find_overlapping_motifs=False):
         """Find a genomic motif in an interval on a :py:class:`~genome_kit.VariantGenome`.

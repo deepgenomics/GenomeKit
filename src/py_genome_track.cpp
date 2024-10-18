@@ -284,6 +284,9 @@ GKPY_METHOD_BEGIN_NOARG(GenomeTrackBuilder, close)
 	GKPY_RETURN_NONE;
 GKPY_METHOD_END
 
+GKPY_TRAVERSE_BEGIN(GenomeTrackBuilder)
+GKPY_TRAVERSE_END
+
 GKPY_METHODS_BEGIN(GenomeTrackBuilder)
 	GKPY_METHOD_ENTRY(GenomeTrackBuilder, set_default_value,      METH_VARARGS | METH_KEYWORDS, nullptr)
 	GKPY_METHOD_ENTRY(GenomeTrackBuilder, set_sparsity,           METH_VARARGS | METH_KEYWORDS, nullptr)
@@ -308,6 +311,7 @@ GKPY_TYPEOBJ_BEGIN(GenomeTrackBuilder)
 	tp_getattro = PyGenomeTrackBuilder_GetAttro;
 	tp_setattro = PyGenomeTrackBuilder_SetAttro;
 	tp_methods = PyGenomeTrackBuilder_Methods;
+	tp_traverse = PyGenomeTrackBuilder_Traverse;
 GKPY_TYPEOBJ_END
 
 /////////////////////////////////////////////////////////////

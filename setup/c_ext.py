@@ -126,6 +126,7 @@ if toolset == "gcc":
 
         extra_link_args += [
             osx_sdk,
+            "-isysroot{}".format(os.environ.get("CONDA_BUILD_SYSROOT", "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")),
         ]
         define_macros += [
             # https://conda-forge.org/docs/maintainer/knowledge_base/#newer-c-features-with-old-sdk

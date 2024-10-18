@@ -68,14 +68,13 @@ namespace detail {
 		template <typename T>
 		INLINE static void apply(T* RESTRICT& dst, size_t i, int& k, int dim, int stride, T value)
 		{
-			*dst = value;
-			dst += stride;
+			*(dst++) = value;
 
 			// If we've just written the last dimension of this position,
 			// then advance to the first dimension of the next  position
 			// to be written to, which is backwards, not forwards.
 			if (--k == 0) {
-				dst -= 2*stride;
+				dst -= dim + stride;
 				k = dim;
 			}
 		}

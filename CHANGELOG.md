@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.0.1](https://github.com/deepgenomics/GenomeKit/compare/v6.0.0...v6.0.1) (2024-10-18)
+
+
+### Bug Fixes
+
+* **data:** exception raising was dependent on an envvar before ([#99](https://github.com/deepgenomics/GenomeKit/issues/99)) ([3d461c1](https://github.com/deepgenomics/GenomeKit/commit/3d461c184d71eaca48bebc60f1f40dcba95fcafe))
+* **dna:** consistent allow_outside_chromosome defaults ([#98](https://github.com/deepgenomics/GenomeKit/issues/98)) ([611970d](https://github.com/deepgenomics/GenomeKit/commit/611970d9b1c6cfaca2e2dd7938ec9d3d46cef697))
+* **track:** OOB issue with negative strands on u1 tracks ([#104](https://github.com/deepgenomics/GenomeKit/issues/104)) ([53ae2f5](https://github.com/deepgenomics/GenomeKit/commit/53ae2f5881c2c97b572cb787098544f59e2e2d14))
+
 ## [6.0.0](https://github.com/deepgenomics/GenomeKit/compare/v5.2.5...v6.0.0) (2024-09-17)
 
 

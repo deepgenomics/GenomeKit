@@ -74,7 +74,7 @@ namespace detail {
 			// then advance to the first dimension of the next  position
 			// to be written to, which is backwards, not forwards.
 			if (--k == 0) {
-				dst -= 2*stride;
+				dst -= dim + stride;
 				k = dim;
 			}
 		}

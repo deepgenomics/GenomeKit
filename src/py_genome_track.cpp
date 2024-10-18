@@ -327,25 +327,24 @@ GKPY_INIT_BEGIN(GenomeTrack)
 	} else if (PyObject_IsInstance(arg, (PyObject*)PyGenome::Type)) {
 		// If argument was a Genome object, then point to the pre-existing genome_dna instance
 		Py_INCREF(arg);
-		self->owner = arg;
 		self->track = track_ptr;
 	} else
 		GK_THROW(value, "GenomeTrack.__init__ could not parse arguments");
 GKPY_INIT_END
 
-GKPY_DEALLOC_OWNED_BEGIN(GenomeTrack)
+GKPY_DEALLOC_BEGIN(GenomeTrack)
 	// If we don't have an owner, then the genome_track instance must be deleted
-	if (self->track && !self->owner) {
+	if (self->track) {
 		delete self->track;
 		self->track = nullptr;
 	}
-GKPY_DEALLOC_OWNED_END
+GKPY_DEALLOC_END
 
-GKPY_TRAVERSE_OWNED_BEGIN(GenomeTrack)
-GKPY_TRAVERSE_OWNED_END
+GKPY_TRAVERSE_BEGIN(GenomeTrack)
+GKPY_TRAVERSE_END
 
-GKPY_CLEAR_OWNED_BEGIN(GenomeTrack)
-GKPY_CLEAR_OWNED_END
+GKPY_CLEAR_BEGIN(GenomeTrack)
+GKPY_CLEAR_END
 
 GKPY_GETATTRO_BEGIN(GenomeTrack)
 	GKPY_GETATTR_CASE("dim")               return PyInt_FromLong(self->track->dim());

@@ -11,7 +11,7 @@ tests_require = [
     "twobitreader>=3.1",
 ]
 
-version = "6.0.0"
+version = "6.0.1"
 
 # See https://stackoverflow.com/questions/9977889/how-to-include-license-file-in-setup-py-script/66443941#66443941
 class egg_info_ex(egg_info):

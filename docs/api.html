@@ -1,24 +1,22 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>API Documentation &mdash; GenomeKit 6.0.0 documentation</title>
+  <title>API Documentation &mdash; GenomeKit 6.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
   
     <link rel="shortcut icon" href="_static/favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=12958129"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b6ed0530"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -38,9 +36,6 @@
             GenomeKit
               <img src="_static/logo.png" class="logo" alt="Logo"/>
           </a>
-              <div class="version">
-                6.0.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -1354,7 +1349,7 @@ If not specified, defaults to True. Any base outside the chromosome range will b
 
 <dl class="py method">
 <dt class="sig sig-object py" id="genome_kit.Genome.variant_dna">
-<span class="sig-name descname"><span class="pre">variant_dna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variants</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/genome_kit/genome.html#Genome.variant_dna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#genome_kit.Genome.variant_dna" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">variant_dna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_outside_chromosome</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/genome_kit/genome.html#Genome.variant_dna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#genome_kit.Genome.variant_dna" title="Link to this definition"></a></dt>
 <dd><p>Extract DNA from a genome with specific variants applied to it.</p>
 <p>Follows the same rules as <a class="reference internal" href="#genome_kit.VariantGenome.dna" title="genome_kit.VariantGenome.dna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dna()</span></code></a>.
 Intended for applying sets of variants that may overlap <cite>interval</cite>.</p>
@@ -1708,7 +1703,7 @@ positions are with respect to the reference genome.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="genome_kit.VariantGenome.dna">
-<span class="sig-name descname"><span class="pre">dna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/genome_kit/variant_genome.html#VariantGenome.dna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#genome_kit.VariantGenome.dna" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">dna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_outside_chromosome</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/genome_kit/variant_genome.html#VariantGenome.dna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#genome_kit.VariantGenome.dna" title="Link to this definition"></a></dt>
 <dd><p>Extract variant DNA for an anchored interval or coordinate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

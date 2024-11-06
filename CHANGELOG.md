@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.3](https://github.com/deepgenomics/GenomeKit/compare/v6.0.2...v6.0.3) (2024-11-06)
+
+
+### Miscellaneous Chores
+
+* fix windows build ([#106](https://github.com/deepgenomics/GenomeKit/issues/108)) ([5fe3814](https://github.com/deepgenomics/GenomeKit/commit/5fe3814f7c7ec0654aabbe2d49064b98b834e564))
+
 ## [6.0.2](https://github.com/deepgenomics/GenomeKit/compare/v6.0.1...v6.0.2) (2024-11-05)
 
 

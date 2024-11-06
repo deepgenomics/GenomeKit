@@ -5,8 +5,7 @@
 
 ### Miscellaneous Chores
 
-* release 6.0.3 ([e3ff39e](https://github.com/deepgenomics/GenomeKit/commit/e3ff39e2ed0988858a05ceabdc9186d8dc9f73b8))
-* release 6.0.3 ([#110](https://github.com/deepgenomics/GenomeKit/issues/110)) ([f8a1062](https://github.com/deepgenomics/GenomeKit/commit/f8a10626f84bc93082e66ad00b822a2106b44046))
+* fix windows build ([#106](https://github.com/deepgenomics/GenomeKit/issues/108)) ([5fe3814](https://github.com/deepgenomics/GenomeKit/commit/5fe3814f7c7ec0654aabbe2d49064b98b834e564))
 
 ## [6.0.2](https://github.com/deepgenomics/GenomeKit/compare/v6.0.1...v6.0.2) (2024-11-05)
 

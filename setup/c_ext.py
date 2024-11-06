@@ -349,8 +349,6 @@ def windows_parallel_ccompile(self,
 
 if sys.platform == "win32":
     import distutils._msvccompiler
-    import distutils.msvc9compiler
     distutils._msvccompiler.MSVCCompiler.compile = windows_parallel_ccompile
-    distutils.msvc9compiler.MSVCCompiler.compile = windows_parallel_ccompile
 else:
     distutils.ccompiler.CCompiler.compile = gcc_parallel_ccompile

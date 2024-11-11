@@ -39,17 +39,8 @@ Data, such as assemblies, annotations, tracks, etc, are stored in custom-built b
 These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
 APIs for building these files are provided as part of the API.
 
-``starter/build.sh`` is a bash script that builds a few assemblies and annotations and places
-them in the local data directory, to get you started. It also serves as a good example of how
-to build your own data files::
-
-    conda activate env-with-genomekit
-    curl -o starter_build.sh https://raw.githubusercontent.com/deepgenomics/GenomeKit/main/starter/build.sh
-    chmod +x starter_build.sh
-    ./starter_build.sh
-
-A larger selection of pre-built data files is provided in a public Google Cloud Storage bucket,
-which is set as the default data source.
+A selection of pre-built data files is provided in a public Google Cloud Storage bucket,
+which is set as the default data source. If you don't have access to Google Cloud, see :ref:`docker_data_gen` below.
 
 The bucket is configured with `"requester pays" <https://cloud.google.com/storage/docs/requester-pays>`__
 enabled, so you will need to
@@ -64,6 +55,45 @@ enabled, so you will need to
     export GENOMEKIT_GCS_BILLING_PROJECT="your-project-id"
     # required depending on your local gcloud configuration
     export GOOGLE_CLOUD_PROJECT="your-project-id"
+
+.. _docker_data_gen:
+
+Generating data with Docker
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Clone the repo:
+
+    .. code-block:: Bash
+
+        git clone https://github.com/deepgenomics/GenomeKit.git
+        pushd GenomeKit
+
+Scripts under ``data-src`` are used to obtain and generate the data files:
+
+- ``data-src/<assembly>/assembly`` for the assembly, e.g ``data-src/hg19/assembly``
+- ``data-src/<assembly>/<annotation-source>/<annotation>``, e.g ``data-src/hg19/GENCODE/v26lift37``
+
+Run the data generation script for the annotation/assembly you require. Note that annotations require the
+assembly to be built first.
+
+    .. code-block:: Bash
+
+        # set GENOMEKIT_DATA_DIR
+        export GENOMEKIT_DATA_DIR=$(python -c "import os ; import appdirs ; print(os.environ.get('GENOMEKIT_DATA_DIR', appdirs.user_data_dir('genome_kit')))")
+
+        # obtain data files for the related assembly
+        docker run --rm -it -v ./data-src:/data-src \
+            -v $GENOMEKIT_DATA_DIR:/output -e GENOMEKIT_DATA_DIR=/output \
+            --platform=linux/amd64 deepgenomicsinc/genomekit \
+            python /data-src/build.py hg19.p13.plusMT/assembly /output
+
+        # generate the annotation data files
+        docker run --rm -it -v ./data-src:/data-src \
+            -v $GENOMEKIT_DATA_DIR:/output -e GENOMEKIT_DATA_DIR=/output \
+            --platform=linux/amd64 deepgenomicsinc/genomekit \
+            python /data-src/build.py hg19.p13.plusMT/NCBI/v105.20190906 /output
+
+The files should now be ready to use in your local GenomeKit data directory.
 
 For more details on creating your own data source, see `the section on Sharing data files <sharing data>`_.
 

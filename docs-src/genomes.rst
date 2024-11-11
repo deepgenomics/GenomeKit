@@ -11,17 +11,36 @@ must be specified in GENCODE/Ensembl/NCBI GFF3 formats.
 Examples
 --------
 
-``starter/build.sh`` is a bash script that builds a few assemblies and annotations to get you started.
+Clone the GenomeKit git repo to see scripts under data-src/ for examples of how to build annotation data files.
+
+    .. code-block:: Bash
+
+        git clone https://github.com/deepgenomics/GenomeKit.git
+        pushd GenomeKit
+
+Scripts under ``data-src`` are used to obtain and generate the data files:
+
+- ``data-src/<assembly>/assembly`` for the assembly, e.g ``data-src/hg19/assembly``
+- ``data-src/<assembly>/<annotation-source>/<annotation>``, e.g ``data-src/hg19/GENCODE/v26lift37``
+-
 
 Assemblies
 ^^^^^^^^^^
 
-#. Copy the `2bit`, `chrom.sizes`, and `chromAlias.txt` files from
-   https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/. into your
+#. Generate a hash file
+
+#. .. code-block:: Bash
+
+     echo $(python -c 'import genome_kit as gk; print(gk.Genome._refg_hash("hg19"))') > hg19.hash
+(replace ``hg19`` with the desired assembly name)
+
+#. Copy the ``2bit``, ``chrom.sizes``, and ``chromAlias.txt`` files from
+   https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/.
+   and the ``hash`` file you generated into your
 
    .. code-block:: Bash
 
-     python -c 'import appdirs; print(appdirs.user_data_dir("genome_kit"))'
+     python -c 'import os ; import appdirs ; print(os.environ.get("GENOMEKIT_DATA_DIR", appdirs.user_data_dir("genome_kit")))'
 
    directory.
 

@@ -5,7 +5,7 @@ on:
     # only build+push docker on release-please tags
     # TODO
     #tags: ["v*"]
-    tags: ["test-ci"]
+    branches: ["test-ci"]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"

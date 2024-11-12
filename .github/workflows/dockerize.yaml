@@ -90,7 +90,7 @@ jobs:
           # TODO
           #push: true
           push: false
-          tags:
-            - deepgenomicsinc/genomekit:latest
-            - deepgenomicsinc/genomekit:latest-py310
-            - deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PGK_VERSION }}-py310
+          tags: |
+            deepgenomicsinc/genomekit:latest
+            deepgenomicsinc/genomekit:latest-py310
+            deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PGK_VERSION }}-py310

@@ -76,7 +76,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ~/micromamba/envs/genomekit
+          context: ~/conda/envs/genomekit
           file: Dockerfile
           # TODO
           #push: true

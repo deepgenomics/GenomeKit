@@ -49,14 +49,13 @@ jobs:
         shell: bash -l -e {0}
         run: |
           set -x
-          pkg_name=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
-          pkg_name=$(basename ${pkg_name})
-          pkg_version=$(echo $pkg_name | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
-          pkg_name=${pkg_name%%-[0-9]*}
+          pgk_file_path=$(eval ls -1 ~/conda-bld/*/*.tar.bz2 | head -1)
+          pkg_file=$(basename ${pgk_file_path})
+          pkg_version=$(echo $pkg_file | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
           micromamba activate build
           conda index ~/conda-bld
           mamba create -n doc-build -c file://${HOME}/conda-bld \
-            ${pkg_name}=${pkg_version} \
+            genomekit=${pkg_version} \
             m2r2 \
             make \
             myst-parser \

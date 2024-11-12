@@ -20,6 +20,14 @@ You can install GenomeKit with::
     conda install -c conda-forge genomekit
 
 
+Use with docker
+~~~~~~~~~~~~~~~~~
+
+Alternatively you can use GenomeKit with docker::
+
+    $ docker run -it --rm deepgenomicsinc/genomekit:latest python
+    >>> import genome_kit
+
 Basics
 ------
 

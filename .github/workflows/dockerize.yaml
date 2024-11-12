@@ -17,7 +17,7 @@ on:
     - "tests/**"
 
 jobs:
-  build:
+  docker-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +25,6 @@ jobs:
       - uses: ./.github/actions/build-gk
         with:
           platform: linux-64
-
-  docker-build:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: get meta.yaml from conda-forge for cache key calculation
-        uses: ./.github/actions/curl-meta-yaml
 
       - name: restore mamba env
         id: restore_mamba_cache

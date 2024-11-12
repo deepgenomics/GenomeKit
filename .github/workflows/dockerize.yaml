@@ -88,4 +88,5 @@ jobs:
           push: true
           tags:
             - deepgenomicsinc/genomekit:latest
-            - deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PGK_VERSION }}
+            - deepgenomicsinc/genomekit:latest-py310
+            - deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PGK_VERSION }}-py310

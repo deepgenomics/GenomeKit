@@ -59,8 +59,6 @@ jobs:
           micromamba activate build
           conda index ~/conda-bld
           mamba create -n genomekit -c file://${HOME}/conda-bld genomekit=${pkg_version}
-          mamba info --envs
-          ls ~/
           set +x
 
       - name: Set up QEMU
@@ -78,7 +76,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ~/conda/envs/genomekit
+          context: ~/micromamba/envs/build/envs/genomekit
           file: Dockerfile
           # TODO
           #push: true

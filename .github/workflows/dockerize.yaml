@@ -59,6 +59,8 @@ jobs:
           micromamba activate build
           conda index ~/conda-bld
           mamba create -n genomekit -c file://${HOME}/conda-bld genomekit=${pkg_version}
+          ls ~/conda/envs
+          pwd
           set +x
 
       - name: Set up QEMU

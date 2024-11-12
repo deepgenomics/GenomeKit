@@ -28,7 +28,7 @@ jobs:
 
   docker-build:
     needs: build
-    runs-on: linux-64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 

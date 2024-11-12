@@ -3,7 +3,9 @@ run-name: dockerize
 on:
   push:
     # only build+push docker on release-please tags
-    tags: ["v*"]
+    # TODO
+    #tags: ["v*"]
+    tags: ["test-ci"]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
@@ -85,7 +87,9 @@ jobs:
         with:
           context: ~/micromamba/envs/build/envs
           file: Dockerfile
-          push: true
+          # TODO
+          #push: true
+          push: false
           tags:
             - deepgenomicsinc/genomekit:latest
             - deepgenomicsinc/genomekit:latest-py310

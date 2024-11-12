@@ -15,7 +15,7 @@ on:
     - "tests/**"
 
 jobs:
-  build:
+  docker-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,20 +24,11 @@ jobs:
         with:
           platform: linux-64
 
-  docker-build:
-    needs: build
-    runs-on: linux-64
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: get meta.yaml from conda-forge for cache key calculation
-        uses: ./.github/actions/curl-meta-yaml
-
       - name: restore mamba env
         id: restore_mamba_cache
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/dockerize.yaml', '.github/actions/**') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
           path: |
             ~/micromamba
             ~/.condarc
@@ -48,7 +39,7 @@ jobs:
         id: restore_gk_pkg
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/dockerize.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**', 'tests/**') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**', 'tests/**') }}
           path: |
             ~/conda-bld
           fail-on-cache-miss: true
@@ -83,10 +74,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ~/micromamba/envs/build/envs
+          context: /home/runner/micromamba/envs/build/envs
           file: Dockerfile
           push: true
-          tags:
-            - deepgenomicsinc/genomekit:latest
-            - deepgenomicsinc/genomekit:latest-py310
-            - deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PGK_VERSION }}-py310
+          tags: |
+            deepgenomicsinc/genomekit:latest
+            deepgenomicsinc/genomekit:latest-py310
+            deepgenomicsinc/genomekit:${{ steps.create-gk-env.outputs.PKG_VERSION }}-py310

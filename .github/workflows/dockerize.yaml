@@ -55,7 +55,7 @@ jobs:
           pgk_file_path=$(eval ls -1 ~/conda-bld/linux-64/*py310*.tar.bz2 | head -1)
           pkg_file=$(basename ${pgk_file_path})
           pkg_version=$(echo $pkg_file | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')
-          echo "PKG_VERSION=${pkg_version}" >> $GITHUB_OUTPUT
+          echo "PKG_VERSION=${pkg_version}\n" >> $GITHUB_OUTPUT
           micromamba activate build
           conda index ~/conda-bld
           mamba create -n genomekit -c file://${HOME}/conda-bld genomekit=${pkg_version}

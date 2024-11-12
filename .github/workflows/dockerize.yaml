@@ -59,6 +59,7 @@ jobs:
           micromamba activate build
           conda index ~/conda-bld
           mamba create -n genomekit -c file://${HOME}/conda-bld genomekit=${pkg_version}
+          mamba info --envs
           ls ~/
           set +x
 

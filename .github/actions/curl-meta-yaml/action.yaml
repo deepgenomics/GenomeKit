@@ -11,6 +11,6 @@ runs:
         # build from local source, not from the latest release tarball
         # replace the (non-existent) tarball with local path, remove the related sha for that tarball, and build for
         # all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
-        sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d' meta.yaml
+        sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d' conda-recipe/meta.yaml
         head -10 conda-recipe/meta.yaml
         set +x

@@ -144,19 +144,7 @@ struct PyImplicitError {
 // Class to make Py_INCREF/Py_DECREF exception safe, when an error occurs and
 // the stack needs to be unwound all the way to the last Python-to-C entry point.
 struct PyObjectDecrementer {
-	void operator()(PyObject* obj) const noexcept {
-#if PY_VERSION_HEX >= 0x030B0000 // >= py311
-		// see https://github.com/deepgenomics/GenomeKit/issues/102
-		// and https://github.com/python/cpython/issues/126508
-		if (PyThreadState_Get() != nullptr) {
-			Py_XDECREF(obj);
-		}
-#else
-		// on < py311 calling PyThreadState_Get() on exit causes:
-		// Fatal Python error: PyThreadState_Get: the function must be called with the GIL held, but the GIL is released (the current Python thread state is NULL)
-		Py_XDECREF(obj);
-#endif
-	};
+	void operator()(PyObject* obj) const noexcept { Py_XDECREF(obj); }
 };
 using PyAutoRef = std::unique_ptr<PyObject, PyObjectDecrementer>;
 

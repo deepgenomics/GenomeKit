@@ -74,6 +74,7 @@ Contents:
     api
     genomes
     develop
+    data_org
 
 ------------------
 Indices and tables

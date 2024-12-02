@@ -182,6 +182,8 @@ Py_ssize_t PyInterval_Length(PyObject *selfo) { return (Py_ssize_t)PyInterval::v
 
 PyObject* PyString_FromChrom(chrom_key_t<refg_t> key)
 {
+	// The string values are never decref'd in order to avoid a segfault on exit
+	// see https://github.com/python/cpython/issues/126508
 	static chrom_map_t<refg_t, PyObject*> map;
 
 	auto& s = map[key];

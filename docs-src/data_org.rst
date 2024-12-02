@@ -19,7 +19,7 @@ Available File Formats
 Formats not specific to GenomeKit:
 
 - ``2bit`` (raw assembly data)
-- ``chrom.sizes`` / chromAlias.txt (text format)
+- ``chrom.sizes`` / ``chromAlias.txt`` (text format)
 
 GenomeKit-specific data files:
 

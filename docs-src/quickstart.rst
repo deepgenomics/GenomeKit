@@ -39,22 +39,8 @@ Data, such as assemblies, annotations, tracks, etc, are stored in custom-built b
 These files back GenomeKit objects and are required to query the genomic sequences and locations you are interested in.
 APIs for building these files are provided as part of the API.
 
-A selection of pre-built data files is provided in a public Google Cloud Storage bucket,
-which is set as the default data source. If you don't have access to Google Cloud, see :ref:`docker_data_gen` below.
-
-The bucket is configured with `"requester pays" <https://cloud.google.com/storage/docs/requester-pays>`__
-enabled, so you will need to
-
-- `install gcloud <https://cloud.google.com/sdk/docs/install>`__
-- set up your `gcloud credentials <https://cloud.google.com/sdk/docs/authorizing>`__::
-
-    gcloud auth application-default login
-
-- set the ``GENOMEKIT_GCS_BILLING_PROJECT`` env var to your Google Cloud project::
-
-    export GENOMEKIT_GCS_BILLING_PROJECT="your-project-id"
-    # required depending on your local gcloud configuration
-    export GOOGLE_CLOUD_PROJECT="your-project-id"
+A selection of pre-built data files is provided in a public S3 bucket,
+which is set as the default data source. If you prefer to generate the data locally, see :ref:`docker_data_gen` below.
 
 .. _docker_data_gen:
 
@@ -855,7 +841,7 @@ GenomeKit first searches for data files in the directory specified by the enviro
 If the file is not found, by default GenomeKit attempts to download it from a public read-only
 Google Cloud Storage bucket.
 
-You can use your own GCS bucket by setting the environment variable ``GENOMEKIT_GCS_BUCKET``,
+You can use your own GCS bucket by setting the environment variable ``GENOMEKIT_STORAGE_BUCKET``,
 allowing you to upload and share your data files.
 
 If you wish to use a different mechanism to store remote data files, you can provide an

@@ -1,5 +1,4 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
-
 import base64
 import hashlib
 import logging
@@ -10,9 +9,13 @@ from abc import ABC
 from contextlib import contextmanager
 from functools import wraps, lru_cache
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 from google.cloud import storage
+import boto3
+from botocore import UNSIGNED
+from botocore.config import Config
+from botocore.exceptions import ClientError
 from tqdm.auto import tqdm
 from tqdm.utils import ObjectWrapper
 
@@ -52,7 +55,7 @@ class ProgressPercentage(object):  # pragma: no cover
     def __call__(self, bytes_amount):
         self.progress.update(bytes_amount)
 
-_GCS_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genomekit-public-dg")
+_S3_BUCKET = os.environ.get("GENOMEKIT_STORAGE_BUCKET", "genomekit-data-public")
 
 def _hashfile(afile, hasher, blocksize=65536):
     """Memory efficient file hashing function.
@@ -77,7 +80,7 @@ def _hashfile(afile, hasher, blocksize=65536):
     while len(buf) > 0:
         hasher.update(buf)
         buf = afile.read(blocksize)
-    return hasher.digest()
+    return hasher.hexdigest()
 
 class DataManager(ABC):
     def __init__(self, data_dir: str):
@@ -123,14 +126,6 @@ class DataManager(ABC):
         """List all available genomes in the data manager"""
         raise NotImplementedError("Descendant classes must implement list_available_genomes")
 
-
-def _remote_equal(blob: storage.Blob, file_path: Path) -> bool:
-    remote_checksum = base64.b64decode(blob.md5_hash)
-    with open(file_path, 'rb') as f:
-        local_checksum = _hashfile(f, hashlib.md5())
-    return remote_checksum == local_checksum
-
-
 class CallbackIOWrapper(ObjectWrapper, object):
     def __init__(self, callback, stream):
         super(CallbackIOWrapper, self).__init__(stream)
@@ -172,14 +167,15 @@ def FileIO(filename, desc, mode, size, quiet):
             )
             yield decorated
 
-class DefaultDataManager(DataManager):
-    """A minimal data manager implementation that retrieves files from the GCS samples bucket.
-    Uploads are not supported"""
-    def __init__(self, data_dir: str):
+class GCSDataManager(DataManager):
+    """A minimal data manager implementation that retrieves files from a GCS bucket."""
+    def __init__(self, data_dir: str, bucket_name: str):
         """
         Args:
             data_dir: location where local files are cached
+            bucket_name: GCS bucket
         """
+        self._bucket_name = bucket_name
         super().__init__(data_dir)
 
     @property
@@ -187,7 +183,7 @@ class DefaultDataManager(DataManager):
         if not hasattr(self, "_bucket"):
             gcloud_client = storage.Client()
             try:
-                self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+                self._bucket = gcloud_client.bucket(self._bucket_name, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
             except Exception as e:
                 # give the user a hint in case of permission errors
                 print(e, file=sys.stderr)
@@ -226,12 +222,18 @@ class DefaultDataManager(DataManager):
 
         return str(local_path)
 
+    def _remote_equal(self, blob: storage.Blob, file_path: Path) -> bool:
+        remote_checksum = base64.b64decode(blob.md5_hash).hex()
+        with open(file_path, 'rb') as f:
+            local_checksum = _hashfile(f, hashlib.md5())
+        return remote_checksum == local_checksum
+
     def upload_file(self, filepath: str, filename: str, metadata: Dict[str, str]=None):
         blob = self.bucket.blob(filename)
 
         if blob.exists():
             blob.reload()
-            if _remote_equal(blob, Path(filepath)):
+            if self._remote_equal(blob, Path(filepath)):
                 logger.info(f"File '{filename}' already exists in the GCS bucket and is identical, skipping.")
                 return
 
@@ -255,3 +257,106 @@ class DefaultDataManager(DataManager):
     def list_available_genomes(self):
         blobs = self.bucket.list_blobs(match_glob="*.{2bit,cfg}")
         return [blob.name.rpartition(".")[0] for blob in blobs]
+
+class DefaultDataManager(DataManager):
+    """A minimal data manager implementation that retrieves files from a S3 bucket.
+    When using the default bucket, uploads are only supported for GenomeKit maintainers."""
+    def __init__(self, data_dir: str, bucket_name=_S3_BUCKET, require_auth=False):
+        """
+        Args:
+            data_dir: location where local files are cached
+            bucket_name: S3 bucket. By default, use the bucket sponsored by AWS Open Data
+            require_auth: set True for non-public buckets
+        """
+        self._bucket_name = bucket_name
+        self._require_auth = require_auth
+        super().__init__(data_dir)
+
+    @property
+    def client(self):
+        if not hasattr(self, "_client"):
+            s3_client = boto3.client("s3") if self._require_auth else boto3.client("s3", config=Config(signature_version=UNSIGNED))
+            self._client = s3_client
+
+        return self._client
+
+    def get_file(self, filename: str) -> str:
+        local_path = Path(self.data_dir, filename)
+
+        if local_path.exists():
+            return str(local_path)
+
+        try:
+            obj = self.client.head_object(Bucket=self._bucket_name, Key=filename)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                raise FileNotFoundError(f"File '{filename}' not found in the S3 bucket")
+            else:
+                raise
+        except Exception as e:
+            if "GENOMEKIT_TRACE" in os.environ:
+                # give the user a hint in case of permission errors
+                print(e, file=sys.stderr)
+            raise
+
+        # form a temporary filename to make the download safe
+        temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")
+        temp_file_path = str(Path(self.data_dir, temp_file.name))
+        try:
+            temp_file.close()
+            with FileIO(temp_file_path, filename, "wb", obj['ContentLength'], quiet=False) as f:
+                self.client.download_fileobj(Bucket=self._bucket_name, Key=filename, Fileobj=f)
+        except:
+            os.remove(temp_file_path)
+            raise
+        # atomically (on POSIX) rename the file to the real one
+        os.rename(temp_file_path, local_path)
+
+        return str(local_path)
+
+    def _remote_equal(self, obj: Dict[str, Any], file_path: Path) -> bool:
+        remote_checksum = obj['ETag'].strip('"')
+        with open(file_path, 'rb') as f:
+            local_checksum = _hashfile(f, hashlib.md5())
+        return remote_checksum == local_checksum
+
+    def upload_file(self, filepath: str, filename: str, metadata: Dict[str, str]=None):
+        remote_exists = True
+        try:
+            obj = self.client.head_object(Bucket=self._bucket_name, Key=filename)
+        except ClientError as e:
+            # ignore error only if remote file not found
+            if e.response['Error']['Code'] != "404":
+                raise
+            remote_exists = False
+
+        if remote_exists:
+            if self._remote_equal(obj, Path(filepath)):
+                logger.info(f"File '{filename}' already exists in the S3 bucket and is identical, skipping.")
+                return
+
+            if "GK_UPLOAD_ALLOW_OVERWRITE" not in os.environ:
+                raise ValueError(f"File '{filename}' already exists in the bucket."
+                                 "Set GK_UPLOAD_ALLOW_OVERWRITE=1 to overwrite.")
+            else:
+                logger.warning(f"Overwriting '{filename}' on the server.")
+
+            metadata.update({k: v for k, v in obj.get("Metadata", {}) if k not in metadata})
+        else:
+            metadata = {}
+
+        with FileIO(filepath, filename, "rb", os.path.getsize(filepath), quiet=False) as f:
+            self.client.upload_fileobj(Fileobj=f, Bucket=self._bucket_name, Key=filename, ExtraArgs={"Metadata": metadata})
+
+    @lru_cache
+    def list_available_genomes(self):
+        names = set()
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket_name, Delimiter="/"):
+            if "Contents" not in page:
+                continue
+            for obj in page["Contents"]:
+                name: str = obj["Key"]
+                if name.endswith(".2bit") or name.endswith(".cfg"):
+                    names.add(name.rpartition(".")[0])
+        return sorted(list(names))

@@ -12,7 +12,7 @@ from . import test_data_dir
 
 
 class TestGkData(unittest.TestCase):
-    @unittest.skipIf('CI' in os.environ, "can't provide GCS credentials in CI")
+    @unittest.skipIf('CI' in os.environ, "can't provide AWS credentials in CI")
     def test_get_file(self):
         assert not os.path.exists(
             os.path.join(test_data_dir, "gencode.vM30.cfg")
@@ -31,7 +31,7 @@ class TestGkData(unittest.TestCase):
         finally:
             os.remove(path)
 
-    @unittest.skipIf('CI' in os.environ, "can't provide GCS credentials in CI")
+    @unittest.skipIf('CI' in os.environ, "can't provide AWS credentials in CI")
     def test_list_available_genomes(self):
         assert "gencode.v41" in gk_data.data_manager.list_available_genomes()
         assert "macFas5" in gk_data.data_manager.list_available_genomes()

@@ -283,6 +283,20 @@ genome_kit.DataManager
     :special-members:
     :members:
 
+genome_kit.DefaultDataManager
+-----------------------------
+
+.. autoclass:: genome_kit.DefaultDataManager
+    :special-members:
+    :members:
+
+genome_kit.GCSDataManager
+-------------------------
+
+.. autoclass:: genome_kit.GCSDataManager
+    :special-members:
+    :members:
+
 Internals
 =========
 

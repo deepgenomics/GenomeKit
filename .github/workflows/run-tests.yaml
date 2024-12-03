@@ -30,7 +30,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: [["39", "3.9"], ["310", "3.10"]]
+        python-version: [["39", "3.9"], ["310", "3.10"], ["311", "3.11"], ["312", "3.12"]]
         platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:
@@ -81,6 +81,11 @@ jobs:
           set -x
           micromamba activate test
           conda index ~/conda-bld
-          conda mambabuild --croot /tmp/conda-bld -t ~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2 --extra-deps python=${{ matrix.python-version[1] }}
+          files=(~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2)
+          if [ ! -e "${files[0]}" ]; then
+              echo "No files matched for py${{ matrix.python-version[0] }}"
+              exit 1 
+          fi          
+          conda mambabuild --croot /tmp/conda-bld -t $files --extra-deps python=${{ matrix.python-version[1] }}
           conda clean -it
           set +x

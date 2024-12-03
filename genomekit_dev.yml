@@ -6,8 +6,8 @@ channels:
 dependencies:
   - appdirs>=1.4.0
   - fmt
-  - numpy
-  - python>=3.9.0,<3.11.0
+  - numpy <2.0dev0
+  - python>=3.9.0,<3.13.0
   - tqdm
   - typing-extensions
   - zlib

@@ -9,6 +9,8 @@ runs:
         mkdir -p conda-recipe
         curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         # build from local source, not from the latest release tarball
-        sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d' conda-recipe/meta.yaml
+        # replace the (non-existent) tarball with local path, remove the related sha for that tarball, and build for
+        # all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
+        sed -i -e 's|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d' conda-recipe/meta.yaml
         head -10 conda-recipe/meta.yaml
         set +x

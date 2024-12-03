@@ -11,7 +11,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 BEGIN_NAMESPACE_GK
 
 GKPY_TYPE_BEGIN(GenomeTrack)
-	PyObject* owner;            // The object in which we're embedded, if any.
 	genome_track* track;        // Pointer to the track object we're wrapping
 GKPY_TYPE_END
 

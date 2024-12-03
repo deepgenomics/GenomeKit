@@ -182,15 +182,17 @@ Py_ssize_t PyInterval_Length(PyObject *selfo) { return (Py_ssize_t)PyInterval::v
 
 PyObject* PyString_FromChrom(chrom_key_t<refg_t> key)
 {
-	static chrom_map_t<refg_t, PyAutoRef> map;
+	// The string values are never decref'd in order to avoid a segfault on exit
+	// see https://github.com/python/cpython/issues/126508
+	static chrom_map_t<refg_t, PyObject*> map;
 
 	auto& s = map[key];
-	if (s.get() == nullptr) {
+	if (s == nullptr) {
 		// TODO: data_dir injected as a context
-		s.reset(PyString_FromSV(get_chrom_names(key.other).chrom_as_sv(key.chrom)));
+		s = PyString_FromSV(get_chrom_names(key.other).chrom_as_sv(key.chrom));
 	}
-	Py_INCREF(s.get()); /* Increment reference count so that we're returning a new ref */
-	return s.get();     /* which can be directly returned as a result to Python */
+	Py_INCREF(s); /* Increment reference count so that we're returning a new ref */
+	return s;     /* which can be directly returned as a result to Python */
 }
 
 GKPY_GETATTRO_BEGIN(Interval)

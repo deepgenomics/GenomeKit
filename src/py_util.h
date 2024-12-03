@@ -144,7 +144,7 @@ struct PyImplicitError {
 // Class to make Py_INCREF/Py_DECREF exception safe, when an error occurs and
 // the stack needs to be unwound all the way to the last Python-to-C entry point.
 struct PyObjectDecrementer {
-	void operator()(PyObject* obj) const noexcept { Py_XDECREF(obj); };
+	void operator()(PyObject* obj) const noexcept { Py_XDECREF(obj); }
 };
 using PyAutoRef = std::unique_ptr<PyObject, PyObjectDecrementer>;
 

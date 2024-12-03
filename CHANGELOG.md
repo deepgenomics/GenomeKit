@@ -1,5 +1,18 @@
 # Changelog
 
+## [6.1.0](https://github.com/deepgenomics/GenomeKit/compare/v6.0.3...v6.1.0) (2024-12-03)
+
+
+### Features
+
+* deprecate py38, support py11 py12 ([#101](https://github.com/deepgenomics/GenomeKit/issues/101)) ([cd94123](https://github.com/deepgenomics/GenomeKit/commit/cd941236dd57abbb9f477e8fec89513c88775617))
+
+
+### Documentation
+
+* prepare required documentation for AWS Open Data ([#116](https://github.com/deepgenomics/GenomeKit/issues/116)) ([364d723](https://github.com/deepgenomics/GenomeKit/commit/364d72323eaee22147064f7ad6d7027dbafea384))
+* starter_build script download ([#96](https://github.com/deepgenomics/GenomeKit/issues/96)) ([1245558](https://github.com/deepgenomics/GenomeKit/commit/12455581374025313e767a6fdfef96b23a77987e))
+
 ## [6.0.3](https://github.com/deepgenomics/GenomeKit/compare/v6.0.2...v6.0.3) (2024-11-06)
 
 

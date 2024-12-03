@@ -12,7 +12,9 @@ dependencies:
   - typing-extensions
   - zlib
   - importlib-metadata
-  - google-cloud-storage>=2.10.0
+  - boto3
+  # https://github.com/conda/conda/issues/13619
+  - pyopenssl >= 23.2.0
 
   # dev + test dependencies
   - ccache

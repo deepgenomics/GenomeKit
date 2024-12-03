@@ -12,7 +12,9 @@ from functools import wraps, lru_cache
 from pathlib import Path
 from typing import Dict
 
-from google.cloud import storage
+import boto3
+from botocore.config import Config
+from botocore.exceptions import ClientError
 from tqdm.auto import tqdm
 from tqdm.utils import ObjectWrapper
 
@@ -52,7 +54,8 @@ class ProgressPercentage(object):  # pragma: no cover
     def __call__(self, bytes_amount):
         self.progress.update(bytes_amount)
 
-_GCS_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genomekit-public-dg")
+# _S3_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genomekit-public-dg")
+_S3_BUCKET = os.environ.get("GENOMEKIT_GCS_BUCKET", "genome-browser")
 
 def _hashfile(afile, hasher, blocksize=65536):
     """Memory efficient file hashing function.
@@ -185,9 +188,9 @@ class DefaultDataManager(DataManager):
     @property
     def bucket(self):
         if not hasattr(self, "_bucket"):
-            gcloud_client = storage.Client()
+            s3_client = boto3.resource("s3", config=Config(signature_version='unsigned'))
             try:
-                self._bucket = gcloud_client.bucket(_GCS_BUCKET, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+                self._bucket = s3_client.Bucket(_S3_BUCKET)
             except Exception as e:
                 # give the user a hint in case of permission errors
                 print(e, file=sys.stderr)
@@ -201,10 +204,14 @@ class DefaultDataManager(DataManager):
         if local_path.exists():
             return str(local_path)
 
+        obj = self.bucket.Object(filename)
         try:
-            blob = self.bucket.blob(filename)
-            if not blob.exists():
-                raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
+            blob = obj.load()
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                raise FileNotFoundError(f"File '{filename}' not found in the S3 bucket")
+            else:
+                raise
         except Exception as e:
             if "GENOMEKIT_TRACE" in os.environ:
                 # give the user a hint in case of permission errors

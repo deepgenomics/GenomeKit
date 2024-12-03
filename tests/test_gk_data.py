@@ -19,7 +19,7 @@ class TestGkData(unittest.TestCase):
         )
 
         # Download a test file and check if the content is correct
-        path = gk_data.get_file('gencode.vM30.cfg')
+        path = gk_data.get_file('temp.txt')
         try:
             self.assertTrue(os.path.isfile(path))
             with open(path) as f:

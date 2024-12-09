@@ -195,6 +195,7 @@ elif toolset == "msvc":
             "/Oy",  # Omit frame pointers
             "/Oi",  # Enable intrinsics
             #"/Zi",  # Enable debug information .pdb
+            "/utf-8" # support fmt11
         ]
         extra_link_args += [
             "/LTCG",  # Enable link-time code generation

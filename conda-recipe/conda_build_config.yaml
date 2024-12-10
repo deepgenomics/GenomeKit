@@ -1,3 +1,5 @@
+# this file does not affect the conda-forge build, only the local repos github actions
+# (in particular running unit tests)
 c_stdlib:
 - sysroot # [linux]
 - macosx_deployment_target # [osx]

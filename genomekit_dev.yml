@@ -1,6 +1,5 @@
 name: genomekit_dev
 channels:
-  - deepgenomics
   - conda-forge
   - bioconda
 dependencies:

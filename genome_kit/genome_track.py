@@ -76,6 +76,9 @@ class GenomeTrackBuilder(_cxx.GenomeTrackBuilder):
             * ``"single_stranded"``: both strands share the same data. The data is applied in Interval coordinate (reference strand) order.
             * ``"strand_unaware"``: ignores the Interval strand, data is applied in Interval coordinate (reference strand) order.
             * ``"strand_aware"``: data is applied from 5" end to 3" end (sense strand order).
+
+            Negative strand data from bedgraph or wig files must be provided from a separate file. When calling
+            :py:meth:`~genome_kit.GenomeTrackBuilder.set_data_from_bedgraph` or :py:meth:`~genome_kit.GenomeTrackBuilder.set_data_from_wig`, set ``"strand_unaware"``.
         reference_genome : :class:`~genome_kit.Genome`
             The reference genome for the track data to build.
         dim : :py:class:`int`
@@ -238,8 +241,7 @@ class GenomeTrackBuilder(_cxx.GenomeTrackBuilder):
 
         Loads all data from a fixedStep or variableStep WIG file.
 
-        If the track is stranded, then the negative strand
-        track data will be loaded from the second file.
+        Set ``strandedness="strand_unaware"`` in :py:meth:`~genome_kit.GenomeTrackBuilder.__init__`.
 
         The number of data columns in the WIG must match the track dimension.
         The span of the data must match the track resolution, with the exception
@@ -264,6 +266,8 @@ class GenomeTrackBuilder(_cxx.GenomeTrackBuilder):
 
         Loads all data from a BEDGRAPH file.
         A direct analogue of :py:meth:`~genome_kit.GenomeTrackBuilder.set_data_from_wig`.
+
+        Set ``strandedness="strand_unaware"`` in :py:meth:`~genome_kit.GenomeTrackBuilder.__init__`.
 
         Parameters
         ----------

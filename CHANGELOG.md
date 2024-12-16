@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.1.1](https://github.com/deepgenomics/GenomeKit/compare/v6.1.0...v6.1.1) (2024-12-16)
+
+
+### Documentation
+
+* simplify strandedness instructions for bedgraph/wig ([#118](https://github.com/deepgenomics/GenomeKit/issues/118)) ([60c44dd](https://github.com/deepgenomics/GenomeKit/commit/60c44ddedd09fdd713ace12e18d5fa34ce844e15))
+
+
+### Miscellaneous Chores
+
+* release 6.1.1 ([#119](https://github.com/deepgenomics/GenomeKit/issues/119)) ([e081b55](https://github.com/deepgenomics/GenomeKit/commit/e081b55cf3cd29b306510d69dc5db7a2fc0cbb67))
+
 ## [6.1.0](https://github.com/deepgenomics/GenomeKit/compare/v6.0.3...v6.1.0) (2024-12-03)
 
 

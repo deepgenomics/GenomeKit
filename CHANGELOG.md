@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.0](https://github.com/deepgenomics/GenomeKit/compare/v6.1.1...v6.2.0) (2024-12-20)
+
+
+### Features
+
+* S3 data manager ([#121](https://github.com/deepgenomics/GenomeKit/issues/121)) ([85f1cbd](https://github.com/deepgenomics/GenomeKit/commit/85f1cbd93f17235e195a026e19db6509d43c44a2))
+
 ## [6.1.1](https://github.com/deepgenomics/GenomeKit/compare/v6.1.0...v6.1.1) (2024-12-16)
 
 

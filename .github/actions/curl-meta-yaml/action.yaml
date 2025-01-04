@@ -9,10 +9,18 @@ runs:
         mkdir -p conda-recipe
         curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
+        export GK_VERSION=5.5.5
+
+        export OS_TYPE=$(uname)
         # - replace the (non-existent) tarball with local path
         # - remove the related sha for that tarball
         # - build for all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
         # - set the version to the local release-please version (for docs and docker publish)
-        sed -i -E "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d;s/\{% set version = \".+\" %\}/\{% set version = \"${GK_VERSION}\" %\}/" conda-recipe/meta.yaml
+        if [[ "$OS_TYPE" == "Darwin" ]]; then
+          sed -i '' -E "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d;s/{% set version = \".+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+        else
+          sed -i -e    "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d;s/{% set version = \".\+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+        fi
+
         head -10 conda-recipe/meta.yaml
         set +x

@@ -1,0 +1,22 @@
+##gff-version 3
+#!gff-spec-version 1.21
+#!processor NCBI annotwriter
+#!genome-build GRCh38.p14
+#!genome-build-accession NCBI_Assembly:GCF_000001405.40
+#!annotation-date 08/23/2024
+#!annotation-source NCBI RefSeq GCF_000001405.40-RS_2024_08
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=9606
+NC_000002.12	BestRefSeq	gene	1	5869	.	+	.	ID=gene-INO80B-WBP1;Dbxref=GeneID:100532735,HGNC:HGNC:49199;Name=INO80B-WBP1;description=INO80B-WBP1 readthrough (NMD candidate);gbkey=Gene;gene=INO80B-WBP1;gene_biotype=lncRNA
+NC_000002.12	BestRefSeq	lnc_RNA	1	5869	.	+	.	ID=rna-NR_037849.1;Parent=gene-INO80B-WBP1;Dbxref=GeneID:100532735,GenBank:NR_037849.1,HGNC:HGNC:49199;Name=NR_037849.1;gbkey=ncRNA;gene=INO80B-WBP1;product=INO80B-WBP1 readthrough (NMD candidate);transcript_id=NR_037849.1
+NC_000002.12	BestRefSeq	gene	65	2922	.	+	.	ID=gene-INO80B;Dbxref=GeneID:83444,HGNC:HGNC:13324,MIM:616456;Name=INO80B;description=INO80 complex subunit B;gbkey=Gene;gene=INO80B;gene_biotype=protein_coding;gene_synonym=hIes2,HMGA1L4,HMGIYL4,IES2,PAP-1BP,PAPA-1,PAPA1,ZNHIT4
+NC_000002.12	BestRefSeq	mRNA	65	2922	.	+	.	ID=rna-NM_031288.4;Parent=gene-INO80B;Dbxref=Ensembl:ENST00000233331.12,GeneID:83444,GenBank:NM_031288.4,HGNC:HGNC:13324,MIM:616456;Name=NM_031288.4;gbkey=mRNA;gene=INO80B;product=INO80 complex subunit B;tag=MANE Select;transcript_id=NM_031288.4

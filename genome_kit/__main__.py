@@ -11,7 +11,7 @@ import logging
 import os
 from pathlib import Path
 
-from . import _build_annotations, _build_appris, gk_data
+from . import _build_annotations, _build_appris, gk_data, _build_mane
 
 #################################################################
 
@@ -42,10 +42,13 @@ def parse_args():
         help="build data files, optionally uploading to store")
     build_parser.add_argument("--all", action="store_true", default=False, help="build all data files")
     build_parser.add_argument("--appris", action="store_true", default=False, help="build full-sized APPRIS data files")
+    build_parser.add_argument("--mane", action="store_true", default=False, help="build MANE data files")
     build_parser.add_argument(
         "--test-anno", action="store_true", default=False, help="build test-sized annotation data files")
     build_parser.add_argument(
         "--test-appris", action="store_true", default=False, help="build test-sized APPRIS data files")
+    build_parser.add_argument(
+        "--test-mane", action="store_true", default=False, help="build test-sized MANE data files")
     build_parser.add_argument(
         "--test-2bit", action="store_true", default=False, help="build test-sized 2bit data files")
     build_parser.add_argument(
@@ -69,6 +72,10 @@ def build(args):
     if args.appris or args.all:
         _build_appris.build_full_appris_files(args.upload)
 
+    # Build MANE
+    if args.mane or args.all:
+        _build_mane.build_full_mane_files(args.upload)
+
     _get_file_original = gk_data.data_manager.get_file
     test_data_dir = Path(__file__).parent.parent / 'tests' / 'data' / 'mini1'
 
@@ -87,9 +94,13 @@ def build(args):
     if args.test_anno or args.all:
         _build_annotations.build_test_annotation_files()
 
-    # Build test-sized annotation files
+    # Build test-sized APPRIS files
     if args.test_appris or args.all:
         _build_appris.build_test_appris_files()
+
+    # Build test-sized MANE files
+    if args.test_mane or args.all:
+        _build_mane.build_test_mane_files()
 
 
 def main():

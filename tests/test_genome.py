@@ -336,6 +336,61 @@ class TestGenome(unittest.TestCase):
         principalities = [genome.appris_principality(x) for x in genome.appris_transcripts('26470')]
         self.assertEqual(sorted(principalities), principalities)
 
+    def test_mane_simple(self):
+        genome = MiniGenome("gencode.v41")
+        self.assertTrue(len(genome.mane_transcripts()) > 0)
+        self.assertTrue(
+            set(genome.mane_transcripts()).issubset(set(genome.transcripts))
+        )
+
+    def test_mane_transcripts_unavailable(self):
+        genome = MiniGenome("gencode.v29lift37")
+        with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
+            genome.mane_transcripts()
+
+    def test_mane_gencode(self):
+        answers = [
+            ("ENSG00000115274", "ENST00000233331.12"),
+            ("ENSG00000239779", "ENST00000233615.7"),
+            ("ENSG00000115275", "ENST00000448666.7"),
+        ]
+
+        genome = MiniGenome("gencode.v41")
+        for g, t in answers:
+            self.assertEqual(genome.mane_transcripts(genome.genes[g]), [genome.transcripts[t]])
+
+        self.assertEqual(
+            set(genome.mane_transcripts()),
+            {
+                genome.transcripts["ENST00000233331.12"],
+                genome.transcripts["ENST00000233615.7"],
+                genome.transcripts["ENST00000448666.7"],
+            },
+        )
+
+
+    def test_mane_ncbi(self):
+        answers = [
+            ("INO80B", "NM_031288.4"),
+            ("WBP1", "NM_012477.4"),
+            ("MOGS", "NM_006302.3"),
+        ]
+
+        genome = MiniGenome("ncbi_refseq.hg38.p14_RS_2024_08")
+        from pprint import pprint
+        for g, t in answers:
+            gene = genome.genes.first_by_name(g)
+            self.assertEqual(genome.mane_transcripts(gene), [genome.transcripts[t]])
+
+        self.assertEqual(
+            set(genome.mane_transcripts()),
+            {
+                genome.transcripts["NM_031288.4"],
+                genome.transcripts["NM_012477.4"],
+                genome.transcripts["NM_006302.3"],
+            },
+        )
+
     def test_cache(self):
         self.assertIs(Genome('hg19'), Genome('hg19'))
         self.assertIsNot(Genome('hg19'), MiniGenome('hg19'))

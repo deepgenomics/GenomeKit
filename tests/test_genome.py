@@ -337,10 +337,10 @@ class TestGenome(unittest.TestCase):
         self.assertEqual(sorted(principalities), principalities)
 
     def test_mane_simple(self):
-        genome = MiniGenome("gencode.v41")
-        print(genome.transcripts[0])
-        # genome = MiniGenome("gencode.v29lift37")
+        # genome = MiniGenome("gencode.v41")
         # print(genome.transcripts[0])
+        genome = MiniGenome("gencode.v29lift37")
+        print(genome.transcripts[0])
         # self.assertTrue(len(genome.mane_transcripts()) > 0)
         # self.assertTrue(
         #     set(genome.mane_transcripts()).issubset(set(genome.transcripts))

@@ -1,8 +1,8 @@
 name: run-unit-tests
 run-name: run unit tests
 on:
-  pull_request:
-    branches-ignore: ["release-please*"]
+  push:
+    branches: ["debug-ci"]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
@@ -17,7 +17,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+        platform: [["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +30,8 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: [["39", "3.9"], ["310", "3.10"], ["311", "3.11"], ["312", "3.12"]]
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+        python-version: [["39", "3.9"]]
+        platform: [["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
     steps:
       - uses: actions/checkout@v4

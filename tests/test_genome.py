@@ -343,11 +343,11 @@ class TestGenome(unittest.TestCase):
             set(genome.mane_transcripts()).issubset(set(genome.transcripts))
         )
 
-    # def test_mane_transcripts_unavailable(self):
-    #     genome = MiniGenome("gencode.v29lift37")
-    #     with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
-    #         genome.mane_transcripts()
-    #
+    def test_mane_transcripts_unavailable(self):
+        genome = MiniGenome("gencode.v29lift37")
+        with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
+            genome.mane_transcripts()
+
     def test_mane_gencode(self):
         answers = [
             ("ENSG00000115274", "ENST00000233331.12"),

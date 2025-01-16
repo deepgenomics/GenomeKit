@@ -348,27 +348,27 @@ class TestGenome(unittest.TestCase):
     #     with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
     #         genome.mane_transcripts()
     #
-    # def test_mane_gencode(self):
-    #     answers = [
-    #         ("ENSG00000115274", "ENST00000233331.12"),
-    #         ("ENSG00000239779", "ENST00000233615.7"),
-    #         ("ENSG00000115275", "ENST00000448666.7"),
-    #     ]
-    #
-    #     genome = MiniGenome("gencode.v41")
-    #     for g, t in answers:
-    #         self.assertEqual(genome.mane_transcripts(genome.genes[g]), [genome.transcripts[t]])
-    #
-    #     self.assertEqual(
-    #         set(genome.mane_transcripts()),
-    #         {
-    #             genome.transcripts["ENST00000233331.12"],
-    #             genome.transcripts["ENST00000233615.7"],
-    #             genome.transcripts["ENST00000448666.7"],
-    #         },
-    #     )
-    #
-    #
+    def test_mane_gencode(self):
+        answers = [
+            ("ENSG00000115274", "ENST00000233331.12"),
+            ("ENSG00000239779", "ENST00000233615.7"),
+            ("ENSG00000115275", "ENST00000448666.7"),
+        ]
+
+        genome = MiniGenome("gencode.v41")
+        for g, t in answers:
+            self.assertEqual(genome.mane_transcripts(genome.genes[g]), [genome.transcripts[t]])
+
+        self.assertEqual(
+            set(genome.mane_transcripts()),
+            {
+                genome.transcripts["ENST00000233331.12"],
+                genome.transcripts["ENST00000233615.7"],
+                genome.transcripts["ENST00000448666.7"],
+            },
+        )
+
+
     # def test_mane_ncbi(self):
     #     answers = [
     #         ("INO80B", "NM_031288.4"),

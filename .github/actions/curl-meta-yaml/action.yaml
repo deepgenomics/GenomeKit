@@ -9,7 +9,6 @@ runs:
         mkdir -p conda-recipe
         curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
-        export GK_VERSION=5.5.5
 
         export OS_TYPE=$(uname)
         # - replace the (non-existent) tarball with local path

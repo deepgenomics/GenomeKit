@@ -299,14 +299,15 @@ def build_test_annotation_gff3(regions, chrom_aliases, infile, outfile):
                             # Only add elements that either have no parent or whose parent
                             # has already been added because it too falls completely within
                             # the filter interval
-                            if ltype == "gene" or pa_re.findall(lextra)[0] in parent_ids:
+                            parent_matches = pa_re.findall(lextra)
+                            if ltype == "gene" or (len(parent_matches) > 0 and parent_matches[0] in parent_ids):
                                 out.write("\t".join(
                                     [lchrom, lsource, ltype,
                                      str(lstart - start + 1),
                                      str(lend - start), lextra]))
                                 # All elements below gene/transcript can only have gene/transcript parents IDs
                                 # so those are the only ones we add to the list.
-                                if ltype in ("gene", "transcript"):
+                                if ltype in ("gene", "transcript", "lnc_RNA", "mRNA"):
                                     parent_ids.append(id_re.findall(lextra)[0])
 
 

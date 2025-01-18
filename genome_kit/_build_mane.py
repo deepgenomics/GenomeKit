@@ -90,7 +90,7 @@ def build_full_mane_files(upload: bool = False):
         output_filename = get_mane_filename(anno)
         output_filepath = os.path.join(gk.gk_data._config["DATA_DIR"], output_filename)
         with open(output_filepath, "wb") as fp:
-            pickle.dump(res, fp, 2)
+            pickle.dump(res, fp, 4)
         print("built", output_filepath)
 
         if upload is True:
@@ -113,7 +113,7 @@ def build_test_mane_file(mane_version, annotation):
     output_filepath = os.path.join(data_dir, get_mane_filename(annotation))
 
     with open(output_filepath, "wb") as fp:
-        pickle.dump(output, fp, 2)
+        pickle.dump(output, fp, 4)
 
     print("Wrote", output_filepath)
 

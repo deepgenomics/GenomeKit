@@ -94,8 +94,10 @@ class Genome(_cxx.Genome):
         self._appris_transcripts_by_gene = None
         self._appris_principality_strings = ('PRINCIPAL:1', 'PRINCIPAL:2', 'PRINCIPAL:3', 'PRINCIPAL:4', 'PRINCIPAL:5',
                                              'ALTERNATIVE:1', 'ALTERNATIVE:2')
-        self._mane_transcripts = None
-        self._mane_transcript_by_gene = None
+        self._mane_select_transcripts = None
+        self._mane_select_transcript_by_gene = None
+        self._mane_plus_clinical_transcripts = None
+        self._mane_plus_clinical_transcripts_by_gene = None
 
     genome_cache = WeakValueDictionary()
 
@@ -589,14 +591,19 @@ class Genome(_cxx.Genome):
 
         with open(datafile_path, 'rb') as fp:
             data = pickle.load(fp)
-        # List of all MANE Transcript indices
-        self._mane_transcripts = data[0]
-        # List of lists, where item [i] is a list of Transcript indices belonging to self.genes[i]
-        self._mane_transcript_by_gene = data[1]
+        # List of all MANE Select Transcript indices
+        self._mane_select_transcripts = data[0]
+        # List of MANE Select transcripts, where item [i] is the Transcript index belonging to self.genes[i], or
+        # None if there is no MANE Select transcript for that gene.
+        self._mane_select_transcript_by_gene = data[1]
+        # List of all MANE Plus Clinical Transcript indices
+        self._mane_plus_clinical_transcripts = data[2]
+        # List of lists, where item [i] is a list of MANE Plus Clinical Transcript indices belonging to self.genes[i]
+        self._mane_plus_clinical_transcripts_by_gene = data[3]
 
-    def mane_transcripts(self, gene=None):
+    def mane_select_transcripts(self, gene=None):
         """Returns a list of MANE Select transcript objects.
-        If a gene is provided as input, a list of containing the single MANE transcript
+        If a gene is provided as input, a list of containing the single MANE Select transcript
             for that gene, or an empty list if the gene has no MANE transcript.
 
         Parameters
@@ -608,7 +615,7 @@ class Genome(_cxx.Genome):
         -------
         :py:class:`list` of :py:class:`~genome_kit.Transcript`
             A list of MANE Select transcripts for this genome. If a gene is provided as input, a list
-            of containing the single MANE transcript for that gene, or an empty list if the
+            containing the single MANE Select transcript for that gene, or an empty list if the
             gene has no MANE transcript.
 
         Raises
@@ -617,14 +624,14 @@ class Genome(_cxx.Genome):
             MANE data is not available for this annotation.
         """
 
-        if self._mane_transcripts is None:
+        if self._mane_select_transcripts is None:
             self._load_mane()
 
         if gene is None:
-            transcript_indices = self._mane_transcripts
+            transcript_indices = self._mane_select_transcripts
         else:
             gene_idx = self.genes.index_of(gene)
-            by_gene = self._mane_transcript_by_gene
+            by_gene = self._mane_select_transcript_by_gene
             transcript_idx = by_gene[gene_idx]
             transcript_indices = [transcript_idx] if transcript_idx is not None else []
 
@@ -632,6 +639,44 @@ class Genome(_cxx.Genome):
         if gene is not None:
             for transcript in transcripts:
                 assert transcript.gene == gene, f"Unexpected gene {transcript.gene} for transcript {transcript}"
+        return transcripts
+
+    def mane_plus_clinical_transcripts(self, gene=None):
+        """Returns a list of MANE Plus Clinical transcript objects.
+        If a gene is provided as input, a list of MANE Plus Clinical transcripts
+            for that gene.
+
+        Parameters
+        ----------
+        gene : :py:class:`~genome_kit.Gene`, optional
+            Restrict to a specific gene.
+
+        Returns
+        -------
+        :py:class:`list` of :py:class:`~genome_kit.Transcript`
+            A list of MANE Plus Clinical transcripts for this genome. If a gene is provided as
+            input, a list of MANE Plus Clinical transcripts for that gene.
+
+        Raises
+        ------
+        ManeNotAvailableError:
+            MANE data is not available for this annotation.
+        """
+
+        if self._mane_select_transcripts is None:
+            self._load_mane()
+
+        if gene is None:
+            transcript_indices = self._mane_plus_clinical_transcripts
+        else:
+            gene_idx = self.genes.index_of(gene)
+            by_gene = self._mane_plus_clinical_transcripts_by_gene
+            transcript_indices = by_gene[gene_idx]
+
+        transcripts = [self.transcripts[i] for i in transcript_indices]
+        if gene is not None:
+            for transcript in transcripts:
+                assert transcript.gene == gene, f"Unexpected gene {transcript.gene} for transcript {transcript} (should be {gene})"
         return transcripts
 
 class ApprisNotAvailableError(RuntimeError):

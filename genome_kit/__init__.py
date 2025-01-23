@@ -5,7 +5,7 @@ from importlib import metadata
 
 from . import gk_data
 from .data_manager import DataManager, DefaultDataManager, GCSDataManager
-from .genome import Genome, ApprisNotAvailableError
+from .genome import Genome, ApprisNotAvailableError, ManeNotAvailableError
 from .genome_annotation import (
     Cds,
     CdsTable,

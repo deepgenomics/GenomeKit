@@ -169,7 +169,7 @@ _ANNOTATION_BUILDERS = {
 #         SULT1A3 (mapped to multiple regions in chr16 for UCSC)
 #   and they all fall within a 10,500nt window.
 #
-# NOTE: when changing, python -m genome_kit --build-2bit --build-anno --build-appris
+# NOTE: when changing, python -m genome_kit --build-2bit --build-anno --build-appris --build-mane
 #       must be run
 TEST_GENOME_REGIONS = (
     ('mini1', 'hg19', [('chr1', 84971983, 85022178), ('chr2', 74682100, 74692599), ('chr16', 29471206, 30215650)], {}),

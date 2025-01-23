@@ -130,7 +130,7 @@ GenomeKit has two sets of data files:
   They are stored in the source tree under ``tests/data``.
 
 The ``genome_kit`` module's ``build`` command can be used to build full
-Appris data files, and Appris/dganno/2bit test data files.
+Appris/MANE data files, and Appris/MANE/dganno/2bit test data files.
 
 For a full set of options, run::
 
@@ -167,10 +167,10 @@ Now that your source tree is the default `genome_kit` import,
 the ``build`` subcommand will be able to find
 your test data directory.
 
-To build test annotation, 2bit, and Appris files, use `--test-<type>`
+To build test annotation, 2bit, Appris, and MANE files, use `--test-<type>`
 flags on the ``build`` subcommand::
 
-    python -m genome_kit build --test-anno --test-2bit --test-appris
+    python -m genome_kit build --test-anno --test-2bit --test-appris --test-mane
 
 
 Releasing GenomeKit

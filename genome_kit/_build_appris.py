@@ -297,7 +297,7 @@ def build_test_appris_file(annotation, source_file):
 
 def build_test_appris_files():
     all_test_annotations = list(
-        _build_annotations.GENCODE_TEST_ANNOTATIONS.values()
+        _build_annotations.GENCODE_OR_NCBI_TEST_ANNOTATIONS.values()
     ) + list(_build_annotations.UCSC_REFSEQ_TEST_ANNOTATIONS.values())
 
     archive = gk_data.get_file(APPRIS_ARCHIVE_NAME)

@@ -26,6 +26,7 @@ GenomeKit-specific data files:
 - ``dganno``: genomic annotation data
 - ``cfg``: annotation metadata, such as associated assembly name (text format)
 - ``appris.*.pkl``: Python-pickled appris metadata
+- ``mane.*.pkl``: Python-pickled MANE metadata
 
 Data Access
 ===========

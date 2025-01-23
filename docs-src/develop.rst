@@ -170,7 +170,7 @@ your test data directory.
 To build test annotation, 2bit, and Appris files, use `--test-<type>`
 flags on the ``build`` subcommand::
 
-    python -m genome_kit build --test-anno --test-2bit --test-appris
+    python -m genome_kit build --test-anno --test-2bit --test-appris --test-mane
 
 
 Releasing GenomeKit

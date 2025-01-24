@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.3.0](https://github.com/deepgenomics/GenomeKit/compare/v6.2.0...v6.3.0) (2025-01-23)
+
+
+### Features
+
+* support MANE Select and Clinical Plus transcripts ([#127](https://github.com/deepgenomics/GenomeKit/issues/127)) ([98d0757](https://github.com/deepgenomics/GenomeKit/commit/98d075746d3c8a8937149e498d8fef85e1579db1))
+* support refseq anno GCF_000001405.40-RS_2024_08 ([#125](https://github.com/deepgenomics/GenomeKit/issues/125)) ([b8e1ca3](https://github.com/deepgenomics/GenomeKit/commit/b8e1ca35116b4d6b4ac04f5d3526f12786a02b05)), closes [#124](https://github.com/deepgenomics/GenomeKit/issues/124)
+
 ## [6.2.0](https://github.com/deepgenomics/GenomeKit/compare/v6.1.1...v6.2.0) (2024-12-20)
 
 

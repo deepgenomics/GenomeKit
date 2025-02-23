@@ -55,6 +55,7 @@ if __name__ == "__main__":
         ext_modules=[c_ext.extension],
         test_suite="tests",
         tests_require=tests_require,
+        setup_requires=["numpy==1.26"],
         url=f"https://github.com/deepgenomics/GenomeKit/v{version}",
         version=version,
         zip_safe=False,

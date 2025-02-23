@@ -227,7 +227,16 @@ extension = Extension(
     extra_link_args=extra_link_args,
 )
 
-print(f"XXXXXXXXXXXXXXXXXXXXX \n{extension}\n YYYYYYYYYYYYYYYYYYYYYY")
+print(f"XXXXXXXXXXXXXXXXXXXXX \n"
+      f"{extension.depends=}\n"
+      f"{extension.include_dirs=}\n"
+        f"{extension.define_macros=}\n"
+        f"{extension.library_dirs=}\n"
+        f"{extension.libraries=}\n"
+        f"{extension.runtime_library_dirs=}\n"
+        f"{extension.extra_compile_args=}\n"
+        f"{extension.extra_link_args=}\n"
+      f"YYYYYYYYYYYYYYYYYYYYYY")
 
 ##############################################################
 

@@ -28,6 +28,7 @@ gen_dir = os.path.join('build', 'gen')
 include_dirs = [
     sys.prefix + "/include",
     gen_dir,
+    "/project/vcpkg/installed/x64-linux/include/",
 ]
 library_dirs = [sys.prefix + '/lib']
 runtime_library_dirs = []

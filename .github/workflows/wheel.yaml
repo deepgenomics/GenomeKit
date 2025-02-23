@@ -1,0 +1,46 @@
+name: Build Wheels
+
+on:
+  push:
+    branches:
+      - debug-ci
+
+jobs:
+  build_wheels:
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ libboost-all-dev
+
+      - name: Install system dependencies (MacOS)
+        if: runner.os == 'macOS'
+        run: brew install cmake boost fmt zlib
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install cmake visualstudio2019buildtools -y
+
+      - name: Install numpy
+        run: pip install numpy # ***SPECIFY VERSION TODO***
+
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel
+      - name: Build wheels
+        run: cibuildwheel --output-dir dist
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels
+          path: dist/*
+

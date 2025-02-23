@@ -227,6 +227,8 @@ extension = Extension(
     extra_link_args=extra_link_args,
 )
 
+print(f"XXXXXXXXXXXXXXXXXXXXX \n{extension}\n YYYYYYYYYYYYYYYYYYYYYY")
+
 ##############################################################
 
 # monkey-patch for parallel compilation

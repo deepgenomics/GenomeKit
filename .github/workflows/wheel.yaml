@@ -20,6 +20,7 @@ jobs:
         run: python -m pip install --upgrade pip
 
       - name: Install system dependencies (Ubuntu)
+        # TODO need cmake? (maybe for fmt)
         run: sudo apt-get update && sudo apt-get install -y cmake g++
 
       - name: Install cibuildwheel

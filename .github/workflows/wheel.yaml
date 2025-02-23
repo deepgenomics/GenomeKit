@@ -20,19 +20,10 @@ jobs:
         run: python -m pip install --upgrade pip
 
       - name: Install system dependencies (Ubuntu)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y cmake g++ libboost-all-dev
-
-      - name: Install system dependencies (MacOS)
-        if: runner.os == 'macOS'
-        run: brew install cmake boost fmt zlib
-
-      - name: Install system dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: choco install cmake visualstudio2019buildtools -y
+        run: sudo apt-get update && sudo apt-get install -y cmake g++
 
       - name: Install numpy
-        run: pip install numpy # ***SPECIFY VERSION TODO***
+        run: pip install numpy=1.26
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel

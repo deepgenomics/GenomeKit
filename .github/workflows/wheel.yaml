@@ -32,8 +32,7 @@ jobs:
           vcpkg && \
           ./bootstrap-vcpkg.sh && \
           ./vcpkg integrate install && \
-          ./vcpkg install fmt && \
-          find / -type f -path '*/fmt/core.h'"
+          ./vcpkg install fmt"
           export CIBW_BEFORE_BUILD="pip install numpy==1.26"
           cibuildwheel --output-dir dist
       - name: Upload wheels

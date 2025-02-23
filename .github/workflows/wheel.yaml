@@ -25,7 +25,7 @@ jobs:
       - name: Install cibuildwheel
         run: pip install cibuildwheel
       - name: Build wheels
-        run: CIBW_BEFORE_ALL="cat /etc/*-release && lsb_release -a && apt install libfmt-dev" CIBW_BEFORE_BUILD="pip install numpy==1.26" cibuildwheel --output-dir dist
+        run: CIBW_BEFORE_ALL="dnf install fmt-dev" CIBW_BEFORE_BUILD="pip install numpy==1.26" cibuildwheel --output-dir dist
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:

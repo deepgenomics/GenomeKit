@@ -27,7 +27,9 @@ jobs:
         run: pip install cibuildwheel
       - name: Build wheels
         run: |
-          set -x
+          set -x && \
+          (/sbin/ldconfig -p | grep stdc++) && \
+          (strings /usr/lib/libstdc++.so.6 | grep LIBCXX) && \
           export CIBW_BEFORE_ALL="yum -y install curl zip unzip tar && \
           git clone https://github.com/Microsoft/vcpkg.git && cd \
           vcpkg && \

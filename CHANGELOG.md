@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.4.0](https://github.com/deepgenomics/GenomeKit/compare/v6.3.0...v6.4.0) (2025-02-27)
+
+
+### Features
+
+* add appris data ([#132](https://github.com/deepgenomics/GenomeKit/issues/132)) ([6914b05](https://github.com/deepgenomics/GenomeKit/commit/6914b055d348892070be40c153f9d3e77adbc530))
+* support gencode v47 ([#131](https://github.com/deepgenomics/GenomeKit/issues/131)) ([210ec32](https://github.com/deepgenomics/GenomeKit/commit/210ec329e487949b431f0262bdad9de1ecbcbf22))
+
 ## [6.3.0](https://github.com/deepgenomics/GenomeKit/compare/v6.2.0...v6.3.0) (2025-01-23)
 
 

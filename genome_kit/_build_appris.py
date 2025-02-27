@@ -54,6 +54,7 @@ REMOTE_FILES.update(("gencode.v{version}{lift}{basic}".format(version=version, l
                      PATH_FMT.format(species="homo_sapiens", data_version=data_version))
                     for version, data_version in [(25, "e87v22"), (26, "e88v22"), (27, "e91v27"), (29, "e94v28"), (41, "e103v45")]
                     for lift in ["", "lift37"] for basic in ["", ".basic"])
+REMOTE_FILES.update({"gencode.v47": PATH_FMT.format(species="homo_sapiens", data_version="e113v49")})
 # mouse
 REMOTE_FILES.update(("gencode.vM{version}{basic}".format(version=version, basic=basic),
                      PATH_FMT.format(species="mus_musculus", data_version=data_version))
@@ -65,9 +66,9 @@ REMOTE_FILES.update(("ncbi_refseq.{version}".format(version=version),
 # finalize appris version path
 REMOTE_FILES = {k: v.format(appris_version=get_appris_version(k)) for k, v in REMOTE_FILES.items()}
 
-# archived via: wget -q -r -np -A appris_data.principal.txt --accept-regex 'homo_sapiens|mus_musculus|rattus_norvegicus|sus_scrofa' https://apprisws.bioinfo.cnio.es/pub/releases/2023_08.v48/datafiles/
+# archived via: wget -q -r -np -A appris_data.principal.txt --accept-regex 'homo_sapiens|mus_musculus|rattus_norvegicus|sus_scrofa' https://apprisws.bioinfo.cnio.es/pub/releases/2024_10.v49/datafiles/
 # and merged with previous backups.
-APPRIS_ARCHIVE_NAME = "apprisws.bioinfo.cnio.es.2023_08.v48.tar.gz"
+APPRIS_ARCHIVE_NAME = "apprisws.bioinfo.cnio.es.2024_10.v49.tar.gz"
 
 ISO_DICT = {
     'PRINCIPAL:1': 0,
@@ -124,7 +125,8 @@ def _process_appris_data(data):
 
     # Filter data and add a processed transcript_id for keying result:
     # [gene_id, transcript_id, transcript_id_num, principality_num]
-    data = ((line[1], line[2], ISO_DICT[line[4]]) for line in data)
+    # skip MANE lines (PRINCIPAL:M, ALTERNATIVE:M)
+    data = ((line[1], line[2], ISO_DICT[line[4]]) for line in data if line[4] in ISO_DICT)
 
     # Take data in the form [[gene_id, transcript_id, transcript_id_num, principality_num] ... ]
     result = defaultdict(dict)

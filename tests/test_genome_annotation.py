@@ -38,7 +38,7 @@ def _check_interval_query(self, elems, query, expected):
 
     # Brute force filtering functions applied to each element in 'elems'.
     # Each function f(interval) here returns a new function g(elem) that, when called
-    # tests whether 'elem' is is within/overlaps the original interval.
+    # tests whether 'elem' is within/overlaps the original interval.
     def end5_within(interval):
         return lambda elem: elem.end5.within(interval)
 

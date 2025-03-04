@@ -58,7 +58,7 @@ REMOTE_FILES.update({"gencode.v47": PATH_FMT.format(species="homo_sapiens", data
 # mouse
 REMOTE_FILES.update(("gencode.vM{version}{basic}".format(version=version, basic=basic),
                      PATH_FMT.format(species="mus_musculus", data_version=data_version))
-                    for version, data_version in [(15, "e88v22"), (19, "e94v28"), (30, "e107v47")] for basic in ["", ".basic"])
+                    for version, data_version in [(15, "e88v22"), (19, "e94v28"), (30, "e107v47"), (36, "e113v49")] for basic in ["", ".basic"])
 # ncbi refseq
 REMOTE_FILES.update(("ncbi_refseq.{version}".format(version=version),
                      PATH_FMT.format(species="homo_sapiens", data_version=data_version))

@@ -53,6 +53,44 @@ def check_variants_list(reference_genome, variants):
 
     return variants
 
+def _reverse_tuples_in_alignment(alignment):
+    result = []
+    tmp = []
+
+    for i in alignment:
+        if isinstance(i, tuple):  # If the item is a tuple, add it to the temp list
+            tmp.append(i)
+        else:
+            if tmp:
+                # If we encountered a non-tuple and there was a tuple sequence, reverse it
+                result.extend(tmp[::-1])
+                tmp = []
+            result.append(i)
+
+    # If there were any tuples left in temp at the end, reverse and add them
+    if tmp:
+        result.extend(tmp[::-1])
+
+    return result
+
+def _flip_alignment_for_negative_strand(interval, alignment):
+    """Given an alignment for the positive strand, flip it so that it represents the alignment for the negative strand.
+
+    This encompasses two steps: firstly, it flips the provided alignment, since
+    negative strand intervals are defined from the 3' to the 5' end. Secondly,
+    it translates the alignment so that it is reported in ascending order
+    instead of descending order.
+    """
+    highest_index = len(interval) - 1
+    flipped_alignment = []
+    alignment = _reverse_tuples_in_alignment(alignment)
+    for i in alignment[::-1]:
+        if isinstance(i, tuple):
+            flipped_alignment.append((highest_index-i[0]+1, i[1]))
+        else:
+            flipped_alignment.append(highest_index-i)
+    return flipped_alignment
+
 
 def apply_variants(sequence, variants, interval, reference_alignment=False):
     """Apply variants to a sequence interval.
@@ -195,7 +233,8 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
         var_sequence = reverse_complement(var_sequence)
 
         if reference_alignment:
-            raise ValueError("Reference alignment only work on forward strand.")
+            # raise ValueError("Reference alignment only work on forward strand.")
+            alignment = _flip_alignment_for_negative_strand(interval, alignment)
 
     if reference_alignment:
         return var_sequence, alignment

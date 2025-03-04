@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.0](https://github.com/deepgenomics/GenomeKit/compare/v6.4.0...v6.5.0) (2025-03-04)
+
+
+### Features
+
+* add mouse annos and appris ([#137](https://github.com/deepgenomics/GenomeKit/issues/137)) ([3e2b148](https://github.com/deepgenomics/GenomeKit/commit/3e2b14844a3ec818f8f4fe6f1084e95483810662)), closes [#129](https://github.com/deepgenomics/GenomeKit/issues/129)
+
 ## [6.4.0](https://github.com/deepgenomics/GenomeKit/compare/v6.3.0...v6.4.0) (2025-02-27)
 
 

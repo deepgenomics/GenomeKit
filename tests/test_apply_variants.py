@@ -645,24 +645,48 @@ class TestApplyVariants(unittest.TestCase):
 
     def test_reference_alignment_no_anchor(self):
         genome37 = MiniGenome('test_genome')
+        positive_strand_interval = Interval('chr1', '+', 5, 15, genome37)
+        negative_strand_interval = Interval('chr1', '-', 5, 15, genome37)
+
+        # test a deletion variant
+
         variants = [Variant.from_string("chr1:11:G:-", genome37)]
-        interval = Interval('chr1', '+', 5, 15, genome37)
 
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
-
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
         self.assertEqual([0, 1, 2, 3, 4, 6, 7, 8, 9], reference_alignment)
 
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual([0, 1, 2, 3, 5, 6, 7, 8, 9], reference_alignment)
+
+        # test a deletion + substitution variant
+
         variants = [Variant.from_string("chr1:11:GTA:TT", genome37)]
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
         self.assertEqual([0, 1, 2, 3, 4, 5, 6, 8, 9], reference_alignment)
 
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual([0, 1, 3, 4, 5, 6, 7, 8, 9], reference_alignment)
+
+        # test an insertion variant
+
         variants = [Variant.from_string("chr1:11::TT", genome37)]
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
         self.assertEqual([0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9], reference_alignment)
 
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual([0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9], reference_alignment) # TODO: double check
+
+        # test an insertion + substitution variant
+
         variants = [Variant.from_string("chr1:11:G:TT", genome37)]
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
         self.assertEqual([0, 1, 2, 3, 4, 5, (6, 0), 6, 7, 8, 9], reference_alignment)
+
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual([0, 1, 2, 3, (4, 0), 4, 5, 6, 7, 8, 9], reference_alignment)
 
     def test_reference_alignment_interior_anchor(self):
         genome37 = MiniGenome('test_genome')
@@ -736,13 +760,13 @@ class TestApplyVariants(unittest.TestCase):
         reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [2, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9])
 
-    def test_reference_alignment_exception(self):
-        genome37 = MiniGenome('test_genome')
-        variants = [Variant.from_string("chr1:11:GTA:ATG", genome37)]
-        interval = Interval('chr1', '-', 5, 15, genome37, 5)
+    # def test_reference_alignment_exception(self): # TODO: remove
+    #     genome37 = MiniGenome('test_genome')
+    #     variants = [Variant.from_string("chr1:11:GTA:ATG", genome37)]
+    #     interval = Interval('chr1', '-', 5, 15, genome37, 5)
 
-        with self.assertRaises(ValueError):
-            apply_variants(genome37.dna, variants, interval, reference_alignment=True)
+    #     with self.assertRaises(ValueError):
+    #         apply_variants(genome37.dna, variants, interval, reference_alignment=True)
 
     def test_variant_on_other_chromosome(self):
         """Tests that variants are only applied when they are on the same

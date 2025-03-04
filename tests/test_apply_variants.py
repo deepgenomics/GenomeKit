@@ -813,14 +813,6 @@ class TestApplyVariants(unittest.TestCase):
         reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7])
 
-    # def test_reference_alignment_exception(self): # TODO: remove
-    #     genome37 = MiniGenome('test_genome')
-    #     variants = [Variant.from_string("chr1:11:GTA:ATG", genome37)]
-    #     interval = Interval('chr1', '-', 5, 15, genome37, 5)
-
-    #     with self.assertRaises(ValueError):
-    #         apply_variants(genome37.dna, variants, interval, reference_alignment=True)
-
     def test_variant_on_other_chromosome(self):
         """Tests that variants are only applied when they are on the same
         chromosome as the interval.

@@ -713,10 +713,15 @@ class TestApplyVariants(unittest.TestCase):
 
         # Test insertion with anchor_offset
         positive_strand_interval = Interval('chr1', '+', 5, 15, genome37, 10, 2)
-        variants = [Variant.from_string("chr1:11::TTATT", self.genome)]
-        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
+        negative_strand_interval = Interval('chr1', '-', 5, 15, genome37, 10, 2)
 
+        variants = [Variant.from_string("chr1:11::TTATT", self.genome)]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [2, 3, 4, (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), 5, 6])
+
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [3, 4, (5, 0), (5, 1), (5, 2), (5, 3), (5, 4), 5, 6, 7])
 
         # Test deletion
         positive_strand_interval = Interval('chr1', '+', 5, 15, genome37, 10)

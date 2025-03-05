@@ -135,7 +135,12 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
 
     :py:class:`list`
         The alignment of the variant sequence with the reference sequence
-        (if ``reference_alignment=True``).
+        (if ``reference_alignment=True``). The alignment is comprised of integers
+        and (int, int) tuples, with the tuples signifying an insertion of
+        nucleotides. The first index of these tuples denotes the index of the
+        nucleotide immediately proceeding the insertion sequence, while the
+        second index denotes the index of that nucleotide relative to all the
+        other nucleotides included in that insertion operation.
 
     """
 

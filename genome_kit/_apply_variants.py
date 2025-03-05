@@ -61,14 +61,14 @@ def _reverse_tuples_in_alignment(alignment):
         if isinstance(i, tuple):  # If the item is a tuple, add it to the temp list
             tmp.append(i)
         else:
-            if tmp:
+            if len(tmp) > 0:
                 # If we encountered a non-tuple and there was a tuple sequence, reverse it
                 result.extend(tmp[::-1])
                 tmp = []
             result.append(i)
 
     # If there were any tuples left in temp at the end, reverse and add them
-    if tmp:
+    if len(tmp) > 0:
         result.extend(tmp[::-1])
 
     return result

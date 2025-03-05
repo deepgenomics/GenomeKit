@@ -568,6 +568,9 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(interval.anchor, 8)
         self.assertEqual(interval.anchor_offset, 0)
 
+        interval = Interval('chr1', '-', 5, 10, 'hg19', 8)
+        self.assertEqual(interval.anchor_offset, 0)
+
         interval = Interval('chr1', '+', 5, 10, 'hg19', 9)
         self.assertEqual(interval.anchor, 9)
         self.assertEqual(interval.anchor_offset, 0)

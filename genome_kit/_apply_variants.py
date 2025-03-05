@@ -79,7 +79,23 @@ def _flip_alignment_for_negative_strand(interval, alignment):
     This encompasses two steps: firstly, it flips the provided alignment, since
     negative strand intervals are defined from the 3' to the 5' end. Secondly,
     it translates the alignment so that it is reported in ascending order
-    instead of descending order.
+    instead of descending order. Here's an example:
+
+    Say we had Interval('chr1', '-', 0, 10, "hg37"), with 2 nt insertion at
+    position 5 and a deletion of position 7. If these variants are applied to
+    the positive strand, we'd get the following alignment back:
+
+    [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 8]
+
+    In order to convert this to the negative strand, we'd follow these steps:
+
+    1. Flip the alignment: [8, 6, 5, (5, 1), (5, 0), 4, 3, 2, 1, 0]
+    2. Reverse the insertion alignment: [8, 6, 5, (5, 0), (5, 1), 4, 3, 2, 1, 0]
+    3. Translate the alignment to be in ascending order:
+        3a. [9-8, 9-6, 9-5, (9-5, 0), (9-5, 1), 9-4, 9-3, 9-2, 9-1, 9-0]
+        3b. [1, 3, 4, (4, 0), (4, 1), 5, 6, 7, 8, 9]
+    4. Increment the tuples by 1 to anchor them to the nucleotide following them:
+        [1, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9]
     """
     highest_index = len(interval) - 1
     flipped_alignment = []

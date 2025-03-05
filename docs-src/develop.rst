@@ -38,7 +38,7 @@ by linking your source tree from python's ``site-packages``.
 
 .. note:: Windows Prerequisites
 
-    You will need VS 2019 or newer installed. To get a compatible shell, either locate
+    You will need VS 2019 or newer installed. To get a compatible shell, either locate 
     and run ``vcvars64.bat``, or start the x64 Native Tools Command Prompt from the
     Start menu.
     To open VS with a preconfigured project, directly run in that command prompt::
@@ -47,7 +47,7 @@ by linking your source tree from python's ``site-packages``.
 
 Finally, run the all the tests::
 
-    CI=1 python -m unittest discover
+    python -m unittest discover
 
 You can also run examples from the ``demos`` directory.
 
@@ -74,7 +74,7 @@ yourself. *Forgetting this step may lead to unpredictable behaviour.*
 
 Before checking in any changes, run all tests locally::
 
-    CI=1 python -m unittest discover
+    python -m unittest discover
 
 
 Adding tests

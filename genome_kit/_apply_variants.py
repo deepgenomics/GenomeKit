@@ -233,7 +233,6 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
         var_sequence = reverse_complement(var_sequence)
 
         if reference_alignment:
-            # raise ValueError("Reference alignment only work on forward strand.")
             alignment = _flip_alignment_for_negative_strand(interval, alignment)
 
     if reference_alignment:

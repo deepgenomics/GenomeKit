@@ -7,6 +7,7 @@ from genome_kit._apply_variants import apply_variants
 from genome_kit._apply_variants import _apply_variants_left_anchor
 from genome_kit._apply_variants import _apply_variants_right_anchor
 from genome_kit._apply_variants import _apply_variants_no_anchor
+from genome_kit._util import reverse_complement
 from genome_kit import Interval
 from genome_kit import Variant
 import unittest
@@ -269,7 +270,7 @@ class TestApplyVariants(unittest.TestCase):
 
         self.assertEqual(var_seq_right, var_seq_left)
         self.assertEqual(var_seq_right, var_seq_center)
-        self.assertEqual(var_seq_right, _dna_complement('GTGTGT'))
+        self.assertEqual(var_seq_right, reverse_complement('GTGTGT'))
 
     def test_var_upstream(self):
         variants = [Variant.from_string("chr1:4:.:AAAAA", self.genome)]
@@ -344,8 +345,8 @@ class TestApplyVariants(unittest.TestCase):
         var_seq_left = apply_variants(self.dna, variants, interval)
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq_right, _dna_complement('ACGTA'))
-        self.assertEqual(var_seq_left, _dna_complement('CGACG'))
+        self.assertEqual(var_seq_right, reverse_complement('ACGTA'))
+        self.assertEqual(var_seq_left, reverse_complement('CGACG'))
         self.assertEqual(var_seq_left, var_seq_center)
 
     def test_deletion_overlap_end(self):
@@ -371,8 +372,8 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
 
-        self.assertEqual(var_seq_right, _dna_complement('GTACC'))
-        self.assertEqual(var_seq_left, _dna_complement('CGTAC'))
+        self.assertEqual(var_seq_right, reverse_complement('GTACC'))
+        self.assertEqual(var_seq_left, reverse_complement('CGTAC'))
         self.assertEqual(var_seq_right, var_seq_center)
 
     def test_deletion_interior(self):
@@ -396,9 +397,9 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
 
-        self.assertEqual(var_seq_right, _dna_complement('GTTAC'))
-        self.assertEqual(var_seq_left, _dna_complement('TACGT'))
-        self.assertEqual(var_seq_center, _dna_complement('CGTTA'))
+        self.assertEqual(var_seq_right, reverse_complement('GTTAC'))
+        self.assertEqual(var_seq_left, reverse_complement('TACGT'))
+        self.assertEqual(var_seq_center, reverse_complement('CGTTA'))
 
     def test_indel_overlap_end(self):
         variants = [Variant.from_string("chr1:14:CGTAC:AAAA", self.genome)]
@@ -423,9 +424,9 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
 
-        self.assertEqual(var_seq_right, _dna_complement('GTAAA'))
-        self.assertEqual(var_seq_left, _dna_complement('GTAAA'))
-        self.assertEqual(var_seq_center, _dna_complement('GTAAA'))
+        self.assertEqual(var_seq_right, reverse_complement('GTAAA'))
+        self.assertEqual(var_seq_left, reverse_complement('GTAAA'))
+        self.assertEqual(var_seq_center, reverse_complement('GTAAA'))
 
     def test_double_variant(self):
         variants = [
@@ -451,9 +452,9 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
 
-        self.assertEqual(var_seq_right, _dna_complement('GGAAA'))
-        self.assertEqual(var_seq_left, _dna_complement('GGAAA'))
-        self.assertEqual(var_seq_center, _dna_complement('GGAAA'))
+        self.assertEqual(var_seq_right, reverse_complement('GGAAA'))
+        self.assertEqual(var_seq_left, reverse_complement('GGAAA'))
+        self.assertEqual(var_seq_center, reverse_complement('GGAAA'))
 
     def test_indel_overlap_entire_interval(self):
         variants = [Variant.from_string("chr1:9:ACGTACGT:", self.genome)]
@@ -476,9 +477,9 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval('chr1', '-', 10, 15, 'test_genome', 13)
         var_seq_center = apply_variants(self.dna, variants, interval)
 
-        self.assertEqual(var_seq_right, _dna_complement('ACGTA'))
-        self.assertEqual(var_seq_left, _dna_complement('NACGT'))
-        self.assertEqual(var_seq_center, _dna_complement('CGTAC'))
+        self.assertEqual(var_seq_right, reverse_complement('ACGTA'))
+        self.assertEqual(var_seq_left, reverse_complement('NACGT'))
+        self.assertEqual(var_seq_center, reverse_complement('CGTAC'))
 
     def test_no_anchor(self):
         variants = [Variant.from_string('chr1:8:TACGTA:-', self.genome)]
@@ -495,14 +496,14 @@ class TestApplyVariants(unittest.TestCase):
         self.assertEqual(var_seq, 'CG')
         interval = Interval('chr1', '-', 10, 15, 'test_genome', None)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('CG'))
+        self.assertEqual(var_seq, reverse_complement('CG'))
 
         interval = Interval('chr1', '+', 5, 10, 'test_genome', None)
         var_seq = apply_variants(self.dna, variants, interval)
         self.assertEqual(var_seq, 'CG')
         interval = Interval('chr1', '-', 5, 10, 'test_genome', None)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('CG'))
+        self.assertEqual(var_seq, reverse_complement('CG'))
 
     def test_insertion_at_anchor(self):
         variant = [Variant.from_string('chr1:21::AGTT', self.genome)]
@@ -513,7 +514,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 15, 25, 'test_genome', 20)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('TACGTAGTTA'))
+        self.assertEqual(sequence, reverse_complement('TACGTAGTTA'))
 
     def test_insertion_at_anchor_with_offset(self):
         variant = [Variant.from_string('chr1:21::AGTT', self.genome)]
@@ -523,7 +524,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 15, 25, self.genome, 20, 2)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('CGTAGTTACG'))
+        self.assertEqual(sequence, reverse_complement('CGTAGTTACG'))
 
         variant = Variant.from_string("chr1:11::TTTTAGTTTT", self.genome)
         interval = Interval("chr1", "+", 10, 12, 'test_genome', 10, 4)
@@ -532,7 +533,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval("chr1", "-", 10, 12, 'test_genome', 10, 4)
         sequence = apply_variants(self.dna, [variant], interval)
-        self.assertEqual(_dna_complement('AG'), sequence)
+        self.assertEqual(reverse_complement('AG'), sequence)
 
     def test_anchor_outside_interval(self):
         # Deletion between interval end and anchor
@@ -543,7 +544,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, self.genome, 21)
         sequence = apply_variants(self.dna, [variant], interval)
-        self.assertEqual(sequence, _dna_complement('ACGT'))
+        self.assertEqual(sequence, reverse_complement('ACGT'))
 
         # Deletion overlapping the end
         variant = [Variant.from_string('chr1:14:CG:', self.genome)]
@@ -553,7 +554,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, 'test_genome', 21)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('ACGT'))
+        self.assertEqual(sequence, reverse_complement('ACGT'))
 
         # Insertion between interval end and anchor
         variant = [Variant.from_string('chr1:17::TTTTTTT', self.genome)]
@@ -563,7 +564,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, 'test_genome', 21)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('TTTT'))
+        self.assertEqual(sequence, reverse_complement('TTTT'))
 
         # Deletion between the anchor and interval start
         variant = [Variant.from_string('chr1:7:GT:', self.genome)]
@@ -573,7 +574,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, 'test_genome', 5)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('ACGT'))
+        self.assertEqual(sequence, reverse_complement('ACGT'))
 
         # Deletion overlapping the start
         variant = [Variant.from_string('chr1:10:CG:', self.genome)]
@@ -583,7 +584,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, 'test_genome', 5)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('ACGT'))
+        self.assertEqual(sequence, reverse_complement('ACGT'))
 
         # Insertion between anchor and interval start
         variant = [Variant.from_string('chr1:9::TTTTTTT', self.genome)]
@@ -593,7 +594,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 10, 14, 'test_genome', 5)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, _dna_complement('TTTT'))
+        self.assertEqual(sequence, reverse_complement('TTTT'))
 
     def test_insertion_at_interval_ends(self):
         # Test behaviour when insertions occur at the start or
@@ -610,7 +611,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 9, 19, 'test_genome', 9)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(_dna_complement('TTTCGTACGT'), sequence)
+        self.assertEqual(reverse_complement('TTTCGTACGT'), sequence)
 
         # Insertion will be outside interval
         interval = Interval('chr1', '+', 9, 19, 'test_genome', 9, 3)
@@ -619,7 +620,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 9, 19, 'test_genome', 9, 3)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(_dna_complement('CGTACGTACG'), sequence)
+        self.assertEqual(reverse_complement('CGTACGTACG'), sequence)
 
         # Insertion at end
         variant = [Variant.from_string('chr1:20::TTT', self.genome)]
@@ -632,7 +633,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 9, 19, 'test_genome', 19)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(_dna_complement('CGTACGTACG'), sequence)
+        self.assertEqual(reverse_complement('CGTACGTACG'), sequence)
 
         # Insertion will be inside interval
         interval = Interval('chr1', '+', 9, 19, 'test_genome', 19, 3)
@@ -641,7 +642,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 9, 19, 'test_genome', 19, 3)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(_dna_complement('ACGTACGTTT'), sequence)
+        self.assertEqual(reverse_complement('ACGTACGTTT'), sequence)
 
     def test_reference_alignment_no_anchor(self):
         genome37 = MiniGenome('test_genome')
@@ -837,7 +838,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome')
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('ATCAT'))
+        self.assertEqual(var_seq, reverse_complement('ATCAT'))
 
         # right anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 16)
@@ -846,7 +847,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 16)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('TCAT'))
+        self.assertEqual(var_seq, reverse_complement('TCAT'))
 
         # at anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 13)
@@ -855,7 +856,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 13)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('ATCA'))
+        self.assertEqual(var_seq, reverse_complement('ATCA'))
 
     def test_insertion_and_deletion(self):
         variants = [Variant.from_string('chr1:14::T', self.genome), Variant.from_string('chr1:15:G:', self.genome)]
@@ -868,7 +869,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome')
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('ATCT'))
+        self.assertEqual(var_seq, reverse_complement('ATCT'))
 
         # right anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 16)
@@ -877,7 +878,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 16)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('ATCT'))
+        self.assertEqual(var_seq, reverse_complement('ATCT'))
 
         # at anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 13)
@@ -886,7 +887,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 13)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('ATCT'))
+        self.assertEqual(var_seq, reverse_complement('ATCT'))
 
     def test_deletion_and_substitution(self):
         variants = [Variant.from_string('chr1:14:C:', self.genome), Variant.from_string('chr1:15:G:A', self.genome)]
@@ -899,7 +900,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome')
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('AAT'))
+        self.assertEqual(var_seq, reverse_complement('AAT'))
 
         # right anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 16)
@@ -908,7 +909,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 16)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('TAAT'))
+        self.assertEqual(var_seq, reverse_complement('TAAT'))
 
         # at anchor
         interval = Interval('chr1', '+', 12, 16, 'test_genome', 13)
@@ -917,7 +918,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 12, 16, 'test_genome', 13)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('AATA'))
+        self.assertEqual(var_seq, reverse_complement('AATA'))
 
     def test_substitution_in_extended_interval_from_deletion(self):
         self.assertEqual(self.genome.dna(Interval('chr1', '+', 11, 17, 'test_genome')), 'TACGTA')
@@ -953,7 +954,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 13, 16, 'test_genome')
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('TGT'))
+        self.assertEqual(var_seq, reverse_complement('TGT'))
 
         # right anchor
         interval = Interval('chr1', '+', 13, 16, 'test_genome', 16)
@@ -962,7 +963,7 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 13, 16, 'test_genome', 16)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('TGT'))
+        self.assertEqual(var_seq, reverse_complement('TGT'))
 
         # at anchor
         interval = Interval('chr1', '+', 13, 16, 'test_genome', 13)
@@ -971,8 +972,4 @@ class TestApplyVariants(unittest.TestCase):
 
         interval = Interval('chr1', '-', 13, 16, 'test_genome', 13)
         var_seq = apply_variants(self.dna, variants, interval)
-        self.assertEqual(var_seq, _dna_complement('TGT'))
-
-def _dna_complement(dna: str) -> str:
-    complement = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C', 'N': 'N'}
-    return ''.join(reversed([complement[base] for base in dna]))
+        self.assertEqual(var_seq, reverse_complement('TGT'))

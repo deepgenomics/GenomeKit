@@ -53,6 +53,60 @@ def check_variants_list(reference_genome, variants):
 
     return variants
 
+def _reverse_tuples_in_alignment(alignment):
+    result = []
+    tmp = []
+
+    for i in alignment:
+        if isinstance(i, tuple):  # If the item is a tuple, add it to the temp list
+            tmp.append(i)
+        else:
+            if len(tmp) > 0:
+                # If we encountered a non-tuple and there was a tuple sequence, reverse it
+                result.extend(tmp[::-1])
+                tmp = []
+            result.append(i)
+
+    # If there were any tuples left in temp at the end, reverse and add them
+    if len(tmp) > 0:
+        result.extend(tmp[::-1])
+
+    return result
+
+def _flip_alignment_for_negative_strand(interval, alignment):
+    """Given an alignment for the positive strand, flip it so that it represents the alignment for the negative strand.
+
+    This encompasses two steps: firstly, it flips the provided alignment, since
+    negative strand intervals are defined from the 3' to the 5' end. Secondly,
+    it translates the alignment so that it is reported in ascending order
+    instead of descending order. Here's an example:
+
+    Say we had Interval('chr1', '-', 0, 10, "hg37"), with 2 nt insertion at
+    position 5 and a deletion of position 7. If these variants are applied to
+    the positive strand, we'd get the following alignment back:
+
+    [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 8]
+
+    In order to convert this to the negative strand, we'd follow these steps:
+
+    1. Flip the alignment: [8, 6, 5, (5, 1), (5, 0), 4, 3, 2, 1, 0]
+    2. Reverse the insertion alignment: [8, 6, 5, (5, 0), (5, 1), 4, 3, 2, 1, 0]
+    3. Translate the alignment to be in ascending order:
+        3a. [9-8, 9-6, 9-5, (9-5, 0), (9-5, 1), 9-4, 9-3, 9-2, 9-1, 9-0]
+        3b. [1, 3, 4, (4, 0), (4, 1), 5, 6, 7, 8, 9]
+    4. Increment the tuples by 1 to anchor them to the nucleotide following them:
+        [1, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9]
+    """
+    highest_index = len(interval) - 1
+    flipped_alignment = []
+    alignment = _reverse_tuples_in_alignment(alignment)
+    for i in alignment[::-1]:
+        if isinstance(i, tuple):
+            flipped_alignment.append((highest_index-i[0]+1, i[1]))
+        else:
+            flipped_alignment.append(highest_index-i)
+    return flipped_alignment
+
 
 def apply_variants(sequence, variants, interval, reference_alignment=False):
     """Apply variants to a sequence interval.
@@ -81,7 +135,10 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
 
     :py:class:`list`
         The alignment of the variant sequence with the reference sequence
-        (if ``reference_alignment=True``).
+        (if ``reference_alignment=True``). The alignment is comprised of 
+        int/tuple[int, int] offsets to `interval.5p`.
+        The tuples denote insertions, where tuple[0] is the offset after the 
+        insertion and tuple[1] is the indexes the inserted sequence.
 
     """
 
@@ -195,7 +252,7 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
         var_sequence = reverse_complement(var_sequence)
 
         if reference_alignment:
-            raise ValueError("Reference alignment only work on forward strand.")
+            alignment = _flip_alignment_for_negative_strand(interval, alignment)
 
     if reference_alignment:
         return var_sequence, alignment

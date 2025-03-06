@@ -23,6 +23,7 @@ from . import (
 
 # Which gencode annotation to use for which test genome
 GENCODE_OR_NCBI_TEST_ANNOTATIONS = {
+    "hg19": "gencode.v47lift37",
     "hg19.p13.plusMT": "gencode.v29lift37",  # v29lift37 for hg19
     "hg38.p12": "gencode.v29",  # v29 for hg38
     "hg38.p13": "gencode.v41",
@@ -147,6 +148,8 @@ _ANNOTATION_BUILDERS = {
         _GencodeBuilder("hg38.p13", "release_41/gencode.v41.annotation.gff3.gz"),
     "gencode.v29lift37":
         _GencodeBuilder("hg19.p13.plusMT", "release_29/GRCh37_mapping/gencode.v29lift37.annotation.gff3.gz"),
+    "gencode.v47lift37":
+        _GencodeBuilder("hg19", "release_47/GRCh37_mapping/gencode.v47lift37.annotation.gff3.gz"),
     "ucsc_refseq.2017-06-25":
         _UCSCRefSeqBuilder("hg19", "hg19.ucsc_refseq.2017-06-25"),
     "ncbi_refseq.hg38.p14_RS_2024_08":
@@ -172,7 +175,7 @@ _ANNOTATION_BUILDERS = {
 # NOTE: when changing, python -m genome_kit --build-2bit --build-anno --build-appris --build-mane
 #       must be run
 TEST_GENOME_REGIONS = (
-    ('mini1', 'hg19', [('chr1', 84971983, 85022178), ('chr2', 74682100, 74692599), ('chr16', 29471206, 30215650)], {}),
+    ('mini1', 'hg19', [('chr1', 134900, 139381), ('chr1', 84971983, 85022178), ('chr2', 74682100, 74692599), ('chr16', 29471206, 30215650)], {}),
     ('mini1', 'hg19.p13.plusMT', [('chr1', 84971983, 85022178), ('chr2', 74682100, 74692599), ('chr16', 29471206, 30215650)], {}),
     ('mini1', 'hg38.p12', [('chr2', 74454973, 74465472)], {}),
     ('mini1', 'hg38.p13', [('chr2', 74454973, 74465472)], {}),
@@ -422,4 +425,4 @@ def build_test_annotation_files():
 
     for name, refg, regions, chrom_aliases in TEST_GENOME_REGIONS:
         build_test_gencode_or_ncbi_file(name, refg, regions, chrom_aliases)
-        build_test_ucsc_refseq_file(name, refg, regions)
+        # build_test_ucsc_refseq_file(name, refg, regions)

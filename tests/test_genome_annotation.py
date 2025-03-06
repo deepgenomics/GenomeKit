@@ -5,6 +5,7 @@ from __future__ import print_function
 import unittest
 import gc
 import os
+import genome_kit
 from genome_kit import Genome
 from genome_kit import GenomeAnnotation
 from genome_kit import GeneTable
@@ -656,6 +657,23 @@ class TestGencode(unittest.TestCase):
         self.assertEqual(tran.exons[3].interval, tran.utr3s[1].interval)
         self.assertEqual(tran.exons[8].interval, tran.utr3s[6].interval)
 
+    def test_out_of_order_utrs(self):
+        # out of order UTRs
+        genome = MiniGenome("gencode.v47lift37")
+        tran = genome.transcripts["ENST00000423372.3"]
+        # |-----------exon------------||---intron---||-----------exon------------|
+        # |--utr5--||--cds--||--utr3--|              |-----------utr3------------|
+        self.assertEqual(2, len(tran.exons))
+        self.assertEqual(tran.exons[1].interval, tran.utr3s[1].interval)
+        self.assertEqual(1, len(tran.introns))
+        self.assertEqual(1, len(tran.utr5s))
+        self.assertEqual(2, len(tran.utr3s))
+        self.assertEqual(1, len(tran.cdss))
+        self.assertTrue(tran.utr5s[0].upstream_of(tran.utr3s[0]))
+        self.assertEqual(tran.utr3s[1].interval.end, tran.introns[0].interval.start)
+        self.assertEqual(tran.utr3s[0].interval.start, tran.introns[0].interval.end)
+        self.assertEqual(tran.cdss[0].interval.start, tran.utr3s[0].interval.end)
+        self.assertEqual(tran.cdss[0].interval.end, tran.utr5s[0].interval.start)
 
 
 ########################################################

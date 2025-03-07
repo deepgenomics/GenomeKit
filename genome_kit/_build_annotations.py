@@ -425,4 +425,4 @@ def build_test_annotation_files():
 
     for name, refg, regions, chrom_aliases in TEST_GENOME_REGIONS:
         build_test_gencode_or_ncbi_file(name, refg, regions, chrom_aliases)
-        # build_test_ucsc_refseq_file(name, refg, regions)
+        build_test_ucsc_refseq_file(name, refg, regions)

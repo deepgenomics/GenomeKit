@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.5.1](https://github.com/deepgenomics/GenomeKit/compare/v6.5.0...v6.5.1) (2025-03-07)
+
+
+### Bug Fixes
+
+* build anno relies on utr/cds ordering ([#142](https://github.com/deepgenomics/GenomeKit/issues/142)) ([e28678b](https://github.com/deepgenomics/GenomeKit/commit/e28678b3778baa8fff6a54ab4858eb794f8b53c2)), closes [#135](https://github.com/deepgenomics/GenomeKit/issues/135)
+* handle anchor within deletions ([#140](https://github.com/deepgenomics/GenomeKit/issues/140)) ([3c8aabb](https://github.com/deepgenomics/GenomeKit/commit/3c8aabbd7bbc29f4771560cb4b47c65f27056c9d))
+
 ## [6.5.0](https://github.com/deepgenomics/GenomeKit/compare/v6.4.0...v6.5.0) (2025-03-04)
 
 

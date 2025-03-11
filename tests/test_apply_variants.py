@@ -797,10 +797,11 @@ class TestApplyVariants(unittest.TestCase):
         negative_strand_interval = Interval('chr1', '-', 5, 15, genome37, 11)
 
         reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
-        self.assertEqual(reference_alignment, [-1, 0, 1, 2, 3, 4, 6, 7, 8, 9])
+        # self.assertEqual(reference_alignment, [-1, 0, 1, 2, 3, 4, 6, 7, 8, 9])
+        self.assertEqual(reference_alignment, [-1, 0, 1, 2, 3, 4, 7, 8, 9, 10])
 
         reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
-        self.assertEqual(reference_alignment, [0, 1, 2, 3, 5, 6, 7, 8, 9, 10])
+        self.assertEqual(reference_alignment, [-1, 0, 1, 2, 5, 6, 7, 8, 9, 10])
 
         # Test anchor right of insertion
         variants = [Variant.from_string("chr1:11::TT", self.genome)]

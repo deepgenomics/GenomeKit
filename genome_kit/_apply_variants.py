@@ -188,7 +188,8 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
                 offset, insert_offset = offset
                 insert_offset += 1
             else:
-                offset += 1
+                # handle deletions spanning an anchor
+                offset += 1 - (min(0, alignment_left[0]))
 
             for i in alignment_right_tmp:
                 if isinstance(i, tuple):

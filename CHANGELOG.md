@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.6.0](https://github.com/deepgenomics/GenomeKit/compare/v6.5.1...v6.6.0) (2025-03-13)
+
+
+### Features
+
+* add gencode.v47 adjacent annos + appris ([#143](https://github.com/deepgenomics/GenomeKit/issues/143)) ([34b94df](https://github.com/deepgenomics/GenomeKit/commit/34b94dfd023dd56890b7d6a9bbad54738dec0876)), closes [#134](https://github.com/deepgenomics/GenomeKit/issues/134)
+
 ## [6.5.1](https://github.com/deepgenomics/GenomeKit/compare/v6.5.0...v6.5.1) (2025-03-07)
 
 

@@ -52,9 +52,8 @@ REMOTE_FILES = {
 # hg38
 REMOTE_FILES.update(("gencode.v{version}{lift}{basic}".format(version=version, lift=lift, basic=basic),
                      PATH_FMT.format(species="homo_sapiens", data_version=data_version))
-                    for version, data_version in [(25, "e87v22"), (26, "e88v22"), (27, "e91v27"), (29, "e94v28"), (41, "e103v45")]
+                    for version, data_version in [(25, "e87v22"), (26, "e88v22"), (27, "e91v27"), (29, "e94v28"), (41, "e103v45"), (47, "e113v49")]
                     for lift in ["", "lift37"] for basic in ["", ".basic"])
-REMOTE_FILES.update({"gencode.v47": PATH_FMT.format(species="homo_sapiens", data_version="e113v49")})
 # mouse
 REMOTE_FILES.update(("gencode.vM{version}{basic}".format(version=version, basic=basic),
                      PATH_FMT.format(species="mus_musculus", data_version=data_version))

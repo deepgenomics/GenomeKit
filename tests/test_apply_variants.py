@@ -837,6 +837,33 @@ class TestApplyVariants(unittest.TestCase):
         reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7])
 
+        # Test indel + anchor at start:
+
+        positive_strand_interval = Interval('chr1', '+', 5, 15, genome37, 5)
+        negative_strand_interval = Interval('chr1', '-', 5, 15, genome37, 5)
+
+        variants = [Variant.from_string("chr1:11::TA", self.genome), Variant.from_string("chr1:7:GT:-", self.genome)]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [0, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9])
+
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 9])
+
+        # Test indel + anchor at end:
+
+        positive_strand_interval = Interval('chr1', '+', 5, 15, genome37, 15)
+        negative_strand_interval = Interval('chr1', '-', 5, 15, genome37, 15)
+
+        variants = [Variant.from_string("chr1:11::TA", self.genome), Variant.from_string("chr1:7:GT:-", self.genome)]
+
+        reference_alignment = apply_variants(genome37.dna, variants, positive_strand_interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [0, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9])
+
+        reference_alignment = apply_variants(genome37.dna, variants, negative_strand_interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 9])
+
+
     def test_variant_on_other_chromosome(self):
         """Tests that variants are only applied when they are on the same
         chromosome as the interval.

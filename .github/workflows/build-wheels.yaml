@@ -1,0 +1,51 @@
+name: Build Wheels
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pull manylinux image (just for caching)
+        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
+
+      - name: Build and repair wheel in manylinux container
+        run: |
+          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+            set -euxo pipefail
+
+            PYTHON=/opt/python/cp312-cp312/bin/python
+
+            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel
+
+            # Build and install libfmt (statically linked)
+            cd /tmp
+            git clone --depth=1 https://github.com/fmtlib/fmt.git
+            cd fmt
+            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
+            make -j\$(nproc)
+            make install
+            cd /io
+
+            # Build wheel
+            \$PYTHON setup.py bdist_wheel
+
+            # Repair wheel to comply with manylinux
+            mkdir -p repaired_wheels
+            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+          "
+
+      - name: Upload built wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: genomekit-wheels-linux
+          path: repaired_wheels/*.whl
+
+
+      #TODO upload to PyPi

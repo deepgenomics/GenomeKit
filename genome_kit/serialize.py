@@ -1,4 +1,4 @@
-from importlib_metadata import entry_points
+from importlib.metadata import entry_points
 
 from genome_kit import Interval, Variant
 from genome_kit.genome_annotation import Gene, Transcript, Exon, Intron, Cds, Utr

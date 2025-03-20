@@ -1,32 +1,32 @@
-[build-system]
-requires = ["setuptools>=42", "wheel", "numpy"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "genomekit"
-version = "6.4.0"
-description = "GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations."
-authors = [
-    { name = "Deep Genomics", email = "info@deepgenomics.com" }
-]
-license = { text = "Apache License 2.0" }
-readme = "README.md"  # optional, update if you have one
-requires-python = ">=3.9, <4"
-
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
-]
-
-dependencies = [
-    "appdirs",
-    "numpy",
-    "google-cloud-storage",
-    "boto3",
-    "tqdm",
-    "setuptools"
-]
+#[build-system]
+#requires = ["setuptools>=42", "wheel", "numpy"]
+#build-backend = "setuptools.build_meta"
+#
+#[project]
+#name = "genomekit"
+#version = "6.4.0"
+#description = "GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations."
+#authors = [
+#    { name = "Deep Genomics", email = "info@deepgenomics.com" }
+#]
+#license = { text = "Apache License 2.0" }
+#readme = "README.md"  # optional, update if you have one
+#requires-python = ">=3.9, <4"
+#
+#classifiers = [
+#    "Development Status :: 5 - Production/Stable",
+#    "License :: OSI Approved :: Apache Software License",
+#    "Programming Language :: Python :: 3.9",
+#    "Programming Language :: Python :: 3.10",
+#    "Programming Language :: Python :: 3.11",
+#    "Programming Language :: Python :: 3.12"
+#]
+#
+#dependencies = [
+#    "appdirs",
+#    "numpy",
+#    "google-cloud-storage",
+#    "boto3",
+#    "tqdm",
+#    "setuptools"
+#]

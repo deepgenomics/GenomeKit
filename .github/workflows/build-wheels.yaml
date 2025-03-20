@@ -12,22 +12,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-#        optional but recommended for speed
+        # optional but recommended for speed
       - name: Pre-pull manylinux image
         run: docker pull quay.io/pypa/manylinux_2_28_x86_64
 
       - name: Build and repair wheel in manylinux container
         run: |
-#          the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
+          # the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
           docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
             set -euxo pipefail
 
             PYTHON=/opt/python/cp312-cp312/bin/python
   
-#            numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
+            # numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
             \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
 
-#            Build and install libfmt (statically linked)
+            # Build and install libfmt (statically linked)
             cd /tmp
             git clone --depth=1 https://github.com/fmtlib/fmt.git
             cd fmt
@@ -36,10 +36,10 @@ jobs:
             make install
             cd /io
 
-#            Build wheel
+            # Build wheel
             \$PYTHON setup.py bdist_wheel
 
-#            Repair wheel to comply with manylinux and bundle .so files
+            # Repair wheel to comply with manylinux and bundle .so files
             mkdir -p repaired_wheels
             auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
           "

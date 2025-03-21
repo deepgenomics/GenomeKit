@@ -41,14 +41,6 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.12",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
-        install_requires=[
-            "appdirs",
-            "numpy",
-            "google-cloud-storage",
-            "boto3",
-            "tqdm",
-            "setuptools"
-        ],
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),
         name="genomekit",

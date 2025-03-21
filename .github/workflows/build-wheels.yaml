@@ -1,3 +1,63 @@
+#name: Build Wheels
+#
+#on:
+#  push:
+#  pull_request:
+#
+#jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#        # optional but recommended for speed
+#      - name: Pre-pull manylinux image
+#        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
+#
+#      - name: Build and repair wheel in manylinux container
+#        run: |
+#          # the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
+#          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+#            set -euxo pipefail
+#
+#            PYTHON=/opt/python/cp312-cp312/bin/python
+#
+#            # numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
+#            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+#
+#            # Build and install libfmt (statically linked)
+#            cd /tmp
+#            # to specify fmt version do git clone --branch xx.x.x --depth=1 https://github.com/fmtlib/fmt.git
+#            git clone --depth=1 https://github.com/fmtlib/fmt.git
+#            cd fmt
+#            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
+#            make -j\$(nproc)
+#            make install
+#            cd /io
+#
+#            # Build wheel
+#            \$PYTHON setup.py bdist_wheel
+#
+#            # Repair wheel to comply with manylinux and bundle .so files
+#            mkdir -p repaired_wheels
+#            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+#          "
+#
+#      - name: Artifact built wheels
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: genomekit-wheels-linux
+#          path: repaired_wheels/*.whl
+#
+#
+#      #TODO upload to PyPi
+
+
+# for Python 3.9-3.12 support:
+# approach 1 — single docker container, only need 1 fmt install
+
 name: Build Wheels
 
 on:
@@ -12,43 +72,101 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-        # optional but recommended for speed
       - name: Pre-pull manylinux image
         run: docker pull quay.io/pypa/manylinux_2_28_x86_64
 
-      - name: Build and repair wheel in manylinux container
+      - name: Build and repair wheels for Python 3.9–3.12
         run: |
-          # the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
           docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
             set -euxo pipefail
 
-            PYTHON=/opt/python/cp312-cp312/bin/python
-  
-            # numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
-            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+            PYTHONS=(
+              /opt/python/cp39-cp39/bin/python
+              /opt/python/cp310-cp310/bin/python
+              /opt/python/cp311-cp311/bin/python
+              /opt/python/cp312-cp312/bin/python
+            )
 
             # Build and install libfmt (statically linked)
             cd /tmp
-            git clone --depth=1 https://github.com/fmtlib/fmt.git
+            git clone --branch 10.1.1 --depth=1 https://github.com/fmtlib/fmt.git
             cd fmt
             cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
             make -j\$(nproc)
             make install
             cd /io
 
-            # Build wheel
-            \$PYTHON setup.py bdist_wheel
-
-            # Repair wheel to comply with manylinux and bundle .so files
             mkdir -p repaired_wheels
-            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+
+            for PYTHON in \${PYTHONS[@]}; do
+              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+
+              # Clean previous build artifacts
+              rm -rf build dist *.egg-info
+
+              # Build wheel
+              \$PYTHON setup.py bdist_wheel
+
+              # Repair wheel to comply with manylinux
+              auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+            done
           "
 
-      - name: Artifact built wheels
+      - name: Upload built wheels
         uses: actions/upload-artifact@v4
         with:
           name: genomekit-wheels-linux
           path: repaired_wheels/*.whl
 
 
-      #TODO upload to PyPi
+# approach 2 — actions matrix, for parallelism and clarity
+
+#name: Build Wheels
+#
+#on:
+#  push:
+#  pull_request:
+#
+#jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        python_tag: [cp39-cp39, cp310-cp310, cp311-cp311, cp312-cp312]
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Build and repair wheel in manylinux container
+#        run: |
+#          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+#            set -euxo pipefail
+#
+#            PYTHON=/opt/python/${{ matrix.python_tag }}/bin/python
+#
+#            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+#
+#            # Build and install libfmt (statically linked)
+#            cd /tmp
+#            git clone --branch 10.1.1 --depth=1 https://github.com/fmtlib/fmt.git
+#            cd fmt
+#            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
+#            make -j\$(nproc)
+#            make install
+#            cd /io
+#
+#            # Clean and build
+#            rm -rf build dist *.egg-info
+#            \$PYTHON setup.py bdist_wheel
+#
+#            mkdir -p repaired_wheels
+#            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+#          "
+#
+#      - name: Upload wheel artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: genomekit-wheel-${{ matrix.python_tag }}
+#          path: repaired_wheels/*.whl
+

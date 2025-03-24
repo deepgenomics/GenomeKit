@@ -79,7 +79,7 @@ jobs:
               python -m pip install \$WHEEL
 
               # Run import and tests
-              python -c 'import genomekit; print(genomekit.__version__)'
+              python -c 'import genome_kit; print(genome_kit.__version__)'
               cd /tests
               python -m unittest discover
             "

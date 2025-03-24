@@ -151,8 +151,8 @@ jobs:
                 python -m pip install \$WHEEL
 
                 # Run import and unit tests
-#                python -c 'import genome_kit; print(genome_kit.__version__)'
-                cd /tests
+                # python -c 'import genome_kit; print(genome_kit.__version__)'
+
                 python -m unittest discover
               "
           done

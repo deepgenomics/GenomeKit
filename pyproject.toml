@@ -28,5 +28,6 @@ dependencies = [
     "google-cloud-storage",
     "boto3",
     "tqdm",
-    "setuptools"
+    "setuptools",
+    "importlib-metadata"
 ]

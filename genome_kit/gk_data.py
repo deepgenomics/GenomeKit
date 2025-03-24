@@ -21,7 +21,7 @@ from __future__ import division
 from __future__ import print_function
 import os
 from typing import Dict
-from importlib.metadata import entry_points
+from importlib_metadata import entry_points
 
 
 from ._util import makedirs

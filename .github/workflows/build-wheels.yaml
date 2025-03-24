@@ -126,13 +126,18 @@ jobs:
           name: genomekit-wheels-linux
           path: wheels
 
-      - name: Test wheels across Python 3.9–3.12
+      - name: Test wheels across Python 3.9–3.12 with unit tests
         run: |
           set -euxo pipefail
           for PYVER in 3.9 3.10 3.11 3.12; do
-            echo "Testing on Python $PYVER"
+            # Get version tags
+            TAG="cp${PYVER/./}"  # 3.9 -> cp39, 3.10 -> cp310, etc.
+
+            echo "Testing on Python $PYVER with tag $TAG"
+
             docker run --rm \
               -v $(pwd)/wheels:/wheels \
+              -v $(pwd)/tests:/tests \
               python:$PYVER-slim /bin/bash -c "
                 set -euxo pipefail
 
@@ -140,16 +145,18 @@ jobs:
 
                 python -m pip install --upgrade pip
 
-                for WHEEL in /wheels/*.whl; do
-                  python -m pip install \$WHEEL
-                done
+                # Find the matching wheel
+                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+                echo 'Installing wheel: ' \$WHEEL
+                python -m pip install \$WHEEL
 
-                # Replace with your actual package name
+                # Run import and unit tests
                 python -c 'import genomekit; print(genomekit.__version__)'
-          
+                cd /tests
                 python -m unittest discover
               "
           done
+
 
 
 

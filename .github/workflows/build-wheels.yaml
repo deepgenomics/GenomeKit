@@ -89,7 +89,8 @@ jobs:
 
             # Build and install libfmt (statically linked)
             cd /tmp
-            git clone --branch 10.1.1 --depth=1 https://github.com/fmtlib/fmt.git
+            # for now 11.1.4 is broken, otherwise use latest tag
+            git clone --branch 11.0.2 --depth=1 https://github.com/fmtlib/fmt.git
             cd fmt
             cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
             make -j\$(nproc)
@@ -117,6 +118,39 @@ jobs:
         with:
           name: genomekit-wheels-linux
           path: repaired_wheels/*.whl
+
+
+      - name: Download built wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: genomekit-wheels-linux
+          path: wheels
+
+      - name: Test wheels across Python 3.9–3.12
+        run: |
+          set -euxo pipefail
+          for PYVER in 3.9 3.10 3.11 3.12; do
+            echo "Testing on Python $PYVER"
+            docker run --rm \
+              -v $(pwd)/wheels:/wheels \
+              python:$PYVER-slim /bin/bash -c "
+                set -euxo pipefail
+
+                apt-get update && apt-get install -y gcc python3-dev
+
+                python -m pip install --upgrade pip
+
+                for WHEEL in /wheels/*.whl; do
+                  python -m pip install \$WHEEL
+                done
+
+                # Replace with your actual package name
+                python -c 'import genomekit; print(genomekit.__version__)'
+          
+                python -m unittest discover
+              "
+          done
+
 
 
 # approach 2 — actions matrix, for parallelism and clarity

@@ -31,5 +31,5 @@ dependencies = [
     "tqdm",
     "setuptools",
     "importlib-metadata",
-    "typing-extesions",
+    "typing-extesions>=4.0,<5.0",
 ]

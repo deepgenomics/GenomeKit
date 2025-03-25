@@ -29,5 +29,6 @@ dependencies = [
     "boto3",
     "tqdm",
     "setuptools",
-    "importlib-metadata"
+    "importlib-metadata",
+    "typing-extesions",
 ]

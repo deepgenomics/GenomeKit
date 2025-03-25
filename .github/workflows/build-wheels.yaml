@@ -113,9 +113,8 @@ jobs:
           docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
             set -euxo pipefail
 
-
-            # /opt/python/cp39-cp39/bin/python
             PYTHONS=(
+              /opt/python/cp39-cp39/bin/python
               /opt/python/cp310-cp310/bin/python
               /opt/python/cp311-cp311/bin/python
               /opt/python/cp312-cp312/bin/python
@@ -163,8 +162,8 @@ jobs:
       - name: Test wheels across Python 3.9–3.12 with unit tests
         run: |
           set -euxo pipefail
-          for PYVER in 3.10 3.11 3.12; do
-          # for PYVER in 3.9 3.10 3.11 3.12; do
+          # for PYVER in 3.10 3.11 3.12; do
+          for PYVER in 3.9 3.10 3.11 3.12; do
             # Get version tags
             TAG="cp${PYVER/./}"  # 3.9 -> cp39, 3.10 -> cp310, etc.
 

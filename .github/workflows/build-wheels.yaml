@@ -2,7 +2,7 @@ name: Build Wheels
 
 on:
   push:
-  pull_request:
+    branches: [test-ci-wheels]
 
 jobs:
   build:
@@ -80,8 +80,7 @@ jobs:
 
               # Run import and tests
               python -c 'import genome_kit; print(genome_kit.__version__)'
-              cd /tests
-              python -m unittest discover
+              ls tests/test_*.py | sed 's/\.py$//' | xargs -I {} python -m unittest tests/{}
             "
 
 

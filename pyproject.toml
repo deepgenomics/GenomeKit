@@ -31,4 +31,5 @@ dependencies = [
     "setuptools",
     "importlib-metadata",
     "typing-extesions",
+    "typing_extesions",
 ]

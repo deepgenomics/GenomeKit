@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12"
 ]
 
+#"typing_extesions",
 dependencies = [
     "appdirs",
     "numpy",
@@ -31,5 +32,4 @@ dependencies = [
     "setuptools",
     "importlib-metadata",
     "typing-extesions",
-    "typing_extesions",
 ]

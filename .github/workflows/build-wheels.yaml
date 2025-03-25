@@ -80,7 +80,7 @@ jobs:
 
               # Run import and tests
               python -c 'import genome_kit; print(genome_kit.__version__)'
-              ls tests/test_*.py | sed 's/\.py$//' | xargs -I {} python -m unittest tests/{}
+              ls tests/test_*.py | sed 's/\.py$//' | xargs -I {} python -m unittest {}
             "
 
 

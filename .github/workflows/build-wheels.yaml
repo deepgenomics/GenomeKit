@@ -1,101 +1,9 @@
-name: Build Wheels
-run-name: build-wheels
-
-on:
-  push:
-#    branches: [test-ci-wheels]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-        # optional but recommended for speed
-      - name: Pre-pull manylinux image
-        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
-
-      - name: Build and repair wheel in manylinux container
-        run: |
-          # the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
-          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
-            set -euxo pipefail
-
-            PYTHON=/opt/python/cp39-cp39/bin/python
-
-            # numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
-            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
-
-            # Build and install libfmt (statically linked)
-            cd /tmp
-            # to specify fmt version do git clone --branch xx.x.x --depth=1 https://github.com/fmtlib/fmt.git
-            git clone --depth=1 https://github.com/fmtlib/fmt.git
-            cd fmt
-            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
-            make -j\$(nproc)
-            make install
-            cd /io
-
-            # Build wheel
-            \$PYTHON setup.py bdist_wheel
-
-            # Repair wheel to comply with manylinux and bundle .so files
-            mkdir -p repaired_wheels
-            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
-          "
-
-      - name: Artifact built wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: genomekit-wheels-linux
-          path: repaired_wheels/*.whl
-
-
-      - name: Download built wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: genomekit-wheels-linux
-          path: wheels
-
-      - name: Test wheel with Python 3.9
-        run: |
-          set -euxo pipefail
-          TAG="cp39"  # Python 3.9 tag
-
-          docker run --rm \
-            -v $(pwd)/wheels:/wheels \
-            -v $(pwd)/tests:/tests \
-            python:3.9-slim /bin/bash -c "
-              set -euxo pipefail
-
-              apt-get update && apt-get install -y gcc python3-dev
-
-              python -m pip install --upgrade pip
-
-              # Install the matching wheel
-              WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
-              echo 'Installing wheel:' \$WHEEL
-              python -m pip install \$WHEEL
-
-              # Run import and tests
-              python -c 'import genome_kit; print(genome_kit.__version__)'
-              ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
-            "
-
-
-      #TODO upload to PyPi
-
-
-# for Python 3.9-3.12 support:
-# approach 1 — single docker container, only need 1 fmt install
-
 #name: Build Wheels
+#run-name: build-wheels
 #
 #on:
 #  push:
-#  pull_request:
+##    branches: [test-ci-wheels]
 #
 #jobs:
 #  build:
@@ -105,48 +13,40 @@ jobs:
 #      - name: Checkout code
 #        uses: actions/checkout@v4
 #
+#        # optional but recommended for speed
 #      - name: Pre-pull manylinux image
 #        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
 #
-#      - name: Build and repair wheels for Python 3.9–3.12
+#      - name: Build and repair wheel in manylinux container
 #        run: |
+#          # the docker image in the workflow is necessary to build a manylinux compliant wheel. PyPI expects these to be run in manylinux_2_28 or lower.
 #          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
 #            set -euxo pipefail
 #
-#            PYTHONS=(
-#              /opt/python/cp39-cp39/bin/python
-#              /opt/python/cp310-cp310/bin/python
-#              /opt/python/cp311-cp311/bin/python
-#              /opt/python/cp312-cp312/bin/python
-#            )
+#            PYTHON=/opt/python/cp39-cp39/bin/python
+#
+#            # numpy is required at build time because its c api is used (#include <numpy/arrayobject.h>)
+#            \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
 #
 #            # Build and install libfmt (statically linked)
 #            cd /tmp
-#            # for now 11.1.4 is broken, otherwise use latest tag
-#            git clone --branch 11.0.2 --depth=1 https://github.com/fmtlib/fmt.git
+#            # to specify fmt version do git clone --branch xx.x.x --depth=1 https://github.com/fmtlib/fmt.git
+#            git clone --depth=1 https://github.com/fmtlib/fmt.git
 #            cd fmt
 #            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
 #            make -j\$(nproc)
 #            make install
 #            cd /io
 #
+#            # Build wheel
+#            \$PYTHON setup.py bdist_wheel
+#
+#            # Repair wheel to comply with manylinux and bundle .so files
 #            mkdir -p repaired_wheels
-#
-#            for PYTHON in \${PYTHONS[@]}; do
-#              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
-#
-#              # Clean previous build artifacts
-#              rm -rf build dist *.egg-info
-#
-#              # Build wheel
-#              \$PYTHON setup.py bdist_wheel
-#
-#              # Repair wheel to comply with manylinux
-#              auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
-#            done
+#            auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
 #          "
 #
-#      - name: Upload built wheels
+#      - name: Artifact built wheels
 #        uses: actions/upload-artifact@v4
 #        with:
 #          name: genomekit-wheels-linux
@@ -159,35 +59,137 @@ jobs:
 #          name: genomekit-wheels-linux
 #          path: wheels
 #
-#      - name: Test wheels across Python 3.9–3.12 with unit tests
+#      - name: Test wheel with Python 3.9
 #        run: |
 #          set -euxo pipefail
-#          for PYVER in 3.9 3.10 3.11 3.12; do
-#            # Get version tags
-#            TAG="cp${PYVER/./}"  # 3.9 -> cp39, 3.10 -> cp310, etc.
+#          TAG="cp39"  # Python 3.9 tag
 #
-#            echo "Testing on Python $PYVER with tag $TAG"
+#          docker run --rm \
+#            -v $(pwd)/wheels:/wheels \
+#            -v $(pwd)/tests:/tests \
+#            python:3.9-slim /bin/bash -c "
+#              set -euxo pipefail
 #
-#            docker run --rm \
-#              -v $(pwd)/wheels:/wheels \
-#              -v $(pwd)/tests:/tests \
-#              python:$PYVER-slim /bin/bash -c "
-#                set -euxo pipefail
+#              apt-get update && apt-get install -y gcc python3-dev
 #
-#                apt-get update && apt-get install -y gcc python3-dev
+#              python -m pip install --upgrade pip
 #
-#                python -m pip install --upgrade pip
+#              # Install the matching wheel
+#              WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+#              echo 'Installing wheel:' \$WHEEL
+#              python -m pip install \$WHEEL
 #
-#                # Find the matching wheel
-#                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
-#                echo 'Installing wheel: ' \$WHEEL
-#                python -m pip install \$WHEEL
+#              # Run import and tests
+#              python -c 'import genome_kit; print(genome_kit.__version__)'
+#              ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+#            "
 #
-#                # Run import and unit tests
-#                python -c 'import genome_kit; print(genome_kit.__version__)'
-#                ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
-#              "
-#          done
+#
+#      #TODO upload to PyPi
+
+
+# for Python 3.9-3.12 support:
+# approach 1 — single docker container, only need 1 fmt install
+
+name: Build Wheels
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pre-pull manylinux image
+        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
+
+      - name: Build and repair wheels for Python 3.9–3.12
+        run: |
+          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+            set -euxo pipefail
+
+
+            # /opt/python/cp39-cp39/bin/python
+            PYTHONS=(
+              /opt/python/cp310-cp310/bin/python
+              /opt/python/cp311-cp311/bin/python
+              /opt/python/cp312-cp312/bin/python
+            )
+
+            # Build and install libfmt (statically linked)
+            cd /tmp
+            # for now 11.1.4 is broken, otherwise use latest tag
+            git clone --branch 11.0.2 --depth=1 https://github.com/fmtlib/fmt.git
+            cd fmt
+            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
+            make -j\$(nproc)
+            make install
+            cd /io
+
+            mkdir -p repaired_wheels
+
+            for PYTHON in \${PYTHONS[@]}; do
+              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+
+              # Clean previous build artifacts
+              rm -rf build dist *.egg-info
+
+              # Build wheel
+              \$PYTHON setup.py bdist_wheel
+
+              # Repair wheel to comply with manylinux
+              auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+            done
+          "
+
+      - name: Upload built wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: genomekit-wheels-linux
+          path: repaired_wheels/*.whl
+
+
+      - name: Download built wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: genomekit-wheels-linux
+          path: wheels
+
+      - name: Test wheels across Python 3.9–3.12 with unit tests
+        run: |
+          set -euxo pipefail
+          for PYVER in 3.10 3.11 3.12; do
+          # for PYVER in 3.9 3.10 3.11 3.12; do
+            # Get version tags
+            TAG="cp${PYVER/./}"  # 3.9 -> cp39, 3.10 -> cp310, etc.
+
+            echo "Testing on Python $PYVER with tag $TAG"
+
+            docker run --rm \
+              -v $(pwd)/wheels:/wheels \
+              -v $(pwd)/tests:/tests \
+              python:$PYVER-slim /bin/bash -c "
+                set -euxo pipefail
+
+                apt-get update && apt-get install -y gcc python3-dev
+
+                python -m pip install --upgrade pip
+
+                # Find the matching wheel
+                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+                echo 'Installing wheel: ' \$WHEEL
+                python -m pip install \$WHEEL
+
+                # Run import and unit tests
+                python -c 'import genome_kit; print(genome_kit.__version__)'
+                ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+              "
+          done
 
 
 

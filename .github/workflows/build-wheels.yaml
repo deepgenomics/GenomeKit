@@ -190,7 +190,91 @@ jobs:
               "
           done
 
+  build-test-arm:
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Pre-pull manylinux image for ARM
+        run: docker pull quay.io/pypa/manylinux_2_28_aarch64
+
+      - name: Build and repair ARM wheels for Python 3.9–3.12
+        run: |
+          docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_aarch64 /bin/bash -c "
+            set -euxo pipefail
+
+            PYTHONS=(
+              /opt/python/cp39-cp39/bin/python
+              /opt/python/cp310-cp310/bin/python
+              /opt/python/cp311-cp311/bin/python
+              /opt/python/cp312-cp312/bin/python
+            )
+
+            cd /tmp
+            git clone --branch 11.0.2 --depth=1 https://github.com/fmtlib/fmt.git
+            cd fmt
+            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
+            make -j\$(nproc)
+            make install
+            cd /io
+
+            mkdir -p repaired_wheels
+
+            for PYTHON in \${PYTHONS[@]}; do
+              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+              rm -rf build dist *.egg-info
+              \$PYTHON setup.py bdist_wheel
+              auditwheel repair dist/*.whl --plat manylinux_2_28_aarch64 -w repaired_wheels
+            done
+          "
+
+      - name: Upload ARM wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: genomekit-wheels-arm
+          path: repaired_wheels/*.whl
+
+      - name: Download ARM wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: genomekit-wheels-arm
+          path: wheels
+
+      - name: Test ARM wheels across Python 3.9–3.12
+        run: |
+          set -euxo pipefail
+
+          for PYVER in 3.9 3.10 3.11 3.12; do
+            TAG="cp${PYVER/./}"  # 3.9 -> cp39, etc.
+
+            echo "Testing on Python $PYVER (arm64)"
+
+            docker run --rm \
+              --platform linux/arm64 \
+              -v $(pwd)/wheels:/wheels \
+              -v $(pwd)/tests:/tests \
+              arm64v8/python:$PYVER-slim /bin/bash -c "
+                set -euxo pipefail
+
+                apt-get update && apt-get install -y gcc python3-dev
+
+                python -m pip install --upgrade pip
+
+                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+                echo 'Installing wheel: ' \$WHEEL
+                python -m pip install \$WHEEL
+
+                python -c 'import genome_kit; print(genome_kit.__version__)'
+                ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+              "
+          done
 
 
 # approach 2 — actions matrix, for parallelism and clarity

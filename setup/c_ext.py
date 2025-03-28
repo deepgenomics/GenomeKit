@@ -116,7 +116,7 @@ if toolset == "gcc":
             osx_sdk,
             "-isysroot{}".format(os.environ.get("CONDA_BUILD_SYSROOT", "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")),
             "-stdlib=libc++",
-            "-mmacosx-version-min=13.3",
+            "-mmacosx-version-min=14.4",
             "-Wshorten-64-to-32",  # catch implicit truncation as per MSVC
             "-Wsign-compare",  # match MSVC(/W3)/gcc(-Wall)
             "-Wconditional-uninitialized",  # gcc does better here but enable for safety

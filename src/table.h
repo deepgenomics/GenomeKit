@@ -95,7 +95,7 @@ public:
 
 	INLINE int index_of(const T& elem) const {
 		std::ptrdiff_t index = &elem - _elems.data();
-		GK_CHECK2(index >= 0 && (size_t)index < _elems.size(), value, "Table does not contain the given element");
+		GK_CHECK(index >= 0 && (size_t)index < _elems.size(), value, "Table does not contain the given element");
 		return int_cast<int>(index);
 	}
 
@@ -338,11 +338,11 @@ void table<T,I>::load(mmap_file& in) {
 template <typename T, typename I> template <template <typename> class P>
 typename table<T,I>::cursor_range table<T,I>::find_by_field(const interval_t& i, const array_view<index_t>& idx) const
 {
-	GK_CHECK2(this->valid(), file, "IntervalTable has been invalidated by close or with statement on source object.");
+	GK_CHECK(this->valid(), file, "IntervalTable has been invalidated by close or with statement on source object.");
 	if (!_elems.empty()) {
 		// TODO: data_dir injected as a context
 		const auto& refgs = get_refg_registry();
-		GK_CHECK2(i.refg == _elems[0].refg, value, "Reference genome '{}' does not match query coordinate '{}'.",
+		GK_CHECK(i.refg == _elems[0].refg, value, "Reference genome '{}' does not match query coordinate '{}'.",
 				 refgs.refg_as_sv(_elems[0].refg), refgs.refg_as_sv(i.refg));
 	}
 	pos_t a = i.start();
@@ -570,21 +570,21 @@ typename interval_table<T>::cursor_range interval_table<T>::_find_3p_within(cons
 template <typename T>
 typename interval_table<T>::cursor_range interval_table<T>::find_5p_within(const interval_t& i) const
 {
-	GK_CHECK2(this->_stranded || i.is_pos_strand(), value, "Cannot call find_5p_within on negative strand for unstranded table");
+	GK_CHECK(this->_stranded || i.is_pos_strand(), value, "Cannot call find_5p_within on negative strand for unstranded table");
 	return _find_5p_within(i);
 }
 
 template <typename T>
 typename interval_table<T>::cursor_range interval_table<T>::find_3p_within(const interval_t& i) const
 {
-	GK_CHECK2(this->_stranded || i.is_pos_strand(), value, "Cannot call find_3p_within on negative strand for unstranded table");
+	GK_CHECK(this->_stranded || i.is_pos_strand(), value, "Cannot call find_3p_within on negative strand for unstranded table");
 	return _find_3p_within(i);
 }
 
 template <typename T>
 typename interval_table<T>::cursor_range interval_table<T>::find_5p_aligned(const interval_t& i) const
 {
-	GK_CHECK2(this->_stranded || i.is_pos_strand(), value, "Cannot call find_5p_aligned on negative strand for unstranded table");
+	GK_CHECK(this->_stranded || i.is_pos_strand(), value, "Cannot call find_5p_aligned on negative strand for unstranded table");
 
 	// Case-by-case proof of correctness, using the (pos5, pos3) representation of intervals
 	//
@@ -640,7 +640,7 @@ typename interval_table<T>::cursor_range interval_table<T>::find_5p_aligned(cons
 template <typename T>
 typename interval_table<T>::cursor_range interval_table<T>::find_3p_aligned(const interval_t& i) const
 {
-	GK_CHECK2(this->_stranded || i.is_pos_strand(), value, "Cannot call find_3p_aligned on negative strand for unstranded table");
+	GK_CHECK(this->_stranded || i.is_pos_strand(), value, "Cannot call find_3p_aligned on negative strand for unstranded table");
 
 	// Case-by-case proof of correctness, using the (pos5, pos3) representation of intervals
 	//
@@ -699,11 +699,11 @@ typename interval_table<T>::cursor_range interval_table<T>::find_exact(const int
 	if (!this->_stranded && i.is_neg_strand())
 		return find_exact(i.as_pos_strand());
 
-	GK_CHECK2(this->valid(), file, "IntervalTable has been invalidated by close or with statement on source object.");
+	GK_CHECK(this->valid(), file, "IntervalTable has been invalidated by close or with statement on source object.");
 	if (!this->_elems.empty()) {
 		// TODO: data_dir injected as a context
 		const auto& refgs = get_refg_registry();
-		GK_CHECK2(i.refg == this->_elems[0].refg, value, "Reference genome '{}' does not match query coordinate '{}'.",
+		GK_CHECK(i.refg == this->_elems[0].refg, value, "Reference genome '{}' does not match query coordinate '{}'.",
 				 refgs.refg_as_sv(this->_elems[0].refg), refgs.refg_as_sv(i.refg));
 	}
 

@@ -97,7 +97,7 @@ PyObject* PyVariant_RichCompare(PyObject* ao, PyObject* bo, int op)
 	case Py_EQ: GKPY_RETURN_BOOL(a == b);
 	case Py_NE: GKPY_RETURN_BOOL(a != b);
 	}
-	GK_THROW2(type, "Unsupported comparison operator.");
+	GK_THROW(type, "Unsupported comparison operator.");
 	GKPY_CATCH_RETURN_NULL
 }
 
@@ -121,8 +121,8 @@ GKPY_GETATTRO_BEGIN(Variant)
 	GKPY_GETATTR_CASE("end3") return PyInterval::create(get_end3(self->value()));
 
 	GKPY_GETATTR_CASE("interval") { return PyInterval::create(self->value()); }
-	GKPY_GETATTR_CASE("anchor") { GK_THROW2(type, "Anchor attribute disabled on variants"); }
-	GKPY_GETATTR_CASE("anchor_offset") { GK_THROW2(type, "Anchor attribute disabled on variants"); }
+	GKPY_GETATTR_CASE("anchor") { GK_THROW(type, "Anchor attribute disabled on variants"); }
+	GKPY_GETATTR_CASE("anchor_offset") { GK_THROW(type, "Anchor attribute disabled on variants"); }
 	return PyVariant::base_type::DefaultType->tp_getattro(selfo, attro);
 GKPY_GETATTRO_END
 
@@ -209,7 +209,7 @@ PyObject* PyVCFVariant_RichCompare(PyObject* ao, PyObject* bo, int op)
 	case Py_EQ: GKPY_RETURN_BOOL(a == b);
 	case Py_NE: GKPY_RETURN_BOOL(a != b);
 	}
-	GK_THROW2(type, "Unsupported comparison operator.");
+	GK_THROW(type, "Unsupported comparison operator.");
 	GKPY_CATCH_RETURN_NULL
 }
 
@@ -241,7 +241,7 @@ PyAutoRef PyVCFTable::numpy_memmap_function;
 
 void validate_VCFTable(const PyAsPtrSource* self)
 {
-	GK_CHECK2(((const PyVCFTable*)self)->table->valid(), file,
+	GK_CHECK(((const PyVCFTable*)self)->table->valid(), file,
 			 "VCFVariants have been invalidated by VCFTable.close or with statement.");
 }
 
@@ -351,7 +351,7 @@ void collect_ids(PyObject* ids, T collect_fn)
 		for (Py_ssize_t i_list = 0; i_list < count; i_list++) {
 			PyObject* id = PyList_GetItem(ids, i_list);
 
-			GK_CHECK2(PyString_Check(id), type, "Each ID must be a 'str'.");
+			GK_CHECK(PyString_Check(id), type, "Each ID must be a 'str'.");
 			const char* id_cstr = PyString_AS_STRING(id);
 			GK_CHECK(PyObject_HasAttr((PyObject*)PyVCFVariant::DefaultType, id) == 0, value,
 					 "ID {} clashes with VCFVariant attribute.", id_cstr);
@@ -367,7 +367,7 @@ void collect_ids(PyObject* ids, T collect_fn)
 			PyObject* id            = PyTuple_GetItem(item, 0);
 			PyObject* default_value = PyTuple_GetItem(item, 1);
 
-			GK_CHECK2(PyString_Check(id), type, "Each ID must be a 'str'.");
+			GK_CHECK(PyString_Check(id), type, "Each ID must be a 'str'.");
 			const char* id_cstr = PyString_AS_STRING(id);
 			GK_CHECK(PyObject_HasAttr((PyObject*)PyVCFVariant::DefaultType, id) == 0, value,
 					 "ID {} clashes with VCFVariant attribute.", id_cstr);
@@ -402,12 +402,12 @@ void collect_ids(PyObject* ids, T collect_fn)
 				auto default_float = get_numpy_scalar<float>(default_value);
 				collect_fn(id_cstr, vt::float32, &default_float);
 			} else {
-				GK_THROW2(type, "Default field values must be one of [int, long, float, numpy.int8, "
+				GK_THROW(type, "Default field values must be one of [int, long, float, numpy.int8, "
 							   "numpy.int16, numpy.int32, numpy.float16, numpy.float32].");
 			}
 		}
 	} else {
-		GK_THROW2(type, "IDs must be a 'list' or 'dict'.");
+		GK_THROW(type, "IDs must be a 'list' or 'dict'.");
 	}
 }
 
@@ -439,11 +439,11 @@ static PyObject* PyVCFTable_build_vcfbin(PyObject* cls, PyObject* args, PyObject
 	if (PyObject* fileno = PyObject_CallMethod(pyinfile, "fileno", nullptr); fileno) {
 		// Add reads from standard input
 		GKPY_TAKEREF(fileno);
-		GK_CHECK2(PyInt_AsLong(fileno) == 0, value, "When infile is a file, expected sys.stdin (i.e. fileno() == 0)");
+		GK_CHECK(PyInt_AsLong(fileno) == 0, value, "When infile is a file, expected sys.stdin (i.e. fileno() == 0)");
 		infile = stdin_path;
 	} else {
 		PyErr_Clear();
-		GK_CHECK2(PyString_Check(pyinfile), type, "Expected infile to be a str or sys.stdin");
+		GK_CHECK(PyString_Check(pyinfile), type, "Expected infile to be a str or sys.stdin");
 		infile = PyString_AS_STRING(pyinfile);
 	}
 
@@ -452,18 +452,18 @@ static PyObject* PyVCFTable_build_vcfbin(PyObject* cls, PyObject* args, PyObject
 	try {
 		collect_ids(info_ids, [&](auto id, auto dtype, auto value) { builder.collect_info(id, dtype, value); });
 	}
-	GK_RETHROW2("INFO field");
+	GK_RETHROW("INFO field");
 	try {
 		collect_ids(fmt_ids, [&](auto id, auto dtype, auto value) { builder.collect_fmt(id, dtype, value); });
 	}
-	GK_RETHROW2("FORMAT field");
+	GK_RETHROW("FORMAT field");
 
 	if (exclude && exclude != Py_None) {
 		GK_DBASSERT(PyList_Check(exclude), "Expected exclude to be a list of intervals.");
 		// Add excluded intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(exclude); ++i) {
 			PyObject* interval = PyList_GET_ITEM(exclude, i); // borrowed reference
-			GK_CHECK2(PyInterval::check(interval), type, "Each exclude item must be an Interval");
+			GK_CHECK(PyInterval::check(interval), type, "Each exclude item must be an Interval");
 			builder.get_interval_filter().exclude(PyInterval::value(interval));
 		}
 	}
@@ -473,7 +473,7 @@ static PyObject* PyVCFTable_build_vcfbin(PyObject* cls, PyObject* args, PyObject
 		// Add allowed intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(allow); ++i) {
 			PyObject* interval = PyList_GET_ITEM(allow, i); // borrowed reference
-			GK_CHECK2(PyInterval::check(interval), type, "Each allow item must be an Interval");
+			GK_CHECK(PyInterval::check(interval), type, "Each allow item must be an Interval");
 			builder.get_interval_filter().allow(PyInterval::value(interval));
 		}
 	}
@@ -483,7 +483,7 @@ static PyObject* PyVCFTable_build_vcfbin(PyObject* cls, PyObject* args, PyObject
 		const auto start                = cbegin(actions);
 		const auto stop                 = cend(actions);
 		const auto found                = find(start, stop, ancestral);
-		GK_CHECK2(found != stop, value, "ancestral must be in [\"error\", \"warn\", \"exclude\"]");
+		GK_CHECK(found != stop, value, "ancestral must be in [\"error\", \"warn\", \"exclude\"]");
 		builder.ancestral(vcf_table::builder::action_t(distance(start, found)));
 	}
 
@@ -508,7 +508,7 @@ GKPY_OMETHOD_BEGIN(VCFTable, info)
 
 	const vcf_table::field_col_t* col = self->table->info_fields().get(id);
 	GK_CHECK(col != nullptr, key, "Unrecognized INFO ID \"{}\"", id);
-	GK_CHECK2(col->dtype != vt::str, type, "String INFO columns must be retrieved by VCFVariant attribute.");
+	GK_CHECK(col->dtype != vt::str, type, "String INFO columns must be retrieved by VCFVariant attribute.");
 
 	// depth of 1 implies 1D, depth of > 1 implies 2D
 	PyObject* shape = PyTuple_New(max(1, col->depth));
@@ -687,7 +687,7 @@ PyObject* PyVCFTable::get_col_attr(const packed_variant* variant, const char* id
 		}
 	}
 
-	GK_CHECK2(col->depth == 1, value,
+	GK_CHECK(col->depth == 1, value,
 			 "VCF INFO/FORMAT attributes only supports scalar values (Number=1). Use VCFTable.info or VCFTable.format "
 			 "for multidimensional access.");
 	auto index = scast<size_t>(variant - &(*table)[0]);
@@ -699,7 +699,7 @@ PyObject* PyVCFTable::get_col_attr(const packed_variant* variant, const char* id
 	case vt::float16: return PyFloat_FromDouble(as_float(rcast<const half_t*>(col->data)[index]));
 	case vt::float32: return PyFloat_FromDouble(rcast<const float*>(col->data)[index]);
 	case vt::str: return get_col_attr_str(index, col);
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 	return nullptr;
 }
@@ -738,7 +738,7 @@ PyObject* PyVCFTable::get_col_attr_str(size_t index, const vcf_table::field_col_
 		case 2: pool_index = rcast<const uint16_t*>(pool_indices)[index]; break;
 		case 4: pool_index = rcast<const uint32_t*>(pool_indices)[index]; break;
 		case 8: pool_index = rcast<const uint64_t*>(pool_indices)[index]; break;
-		default: GK_UNREACHABLE2();
+		default: GK_UNREACHABLE();
 		}
 
 		// Fetch the string from the PyString pool, creating a new instance if required.
@@ -769,7 +769,7 @@ PyObject* PyVCFTable::get_col_attr_str(size_t index, const vcf_table::field_col_
 
 void validate_VariantTable(const PyAsPtrSource* self)
 {
-	GK_CHECK2(((const PyVariantTable*)self)->table->valid(), file,
+	GK_CHECK(((const PyVariantTable*)self)->table->valid(), file,
 			 "Variants have been invalidated by close or with statement on the VariantTable source.");
 }
 

@@ -66,9 +66,9 @@ PyObject* PyTable_where(PyObject* self, PyObject* arg)
 	GKPY_TYPECHECK(arg, &PyArray_Type);
 	auto* mask = (PyArrayObject*)arg;
 	typename PyTable<T>::table_type& table = PyTable<T>::value(self);
-	GK_CHECK2(PyArray_NDIM(mask) == 1 || (PyArray_NDIM(mask) == 2 && PyArray_DIMS(mask)[1] == 1), value, "Expected 1-dimensional mask");
-	GK_CHECK2(PyArray_DIMS(mask)[0] == (npy_intp)table.size(), value, "Expected mask of length {}", table.size());
-	GK_CHECK2(PyArray_ISBOOL(mask), value, "Expected boolean mask");
+	GK_CHECK(PyArray_NDIM(mask) == 1 || (PyArray_NDIM(mask) == 2 && PyArray_DIMS(mask)[1] == 1), value, "Expected 1-dimensional mask");
+	GK_CHECK(PyArray_DIMS(mask)[0] == (npy_intp)table.size(), value, "Expected mask of length {}", table.size());
+	GK_CHECK(PyArray_ISBOOL(mask), value, "Expected boolean mask");
 	const bool* mask_data = (const bool*)PyArray_DATA(mask);
 
 	// First pass to collect nonzeros

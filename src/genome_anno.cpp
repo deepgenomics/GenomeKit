@@ -187,7 +187,7 @@ bool genome_anno::empty() const noexcept { return std::empty(source()); }
 
 void genome_anno::set_source(string sourcefile)
 {
-	GK_CHECK2(!is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK(!is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 

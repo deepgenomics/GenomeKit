@@ -403,7 +403,7 @@ struct offset40_t {
 	{
 		lo = (uint32_t)offset;
 		hi = (uint8_t)(offset >> 32);
-		GK_CHECK2((offset >> 32) <= 255, value, "Overflow when truncating offset to 40 bits");
+		GK_CHECK((offset >> 32) <= 255, value, "Overflow when truncating offset to 40 bits");
 		return *this;
 	}
 

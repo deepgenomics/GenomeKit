@@ -623,7 +623,7 @@ private:
 		template <typename decoder, int dir>
 		static decode_fn specialized_decode_m0_fn_dir(int dim, layout_t layout)
 		{
-			GK_CHECK2(dim == 1, value, "Masks can only be 1 dimensional");
+			GK_CHECK(dim == 1, value, "Masks can only be 1 dimensional");
 			return layout == layout_t::contiguous ? (decode_fn)decode_m0<decoder, dir, layout_t::contiguous>
 										          : (decode_fn)decode_m0<decoder, dir, layout_t::noncontiguous>;
 		}
@@ -895,7 +895,7 @@ private:
 
 	#define GK_ENCODER_APPLY_RANGED(x, lo, hi) \
 			dst_t y = (dst_t)x; \
-			GK_CHECK2((in_range(x, lo, hi) && src_t(y) == x), value, "Value {} can't be encoded, must be integral value in range [{},{}]", x, lo, hi); \
+			GK_CHECK((in_range(x, lo, hi) && src_t(y) == x), value, "Value {} can't be encoded, must be integral value in range [{},{}]", x, lo, hi); \
 			return y
 
 	#define GK_ENCODER_APPLY \

@@ -17,7 +17,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include <variant>
 
 #define GK_CHECK_NODATA(funcname) \
-	GK_CHECK2(index_size() == 0, runtime, "Cannot call " #funcname " after data has been added");
+	GK_CHECK(index_size() == 0, runtime, "Cannot call " #funcname " after data has been added");
 
 BEGIN_NAMESPACE_GK
 
@@ -245,8 +245,8 @@ NOTE ON MASKS:
 
 void genome_track::open()
 {
-	GK_CHECK2(!_fmap.is_open(), runtime, "genome_track::open() already opened");
-	GK_CHECK2(!_sourcefile.empty(), value, "genome_track::open() failed; no source file specified");
+	GK_CHECK(!_fmap.is_open(), runtime, "genome_track::open() already opened");
+	GK_CHECK(!_sourcefile.empty(), value, "genome_track::open() failed; no source file specified");
 
 	// Memory map the source file
 	_fmap.open(_sourcefile);
@@ -328,7 +328,7 @@ void genome_track::encoding::init(etype_t etype, int dim, int res, any_t default
 	case f8:    ((f8_encoding*)this)->init(dim, res); break;
 	case f16:   ((f16_encoding*)this)->init(dim, res); break;
 	case f32:   ((f32_encoding*)this)->init(dim, res); break;
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 }
 
@@ -348,7 +348,7 @@ genome_track::builder::builder(string outfile, etype_t etype, strandedness_t str
 	, _chrom_names{genome.chrom_names()}
 	, _refg_name{genome.refg_name()}
 {
-	GK_CHECK2(dim >= 1, value, "Must have dim >= 1");
+	GK_CHECK(dim >= 1, value, "Must have dim >= 1");
 
 	// Initialize header. Will be written to disk at the end of finalize().
 	_h.sig = c_gtrack_sig;
@@ -370,9 +370,9 @@ genome_track::builder::builder(string outfile, etype_t etype, strandedness_t str
 void genome_track::builder::set_sparsity(int min_run, float min_delta)
 {
 	GK_CHECK_NODATA("set_sparsity");
-	GK_CHECK2(min_run > 0, value, "min_run must be > 0");
-	GK_CHECK2(min_delta >= 0, value, "min_delta must be >= 0");
-	GK_CHECK2(_h.etype != m0, value, "Cannot set sparsity on m0 track");
+	GK_CHECK(min_run > 0, value, "min_run must be > 0");
+	GK_CHECK(min_delta >= 0, value, "min_delta must be >= 0");
+	GK_CHECK(_h.etype != m0, value, "Cannot set sparsity on m0 track");
 	_sparsity_min_run = min_run;
 	_sparsity_min_delta = any_t(min_delta);
 }
@@ -404,9 +404,9 @@ void transform_track_data(T* data, int size, int dim, float scale, float bias)
 		data[i] = as_float(data[i])*scale + bias;
 }
 
-template <> void transform_track_data(bool*    data, int size, int dim, float scale, float bias) { GK_THROW2(type, "Cannot transform data of dtype bool"); }
-template <> void transform_track_data(uint8_t* data, int size, int dim, float scale, float bias) { GK_THROW2(type, "Cannot transform data of dtype uint8"); }
-template <> void transform_track_data(int8_t*  data, int size, int dim, float scale, float bias) { GK_THROW2(type, "Cannot transform data of dtype int8"); }
+template <> void transform_track_data(bool*    data, int size, int dim, float scale, float bias) { GK_THROW(type, "Cannot transform data of dtype bool"); }
+template <> void transform_track_data(uint8_t* data, int size, int dim, float scale, float bias) { GK_THROW(type, "Cannot transform data of dtype uint8"); }
+template <> void transform_track_data(int8_t*  data, int size, int dim, float scale, float bias) { GK_THROW(type, "Cannot transform data of dtype int8"); }
 
 
 inline float clamp_single(float val, float min, float max) {
@@ -421,9 +421,9 @@ template <> void clamp_track_data(float* data, int size, int dim, float min, flo
 	}
 }
 
-template <> void clamp_track_data(bool*    data, int size, int dim, float min, float max) { GK_THROW2(type, "Cannot clamp data of dtype bool"); }
-template <> void clamp_track_data(uint8_t* data, int size, int dim, float min, float max) { GK_THROW2(type, "Cannot clamp data of dtype uint8"); }
-template <> void clamp_track_data(int8_t*  data, int size, int dim, float min, float max) { GK_THROW2(type, "Cannot clamp data of dtype int8"); }
+template <> void clamp_track_data(bool*    data, int size, int dim, float min, float max) { GK_THROW(type, "Cannot clamp data of dtype bool"); }
+template <> void clamp_track_data(uint8_t* data, int size, int dim, float min, float max) { GK_THROW(type, "Cannot clamp data of dtype uint8"); }
+template <> void clamp_track_data(int8_t*  data, int size, int dim, float min, float max) { GK_THROW(type, "Cannot clamp data of dtype int8"); }
 
 void update_min_max_case(bool x, any_t& min_value, any_t& max_value)
 {
@@ -532,7 +532,7 @@ void genome_track::builder::set_data(const interval_t& interval, const void*    
 	case int8:    set_data(interval, rcast<const int8_t* >(data)); break;
 	case float16: set_data(interval, rcast<const half_t* >(data)); break;
 	case float32: set_data(interval, rcast<const float*  >(data)); break;
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 }
 
@@ -563,9 +563,9 @@ template <typename T>
 void genome_track::builder::set_data_impl(const interval_t& interval, const T* data)
 {
 	// Sanity checks
-	GK_CHECK2(_h.refg == interval.refg, value, "Mismatched reference genome");
-	GK_CHECK2(_h.stranded || interval.is_pos_strand(), value, "Cannot specify interval on negative strand for an unstranded track");
-	GK_CHECK2(!finalized(), runtime, "Cannot set data after calling finalize");
+	GK_CHECK(_h.refg == interval.refg, value, "Mismatched reference genome");
+	GK_CHECK(_h.stranded || interval.is_pos_strand(), value, "Cannot specify interval on negative strand for an unstranded track");
+	GK_CHECK(!finalized(), runtime, "Cannot set data after calling finalize");
 
 	// Figure out if we're going to need to reverse or sparsify the data before final encoding.
 	bool sparsify = _sparsity_min_run && _sparsity_min_delta.f > 0;
@@ -599,7 +599,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 		//    0123456789   <-- genome positions
 		//      BBCCDD     <-- restricted data
 		//
-		GK_CHECK2(_restriction->refg == _h.refg, value, "Reference genome of restriction interval does not match track.");
+		GK_CHECK(_restriction->refg == _h.refg, value, "Reference genome of restriction interval does not match track.");
 
 		// Convert restriction interval to coarse coordinates.
 		span_t rspan(_restriction->start() / _h.res, _restriction->end() / _h.res);
@@ -630,7 +630,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 	// Find the location to insert the new interval, and make sure
 	// it doesn't overlap an existing interval.
 	track_info_t& ti = _tracks[{interval.chrom, interval.strand}];
-	GK_CHECK2(!ti.flushed(), value, "Cannot set data on a chromosome ({}) that was already flushed to disk",
+	GK_CHECK(!ti.flushed(), value, "Cannot set data on a chromosome ({}) that was already flushed to disk",
 			 chrom_names().chrom_as_sv(interval.chrom));
 	track_info_t::adder adder{&ti};
 	try {
@@ -640,7 +640,7 @@ void genome_track::builder::set_data_impl(const interval_t& interval, const T* d
 
 	// Special case when there's no actual data to encode.
 	if (_encoding.etype == m0) {
-		GK_CHECK2(!data, value, "Data for etype 'm0' must be NULL");
+		GK_CHECK(!data, value, "Data for etype 'm0' must be NULL");
 		add_track_entry(adder, span, nullptr);
 		return;
 	}
@@ -800,7 +800,7 @@ void genome_track::builder::flush(std::optional<chrom_t> chrom, strand_t strand)
 	if (!chrom)
 		return;
 
-	GK_CHECK2(!finalized(), runtime, "Cannot flush after calling finalize");
+	GK_CHECK(!finalized(), runtime, "Cannot flush after calling finalize");
 	auto& track_info = _tracks[{*chrom, strand}];
 	if (track_info.flushed())
 		return;  // avoid truncating any existing flushed files
@@ -814,9 +814,9 @@ void genome_track::builder::track_info_t::adder::validate(span_t span)
 {
 	auto hint = _ti->_blocks.lower_bound(span);  // it = first interval equivalent-to or later-than 'span'
 	if (hint != std::begin(_ti->_blocks))
-		GK_CHECK2(std::prev(hint)->first.b <= span.a, value, "Overlapping blocks are not allowed");
+		GK_CHECK(std::prev(hint)->first.b <= span.a, value, "Overlapping blocks are not allowed");
 	if (hint != std::end(_ti->_blocks))
-		GK_CHECK2(hint->first.a >= span.b, value, "Overlapping blocks are not allowed");
+		GK_CHECK(hint->first.a >= span.b, value, "Overlapping blocks are not allowed");
 	_inserter = std::inserter(_ti->_blocks, hint);
 }
 void genome_track::builder::track_info_t::adder::add(span_t span, std::unique_ptr<uint8_t[]>&& data,
@@ -824,7 +824,7 @@ void genome_track::builder::track_info_t::adder::add(span_t span, std::unique_pt
 {
 	const auto outplace_mask = [&]<class T>() { return _ti->can_inplace<T>(encoded_sizes) ? 0 : 1; };
 	const auto outplace64    = outplace_mask.template operator()<uint64_t>() * encoded_sizes.bytes;
-	GK_CHECK2(_ti->_max_offset64 + outplace64 < high_bit<uint64_t>(), runtime,
+	GK_CHECK(_ti->_max_offset64 + outplace64 < high_bit<uint64_t>(), runtime,
 			 "Track size exceeds maximum supported (2^63-1): {}",
 			 _ti->_max_offset64 + outplace64);
 
@@ -973,7 +973,7 @@ void genome_track::builder::track_info_t::flush(binary_file& out_file, EncodedSi
 
 void genome_track::builder::wig_bedgraph_config(const char* pos_infile, const char* neg_infile, const char* filetype)
 {
-	GK_CHECK2(!finalized(), runtime, "Cannot set data after calling finalize");
+	GK_CHECK(!finalized(), runtime, "Cannot set data after calling finalize");
 	GK_CHECK(index_size() == 0, runtime, "Cannot call set_data_from_{} after data has already been added to the track",
 			 filetype);
 	GK_CHECK(_strandedness != strandedness_t::strand_aware,
@@ -998,7 +998,7 @@ void genome_track::builder::set_data_from_bedgraph(const string& pos_infile, con
 void genome_track::builder::set_data_from_bedgraph(const char* pos_infile, const char* neg_infile)
 {
 	wig_bedgraph_config(pos_infile, neg_infile, "bedgraph");
-	GK_CHECK2(_h.dim == 1, value, "Calling set_data_from_bedgraph requires dim=1");
+	GK_CHECK(_h.dim == 1, value, "Calling set_data_from_bedgraph requires dim=1");
 	set_data_from_bedgraph(pos_infile, pos_strand);
 	if (neg_infile)
 		set_data_from_bedgraph(neg_infile, neg_strand);
@@ -1060,10 +1060,10 @@ struct contig_parser { NOCOPY(contig_parser)
 
 		// Sanity checks
 		GK_CHECK(start >= 0, value, "Start {} must be non-negative", start);
-		GK_CHECK2(start % bld.res() == 0, value, "Start {} must be divisible by resolution={}", start, bld.res());
+		GK_CHECK(start % bld.res() == 0, value, "Start {} must be divisible by resolution={}", start, bld.res());
 		if (is_fixed) {
 			int step = as_int(get_attr(attrs, "step", "1"));
-			GK_CHECK2(span == step, value, "Expected 'span' to match 'step'");
+			GK_CHECK(span == step, value, "Expected 'span' to match 'step'");
 		}
 
 		// Take note of whether the span matches our track resolution;
@@ -1114,7 +1114,7 @@ struct contig_parser { NOCOPY(contig_parser)
 		// we may be at the end of a chromosome, for which the last data row is allowed to have
 		// irregular span.)
 		if (num_datum > 1)
-			GK_CHECK2(!is_irregular_span, value, "Expected span={} but found span={}", bld.res(), span);
+			GK_CHECK(!is_irregular_span, value, "Expected span={} but found span={}", bld.res(), span);
 	}
 
 	template <class F>
@@ -1187,7 +1187,7 @@ struct contig_parser { NOCOPY(contig_parser)
 				value = T(clamp_float(d));
 			} else {
 				// Use 'name' column value to find index of category
-				GK_CHECK2(num_cols >= 4, value, "Expected at least 4 columns in BED file when categories specified");
+				GK_CHECK(num_cols >= 4, value, "Expected at least 4 columns in BED file when categories specified");
 				category.assign(cols[3]);
 				auto i = find(categories.begin(), categories.end(), category);
 				GK_CHECK(i != categories.end(), value, "Unrecognized name \"{}\"", category);
@@ -1198,9 +1198,9 @@ struct contig_parser { NOCOPY(contig_parser)
 			// strand (if any)
 			strand_t s;
 			switch ((num_cols >= 6) && !empty(cols[5]) ? cols[5][0] : '.') {
-			case '.': s = pos_strand; GK_CHECK2(!bld.stranded(), value, "Expected '+' or '-' for stranded track"); break;
-			case '+': s = pos_strand; GK_CHECK2(bld.stranded(), value, "Expected '.' for unstranded track"); break;
-			case '-': s = neg_strand; GK_CHECK2(bld.stranded(), value, "Expected '.' for unstranded track"); break;
+			case '.': s = pos_strand; GK_CHECK(!bld.stranded(), value, "Expected '+' or '-' for stranded track"); break;
+			case '+': s = pos_strand; GK_CHECK(bld.stranded(), value, "Expected '.' for unstranded track"); break;
+			case '-': s = neg_strand; GK_CHECK(bld.stranded(), value, "Expected '.' for unstranded track"); break;
 			default: GK_THROW(value, "Unrecognized strand value '{}'", cols[5]);
 			}
 
@@ -1226,7 +1226,7 @@ struct contig_parser { NOCOPY(contig_parser)
 	{
 		auto& bld = *bld_ptr;
 
-		GK_CHECK2(data.size() % (size_t)bld.dim() == 0, value, "Expected number of values in block to be divisible by dim={}", bld.dim());
+		GK_CHECK(data.size() % (size_t)bld.dim() == 0, value, "Expected number of values in block to be divisible by dim={}", bld.dim());
 		return start + (pos_t)data.size() / bld.dim() * bld.res();
 	}
 
@@ -1235,7 +1235,7 @@ struct contig_parser { NOCOPY(contig_parser)
 		auto& bld = *bld_ptr;
 
 		// Get starting position for this data element.
-		GK_CHECK2(pos % bld.res() == 0, value, "Position {} must be divisible by resolution={}", pos, bld.res());
+		GK_CHECK(pos % bld.res() == 0, value, "Position {} must be divisible by resolution={}", pos, bld.res());
 
 		// Get the number of (possibly coarsened) genomic coordinates that preceed this data element.
 		size_t size = (size_t)bld.dim() * (pos - start) / bld.res();
@@ -1310,8 +1310,8 @@ struct contig_parser { NOCOPY(contig_parser)
 		}
 
 		// Sanity checks
-		GK_CHECK2(is_fixed == dst.is_fixed, value, "Cannot mix fixedStep and variableStep in single WIG file");
-		GK_CHECK2(!dst.is_irregular_span, value, "Only the last block on a chromosome may have irregular span");
+		GK_CHECK(is_fixed == dst.is_fixed, value, "Cannot mix fixedStep and variableStep in single WIG file");
+		GK_CHECK(!dst.is_irregular_span, value, "Only the last block on a chromosome may have irregular span");
 
 		// Extend the `dst` data block, rather than starting a new interval. Reset our own state to empty.
 		dst.fill_data_until(start);
@@ -1351,7 +1351,7 @@ void genome_track::builder::_set_data_from_wig(const char* infile, strand_t stra
 			}
 		}
 	}
-	GK_RETHROW2("In WIG file: {}:{}", infile, lr.line_num());
+	GK_RETHROW("In WIG file: {}:{}", infile, lr.line_num());
 	curr.set_data();
 	flush(curr.chrom, curr.strand);
 }
@@ -1385,7 +1385,7 @@ void genome_track::builder::_set_data_from_bedgraph(const char* infile, strand_t
 			}
 		}
 	}
-	GK_RETHROW2("In BedGraph file: {}:{}", infile, lr.line_num());
+	GK_RETHROW("In BedGraph file: {}:{}", infile, lr.line_num());
 	curr.set_data();
 	flush(curr.chrom, curr.strand);
 }
@@ -1403,15 +1403,15 @@ void genome_track::builder::set_data_from_bed(const string& infile, const vector
 template <typename T>
 void genome_track::builder::_set_data_from_bed(const string& infile, const vector<string>& categories)
 {
-	GK_CHECK2(!finalized(), runtime, "Cannot set data after calling finalize");
-	GK_CHECK2(_h.dim == 1, value, "Calling set_data_from_bed requires dim=1");
-	GK_CHECK2(index_size() == 0, runtime,
+	GK_CHECK(!finalized(), runtime, "Cannot set data after calling finalize");
+	GK_CHECK(_h.dim == 1, value, "Calling set_data_from_bed requires dim=1");
+	GK_CHECK(index_size() == 0, runtime,
 			 "Cannot call set_data_from_bed after data has already been added to the track");
 
 	int num_categories = (int)categories.size();
 	if (num_categories) {
-		GK_CHECK2(_h.etype >= u1 && _h.etype <= u8, value, "Calling set_data_from_bed with categories requires etypes u1..8");
-		GK_CHECK2(num_categories <= (1 << (size_t)_encoding.bits_per_encoded_datum), value, "Too many categories ({}) for encoding type", num_categories);
+		GK_CHECK(_h.etype >= u1 && _h.etype <= u8, value, "Calling set_data_from_bed with categories requires etypes u1..8");
+		GK_CHECK(num_categories <= (1 << (size_t)_encoding.bits_per_encoded_datum), value, "Too many categories ({}) for encoding type", num_categories);
 	}
 
 	if (!getenv("GENOMEKIT_QUIET"))
@@ -1438,7 +1438,7 @@ void genome_track::builder::_set_data_from_bed(const string& infile, const vecto
 				}
 			}
 		}
-		GK_RETHROW2("In BED file: {}:{}", infile, lr.line_num());
+		GK_RETHROW("In BED file: {}:{}", infile, lr.line_num());
 		curr.set_data();
 		flush(curr.chrom, curr.strand);
 		curr.reset();
@@ -1450,7 +1450,7 @@ void genome_track::builder::finalize()
 	constexpr auto app    = std::ios::app;
 	constexpr auto binary = std::ios::binary;
 
-	GK_CHECK2(!finalized(), runtime, "Cannot finalize: already called finalize before.");
+	GK_CHECK(!finalized(), runtime, "Cannot finalize: already called finalize before.");
 
 	_h.num_tracks = size(_tracks);
 	// Copy the encoding dict into the header
@@ -1491,12 +1491,12 @@ void genome_track::builder::finalize()
 		GK_DBASSERT(ti.data_size() + ti.index_size(encoded_data) == std::filesystem::file_size(track_segment_filename));
 
 		appended << std::ifstream{track_segment_filename, binary}.rdbuf();
-		GK_CHECK2(appended, runtime, "Error merging track data.");
+		GK_CHECK(appended, runtime, "Error merging track data.");
 		appended.flush();
 		std::filesystem::remove(track_segment_filename);
 		_finalized = true;  // remove is destructive so can't repeat afterwards
 	}
-	GK_CHECK2(appended, runtime, "Error merging track data.");
+	GK_CHECK(appended, runtime, "Error merging track data.");
 	GK_DBASSERT(curr_offset == appended.tellp() || curr_offset == file.tell());
 	file.close();
 }

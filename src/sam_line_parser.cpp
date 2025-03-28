@@ -141,7 +141,7 @@ void sam_line_parser::process_file(line_reader& lr)
 		// [9] SEQ
 		// [10] QUAL
 		// [11] Optional fields
-		GK_CHECK2(split_view(line, '\t', cols, num_cols) >= num_cols - 1, value,
+		GK_CHECK(split_view(line, '\t', cols, num_cols) >= num_cols - 1, value,
 				 "Expected at least {} tab-separated columns", num_cols - 1);
 
 		// Check SAM flags
@@ -163,7 +163,7 @@ void sam_line_parser::process_file(line_reader& lr)
 		int m      = 0; // number of cigar string components (exclude `N`s)
 		int n      = 0; // number of splits (Ns) in cigar string
 		auto cigar = cols[5];
-		GK_CHECK2(!empty(cigar), value, "Empty CIGAR string");
+		GK_CHECK(!empty(cigar), value, "Empty CIGAR string");
 
 		bool allow_indels = cols[9] != "=";
 
@@ -203,7 +203,7 @@ bool sam_line_parser::infer_strand(strand_t& out, strand_t segment_strand, unsig
 	constexpr unsigned first_segment    = 0x40;
 	constexpr unsigned last_segment     = 0x80;
 	constexpr unsigned terminal_segment = 0xC0;
-	GK_CHECK2((flags & multi_segment) == multi_segment
+	GK_CHECK((flags & multi_segment) == multi_segment
 				 && ((flags & terminal_segment) == first_segment || (flags & terminal_segment) == last_segment),
 			 value, "Library format specified paired-end, but single end read encountered");
 
@@ -226,7 +226,7 @@ strand_t sam_line_parser::infer_strand(strand_t strand, bool strand_set, chrom_t
 	if (_introns == nullptr) {
 		return strand;
 	}
-	GK_CHECK2(n > 0, value, "Annotation strand inference requires junctions. No N CIGAR op found.");
+	GK_CHECK(n > 0, value, "Annotation strand inference requires junctions. No N CIGAR op found.");
 
 	for (int i_code = 0, i_n = 0; i_code < m && i_n < n; ++i_code) {
 		auto [length, op] = codes[i_code];
@@ -236,7 +236,7 @@ strand_t sam_line_parser::infer_strand(strand_t strand, bool strand_set, chrom_t
 			if (begin(overlapping) != end(overlapping)) {
 				strand_set = true;
 			} else {
-				GK_CHECK2(_first_read_direction == direction::unknown, value,
+				GK_CHECK(_first_read_direction == direction::unknown, value,
 						 "Annotation strand inference: cannot validate library format");
 			}
 			if (_first_read_direction == direction::unknown || !strand_set) {
@@ -247,12 +247,12 @@ strand_t sam_line_parser::infer_strand(strand_t strand, bool strand_set, chrom_t
 						strand = interval.strand;
 						strand_set = true;
 					} else {
-						GK_CHECK2(_first_read_direction != direction::unknown, value,
+						GK_CHECK(_first_read_direction != direction::unknown, value,
 								 "Annotation strand inference: intron can ambiguously align to both strands");
 					}
 				}
 			}
-			GK_CHECK2(strand_set, value, "Annotation strand inference: cannot align read to an intron");
+			GK_CHECK(strand_set, value, "Annotation strand inference: cannot align read to an intron");
 			++i_n;
 		}
 		if (op == 'M' || op == 'D' || op == 'N') {

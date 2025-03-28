@@ -52,7 +52,7 @@ void Init_Interval_PyStrings();
 INLINE interval_t PyAsInterval(PyObject* arg)
 {
 	if (PyInterval::check(arg)) return PyInterval::value(arg);
-	else GK_THROW2(type, "Expected argument of type Interval");
+	else GK_THROW(type, "Expected argument of type Interval");
 }
 
 INLINE ainterval_t PyAsAnchoredInterval(PyObject* arg)
@@ -63,7 +63,7 @@ INLINE ainterval_t PyAsAnchoredInterval(PyObject* arg)
 		ret.anchor_offset = ((PyInterval*)arg)->get_anchor_offset();
 		return ret;
 	} else
-		GK_THROW2(type, "Expected argument of type Interval");
+		GK_THROW(type, "Expected argument of type Interval");
 }
 
 // Helper methods

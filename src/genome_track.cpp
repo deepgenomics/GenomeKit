@@ -89,7 +89,7 @@ void genome_track::set_source(string sourcefile)
 {
 	// Try not to put anything here that would throw in a newly constructed object.
 	// We want genome_t constructor to not throw, even if it's initialized outside
-	GK_CHECK2(!_fmap.is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK(!_fmap.is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 
@@ -118,12 +118,12 @@ void genome_track::operator()(const interval_t& c, float*   dst, int stride) con
 void genome_track::operator()(const interval_t& c, void*    dst, dtype_t dtype, int stride) const
 {
 	ensure_open();
-	GK_CHECK2(refg() == c.refg, value, "Reference genome mismatch");
+	GK_CHECK(refg() == c.refg, value, "Reference genome mismatch");
 
 	if (stride == 0)
 		stride = dim();
 	GK_CHECK(stride > 0, value, "Negative strides not supported: stride={}", stride);
-	GK_CHECK2(stride >= dim(), value, "Stride is too small: stride={}, dim={}", stride, dim());
+	GK_CHECK(stride >= dim(), value, "Stride is too small: stride={}, dim={}", stride, dim());
 	const int layout = as_ordinal(stride == dim() ? encoding::layout_t::contiguous : encoding::layout_t::noncontiguous);
 
 	// Get callbacks that are specialized to decode and default fill for this dtype and strand direction.
@@ -588,10 +588,10 @@ void generic_fdict_init(D* dst, const S* src, int size, int& nval)
 	//   All finite values must therefore appear in non-increasing order.
 	//
 	for (int i = 0; i < size; ++i) {
-		GK_CHECK2(!is_inf(src[i]), value, "Dictionary cannot contain inf");
-		GK_CHECK2(!is_nan(src[i]) || i == size-1, value, "Only final entry of dictionary can be nan");
+		GK_CHECK(!is_inf(src[i]), value, "Dictionary cannot contain inf");
+		GK_CHECK(!is_nan(src[i]) || i == size-1, value, "Only final entry of dictionary can be nan");
 		if (i > 0 && !is_nan(src[i]))
-			GK_CHECK2(src[i-1] <= src[i], value, "Dictionary must be in non-decreasing order of value");
+			GK_CHECK(src[i-1] <= src[i], value, "Dictionary must be in non-decreasing order of value");
 	}
 	for (int i = 0; i < size; ++i)
 		dst[i] = D(as_float(src[i]));
@@ -613,7 +613,7 @@ void genome_track::float_dict::init(const float*  dict, int size) { generic_fdic
 uint8_t genome_track::float_dict::encode(half_t x) const { return encode(as_float(x)); }
 uint8_t genome_track::float_dict::encode(float  x) const
 {
-	GK_CHECK2(nval > 0, runtime, "Dictionary uninitialized. (Forgot to call set_dict?)");
+	GK_CHECK(nval > 0, runtime, "Dictionary uninitialized. (Forgot to call set_dict?)");
 
 	// It's probably faster to do binary search on 32-bit float (hardware support)
 	// using f[...] than it is to do binary search on half-float (emulation) using hdict.
@@ -623,10 +623,10 @@ uint8_t genome_track::float_dict::encode(float  x) const
 	const float* last  = dict+nval;
 	if (is_nan(x)) {
 		bool has_nan = (nval & 1) != 0; // If nval is odd, last slot must be nan
-		GK_CHECK2(has_nan, value, "Cannot encode nan to a dict with no nan entry");
+		GK_CHECK(has_nan, value, "Cannot encode nan to a dict with no nan entry");
 		return nval;  // n is the index the the nan in this case
 	}
-	GK_CHECK2(!is_inf(x), value, "Can only encode finite values into a dict");
+	GK_CHECK(!is_inf(x), value, "Can only encode finite values into a dict");
 	GK_CHECK(x >= *first,    value, "Value {} was less than smallest dictionary value {} (wrong dict? use set_clamping?)", x, *first);
 	GK_CHECK(x <= *(last-1), value, "Value {} was larger than largest dictionary value {} (wrong dict? use set_clamping?)", x, *(last-1));
 

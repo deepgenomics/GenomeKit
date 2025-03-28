@@ -183,7 +183,7 @@ void vcf_table::field_col_t::load(mmap_file& in)
 		in.read_checkpoint(0x31231257);
 		break;
 	}
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 	in.read_until_align32();
 }
@@ -297,7 +297,7 @@ void vcf_table::builder::field_values::add_values(string_view values, vector<str
 			GK_ASSERT(depth.value_or(0) == 1);
 			data_i8.push_back('\0');
 			break;
-		default: GK_UNREACHABLE2();
+		default: GK_UNREACHABLE();
 		}
 		return;
 	}
@@ -327,7 +327,7 @@ void vcf_table::builder::field_values::add_values(string_view values, vector<str
 		  "arbitrary multiplicity ('Number=.' instead of 'Number=R'), then 'bcftools norm' will fail to split "
 		  "the values correctly. If that happens, try correcting the upstream VCF header and normalizing again."
 		  "See VCF 4.2 Specification sections 1.4.2 and 1.6.2.";
-	GK_CHECK2(*depth == num_values, value, "Expected {} values, found {}, for ID \"{}\". {}", *depth,
+	GK_CHECK(*depth == num_values, value, "Expected {} values, found {}, for ID \"{}\". {}", *depth,
 			 num_values, id, num_values < *depth ? "" : warn_too_many);
 
 	switch (*dtype) {
@@ -336,7 +336,7 @@ void vcf_table::builder::field_values::add_values(string_view values, vector<str
 	case int32: vcf_value_decode(data_i32, split_buf, default_int); break;
 	case float16: vcf_value_decode(data_f16, split_buf, default_float); break;
 	case float32: vcf_value_decode(data_f32, split_buf, default_float); break;
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 }
 void vcf_table::builder::field_values::dump(binary_file& out)
@@ -355,7 +355,7 @@ void vcf_table::builder::field_values::dump(binary_file& out)
 	case int32: out.write_array(data_i32); break;
 	case float16: out.write_array(data_f16); break;
 	case float32: out.write_array(data_f32); break;
-	default: GK_UNREACHABLE2();
+	default: GK_UNREACHABLE();
 	}
 	out.write_until_align(4);
 }
@@ -526,7 +526,7 @@ void vcf_table::builder::collect_info(const char* id, optional<dtype_t> dtype, c
 			if (*dtype == int32) {
 				val = *(const int*)default_value;
 			}
-			GK_CHECK2(
+			GK_CHECK(
 				*dtype == int32 && 0 <= val && val < (int)svtype_t::count, value,
 				"INFO ID SVTYPE must be one of SVTYPE_NA, SVTYPE_DEL, SVTYPE_INS, SVTYPE_DUP, SVTYPE_INV, SVTYPE_CNV, "
 				"or SVTYPE_BND.");
@@ -553,7 +553,7 @@ void vcf_table::builder::collect_fmt(const char* id, optional<dtype_t> dtype, co
 			if (*dtype == int8) {
 				val = *(const int*)default_value;
 			}
-			GK_CHECK2(*dtype == int8 && (val == (int)gt_unknown || val == (int)gt_heterozygous_unphased), value,
+			GK_CHECK(*dtype == int8 && (val == (int)gt_unknown || val == (int)gt_heterozygous_unphased), value,
 					 "FORMAT ID GT default value must be one of GT_UNKNOWN or GT_HETEROZYGOUS_UNPHASED.");
 		}
 		optional<int> depth;
@@ -593,7 +593,7 @@ void vcf_table::builder::collect_field(field_values_t& fields, const char* id, o
 	case int32: fields.push_back({ id, dtype, nullopt, *(const int*)default_value }); return;
 	case float16:
 	case float32: fields.push_back({ id, dtype, nullopt, 0, *(const float*)default_value }); return;
-	default: GK_THROW2(value, "user default values are supported only for integer or floating point types.");
+	default: GK_THROW(value, "user default values are supported only for integer or floating point types.");
 	}
 }
 
@@ -629,7 +629,7 @@ void vcf_table::builder::parse_vcf_metainfo_line(string_view line)
 	};
 
 	// OK to include trailing '>' since we don't use the Description key
-	GK_CHECK2(split_view(line, ',', keys, keys_count) >= keys_count, value, "Expected at least {} keys.",
+	GK_CHECK(split_view(line, ',', keys, keys_count) >= keys_count, value, "Expected at least {} keys.",
 			 as_ordinal(keys_count));
 
 	auto value = get_value(keys[keys_id], "ID");
@@ -719,12 +719,12 @@ void vcf_table::builder::parse_vcf_header_line(string_view line)
 {
 	if (_fmt_values.empty()) {
 		auto num_cols = count(cbegin(line), cend(line), '\t') + 1;
-		GK_CHECK2(num_cols >= 8, value, "Expected at least 8 tab-separated columns.");
+		GK_CHECK(num_cols >= 8, value, "Expected at least 8 tab-separated columns.");
 		return;
 	}
 
 	split_view(line, '\t', _field_ids_buf);
-	GK_CHECK2(_field_ids_buf.size() >= 8, value, "Expected at least 8 tab-separated columns.");
+	GK_CHECK(_field_ids_buf.size() >= 8, value, "Expected at least 8 tab-separated columns.");
 	if (_field_ids_buf.size() > 9)
 		_sample_names.assign(next(cbegin(_field_ids_buf), 9), cend(_field_ids_buf));
 }
@@ -740,7 +740,7 @@ bool vcf_table::builder::parse_variant(const vector<string_view>& cols)
 	auto ref  = cols[vcf_col_ref];
 	auto alts = cols[vcf_col_alts];
 
-	GK_CHECK2(alts.find(",") == string_view::npos, value,
+	GK_CHECK(alts.find(",") == string_view::npos, value,
 			 "Expected vcf file having multiallelic sites split into multiple rows. "
 			 "Try setting normalize=True or manually convert with `bcftools norm -m - -f`.");
 	GK_CHECK(!ref.empty() && !alts.empty(), value,
@@ -770,7 +770,7 @@ bool vcf_table::builder::parse_variant(const vector<string_view>& cols)
 			end = as_int(end_value) - 1; // END = inclusive 1-based
 		} else {
 			auto svlen = get_attr(_field_ids_buf, "SVLEN", "");
-			GK_CHECK2(!empty(svlen), value, "Unsupported SV: END/SVLEN INFO ID is required.");
+			GK_CHECK(!empty(svlen), value, "Unsupported SV: END/SVLEN INFO ID is required.");
 			ref.remove_prefix(1); // Padding base is required for symbolic
 			start += 1;
 			// TODO: SVLEN in VCF 4.3 is defined as diff in len between REF and ALT (but 1000G has extensions...)
@@ -914,7 +914,7 @@ void vcf_table::builder::parse_format(const vector<string_view>& cols)
 	// Iterating over samples from col #9 -> \n
 	for (size_t i_sample = vcf_col_format + 1; i_sample < cols.size(); ++i_sample) {
 		split_view(cols[i_sample], ':', _field_ids_buf);
-		GK_CHECK2(_field_ids_buf.size() <= field_count, value,
+		GK_CHECK(_field_ids_buf.size() <= field_count, value,
 				 "Expects at most {} values (from FORMAT string) but found {} for sample {}.",
 				 field_count, _field_ids_buf.size(), i_sample - vcf_col_format);
 
@@ -956,12 +956,12 @@ void vcf_table::builder::build(const char* outfile)
 				}
 				continue;
 			}
-			GK_CHECK2(_fmt_values.empty() || !_sample_names.empty(), value,
+			GK_CHECK(_fmt_values.empty() || !_sample_names.empty(), value,
 					"No FORMAT fields are specified in the supplied VCF.");
 
 			// Split tab-separated columns into cols
 			split_view(line, '\t', cols);
-			GK_CHECK2(cols.size() >= 8, value, "Expected at least 8 tab-separated columns but found {}",
+			GK_CHECK(cols.size() >= 8, value, "Expected at least 8 tab-separated columns but found {}",
 					cols.size());
 
 			_field_ids_buf.clear(); // mark no INFO splitted
@@ -975,12 +975,12 @@ void vcf_table::builder::build(const char* outfile)
 			// Parse Format/Data columns if exists
 			if (!_sample_names.empty()) {
 				int num_sample_cols = (int)cols.size() - (vcf_col_format + 1);
-				GK_CHECK2((int)_sample_names.size() == num_sample_cols, value,
+				GK_CHECK((int)_sample_names.size() == num_sample_cols, value,
 						"Expects {} samples but found {}", _sample_names.size(), num_sample_cols);
 				parse_format(cols);
 			}
 		}
-		GK_RETHROW2("In VCF file: {}:{}", _infile_name, _infile.line_num());
+		GK_RETHROW("In VCF file: {}:{}", _infile_name, _infile.line_num());
 	}
 
 	_ancenstral_handler.log();
@@ -1025,7 +1025,7 @@ void vcf_table::builder::build(const char* outfile)
 bool vcf_table::builder::ancentral_handler::notify(long long line_number)
 {
 	if (_action == action_t::error)
-		GK_THROW2(value, "Ancestral allele found: remove or build with warn/exclude.");
+		GK_THROW(value, "Ancestral allele found: remove or build with warn/exclude.");
 	if (_action == action_t::exclude)
 		return false;
 

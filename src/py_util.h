@@ -611,7 +611,7 @@ struct __value_type_sizes {
 		const Py##name::value_t& b = Py##name::value(bo);
 
 #define GKPY_RICHCOMPARE_END \
-		GK_UNREACHABLE2(); \
+		GK_UNREACHABLE(); \
 		GKPY_CATCH_RETURN_NULL \
 	}
 
@@ -686,7 +686,7 @@ struct __value_type_sizes {
 	GK_CHECK((obj_ptr)->ob_type == (type_ptr), type, "Expected type '{}', not '{}'", (type_ptr)->tp_name, (obj_ptr)->ob_type->tp_name);
 
 #define GKPY_INDEXCHECK(index, size) \
-	GK_CHECK2(index >= 0 && index < size, index, "index out of range")
+	GK_CHECK(index >= 0 && index < size, index, "index out of range")
 
 #define GKPY_TYPECHECK_BUILTIN(obj_ptr, pytype) \
 	GK_CHECK(pytype##_Check(obj_ptr), type, "Expected type '{}', not '{}'", pytype##_Type.tp_name, (obj_ptr)->ob_type->tp_name);

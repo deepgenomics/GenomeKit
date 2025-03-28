@@ -47,7 +47,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {
 				string_view k_v[2];
 				const auto  count = split_view(lr.line(), '=', k_v, std::size(k_v));
-				GK_CHECK2(count == std::size(k_v), value, "Invalid line in {}:{}", config_path, lr.line_num());
+				GK_CHECK(count == std::size(k_v), value, "Invalid line in {}:{}", config_path, lr.line_num());
 				if (k_v[0] != "refg")
 					continue;
 				name = strip(k_v[1]);

@@ -31,7 +31,7 @@ public:
 	{
 		auto n = in.read<uint64_t>();
 		int    s = in.read<int>();
-		GK_CHECK2(s == (int)sizeof(T), file, "Expected to read array with item size '{}' but found '{}'.", sizeof(T), s);
+		GK_CHECK(s == (int)sizeof(T), file, "Expected to read array with item size '{}' but found '{}'.", sizeof(T), s);
 		set_view(in.curr_ptr<T>(), n);
 		_data_file_offset = in.curr_seek();
 		in.move_seek(n*sizeof(T));

@@ -42,7 +42,7 @@ chrom_t chrom_names_t::as_chrom(std::string_view chr) const
 std::string_view chrom_names_t::chrom_as_sv(chrom_t chr) const
 {
 	const auto it = _name_by_chrom.find(chr);
-	GK_CHECK2(it != std::cend(_name_by_chrom), value, "Chromosome tag not found: '{}'.", as_ordinal(chr));
+	GK_CHECK(it != std::cend(_name_by_chrom), value, "Chromosome tag not found: '{}'.", as_ordinal(chr));
 	return it->second;
 }
 

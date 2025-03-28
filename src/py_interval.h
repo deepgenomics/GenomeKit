@@ -45,7 +45,7 @@ GKPY_VALUE_TYPE_END
 // global string tables
 ///////////////////////////////////////////////////////////////////
 
-GKPY_DECLARE_STRINGTABLE(Strand, strand_t, std::uint8_t, strand, num_strand)
+GKPY_DECLARE_STRINGTABLE(Strand, strand_t, strand, num_strand)
 
 void Init_Interval_PyStrings();
 

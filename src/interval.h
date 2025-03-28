@@ -206,4 +206,13 @@ struct std::formatter<T> : std::formatter<std::string> {
 	}
 };
 
+template <>
+struct std::formatter<gk::strand_t> : std::formatter<std::uint8_t> {
+	template <typename FormatCtx>
+	auto format(gk::strand_t x, FormatCtx& ctx) const
+	{
+		return std::formatter<std::uint8_t>::format(static_cast<std::uint8_t>(x), ctx);
+	}
+};
+
 #endif // __GENOME_KIT_INTERVAL_H__

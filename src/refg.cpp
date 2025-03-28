@@ -63,17 +63,15 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 	GK_CHECK(config_inserted, runtime, "hash collision, try renaming one of the annotations: '{}' and '{} on '{}'",
 			 config_it->first, config, name);
 	const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, name);
-	std::uint64_t raw_val = static_cast<std::uint64_t>(name_it->first);
 	GK_CHECK(name_inserted || name_it->second == name, runtime,
-			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", raw_val, config);
+			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, config);
 
 	return ref;
 }
 
 std::string refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 {
-	std::uint64_t raw_val = static_cast<std::uint64_t>(ref);
-	std::string path{std::vformat("{}.hash", std::make_format_args(raw_val))};
+	std::string path{std::vformat("{}.hash", std::make_format_args(ref))};
 	if (!std::filesystem::exists(path)) {
 		path = resolve_datafile_path(prepend_dir(data_dir(), path));
 	}
@@ -85,7 +83,7 @@ std::string refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
     const auto refg_name = strip(lr.line());
 	auto expected_ref = fnv1a_hash64(refg_name);
 	GK_CHECK(refg_t(expected_ref) == ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
-			 path, refg_name, expected_ref, raw_val);
+			 path, refg_name, expected_ref, ref);
 
 	return std::string(refg_name);
 }
@@ -102,8 +100,7 @@ std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
 			return name_it->second;
 		}
 	}
-	std::uint64_t raw_val = static_cast<std::uint64_t>(ref);
-	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", raw_val);
+	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", ref);
 	return it->second;
 }
 

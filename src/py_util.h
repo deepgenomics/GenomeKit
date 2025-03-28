@@ -693,7 +693,7 @@ struct __value_type_sizes {
 
 ////////////////////////////////////////////////////////////////////////
 
-#define GKPY_DECLARE_STRINGTABLE(name, ctype, basetype, cname, num) \
+#define GKPY_DECLARE_STRINGTABLE(name, ctype, cname, num) \
 	extern PyObject* g_##cname##_as_pystring[num]; \
 	INLINE PyObject* PyString_From##name(ctype cname) \
 	{ \
@@ -702,10 +702,8 @@ struct __value_type_sizes {
 			s = g_##cname##_as_pystring[(int)cname]; /* If valid index, return the string */  \
 		else if ((int)cname == (int)num)                                                 \
 			s = Py_None;   /* If index = num, return None, by convention */              \
-		else {                                                                           \
-			basetype raw_val = static_cast<basetype>(cname);                    \
-			GK_THROW(index, "Invalid index {} in PyString_From" #name, raw_val);      \
-		} \
+		else                                                                             \
+			GK_THROW(index, "Invalid index {} in PyString_From" #name, cname);      \
 		Py_INCREF(s);  /* Increment reference count so that we're returning a new ref */ \
 		return s;      /* which can be directly returned as a result to Python */        \
 	}

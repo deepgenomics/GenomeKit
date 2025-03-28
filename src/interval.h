@@ -31,7 +31,6 @@ enum class strand_t : uint8_t { // Strand index [+,-]
 	pos_strand,
 	num_strand // [+,-] is two unique identifiers mapped to [0,1]
 };
-inline auto format_as(strand_t x) { return as_ordinal(x); }
 
 using offset_t = uint32_t;   // Byte offset type. A pointer stored as 4-byte relative offset rather than as 8-byte
 							 // absolute pointer. For easy serialization and memory savings.

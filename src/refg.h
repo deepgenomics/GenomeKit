@@ -17,8 +17,6 @@ BEGIN_NAMESPACE_GK
 
 enum class refg_t : std::uint64_t {};
 
-inline auto format_as(refg_t x) { return as_ordinal(x); }
-
 class refg_registry_t {
 	NOCOPY(refg_registry_t)  // new mappings need to be persisted
 public:

@@ -13,7 +13,7 @@ BEGIN_NAMESPACE_GK
 
 void validate_JRAlignsTable(const PyAsPtrSource* self)
 {
-	GK_CHECK(((const PyJRAlignsTable*)self)->table->valid(), file,
+	GK_CHECK2(((const PyJRAlignsTable*)self)->table->valid(), file,
 			 "JRAligns have been invalidated by JReadAlignments.close or with statement.");
 }
 
@@ -129,7 +129,7 @@ static PyObject* PyJReadAlignments_build_jralign(PyObject* cls, PyObject* args, 
 		// Add excluded intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(exclude); ++i) {
 			PyObject* interval = PyList_GET_ITEM(exclude, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each exclude item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each exclude item must be an Interval");
 			jraligns.get_interval_filter().exclude(PyInterval::value(interval));
 		}
 	}
@@ -138,7 +138,7 @@ static PyObject* PyJReadAlignments_build_jralign(PyObject* cls, PyObject* args, 
 		// Add allowed intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(allow); ++i) {
 			PyObject* interval = PyList_GET_ITEM(allow, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each allow item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each allow item must be an Interval");
 			jraligns.get_interval_filter().allow(PyInterval::value(interval));
 		}
 	}
@@ -150,23 +150,23 @@ static PyObject* PyJReadAlignments_build_jralign(PyObject* cls, PyObject* args, 
 	if (strcmp(overhang_error, "clamp") == 0) {
 		jraligns.set_overhang_error(junction_read_alignments::builder::error_handling::clamp);
 	} else {
-		GK_CHECK(strcmp(overhang_error, "error") == 0, value, "error_handling must be in [\"error\", \"clamp\"]");
+		GK_CHECK2(strcmp(overhang_error, "error") == 0, value, "error_handling must be in [\"error\", \"clamp\"]");
 	}
 
 	if (PyList_Check(infiles)) {
 		// Add reads from individual files
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(infiles); ++i) {
 			PyObject* infile = PyList_GET_ITEM(infiles, i); // borrowed reference
-			GK_CHECK(PyString_Check(infile), type, "Each item in the files list must be a string");
+			GK_CHECK2(PyString_Check(infile), type, "Each item in the files list must be a string");
 			jraligns.add(PyString_AS_STRING(infile));
 		}
 	} else if (PyObject* fileno = PyObject_CallMethod(infiles, "fileno", nullptr); fileno) {
 		// Add reads from standard input
 		GKPY_TAKEREF(fileno);
-		GK_CHECK(PyInt_AsLong(fileno) == 0, value, "When infiles is a file, expected sys.stdin (i.e. fileno() == 0)");
+		GK_CHECK2(PyInt_AsLong(fileno) == 0, value, "When infiles is a file, expected sys.stdin (i.e. fileno() == 0)");
 		jraligns.add(stdin_path);
 	} else {
-		GK_THROW(type, "Expected infiles to be list of file names or sys.stdin");
+		GK_THROW2(type, "Expected infiles to be list of file names or sys.stdin");
 	}
 
 	// Build the final file.

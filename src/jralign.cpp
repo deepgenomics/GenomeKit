@@ -78,7 +78,7 @@ const variant_table& junction_read_alignments::variants() const
 
 void junction_read_alignments::set_source(string sourcefile)
 {
-	GK_CHECK(!is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK2(!is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 
@@ -87,8 +87,8 @@ void junction_read_alignments::close() { _fmap.close(); }
 
 void junction_read_alignments::open()
 {
-	GK_CHECK(!is_open(), runtime, "jraligns_table::open() already opened");
-	GK_CHECK(!_sourcefile.empty(), value, "No file was specified");
+	GK_CHECK2(!is_open(), runtime, "jraligns_table::open() already opened");
+	GK_CHECK2(!_sourcefile.empty(), value, "No file was specified");
 
 	// Memory map the source file
 	_fmap.open(_sourcefile);
@@ -133,7 +133,7 @@ void junction_read_alignments::builder::add(const char* infile)
 	try {
 		process_file(lr);
 	}
-	GK_RETHROW("In SAM file: {}:{}", infile, lr.line_num());
+	GK_RETHROW2("In SAM file: {}:{}", infile, lr.line_num());
 
 	if (_verbose)
 		print("\rLoaded  {}... ({} reads, {} junctions)    \n", infile, _num_reads_loaded,
@@ -212,10 +212,10 @@ void junction_read_alignments::builder::process_line(chrom_t chrom, pos_t pos, s
 			if (code == 'M' || code == 'D' || code == 'N')
 				pos += len;
 		}
-		GK_CHECK(empty(seq), value,
+		GK_CHECK2(empty(seq), value,
 				 "Expect length of CIGAR that consumes query ({}) to correspond to SEQ length ({})",
 				 size(cols[9]) - size(seq), size(cols[9]));
-		GK_CHECK(_ra_variants_indices.size() <= 255, value,
+		GK_CHECK2(_ra_variants_indices.size() <= 255, value,
 				 "Expect number of variants for one read to be less than 256 but found {}",
 				 _ra_variants_indices.size());
 	}
@@ -320,7 +320,7 @@ void junction_read_alignments::builder::finalize()
 
 		// Sets most significant bits of num_reads to indicate
 		// any reads of this junction has variants
-		GK_CHECK(!(num_reads & (1 << 31)), value, "Exceeded 2^31 reads limit on a single junction");
+		GK_CHECK2(!(num_reads & (1 << 31)), value, "Exceeded 2^31 reads limit on a single junction");
 
 		// Fill record for this junction that will be dumped to disk
 		packed_jraligns junc;

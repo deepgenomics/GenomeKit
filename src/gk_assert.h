@@ -6,7 +6,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #define __GK_ASSERT_H__
 
 #include "defines.h"
-#include <fmt/core.h>
+#include <format>
 #include <stdexcept>
 #include <string>
 
@@ -81,7 +81,7 @@ extern bool is_debugger_running();
 //! for the message is the same as printf(msg, ...).
 //!
 #define GK_MAKE_ERROR(etype, msg, ...) \
-	gk::etype##_error(fmt::format(msg __VA_OPT__(, ) __VA_ARGS__), __FILE__, __LINE__)
+	gk::etype##_error(std::vformat(msg __VA_OPT__(, std::make_format_args(__VA_ARGS__))), __FILE__, __LINE__)
 #define GK_THROW(etype, ...) throw GK_MAKE_ERROR(etype, __VA_ARGS__)
 #define GK_CATCH_THROW_NESTED(etype, ...) \
 	catch (const gk::etype##_error&) \
@@ -91,6 +91,19 @@ extern bool is_debugger_running();
 #define GK_DEBUGBREAK_THROW(etype, ...) \
 	GK_DEBUGBREAK; \
 	GK_THROW(etype, __VA_ARGS__)
+
+#define GK_MAKE_ERROR2(etype, msg, ...) \
+	gk::etype##_error(std::format(msg __VA_OPT__(, ) __VA_ARGS__), __FILE__, __LINE__)
+#define GK_THROW2(etype, ...) throw GK_MAKE_ERROR2(etype, __VA_ARGS__)
+#define GK_CATCH_THROW_NESTED2(etype, ...) \
+	catch (const gk::etype##_error&) \
+	{ \
+		std::throw_with_nested(GK_MAKE_ERROR2(etype, __VA_ARGS__)); \
+	}
+#define GK_DEBUGBREAK_THROW2(etype, ...) \
+	GK_DEBUGBREAK; \
+	GK_THROW2(etype, __VA_ARGS__)
+
 #define GK_LIKELY_OR(cond, expr) \
 	do { \
 		if (LIKELY(cond)) { \
@@ -112,6 +125,18 @@ extern bool is_debugger_running();
 	GK_CATCH_THROW_NESTED(unreachable_code, __VA_ARGS__) \
 	GK_CATCH_THROW_NESTED(runtime, __VA_ARGS__)
 
+#define GK_RETHROW2(...) \
+	GK_CATCH_THROW_NESTED2(assertion, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(file, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(type, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(value, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(index, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(key, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(memory, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(not_implemented, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(unreachable_code, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED2(runtime, __VA_ARGS__)
+
 //! \brief If expr is false, throw an assertion_error.
 //!
 //! GK_ASSERT(expr) throws an assertion_error if expr evaluates to
@@ -126,6 +151,7 @@ extern bool is_debugger_running();
 //! format for the message is the same as printf(msg, ...).
 //!
 #define GK_ASSERT(expr, ...) GK_LIKELY_OR(expr, GK_DEBUGBREAK_THROW(assertion, "({}): " GK_VA_HEAD(__VA_ARGS__), #expr GK_VA_COMMA_TAIL(__VA_ARGS__)))
+#define GK_ASSERT2(expr, ...) GK_LIKELY_OR(expr, GK_DEBUGBREAK_THROW2(assertion, "({}): " GK_VA_HEAD(__VA_ARGS__), #expr GK_VA_COMMA_TAIL(__VA_ARGS__)))
 
 //! \brief If expr is false, throw a specific type of exception.
 //!
@@ -138,9 +164,11 @@ extern bool is_debugger_running();
 //! format for the message is the same as printf(msg, ...).
 //!
 #define GK_CHECK(expr, etype, ...)  GK_LIKELY_OR(expr, GK_DEBUGBREAK_THROW(etype, __VA_ARGS__))
+#define GK_CHECK2(expr, etype, ...)  GK_LIKELY_OR(expr, GK_DEBUGBREAK_THROW2(etype, __VA_ARGS__))
 
 //! \brief Throw an unreachable_code_error exception.
 #define GK_UNREACHABLE()            do { GK_DEBUGBREAK_THROW(unreachable_code, ""); } while (0)
+#define GK_UNREACHABLE2()           do { GK_DEBUGBREAK_THROW2(unreachable_code, ""); } while (0)
 
 //! \brief Throw a not_implemented_error exception.
 #define GK_NOT_IMPLEMENTED()        do { GK_DEBUGBREAK_THROW(not_implemented, ""); } while (0)

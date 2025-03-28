@@ -4,12 +4,12 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #ifndef __GENOME_KIT_FORMAT_H__
 #define __GENOME_KIT_FORMAT_H__
 
-#include <fmt/core.h>
+#include <format>
 
 BEGIN_NAMESPACE_GK
 
 // Returns string formatted according to sprintf(fmt, ...) conventions.
-using fmt::format;
+using std::format;
 
 END_NAMESPACE_GK
 

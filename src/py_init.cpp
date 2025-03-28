@@ -69,7 +69,7 @@ static string resolve_datafile_path_with_python(string path)
 
 	// Check for error
 	if (!new_path_obj) {
-		GK_THROW(value, "{}", traceback_format_exc_and_clear());
+		GK_THROW2(value, "{}", traceback_format_exc_and_clear());
 	}
 
 	// Check for wrong return type

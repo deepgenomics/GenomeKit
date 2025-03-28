@@ -12,15 +12,14 @@ if(DEFINED ENV{IN_CLION})
 
     # Don't really need this lib (handled by setup.py), but required for CLion's search etc.
     # NOTE: Set env vars IN_CLION=1;CONDA_PREFIX=$HOME/conda/envs/genomekit_dev in CLion CMake preferences.
-    # include numpy, Python.h, fmt
+    # include numpy, Python.h
     include_directories(
             $ENV{CONDA_PREFIX}/lib/python${PYTHON_VERSION}/site-packages/numpy/core/include/
             $ENV{CONDA_PREFIX}/include/python${PYTHON_VERSION}/
     )
     find_package(ZLIB)
-    find_package(fmt)
     add_library(gkdev ${SOURCES})
-    target_link_libraries(gkdev fmt::fmt ZLIB::ZLIB)
+    target_link_libraries(gkdev ZLIB::ZLIB)
     target_compile_definitions(gkdev PRIVATE -D_FILE_OFFSET_BITS=64 -DGKPY_LIBNAME=$ENV{CONDA_PREFIX}/lib -D_WANT_MAIN=1)
 endif()
 
@@ -32,8 +31,7 @@ add_executable(main ${NON_PY_SOURCES})
 target_compile_definitions(main PRIVATE -D_FILE_OFFSET_BITS=64 -D_FILE_ABS_PATH='\"${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp\"' -D_WANT_MAIN=1)
 set_target_properties(main PROPERTIES LINKER_LANGUAGE CXX)
 find_package(ZLIB)
-find_package(fmt)
-target_link_libraries(main fmt::fmt ZLIB::ZLIB)
+target_link_libraries(main ZLIB::ZLIB)
 
 include(CTest)
 add_test(main unittestbuild/main)

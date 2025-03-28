@@ -9,7 +9,7 @@ BEGIN_NAMESPACE_GK
 
 void validate_JRDistTable(const PyAsPtrSource* self)
 {
-	GK_CHECK(((const PyJRDistTable*)self)->table->valid(), file,
+	GK_CHECK2(((const PyJRDistTable*)self)->table->valid(), file,
 			 "JRDist have been invalidated by ReadDistributions.close or with statement.");
 }
 
@@ -111,7 +111,7 @@ static PyObject* PyReadDistributions_build_rdist(PyObject* cls, PyObject* args, 
 		// Add excluded intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(exclude); ++i) {
 			PyObject* interval = PyList_GET_ITEM(exclude, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each exclude item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each exclude item must be an Interval");
 			rdists.get_interval_filter().exclude(PyInterval::value(interval));
 		}
 	}
@@ -120,19 +120,19 @@ static PyObject* PyReadDistributions_build_rdist(PyObject* cls, PyObject* args, 
 		// Add allowed intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(allow); ++i) {
 			PyObject* interval = PyList_GET_ITEM(allow, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each allow item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each allow item must be an Interval");
 			rdists.get_interval_filter().allow(PyInterval::value(interval));
 		}
 	}
 
 	if (filter != Py_None) {
-		GK_CHECK(PyCallable_Check(filter), type, "filter must be a callable object that returns a bool");
+		GK_CHECK2(PyCallable_Check(filter), type, "filter must be a callable object that returns a bool");
 	}
 
 	// Add read alignments from individual files
 	for (Py_ssize_t i = 0; i < PyList_GET_SIZE(infiles); ++i) {
 		PyObject* infile = PyList_GET_ITEM(infiles, i); // borrowed reference
-		GK_CHECK(PyString_Check(infile), type, "Each item in the files list must be a string");
+		GK_CHECK2(PyString_Check(infile), type, "Each item in the files list must be a string");
 
 		if (filter != Py_None) {
 			rdists.filter([filter, infile](const junction_read_alignments& ralign, int junction, unsigned int read) {
@@ -140,9 +140,9 @@ static PyObject* PyReadDistributions_build_rdist(PyObject* cls, PyObject* args, 
 				PyAutoRef pass{ PyObject_CallObject(filter, args.get()) };
 				if (!pass.get()) {
 					PyErr_Print();
-					GK_THROW(value, "filter could not be called, see error above");
+					GK_THROW2(value, "filter could not be called, see error above");
 				}
-				GK_CHECK(PyBool_Check(pass.get()), type, "filter must be a callable object that returns a bool");
+				GK_CHECK2(PyBool_Check(pass.get()), type, "filter must be a callable object that returns a bool");
 				return pass.get() == Py_True;
 			});
 		}

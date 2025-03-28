@@ -26,7 +26,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		// try a small file to see if it's a refg
 		// this is done instead of populating a dummy cfg to reduce the
 		// effort required to add an assembly
-		std::string path{fmt::format("{}.chrom.sizes", config)};
+		std::string path{std::format("{}.chrom.sizes", config)};
 		if (!std::filesystem::exists(path)) {
 			path = resolve_datafile_path(prepend_dir(data_dir(), path));
 		}
@@ -38,7 +38,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 
 	if (std::empty(name)) {
 		// not an assembly, must be an annotation, get name from .cfg
-		std::string config_path{fmt::format("{}.cfg", config)};
+		std::string config_path{std::format("{}.cfg", config)};
 		try {
 			config_path = resolve_datafile_path(prepend_dir(data_dir(), config_path));
 		} catch (const value_error& e) {
@@ -47,7 +47,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {
 				string_view k_v[2];
 				const auto  count = split_view(lr.line(), '=', k_v, std::size(k_v));
-				GK_CHECK(count == std::size(k_v), value, "Invalid line in {}:{}", config_path, lr.line_num());
+				GK_CHECK2(count == std::size(k_v), value, "Invalid line in {}:{}", config_path, lr.line_num());
 				if (k_v[0] != "refg")
 					continue;
 				name = strip(k_v[1]);
@@ -63,15 +63,17 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 	GK_CHECK(config_inserted, runtime, "hash collision, try renaming one of the annotations: '{}' and '{} on '{}'",
 			 config_it->first, config, name);
 	const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, name);
+	std::uint64_t raw_val = static_cast<std::uint64_t>(name_it->first);
 	GK_CHECK(name_inserted || name_it->second == name, runtime,
-			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", name_it->first, config);
+			 "hash collision, try renaming one of the assemblies: '{}' and '{}'", raw_val, config);
 
 	return ref;
 }
 
 std::string refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 {
-	std::string path{fmt::format("{}.hash", ref)};
+	std::uint64_t raw_val = static_cast<std::uint64_t>(ref);
+	std::string path{std::vformat("{}.hash", std::make_format_args(raw_val))};
 	if (!std::filesystem::exists(path)) {
 		path = resolve_datafile_path(prepend_dir(data_dir(), path));
 	}
@@ -83,7 +85,7 @@ std::string refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
     const auto refg_name = strip(lr.line());
 	auto expected_ref = fnv1a_hash64(refg_name);
 	GK_CHECK(refg_t(expected_ref) == ref, runtime, "Hash mismatch in '{}' for '{}': {} != {}",
-			 path, refg_name, expected_ref, ref);
+			 path, refg_name, expected_ref, raw_val);
 
 	return std::string(refg_name);
 }
@@ -100,7 +102,8 @@ std::string_view refg_registry_t::refg_as_sv(refg_t ref) const
 			return name_it->second;
 		}
 	}
-	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", ref);
+	std::uint64_t raw_val = static_cast<std::uint64_t>(ref);
+	GK_CHECK(it != std::end(_names_by_refg), value, "Could not retrieve name for {}", raw_val);
 	return it->second;
 }
 

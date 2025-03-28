@@ -11,7 +11,8 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include <bit>
 #include <cstdlib>
 #include <cstring>
-#include <fmt/core.h>
+#include <format>
+#include <iostream>
 #include <functional>
 #include <new>
 #include <type_traits>
@@ -20,15 +21,15 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 BEGIN_NAMESPACE_GK
 
 template<typename ...T>
-void print(fmt::format_string<T...> fmt, T&&... args)
+void print(std::format_string<T...> fmt, T&&... args)
 {
-	fmt::print(stderr, fmt, std::forward<T>(args)...);
+	std::cerr << std::format(fmt, std::forward<T>(args)...);
 }
 
 template <typename... T>
-void println(fmt::format_string<T...> fmt, T&&... args)
+void println(std::format_string<T...> fmt, T&&... args)
 {
-	fmt::print(stderr, "{}\n", fmt::format(fmt, std::forward<T>(args)...));
+	std::cerr << std::format(fmt, std::forward<T>(args)...) << '\n';
 }
 
 ///////////////////////////////////////////////////
@@ -402,7 +403,7 @@ struct offset40_t {
 	{
 		lo = (uint32_t)offset;
 		hi = (uint8_t)(offset >> 32);
-		GK_CHECK((offset >> 32) <= 255, value, "Overflow when truncating offset to 40 bits");
+		GK_CHECK2((offset >> 32) <= 255, value, "Overflow when truncating offset to 40 bits");
 		return *this;
 	}
 

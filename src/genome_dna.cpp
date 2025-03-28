@@ -22,13 +22,13 @@ void genome_dna::set_source(string sourcefile)
 {
 	// Try not to put anything here that would throw in a newly constructed object.
 	// We want genome_t constructor to not throw, even if it's initialized outside
-	GK_CHECK(!_fmap.is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK2(!_fmap.is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 
 void genome_dna::open()
 {
-	GK_CHECK(!is_open(), runtime, "genome_dna::open() already opened");
+	GK_CHECK2(!is_open(), runtime, "genome_dna::open() already opened");
 	GK_CHECK(endswith(_sourcefile, ".2bit"), value, "Unrecognized file extension for '{}'", _sourcefile);
 
 	auto path               = std::filesystem::path{_sourcefile};
@@ -56,8 +56,8 @@ void genome_dna::open()
 
 	if (header.signature != c_twobit_sig_lilend) {
 		if (header.signature == c_twobit_sig_bigend)
-			GK_THROW(value, "Byte swapped format not supported by this implementation.");
-		GK_THROW(value, "Unrecognized 2bit signature in file.");
+			GK_THROW2(value, "Byte swapped format not supported by this implementation.");
+		GK_THROW2(value, "Unrecognized 2bit signature in file.");
 	}
 	GK_CHECK(header.version == 0, value, "2bit version unsupported (maybe 64-bit offsets): {}", header.version);
 
@@ -288,7 +288,7 @@ void genome_dna::seqrec_t::ensure_open(const mmap_file& fmap) const
 
 string default_dna_sourcefile(string_view refg_name, string_view data_dir)
 {
-	return prepend_dir(data_dir, fmt::format("{}.2bit", refg_name));
+	return prepend_dir(data_dir, std::format("{}.2bit", refg_name));
 }
 
 END_NAMESPACE_GK

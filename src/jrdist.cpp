@@ -50,7 +50,7 @@ const jrcount_t jrdist_t::operator[](int i) const
 	case 1: count = _counts[i]; break;
 	case 2: count = ((unsigned short*)_counts)[i]; break;
 	case 4: count = ((unsigned*)_counts)[i]; break;
-	default: GK_THROW(value, "Invalid count size byte detected -- corrupt?");
+	default: GK_THROW2(value, "Invalid count size byte detected -- corrupt?");
 	}
 	return jrcount_t(count,
 	                 flags_byte & sign_bit ? -_ushifts[i] : _ushifts[i],
@@ -121,7 +121,7 @@ struct read_distributions::builder::jrdist_collector { NOCOPY(jrdist_collector)
 				juncs.add_aux(counts32);
 				break;
 			}
-			default: GK_UNREACHABLE();
+			default: GK_UNREACHABLE2();
 		}
 
 		// After adding the counts array, add the shifts and flags
@@ -140,7 +140,7 @@ const jrdist_table& read_distributions::juncs() const
 
 void read_distributions::set_source(string sourcefile)
 {
-	GK_CHECK(!is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK2(!is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 
@@ -149,8 +149,8 @@ void read_distributions::close() { _fmap.close(); }
 
 void read_distributions::open()
 {
-	GK_CHECK(!is_open(), runtime, "read_distributions::open() already opened");
-	GK_CHECK(!_sourcefile.empty(), value, "No file was specified");
+	GK_CHECK2(!is_open(), runtime, "read_distributions::open() already opened");
+	GK_CHECK2(!_sourcefile.empty(), value, "No file was specified");
 
 	// Resolve the source file, possibly downloading it
 	//_sourcefile = realize_datafile_path(_sourcefile); // TODO: restore this
@@ -241,7 +241,7 @@ void read_distributions::builder::jrdist_entry::inc_count(unsigned char overhang
 template <>
 void read_distributions::builder::jrdist_entry::inc_count<unsigned long long>(unsigned char overhang, strand_t strand, int direction)
 {
-	GK_THROW(not_implemented, "A read count of > 4B reads was detected; this is not currently supported.");
+	GK_THROW2(not_implemented, "A read count of > 4B reads was detected; this is not currently supported.");
 }
 
 // An array of pointers to the inc_count<T> specializations that handle _mode=1,2,3
@@ -308,7 +308,7 @@ void read_distributions::builder::jrdist_entry::collect(jrdist_collector& collec
 	case count8_mode:  collect_impl<unsigned char >(collector); break;
 	case count16_mode: collect_impl<unsigned short>(collector); break;
 	case count32_mode: collect_impl<unsigned int  >(collector); break;
-	default: GK_UNREACHABLE();
+	default: GK_UNREACHABLE2();
 	}
 }
 
@@ -329,7 +329,7 @@ void read_distributions::builder::jrdist_entry::collect_impl(jrdist_collector& c
 read_distributions::builder::builder(const char* outfile)
 : _file(outfile, "w")
 , _interval_filter{[&](interval_t i) {
-	GK_CHECK(!_refg || i.refg == *_refg, value, "Cannot filter {} for {}", i, get_refg_registry().refg_as_sv(*_refg));
+	GK_CHECK2(!_refg || i.refg == *_refg, value, "Cannot filter {} for {}", i, get_refg_registry().refg_as_sv(*_refg));
 }}
 {
 }
@@ -347,7 +347,7 @@ void read_distributions::builder::add(const char* infile)
 	if (_stranded == stranded::unknown) {
 		_stranded = ralign.juncs().stranded() ? stranded::yes : stranded::no;
 	} else {
-		GK_CHECK((_stranded == stranded::yes) == ralign.juncs().stranded(), value, "Prior jraligns were {}, but {} is {}.",
+		GK_CHECK2((_stranded == stranded::yes) == ralign.juncs().stranded(), value, "Prior jraligns were {}, but {} is {}.",
 				 _stranded == stranded::yes ? "stranded" : "unstranded", infile,
 				 ralign.juncs().stranded() ? "stranded" : "unstranded");
 	}
@@ -360,7 +360,7 @@ void read_distributions::builder::add(const char* infile)
 			_refg = junc_refg;
 			_interval_filter.validate();
 		} else {
-			GK_CHECK(*_refg == junc_refg, file, "Reference genome mismatch between different input files.");
+			GK_CHECK2(*_refg == junc_refg, file, "Reference genome mismatch between different input files.");
 		}
 
 		// Loop over all junctions, and all samples, and build a read distribution for each sample

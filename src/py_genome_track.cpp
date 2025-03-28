@@ -40,7 +40,7 @@ static dtype_t dtype_from_py(int py_dtype)
 	for (int dtype = 0; dtype < as_ordinal(num_dtype); ++dtype)
 		if (py_dtypes[dtype] == py_dtype)
 			return (dtype_t)dtype;
-	GK_THROW(type, "data array had unrecognized dtype; try np.bool_, np.uint8, np.int8, np.float16, or np.float32");
+	GK_THROW2(type, "data array had unrecognized dtype; try np.bool_, np.uint8, np.int8, np.float16, or np.float32");
 }
 
 /////////////////////////////////////////////////////
@@ -149,13 +149,13 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_dict)
 	}
 
 	// Check the data array to make sure it's contiguous, C-order, 1- or 2-dimensions, and the right size.
-	GK_CHECK(PyArray_NDIM(py_dict) == 1, value, "dict array must be 1-dimensional");
+	GK_CHECK2(PyArray_NDIM(py_dict) == 1, value, "dict array must be 1-dimensional");
 	GK_CHECK((int)PyArray_DIMS(py_dict)[0] == dict_size, value, "dict array must be of size {} for this etype", dict_size);
 
 	// Set the dict as either float16 or float32
 	if      (PyArray_TYPE(py_dict) == NPY_HALF)  self->builder->set_dict(rcast<const half_t*>(PyArray_DATA(py_dict)));
 	else if (PyArray_TYPE(py_dict) == NPY_FLOAT) self->builder->set_dict(rcast<const float* >(PyArray_DATA(py_dict)));
-	else GK_THROW(type, "dict must have dtype of np.float16 or np.float32");
+	else GK_THROW2(type, "dict must have dtype of np.float16 or np.float32");
 	GKPY_RETURN_NONE;
 GKPY_OMETHOD_END
 
@@ -191,23 +191,23 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data)
 	if (self->builder->etype() == genome_track::m0) {
 
 		// Mask tracks are special case, since no data.
-		GK_CHECK((PyObject*)py_data == Py_None, value, "Data must be None for etype 'm0'");
+		GK_CHECK2((PyObject*)py_data == Py_None, value, "Data must be None for etype 'm0'");
 		dtype = genome_track::bool_;
 		data  = nullptr;
 
 	} else {
 
 		// Otherwise we expect a numpy array with data for interval.
-		GK_CHECK(PyArray_Check(py_data), type, "Data must be numpy array");
+		GK_CHECK2(PyArray_Check(py_data), type, "Data must be numpy array");
 		int ndim = PyArray_NDIM(py_data);
 		int res = self->builder->res();
 
 		// Check the data array to make sure it's contiguous, C-order, and 1- or 2-dimensions.
-		GK_CHECK(ndim == 1 || ndim == 2, value, "Data must be 1- or 2-dimensional");
-		GK_CHECK((int)PyArray_DIMS(py_data)[0]*res == interval.size(), value, "Data must have {} rows", (int)(interval.size()/res));
+		GK_CHECK2(ndim == 1 || ndim == 2, value, "Data must be 1- or 2-dimensional");
+		GK_CHECK2((int)PyArray_DIMS(py_data)[0]*res == interval.size(), value, "Data must have {} rows", (int)(interval.size()/res));
 		if (ndim > 1) {
-			GK_CHECK((int)PyArray_DIMS(py_data)[1] == self->builder->dim(), value, "Data must have {} columns", self->builder->dim());
-			GK_CHECK(PyArray_FLAGS(py_data) & NPY_ARRAY_CARRAY_RO, value, "Multi-dimensional data array must be C_CONTIGUOUS order");
+			GK_CHECK2((int)PyArray_DIMS(py_data)[1] == self->builder->dim(), value, "Data must have {} columns", self->builder->dim());
+			GK_CHECK2(PyArray_FLAGS(py_data) & NPY_ARRAY_CARRAY_RO, value, "Multi-dimensional data array must be C_CONTIGUOUS order");
 		}
 
 		// Set the data for the given interval using the numpy dtype, if it's supported
@@ -215,7 +215,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data)
 		// TODO: handle strided date during encoding
 		size_t stride = genome_track::dtype_size[as_ordinal(dtype)];
 		for (int dim = ndim; dim > 0; --dim) {
-			GK_CHECK((size_t)PyArray_STRIDE(py_data, dim - 1) == stride, value,
+			GK_CHECK2((size_t)PyArray_STRIDE(py_data, dim - 1) == stride, value,
 					 "Data must have stride=1, consider making a copy with `np.array`");
 			stride *= (size_t)PyArray_DIM(py_data, dim - 1);
 		}
@@ -260,7 +260,7 @@ GKPY_OMETHOD_BEGIN(GenomeTrackBuilder, set_data_from_bed)
 	if (py_categories) {
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(py_categories); ++i) {
 			PyObject* item = PyList_GET_ITEM(py_categories, i); // borrowed reference
-			GK_CHECK(PyString_Check(item), type, "Each category item must be a string");
+			GK_CHECK2(PyString_Check(item), type, "Each category item must be a string");
 			categories.emplace_back(PyString_AS_STRING(item));
 		}
 	}
@@ -333,7 +333,7 @@ GKPY_INIT_BEGIN(GenomeTrack)
 		Py_INCREF(arg);
 		self->track = track_ptr;
 	} else
-		GK_THROW(value, "GenomeTrack.__init__ could not parse arguments");
+		GK_THROW2(value, "GenomeTrack.__init__ could not parse arguments");
 GKPY_INIT_END
 
 GKPY_DEALLOC_BEGIN(GenomeTrack)
@@ -421,19 +421,19 @@ GKPY_OMETHOD_BEGIN(GenomeTrack, Call)
 		if (!py_dst)
 			return nullptr;  // Propagate the error up to interpreter immediately
 	} else {
-		GK_CHECK(PyArray_Check(out), type, "out must be a numpy ndarray.");
+		GK_CHECK2(PyArray_Check(out), type, "out must be a numpy ndarray.");
 
 		auto out_array = rcast<PyArrayObject*>(out);
 
-		GK_CHECK(PyArray_NDIM(out_array) == 1 || PyArray_NDIM(out_array) == 2, value,
+		GK_CHECK2(PyArray_NDIM(out_array) == 1 || PyArray_NDIM(out_array) == 2, value,
 				 "Dimension must be 1- or 2-dimensional: out is {}.", PyArray_NDIM(out_array));
-		GK_CHECK(PyArray_DIM(out_array, 0) == c.size(), value, "Row mismatch: out is {} but interval is {}",
+		GK_CHECK2(PyArray_DIM(out_array, 0) == c.size(), value, "Row mismatch: out is {} but interval is {}",
 				 PyArray_DIM(out_array, 0), c.size());
 		if (PyArray_NDIM(out_array) == 2) {
-			GK_CHECK(PyArray_DIM(out_array, 1) == self->track->dim(), value,
+			GK_CHECK2(PyArray_DIM(out_array, 1) == self->track->dim(), value,
 					 "Column mismatch: out is {} but track is {}", PyArray_DIM(out_array, 1), self->track->dim());
 		}
-		GK_CHECK(PyArray_ISBEHAVED(out_array), value, "out must be writable from C.");
+		GK_CHECK2(PyArray_ISBEHAVED(out_array), value, "out must be writable from C.");
 		dtype  = dtype_from_py(PyArray_DTYPE(out_array)->type_num);
 		stride = int_cast<decltype(stride)>(PyArray_STRIDE(out_array, 0) / PyArray_ITEMSIZE(out_array));
 		py_dst = out;

@@ -46,10 +46,10 @@ refg_t as_refg(PyObject* arg)
 		return ((PyGenome*)arg)->genome.refg();
 	PyObject* refg_attr = PyObject_GetAttrString(arg, "reference_genome");
 	GKPY_TAKEREF(refg_attr);
-	GK_CHECK(refg_attr, value, "Expected reference_genome to either be a string or an object with a reference_genome attribute");
+	GK_CHECK2(refg_attr, value, "Expected reference_genome to either be a string or an object with a reference_genome attribute");
 	if (PyString_Check(refg_attr))
 		return get_refg_registry().as_refg(PyString_AS_STRING(refg_attr));
-	GK_THROW(value, "Could not determine reference genome from reference_genome argument");
+	GK_THROW2(value, "Could not determine reference genome from reference_genome argument");
 }
 
 const genome_t& as_genome(PyObject* arg)
@@ -88,8 +88,8 @@ PyObject* PyInterval___getstate__(PyObject* self)
 PyObject* PyInterval___setstate__(PyObject* self, PyObject* state)
 {
 	GKPY_TRY
-		GK_CHECK(PyBytes_Check(state), type, "Expected string type");
-		GK_CHECK(PyBytes_GET_SIZE(state) == (Py_ssize_t)sizeof(ainterval_t), value, "Expected %d bytes", (int)sizeof(ainterval_t));
+		GK_CHECK2(PyBytes_Check(state), type, "Expected string type");
+		GK_CHECK2(PyBytes_GET_SIZE(state) == (Py_ssize_t)sizeof(ainterval_t), value, "Expected %d bytes", (int)sizeof(ainterval_t));
 		((PyInterval*)self)->as_ptr = nullptr;
 		memcpy(&PyInterval::value(self), PyBytes_AsString(state), sizeof(ainterval_t));
 		GKPY_RETURN_NONE;
@@ -358,7 +358,7 @@ GKPY_TYPEOBJ_END
 PyObject* PyInterval::create(const interval_t& i, pos_t anchor, pos_t anchor_offset)
 {
 	// otherwise Python 3 will give `SystemError: <built-in function len> returned NULL without setting an error`
-	GK_CHECK(i.size() >= 0, value, "Intervals require a non-negative length.");
+	GK_CHECK2(i.size() >= 0, value, "Intervals require a non-negative length.");
 
 	auto* r          = (PyInterval*)PyInterval::DefaultType->tp_new(PyInterval::DefaultType, nullptr, nullptr);
 	ainterval_t& val = r->value();

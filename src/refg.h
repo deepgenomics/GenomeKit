@@ -11,6 +11,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include <cstdint>
 #include <unordered_map>
+#include <format>
 
 BEGIN_NAMESPACE_GK
 

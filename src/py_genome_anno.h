@@ -14,7 +14,7 @@ BEGIN_NAMESPACE_GK
 
 void Init_GenomeAnno_PyStrings();
 
-GKPY_DECLARE_STRINGTABLE(BioType, biotype_t, biotype, num_biotype)
+GKPY_DECLARE_STRINGTABLE(BioType, biotype_t, unsigned char, biotype, num_biotype)
 
 GKPY_TYPE_BEGIN(GenomeAnno)
 	const genome_anno* anno;

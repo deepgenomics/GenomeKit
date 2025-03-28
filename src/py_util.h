@@ -611,7 +611,7 @@ struct __value_type_sizes {
 		const Py##name::value_t& b = Py##name::value(bo);
 
 #define GKPY_RICHCOMPARE_END \
-		GK_UNREACHABLE(); \
+		GK_UNREACHABLE2(); \
 		GKPY_CATCH_RETURN_NULL \
 	}
 
@@ -686,14 +686,14 @@ struct __value_type_sizes {
 	GK_CHECK((obj_ptr)->ob_type == (type_ptr), type, "Expected type '{}', not '{}'", (type_ptr)->tp_name, (obj_ptr)->ob_type->tp_name);
 
 #define GKPY_INDEXCHECK(index, size) \
-	GK_CHECK(index >= 0 && index < size, index, "index out of range")
+	GK_CHECK2(index >= 0 && index < size, index, "index out of range")
 
 #define GKPY_TYPECHECK_BUILTIN(obj_ptr, pytype) \
 	GK_CHECK(pytype##_Check(obj_ptr), type, "Expected type '{}', not '{}'", pytype##_Type.tp_name, (obj_ptr)->ob_type->tp_name);
 
 ////////////////////////////////////////////////////////////////////////
 
-#define GKPY_DECLARE_STRINGTABLE(name, ctype, cname, num) \
+#define GKPY_DECLARE_STRINGTABLE(name, ctype, basetype, cname, num) \
 	extern PyObject* g_##cname##_as_pystring[num]; \
 	INLINE PyObject* PyString_From##name(ctype cname) \
 	{ \
@@ -702,8 +702,10 @@ struct __value_type_sizes {
 			s = g_##cname##_as_pystring[(int)cname]; /* If valid index, return the string */  \
 		else if ((int)cname == (int)num)                                                 \
 			s = Py_None;   /* If index = num, return None, by convention */              \
-		else                                                                             \
-			GK_THROW(index, "Invalid index {} in PyString_From" #name, cname);      \
+		else {                                                                           \
+			basetype raw_val = static_cast<basetype>(cname);                    \
+			GK_THROW(index, "Invalid index {} in PyString_From" #name, raw_val);      \
+		} \
 		Py_INCREF(s);  /* Increment reference count so that we're returning a new ref */ \
 		return s;      /* which can be directly returned as a result to Python */        \
 	}

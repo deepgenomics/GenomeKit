@@ -42,7 +42,7 @@ chrom_t chrom_names_t::as_chrom(std::string_view chr) const
 std::string_view chrom_names_t::chrom_as_sv(chrom_t chr) const
 {
 	const auto it = _name_by_chrom.find(chr);
-	GK_CHECK(it != std::cend(_name_by_chrom), value, "Chromosome tag not found: '{}'.", as_ordinal(chr));
+	GK_CHECK2(it != std::cend(_name_by_chrom), value, "Chromosome tag not found: '{}'.", as_ordinal(chr));
 	return it->second;
 }
 
@@ -61,7 +61,7 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 	auto& chrom_names = name_registry[refg];
 	if (!chrom_names) {
 		std::string refg_name{get_refg_registry(data_dir).refg_as_sv(refg)};
-		std::string alias_path{fmt::format("{}.chromAlias.txt", refg_name)};
+		std::string alias_path{std::format("{}.chromAlias.txt", refg_name)};
 
 		try {
 			auto resolved = resolve_datafile_path(prepend_dir(data_dir, alias_path));
@@ -93,7 +93,7 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 							   [&](auto name) { return std::make_pair(std::string{name}, tag); });
 			}
 		} else {
-			std::string file_path{fmt::format("{}.chrom.sizes", refg_name)};
+			std::string file_path{std::format("{}.chrom.sizes", refg_name)};
 			try {
 				file_path = resolve_datafile_path(prepend_dir(data_dir, file_path));
 			} catch (const value_error& e) {

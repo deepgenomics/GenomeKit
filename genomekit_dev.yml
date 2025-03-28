@@ -4,7 +4,6 @@ channels:
   - bioconda
 dependencies:
   - appdirs>=1.4.0
-  - fmt
   - numpy <2.0dev0
   - python>=3.9.0,<3.13.0
   - tqdm

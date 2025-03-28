@@ -314,7 +314,7 @@ struct gff_record {
 	explicit gff_record(string_view line, const chrom_names_t* chrom_names) : chrom_names(chrom_names)
 	{
 		using namespace std;
-		GK_CHECK(split_view(line, '\t', cols, (int)size(cols)) == (int)size(cols), file,
+		GK_CHECK2(split_view(line, '\t', cols, (int)size(cols)) == (int)size(cols), file,
 				 "Expected {} tab-separated columns.", size(cols));
 	}
 
@@ -532,7 +532,7 @@ public:
 				}
 				// <--- INSERT NEW ANNOTATION TYPES HERE
 			}
-			GK_RETHROW("In GFF3 file: {}:{}", infile, lr.line_num());
+			GK_RETHROW2("In GFF3 file: {}:{}", infile, lr.line_num());
 
 			if (verbose && lr.line_num() % 8000 == 1)
 				print("  {} genes, {} transcripts, {} exons...\r", genes.size(), trans.size(), exons.size() + exons_to_link.size());
@@ -741,7 +741,7 @@ public:
 				entry.protein_id = cols[3];
 				entry.entrez_id = cols[6];
 			}
-			GK_RETHROW("In refLink file: {}:{}", reflink_file, lr.line_num());
+			GK_RETHROW2("In refLink file: {}:{}", reflink_file, lr.line_num());
 		}
 
 		///////////////////////////////////////////////////////////////////////
@@ -802,7 +802,7 @@ public:
 				// Insert the refGene entry under the entrez_id key
 				refgene[e.entrez_id].insert(e);
 			}
-			GK_RETHROW("In refGene file: {}:{}", refgene_file, lr.line_num());
+			GK_RETHROW2("In refGene file: {}:{}", refgene_file, lr.line_num());
 		}
 
 		///////////////////////////////////////////////////////////////////////
@@ -1221,7 +1221,7 @@ public:
 							lr.line_num());
 				}
 			}
-			GK_RETHROW("In GFF3 file: {}:{}", infile, lr.line_num());
+			GK_RETHROW2("In GFF3 file: {}:{}", infile, lr.line_num());
 
 			if (verbose && lr.line_num() % 8000 == 1) {
 				auto sum_value = [](auto init, const auto& x) { return init + x.second.size(); };
@@ -1413,7 +1413,7 @@ private:
 
 		// If this fails: use a more heavy-weight map recording all prior transcripts
 		auto type_name = cols[1];
-		GK_CHECK(!trans.empty() && last_tran_id == tran_id, key,
+		GK_CHECK2(!trans.empty() && last_tran_id == tran_id, key,
 				 "Preceding transcript '{}' is not the parent of {} '{}'", last_tran_id,
 				 type_name, get_attr(attrs, "ID"));
 		index_t tran_index = trans.size() - 1;
@@ -1470,8 +1470,8 @@ std::vector<std::string> genome_anno::build_ncbi_refseq(const char* infile, cons
 
 void genome_anno::open()
 {
-	GK_CHECK(!is_open(), runtime, "genome_anno::open() already opened");
-	GK_CHECK(!_sourcefile.empty(), value, "Genome is not a registered annotation");
+	GK_CHECK2(!is_open(), runtime, "genome_anno::open() already opened");
+	GK_CHECK2(!_sourcefile.empty(), value, "Genome is not a registered annotation");
 
 	// Resolve the source file, possibly downloading it
 	try {

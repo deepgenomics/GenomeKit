@@ -44,7 +44,7 @@ string default_resolve_datafile_path(string path)
 	size_t i = path.find(default_data_directory);
 	if (i != string::npos) {
 		const char* data_dir = getenv("GENOMEKIT_DATA_DIR");
-		GK_CHECK(data_dir, runtime, "Must set GENOMEKIT_DATA_DIR environment variable.");  // destructor WILL get called; no worries
+		GK_CHECK2(data_dir, runtime, "Must set GENOMEKIT_DATA_DIR environment variable.");  // destructor WILL get called; no worries
 		path.replace(i, strlen(default_data_directory), data_dir);
 	}
 	return path;
@@ -86,18 +86,18 @@ string prepend_dir(std::string_view dir, std::string_view filename)
 
 void binary_file::open(const string& path, const char* mode)
 {
-	GK_CHECK(!is_open(), runtime, "Cannot open new file without closing old one.");
+	GK_CHECK2(!is_open(), runtime, "Cannot open new file without closing old one.");
 	string binmode(mode);
 	if (binmode.find('b') == string::npos)
 		binmode.push_back('b');
 	_fh = { fopen(path.c_str(), binmode.c_str()), &fclose };
-	GK_CHECK(_fh, file, "Could not open {} ({}).", path, strerror(errno));
+	GK_CHECK2(_fh, file, "Could not open {} ({}).", path, strerror(errno));
 }
 
 void binary_file::set_seek(size_t offset)
 {
 	int result = __fseek64(_fh.get(), (long long)offset, SEEK_SET);
-	GK_CHECK(result == 0, file, "Error seeking to position {} in file ({}).", offset, strerror(errno));
+	GK_CHECK2(result == 0, file, "Error seeking to position {} in file ({}).", offset, strerror(errno));
 }
 
 long long binary_file::tell() const
@@ -120,7 +120,7 @@ void binary_file::read(void* dst, size_t item_size, size_t num_items)
 {
 	if (num_items > 0) {
 		size_t n = fread(dst, item_size, num_items, _fh.get());
-		GK_CHECK(n == num_items, file, "Expected to read {} bytes, but read {} bytes ({})",
+		GK_CHECK2(n == num_items, file, "Expected to read {} bytes, but read {} bytes ({})",
 				 item_size * num_items, item_size * n, strerror(errno));
 	}
 }
@@ -129,7 +129,7 @@ void binary_file::write(const void* src, size_t item_size, size_t num_items)
 {
 	if (num_items > 0) {
 		size_t n = fwrite(src, item_size, num_items, _fh.get());
-		GK_CHECK(n == num_items, file, "Expected to write {} bytes, but failed ({})",
+		GK_CHECK2(n == num_items, file, "Expected to write {} bytes, but failed ({})",
 				 item_size * num_items, strerror(errno));
 	}
 }
@@ -144,7 +144,7 @@ void line_reader::open(const char* path)
 {
 	_fh = strcmp(path, stdin_path) != 0 ? decltype(_fh){ std::fopen(path, "rb"), &std::fclose }
 										: decltype(_fh){ stdin, [](auto) { return 0; } };
-	GK_CHECK(_fh, file, "Could not open {} for reading ({}).", path, strerror(errno));
+	GK_CHECK2(_fh, file, "Could not open {} for reading ({}).", path, strerror(errno));
 	advance();
 }
 
@@ -180,7 +180,7 @@ void line_reader::resize()
 	// SPECIAL CASE: first call to advance() from constructor hits this case.
 	size_t old_size = _end - _line;
 	size_t new_size = old_size*2 >= min_bufsize ? old_size*2 : min_bufsize;
-	GK_CHECK(new_size <= max_bufsize, value, "Extremely long line encountered. Something wrong?");
+	GK_CHECK2(new_size <= max_bufsize, value, "Extremely long line encountered. Something wrong?");
 	auto new_buf = std::make_unique<char[]>(new_size+1);
 
 	// Copy the fractional line that we haven't returned yet to the
@@ -334,7 +334,7 @@ void zline_reader::open(const char* path)
 	if (endswith(path, ".gz") || endswith(path, "zip")) {
 		// Open compressed file
 		_zfh = { gzopen(path, "rb"), &gzclose };
-		GK_CHECK(_zfh, file, "Could not open {} for reading ({}).", path, strerror(errno));
+		GK_CHECK2(_zfh, file, "Could not open {} for reading ({}).", path, strerror(errno));
 		advance();  // OK to call virtual because VMT for zline_reader will be loaded by now
 	} else {
 		// Open uncompressed file
@@ -346,7 +346,7 @@ size_t zline_reader::fread(char* dst, unsigned bytes)
 {
 	if (_zfh) {
 		int result = gzread(_zfh.get(), dst, bytes);
-		GK_CHECK(result >= 0, file, "I/O error reading compressed file ({}).", strerror(errno));
+		GK_CHECK2(result >= 0, file, "I/O error reading compressed file ({}).", strerror(errno));
 		return (size_t)result;
 	}
 	return std::fread(dst, 1, bytes, _fh.get()); // Call stdlib fread
@@ -407,16 +407,16 @@ void mmap_file::open(const string& path)
 	};
 	off_t file_size = 0;
 	unique_fd fh { ::open(path.c_str(), O_RDONLY) };
-	GK_CHECK(fh.fd >= 0, file, "Could not open {} for reading ({})", path, strerror(errno));
+	GK_CHECK2(fh.fd >= 0, file, "Could not open {} for reading ({})", path, strerror(errno));
 
 	file_size = lseek(fh.fd, 0, SEEK_END);
 	if (file_size < 0) {
-		GK_THROW(file, "Could not determined file size for {} ({})", path, strerror(errno));
+		GK_THROW2(file, "Could not determined file size for {} ({})", path, strerror(errno));
 	}
 
 	_data = { mmap(nullptr, (size_t)file_size, PROT_READ, MAP_SHARED, fh.fd, 0), mmap_deleter{ (size_t)file_size } };
 	if (_data.get() == MAP_FAILED) {
-		GK_THROW(file, "Could not map view of file ({})", strerror(errno));
+		GK_THROW2(file, "Could not map view of file ({})", strerror(errno));
 	}
 
 	// Closing POSIX file does not cause it to be unmapped.

@@ -27,7 +27,7 @@ const utr_table&  genome_t::utr3s() const { return anno().utr3s(); }
 
 void genome_t::set_config(const string& config)
 {
-	GK_CHECK(!std::empty(config), value, "No config specified.");
+	GK_CHECK2(!std::empty(config), value, "No config specified.");
 
 	_config   = config;
 	_data_dir = default_data_directory;

@@ -13,7 +13,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include <climits>
 #include <concepts>
-#include <fmt/format.h>
+#include <format>
 #include <functional>
 #include <string>
 #include <string_view>
@@ -197,12 +197,12 @@ END_NAMESPACE_GK
 
 template <typename T>
 	requires std::derived_from<T, gk::interval_t>
-struct fmt::formatter<T> : fmt::formatter<std::string> {
+struct std::formatter<T> : std::formatter<std::string> {
 	// T instead of interval_t since as_str is not virtual
 	template <typename FormatCtx>
 	auto format(const T& x, FormatCtx& ctx) const
 	{
-		return fmt::formatter<std::string>::format(x.as_str(), ctx);
+		return std::formatter<std::string>::format(x.as_str(), ctx);
 	}
 };
 

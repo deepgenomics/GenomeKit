@@ -101,7 +101,7 @@ const variant_table&     read_alignments::variants() const
 
 void read_alignments::set_source(string sourcefile)
 {
-	GK_CHECK(!is_open(), runtime, "Cannot set source when file already open.");
+	GK_CHECK2(!is_open(), runtime, "Cannot set source when file already open.");
 	_sourcefile = std::move(sourcefile);
 }
 
@@ -110,8 +110,8 @@ void read_alignments::close() { _fmap.close(); }
 
 void read_alignments::open()
 {
-	GK_CHECK(!is_open(), runtime, "jraligns_table::open() already opened");
-	GK_CHECK(!_sourcefile.empty(), value, "No file was specified");
+	GK_CHECK2(!is_open(), runtime, "jraligns_table::open() already opened");
+	GK_CHECK2(!_sourcefile.empty(), value, "No file was specified");
 
 	// Memory map the source file
 	_fmap.open(_sourcefile);
@@ -167,7 +167,7 @@ void read_alignments::builder::add(const char* infile)
 	try {
 		process_file(lr);
 	}
-	GK_RETHROW("In SAM file: {}:{}", infile, lr.line_num());
+	GK_RETHROW2("In SAM file: {}:{}", infile, lr.line_num());
 
 	if (_verbose)
 		print("\rLoaded  {}... ({} reads, {} junctions, {} variants)    \n", infile, _num_reads_loaded,
@@ -238,11 +238,11 @@ void read_alignments::builder::process_line(chrom_t chrom, pos_t pos, strand_t s
 
 		// Record the matching region before N
 		if (code == 'N') {
-			GK_CHECK(a_match.variants.size() <= 255, value,
+			GK_CHECK2(a_match.variants.size() <= 255, value,
 				"Expect number of variants for one read alignment match to be less than 256 but found {}",
 				a_match.variants.size());
 			// assumption this isn't necessary, but revisit if we remove jralign
-			GK_CHECK(match_start < match_end, value,
+			GK_CHECK2(match_start < match_end, value,
 						"No alignment match upstream of intron. Consider filtering out the junction-only "
 						"reads or use jralign.");
 
@@ -260,15 +260,15 @@ void read_alignments::builder::process_line(chrom_t chrom, pos_t pos, strand_t s
 			match_end += len;
 		}
 	}
-	GK_CHECK(!has_seq || empty(seq), value,
+	GK_CHECK2(!has_seq || empty(seq), value,
 			 "Expect length of CIGAR that consumes query ({}) to correspond to SEQ length ({})",
 			 size(cols[9]) - size(seq), size(cols[9]));
 
 	// Remember to collect the last matching region
-	GK_CHECK(a_match.variants.size() <= 255, value,
+	GK_CHECK2(a_match.variants.size() <= 255, value,
 			"Expect number of variants for one read alignment match to be less than 256 but found {}",
 			a_match.variants.size());
-	GK_CHECK(match_start < match_end, value,
+	GK_CHECK2(match_start < match_end, value,
 				"No ending alignment match. Consider filtering out the junction-only "
 				"reads or use jralign.");
 	a_match.i = interval_t::from_dna0(chrom, match_start, match_end, segment_strand, refg());

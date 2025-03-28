@@ -13,19 +13,19 @@ BEGIN_NAMESPACE_GK
 
 void validate_JunctionTable(const PyAsPtrSource* self)
 {
-	GK_CHECK(((PyJunctionTable*)self)->table->valid(), file,
+	GK_CHECK2(((PyJunctionTable*)self)->table->valid(), file,
 			 "Junctions have been invalidated by ReadAlignments.close or with statement.");
 }
 
 void validate_AlignmentTable(const PyAsPtrSource* self)
 {
-	GK_CHECK(((PyAlignmentTable*)self)->table->valid(), file,
+	GK_CHECK2(((PyAlignmentTable*)self)->table->valid(), file,
 			 "Alignments have been invalidated by ReadAlignments.close or with statement.");
 }
 
 void validate_AlignmentMatchTable(const PyAsPtrSource* self)
 {
-	GK_CHECK(((PyAlignmentMatchTable*)self)->table->valid(), file,
+	GK_CHECK2(((PyAlignmentMatchTable*)self)->table->valid(), file,
 			 "AlignmentMatches have been invalidated by ReadAlignments.close or with statement.");
 }
 
@@ -256,7 +256,7 @@ static PyObject* PyReadAlignments_build_ralign(PyObject* cls, PyObject* args, Py
 		// Add excluded intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(exclude); ++i) {
 			PyObject* interval = PyList_GET_ITEM(exclude, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each exclude item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each exclude item must be an Interval");
 			raligns.get_interval_filter().exclude(PyInterval::value(interval));
 		}
 	}
@@ -265,7 +265,7 @@ static PyObject* PyReadAlignments_build_ralign(PyObject* cls, PyObject* args, Py
 		// Add allowed intervals
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(allow); ++i) {
 			PyObject* interval = PyList_GET_ITEM(allow, i); // borrowed reference
-			GK_CHECK(PyInterval::check(interval), type, "Each allow item must be an Interval");
+			GK_CHECK2(PyInterval::check(interval), type, "Each allow item must be an Interval");
 			raligns.get_interval_filter().allow(PyInterval::value(interval));
 		}
 	}
@@ -278,16 +278,16 @@ static PyObject* PyReadAlignments_build_ralign(PyObject* cls, PyObject* args, Py
 		// Add reads from individual files
 		for (Py_ssize_t i = 0; i < PyList_GET_SIZE(infiles); ++i) {
 			PyObject* infile = PyList_GET_ITEM(infiles, i); // borrowed reference
-			GK_CHECK(PyString_Check(infile), type, "Each item in the files list must be a string");
+			GK_CHECK2(PyString_Check(infile), type, "Each item in the files list must be a string");
 			raligns.add(PyString_AS_STRING(infile));
 		}
 	} else if (PyObject* fileno = PyObject_CallMethod(infiles, "fileno", nullptr); fileno) {
 		// Add reads from standard input
 		GKPY_TAKEREF(fileno);
-		GK_CHECK(PyInt_AsLong(fileno) == 0, value, "When infiles is a file, expected sys.stdin (i.e. fileno() == 0)");
+		GK_CHECK2(PyInt_AsLong(fileno) == 0, value, "When infiles is a file, expected sys.stdin (i.e. fileno() == 0)");
 		raligns.add(stdin_path);
 	} else {
-		GK_THROW(type, "Expected infiles to be list of file names or sys.stdin");
+		GK_THROW2(type, "Expected infiles to be list of file names or sys.stdin");
 	}
 
 	// Build the final file.

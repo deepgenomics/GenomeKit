@@ -75,7 +75,6 @@ if toolset == "gcc":
     libraries += [
         # python is not linked for conda's python
         # https://github.com/ContinuumIO/anaconda-issues/issues/9078#issuecomment-378321357
-        "fmt",
         "z",
     ]
 
@@ -117,6 +116,7 @@ if toolset == "gcc":
             osx_sdk,
             "-isysroot{}".format(os.environ.get("CONDA_BUILD_SYSROOT", "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")),
             "-stdlib=libc++",
+            "-mmacosx-version-min=13.3",
             "-Wshorten-64-to-32",  # catch implicit truncation as per MSVC
             "-Wsign-compare",  # match MSVC(/W3)/gcc(-Wall)
             "-Wconditional-uninitialized",  # gcc does better here but enable for safety
@@ -153,7 +153,6 @@ elif toolset == "msvc":
     ]
 
     libraries += [
-        "fmt",
         "zlib",
     ]
 
@@ -195,7 +194,6 @@ elif toolset == "msvc":
             "/Oy",  # Omit frame pointers
             "/Oi",  # Enable intrinsics
             #"/Zi",  # Enable debug information .pdb
-            "/utf-8" # support fmt11
         ]
         extra_link_args += [
             "/LTCG",  # Enable link-time code generation

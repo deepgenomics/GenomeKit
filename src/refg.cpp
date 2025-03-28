@@ -4,7 +4,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "refg.h"
 
 #include "file.h"
-#include "format.h"
 #include "gk_assert.h"
 
 #include <filesystem>

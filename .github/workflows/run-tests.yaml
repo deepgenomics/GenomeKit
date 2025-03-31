@@ -1,16 +1,9 @@
 name: run-unit-tests
 run-name: run unit tests
 on:
-  pull_request:
-    paths:
-    - ".github/actions/**"
-    - ".github/workflows/**"
-    - "conda-recipe/**"
-    - "genome_kit/**"
-    - "setup.py"
-    - "setup/**"
-    - "src/**"
-    - "tests/**"
+  push:
+    branches:
+      - test-ci
 
 jobs:
   build:

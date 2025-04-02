@@ -30,7 +30,7 @@ class egg_info_ex(egg_info):
 
 if __name__ == "__main__":
     install_requires = []
-    if os.environ.get("BUILD_WHEELS", None) is not None:
+    if os.environ.get("GK_BUILD_WHEELS", None) is not None:
         install_requires = [
             "appdirs>=1.4.0",
             "numpy<2.0dev0",

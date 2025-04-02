@@ -33,7 +33,7 @@ jobs:
 
       - name: Build and repair wheels for Python 3.9–3.12
         run: |
-          docker run --rm -v $(pwd):/io -e BUILD_WHEELS=1 quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+          docker run --rm -v $(pwd):/io -e GK_BUILD_WHEELS=1 quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
             set -euxo pipefail
 
             PYTHONS=(
@@ -53,36 +53,23 @@ jobs:
             make install
             cd /io
 
-            mkdir -p repaired_wheels
+            mkdir -p wheels
 
             # install build dependencies
             # numpy is required at build time because its c api is used
             for PYTHON in \${PYTHONS[@]}; do
-              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel numpy
+              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel \"numpy>=1.25,<2.0.0.dev0\"
 
               # Clean previous build artifacts
               rm -rf build dist *.egg-info
 
               # Build wheel
               \$PYTHON setup.py bdist_wheel
-
-              # Repair wheel to comply with manylinux
-              auditwheel repair dist/*.whl --plat manylinux_2_28_x86_64 -w repaired_wheels
+          
+              # Copy wheel to shared folder
+              cp dist/*.whl wheels/
             done
           "
-
-      - name: Upload built wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: genomekit-wheels-linux
-          path: repaired_wheels/*.whl
-
-
-      - name: Download built wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: genomekit-wheels-linux
-          path: wheels
 
       - name: Test wheels across Python 3.9–3.12 with unit tests
         run: |
@@ -111,6 +98,6 @@ jobs:
 
                 # Run import and unit tests
                 python -c 'import genome_kit; print(genome_kit.__version__)'
-                ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+                ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
               "
           done

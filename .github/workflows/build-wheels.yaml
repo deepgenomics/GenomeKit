@@ -3,7 +3,7 @@ run-name: build-wheels
 
 on:
   push:
-    # only build+push docker on release-please tags
+    # only build+publish wheels on release-please tags
     tags: [ "v*" ]
     paths:
     - ".github/actions/**"

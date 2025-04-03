@@ -255,8 +255,8 @@ class GCSDataManager(DataManager):
 
     @lru_cache
     def list_available_genomes(self):
-        blobs = self.bucket.list_blobs(match_glob="*.{2bit,cfg}")
-        return [blob.name.rpartition(".")[0] for blob in blobs]
+        blobs = self.bucket.list_blobs()
+        return [blob.name.rpartition(".")[0] for blob in blobs if blob.name.endswith(".2bit") or blob.name.endswith(".cfg")]
 
 class DefaultDataManager(DataManager):
     """A minimal data manager implementation that retrieves files from a S3 bucket.

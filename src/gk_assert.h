@@ -6,7 +6,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #define __GK_ASSERT_H__
 
 #include "defines.h"
-#include <fmt/core.h>
+#include <format>
 #include <stdexcept>
 #include <string>
 
@@ -81,7 +81,7 @@ extern bool is_debugger_running();
 //! for the message is the same as printf(msg, ...).
 //!
 #define GK_MAKE_ERROR(etype, msg, ...) \
-	gk::etype##_error(fmt::format(msg __VA_OPT__(, ) __VA_ARGS__), __FILE__, __LINE__)
+	gk::etype##_error(std::format(msg __VA_OPT__(, ) __VA_ARGS__), __FILE__, __LINE__)
 #define GK_THROW(etype, ...) throw GK_MAKE_ERROR(etype, __VA_ARGS__)
 #define GK_CATCH_THROW_NESTED(etype, ...) \
 	catch (const gk::etype##_error&) \

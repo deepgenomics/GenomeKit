@@ -26,7 +26,7 @@ const char* runtime_error::what() const noexcept
 
 	const char* const msg = std::runtime_error::what();
 	try {
-		ccast<decltype(buf)&>(buf) = fmt::format("{}:{}: {}", file, line, msg);
+		ccast<decltype(buf)&>(buf) = std::format("{}:{}: {}", file, line, msg);
 		return buf.c_str();
 	} catch (...) {
 		return msg;

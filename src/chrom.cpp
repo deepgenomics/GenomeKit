@@ -4,7 +4,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "chrom.h"
 
 #include "file.h"
-#include "format.h"
 #include "gk_assert.h"
 #include "strutil.h"
 #include "util.h"
@@ -61,7 +60,7 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 	auto& chrom_names = name_registry[refg];
 	if (!chrom_names) {
 		std::string refg_name{get_refg_registry(data_dir).refg_as_sv(refg)};
-		std::string alias_path{fmt::format("{}.chromAlias.txt", refg_name)};
+		std::string alias_path{std::format("{}.chromAlias.txt", refg_name)};
 
 		try {
 			auto resolved = resolve_datafile_path(prepend_dir(data_dir, alias_path));
@@ -93,7 +92,7 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 							   [&](auto name) { return std::make_pair(std::string{name}, tag); });
 			}
 		} else {
-			std::string file_path{fmt::format("{}.chrom.sizes", refg_name)};
+			std::string file_path{std::format("{}.chrom.sizes", refg_name)};
 			try {
 				file_path = resolve_datafile_path(prepend_dir(data_dir, file_path));
 			} catch (const value_error& e) {

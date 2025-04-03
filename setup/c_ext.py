@@ -75,7 +75,6 @@ if toolset == "gcc":
     libraries += [
         # python is not linked for conda's python
         # https://github.com/ContinuumIO/anaconda-issues/issues/9078#issuecomment-378321357
-        "fmt",
         "z",
     ]
 
@@ -153,7 +152,6 @@ elif toolset == "msvc":
     ]
 
     libraries += [
-        "fmt",
         "zlib",
     ]
 
@@ -195,7 +193,6 @@ elif toolset == "msvc":
             "/Oy",  # Omit frame pointers
             "/Oi",  # Enable intrinsics
             #"/Zi",  # Enable debug information .pdb
-            "/utf-8" # support fmt11
         ]
         extra_link_args += [
             "/LTCG",  # Enable link-time code generation

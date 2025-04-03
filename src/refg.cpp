@@ -4,7 +4,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "refg.h"
 
 #include "file.h"
-#include "format.h"
 #include "gk_assert.h"
 
 #include <filesystem>
@@ -26,7 +25,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		// try a small file to see if it's a refg
 		// this is done instead of populating a dummy cfg to reduce the
 		// effort required to add an assembly
-		std::string path{fmt::format("{}.chrom.sizes", config)};
+		std::string path{std::format("{}.chrom.sizes", config)};
 		if (!std::filesystem::exists(path)) {
 			path = resolve_datafile_path(prepend_dir(data_dir(), path));
 		}
@@ -38,7 +37,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 
 	if (std::empty(name)) {
 		// not an assembly, must be an annotation, get name from .cfg
-		std::string config_path{fmt::format("{}.cfg", config)};
+		std::string config_path{std::format("{}.cfg", config)};
 		try {
 			config_path = resolve_datafile_path(prepend_dir(data_dir(), config_path));
 		} catch (const value_error& e) {
@@ -71,7 +70,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 
 std::string refg_registry_t::_try_refg_as_sv_from_file(refg_t ref) const
 {
-	std::string path{fmt::format("{}.hash", ref)};
+	std::string path{std::vformat("{}.hash", std::make_format_args(ref))};
 	if (!std::filesystem::exists(path)) {
 		path = resolve_datafile_path(prepend_dir(data_dir(), path));
 	}

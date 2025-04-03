@@ -3,7 +3,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 */
 #include "jralign.h"
 
-#include "format.h"
 #include "genome.h"
 #include "genome_dna.h"
 #include "strutil.h"

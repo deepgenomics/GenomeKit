@@ -7,7 +7,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include "defines.h"
 #include <cmath>
-#include <fmt/format.h>
+#include <format>
 #include <limits>
 
 BEGIN_NAMESPACE_GK
@@ -86,11 +86,11 @@ INLINE bool le_nonan(half_t x, half_t y)
 END_NAMESPACE_GK
 
 template <>
-struct fmt::formatter<gk::half_t> : fmt::formatter<float> {
+struct std::formatter<gk::half_t> : std::formatter<float> {
 	template <typename FormatCtx>
 	auto format(gk::half_t x, FormatCtx& ctx) const
 	{
-		return fmt::formatter<gk::half_t>::format(as_float(x), ctx);
+		return std::formatter<gk::half_t>::format(as_float(x), ctx);
 	}
 };
 

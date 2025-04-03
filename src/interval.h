@@ -13,7 +13,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include <climits>
 #include <concepts>
-#include <fmt/format.h>
+#include <format>
 #include <functional>
 #include <string>
 #include <string_view>
@@ -31,7 +31,6 @@ enum class strand_t : uint8_t { // Strand index [+,-]
 	pos_strand,
 	num_strand // [+,-] is two unique identifiers mapped to [0,1]
 };
-inline auto format_as(strand_t x) { return as_ordinal(x); }
 
 using offset_t = uint32_t;   // Byte offset type. A pointer stored as 4-byte relative offset rather than as 8-byte
 							 // absolute pointer. For easy serialization and memory savings.
@@ -197,12 +196,21 @@ END_NAMESPACE_GK
 
 template <typename T>
 	requires std::derived_from<T, gk::interval_t>
-struct fmt::formatter<T> : fmt::formatter<std::string> {
+struct std::formatter<T> : std::formatter<std::string> {
 	// T instead of interval_t since as_str is not virtual
 	template <typename FormatCtx>
 	auto format(const T& x, FormatCtx& ctx) const
 	{
-		return fmt::formatter<std::string>::format(x.as_str(), ctx);
+		return std::formatter<std::string>::format(x.as_str(), ctx);
+	}
+};
+
+template <>
+struct std::formatter<gk::strand_t> : std::formatter<std::uint8_t> {
+	template <typename FormatCtx>
+	auto format(gk::strand_t x, FormatCtx& ctx) const
+	{
+		return std::formatter<std::uint8_t>::format(static_cast<std::uint8_t>(x), ctx);
 	}
 };
 

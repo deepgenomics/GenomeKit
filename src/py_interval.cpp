@@ -4,7 +4,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #include "py_util.h"
 #include "py_interval.h"
 
-#include "format.h"
 #include "genome.h"
 #include "py_genome.h"
 

@@ -23,7 +23,7 @@ On Windows, you'll need to comment out the mac/linux only test dependencies from
 
 On M1 macs, you might need to set up the environment differently::
 
-    conda create -n cxx cxx-compiler zlib
+    conda create -n cxx cxx-compiler zlib fmt
     conda activate cxx
     conda install -c conda-forge -c bioconda --file a-file-with-the-deps-from-genomekit_dev-yml.txt
 

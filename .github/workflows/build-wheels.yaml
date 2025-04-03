@@ -23,11 +23,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-        # optional but recommended for speed.
         # the docker image in the workflow is necessary to build a manylinux compliant wheel.
-        # PyPI expects these to be run in manylinux_2_28 or lower.
+        # PyPI expects these to be run in manylinux_2_28 or lower. see https://peps.python.org/pep-0600/
         # additionally, manylinux_2_28 is actively maintained by PyPA and includes /opt/python/ environments
-        # for 3.9-3.12 out-of-the-box.
+        # for 3.9-3.12 out-of-the-box. see https://quay.io/repository/pypa/manylinux_2_28_x86_64
       - name: Pre-pull manylinux image
         run: docker pull quay.io/pypa/manylinux_2_28_x86_64
 

@@ -42,14 +42,6 @@ jobs:
               /opt/python/cp312-cp312/bin/python
             )
 
-            # Build and install libfmt to statically link to wheel
-            cd /tmp
-            # for now 11.1.4 is broken, otherwise use latest tag
-            git clone --branch 11.0.2 --depth=1 https://github.com/fmtlib/fmt.git
-            cd fmt
-            cmake -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DFMT_INSTALL=ON .
-            make -j\$(nproc)
-            make install
             cd /io
 
             mkdir -p wheels

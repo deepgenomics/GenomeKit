@@ -7,7 +7,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include "gk_assert.h"
 #include <cstring>
-#include <fmt/format.h>
+#include <format>
 #include <memory>
 #include <string_view>
 #include <vector>
@@ -71,11 +71,11 @@ inline bool dnastr::operator!=(const dnastr& s) const
 END_NAMESPACE_GK
 
 template <>
-struct fmt::formatter<gk::dnastr> : fmt::formatter<const char*> {
+struct std::formatter<gk::dnastr> : std::formatter<const char*> {
 	template <typename FormatCtx>
 	auto format(const gk::dnastr& x, FormatCtx& ctx) const
 	{
-		return fmt::formatter<const char*>::format(x.c_str(), ctx);
+		return std::formatter<const char*>::format(x.c_str(), ctx);
 	}
 };
 

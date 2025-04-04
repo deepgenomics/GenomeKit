@@ -3,7 +3,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 */
 #include "interval.h"
 
-#include "format.h"
 #include <algorithm>
 #include <vector>
 

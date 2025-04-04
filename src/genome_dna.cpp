@@ -2,7 +2,6 @@
 Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 */
 #include "genome_dna.h"
-#include "format.h"
 #include "strutil.h"
 #include "util.h"
 #include <algorithm>
@@ -288,7 +287,7 @@ void genome_dna::seqrec_t::ensure_open(const mmap_file& fmap) const
 
 string default_dna_sourcefile(string_view refg_name, string_view data_dir)
 {
-	return prepend_dir(data_dir, fmt::format("{}.2bit", refg_name));
+	return prepend_dir(data_dir, std::format("{}.2bit", refg_name));
 }
 
 END_NAMESPACE_GK

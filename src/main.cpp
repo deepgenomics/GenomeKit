@@ -8,7 +8,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #include "genome_kit.h"
 #include "gk_time.h"
-#include "format.h"
 #include "half.h"
 #include "jralign.h"
 #include "jrdist.h"

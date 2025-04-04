@@ -3,7 +3,6 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 */
 #include "genome_anno.h"
 
-#include "format.h"
 #include "genome.h"
 #include "strutil.h"
 #include <algorithm>
@@ -360,6 +359,7 @@ public:
 		packed_cdss_t cdss_to_link;
 		packed_utrs_t utr5s_to_link;
 		packed_utrs_t utr3s_to_link;
+		packed_utrs_t generic_utrs_to_link;
 		string last_tran_id;
 		string last_gene_id;
 		set<string, less<>> unknown_gff_types;
@@ -427,7 +427,7 @@ public:
 
 				} else if (type == "transcript" || startswith(cols[8], "ID=transcript:")) {
 					// process any unlinked children from previous transcript
-					link(exons_to_link, cdss_to_link, utr5s_to_link, utr3s_to_link);
+					link(exons_to_link, cdss_to_link, utr5s_to_link, utr3s_to_link, generic_utrs_to_link);
 
 					split_view(cols[8], ';', attrs);
 
@@ -522,40 +522,8 @@ public:
 					const auto utr3 = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
 					utr3s_to_link.push_back(utr3);
 				} else if (type == "UTR") {
-					auto throwaway = process_exonic_component<packed_cds>(cols, last_tran_id, parsed_interval);
-					if (cdss_to_link.empty()) {
-						if (throwaway.strand == strand_t::pos_strand) {
-							const auto utr5 = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
-							if (verbose) {
-								print("utr5: {}\n", utr5);
-							}
-							utr5s_to_link.push_back(utr5);
-						} else {
-							const auto utr3 = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
-							if (verbose) {
-								print("utr3: {}\n", utr3);
-							}
-							utr3s_to_link.push_back(utr3);
-						}
-					} else {
-						// assumes some ordering of UTR and CDS lines
-						const packed_cds first_cds = cdss_to_link.front();
-						const packed_cds last_cds = cdss_to_link.back();
-						if (throwaway.upstream_of(first_cds)) {
-							const auto utr5 = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
-							if (verbose) {
-								print("utr5: {}\n", utr5);
-							}
-							utr5s_to_link.push_back(utr5);
-						}
-						if (throwaway.dnstream_of(last_cds)) {
-							const auto utr3 = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
-							if (verbose) {
-								print("utr3:{}\n", utr3);
-							}
-							utr3s_to_link.push_back(utr3);
-						}
-					}
+					auto throwaway = process_exonic_component<packed_utr>(cols, last_tran_id, parsed_interval);
+					generic_utrs_to_link.push_back(throwaway);
 				} else if (auto loc = unknown_gff_types.lower_bound(type);
 						   loc == cend(unknown_gff_types) || *loc != type) {
 					unknown_gff_types.emplace_hint(loc, type);
@@ -570,7 +538,7 @@ public:
 
 			//if (lr.line_num() > 10000) break; // UNCOMMENT FOR SPEED
 		}
-		link(exons_to_link, cdss_to_link, utr5s_to_link, utr3s_to_link); // process any unlinked children from final transcript
+		link(exons_to_link, cdss_to_link, utr5s_to_link, utr3s_to_link, generic_utrs_to_link); // process any unlinked children from final transcript
 
 		if (verbose)
 			print("  {} genes, {} transcripts, {} exons...\n", genes.size(), trans.size(), exons.size());
@@ -669,16 +637,32 @@ public:
 	// exons or negative strands may be in downstream ordering.
 	// This relies on collecting all the exons/cdss in a transcript and then
 	// processing when fully known (we get to a new transcript).
-	void link(packed_exons_t& exons_to_link, packed_cdss_t& cdss_to_link, packed_utrs_t& utr5s_to_link, packed_utrs_t& utr3s_to_link)
+	void link(packed_exons_t& exons_to_link, packed_cdss_t& cdss_to_link, packed_utrs_t& utr5s_to_link, packed_utrs_t& utr3s_to_link, packed_utrs_t& generic_utrs_to_link)
 	{
 		static constexpr auto upstream_ordering = [](auto& lhs, auto& rhs) { return lhs.upstream_of(rhs); };
 		sort(begin(exons_to_link), end(exons_to_link), upstream_ordering);
 		for_each(cbegin(exons_to_link), cend(exons_to_link), [this](const auto& x) { link(x); });
 		exons_to_link.clear();
 
-		if (cdss_to_link.empty() && utr5s_to_link.empty() && utr3s_to_link.empty()) {
+		if (cdss_to_link.empty() && utr5s_to_link.empty() && utr3s_to_link.empty() && generic_utrs_to_link.empty()) {
 			return;
 		}
+
+		sort(begin(cdss_to_link), end(cdss_to_link), upstream_ordering);
+
+		for (packed_utr& utr : generic_utrs_to_link) {
+			const packed_cds first_cds = cdss_to_link.front();
+			const packed_cds last_cds = cdss_to_link.back();
+			GK_CHECK(utr.upstream_of(first_cds) || utr.dnstream_of(last_cds), value,
+				"Found utr {} in middle of cds", utr);
+			if (utr.upstream_of(first_cds)) {
+				utr5s_to_link.push_back(utr);
+			}
+			if (utr.dnstream_of(last_cds)) {
+				utr3s_to_link.push_back(utr);
+			}
+		}
+		generic_utrs_to_link.clear();
 
 		const packed_tran& parent_tran = (!cdss_to_link.empty()) ? trans[cdss_to_link[0].tran] :
 				(!utr5s_to_link.empty()) ? trans[utr5s_to_link[0].tran] :

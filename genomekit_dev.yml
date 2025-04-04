@@ -4,14 +4,13 @@ channels:
   - bioconda
 dependencies:
   - appdirs>=1.4.0
-  - fmt
   - numpy <2.0dev0
   - python>=3.9.0,<3.13.0
   - tqdm
   - typing-extensions
   - zlib
   - importlib-metadata
-  - google-cloud-storage>=2.10.0
+  - google-cloud-storage
   - boto3
 
   # dev + test dependencies

@@ -2,7 +2,6 @@ name: run-unit-tests
 run-name: run unit tests
 on:
   pull_request:
-    branches-ignore: ["release-please*"]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
@@ -19,6 +18,7 @@ jobs:
       matrix:
         platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
     runs-on: ${{ matrix.platform[1] }}
+    if: "!startsWith(github.head_ref, 'release-please')"
     steps:
       - uses: actions/checkout@v4
 
@@ -54,7 +54,7 @@ jobs:
         id: restore_gk_pkg
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/meta.yaml', 'src/**', 'genome_kit/**', 'tests/**') }}
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
           path: |
             ~/conda-bld
           fail-on-cache-miss: true

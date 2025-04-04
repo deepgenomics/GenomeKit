@@ -1,5 +1,32 @@
 # Changelog
 
+## [6.5.2](https://github.com/deepgenomics/GenomeKit/compare/v6.5.1...v6.5.2) (2025-04-03)
+
+
+### Features
+
+* add gencode.v47 adjacent annos + appris ([#143](https://github.com/deepgenomics/GenomeKit/issues/143)) ([34b94df](https://github.com/deepgenomics/GenomeKit/commit/34b94dfd023dd56890b7d6a9bbad54738dec0876)), closes [#134](https://github.com/deepgenomics/GenomeKit/issues/134)
+
+
+### Miscellaneous Chores
+
+* replace libfmt with std::format ([#148](https://github.com/deepgenomics/GenomeKit/issues/148)) ([ae7100a](https://github.com/deepgenomics/GenomeKit/commit/ae7100ab1462aa07cdce03a3975a04a4e561cd7d))
+
+## [6.5.1](https://github.com/deepgenomics/GenomeKit/compare/v6.5.0...v6.5.1) (2025-03-07)
+
+
+### Bug Fixes
+
+* build anno relies on utr/cds ordering ([#142](https://github.com/deepgenomics/GenomeKit/issues/142)) ([e28678b](https://github.com/deepgenomics/GenomeKit/commit/e28678b3778baa8fff6a54ab4858eb794f8b53c2)), closes [#135](https://github.com/deepgenomics/GenomeKit/issues/135)
+* handle anchor within deletions ([#140](https://github.com/deepgenomics/GenomeKit/issues/140)) ([3c8aabb](https://github.com/deepgenomics/GenomeKit/commit/3c8aabbd7bbc29f4771560cb4b47c65f27056c9d))
+
+## [6.5.0](https://github.com/deepgenomics/GenomeKit/compare/v6.4.0...v6.5.0) (2025-03-04)
+
+
+### Features
+
+* add mouse annos and appris ([#137](https://github.com/deepgenomics/GenomeKit/issues/137)) ([3e2b148](https://github.com/deepgenomics/GenomeKit/commit/3e2b14844a3ec818f8f4fe6f1084e95483810662)), closes [#129](https://github.com/deepgenomics/GenomeKit/issues/129)
+
 ## [6.4.0](https://github.com/deepgenomics/GenomeKit/compare/v6.3.0...v6.4.0) (2025-02-27)
 
 

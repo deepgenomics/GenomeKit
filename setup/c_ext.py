@@ -158,6 +158,7 @@ elif toolset == "msvc":
     # VC flags common to both debug and release modes
     extra_compile_args += [
         "/std:c++20",
+        "/std:c++latest", # required for std::format
         "/permissive-",
         "/Zc:__cplusplus",
         "/Zc:strictStrings-",  # don"t let strings be written to by default

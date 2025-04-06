@@ -1,0 +1,94 @@
+name: build-wheels
+run-name: build-wheels
+
+on:
+  push:
+    # only build+publish wheels on release-please tags
+    tags: [ "v*" ]
+    paths:
+    - ".github/actions/**"
+    - ".github/workflows/**"
+    - "conda-recipe/**"
+    - "genome_kit/**"
+    - "setup.py"
+    - "setup/**"
+    - "src/**"
+    - "tests/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+        # the docker image in the workflow is necessary to build a manylinux compliant wheel.
+        # PyPI expects manylinux compliance in their distributions.
+        # additionally, manylinux_2_28 is designed to be "future-proof" as per PEP 600.
+        # see https://github.com/pypa/manylinux
+      - name: Pre-pull manylinux image
+        run: docker pull quay.io/pypa/manylinux_2_28_x86_64
+
+      - name: Build and repair wheels for Python 3.9–3.12
+        run: |
+          docker run --rm -v $(pwd):/io -e GK_BUILD_WHEELS=1 quay.io/pypa/manylinux_2_28_x86_64 /bin/bash -c "
+            set -euxo pipefail
+
+            PYTHONS=(
+              /opt/python/cp39-cp39/bin/python
+              /opt/python/cp310-cp310/bin/python
+              /opt/python/cp311-cp311/bin/python
+              /opt/python/cp312-cp312/bin/python
+            )
+
+            cd /io
+
+            mkdir -p wheels
+
+            # install build dependencies
+            # numpy is required at build time because its c api is used
+            for PYTHON in \${PYTHONS[@]}; do
+              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel \"numpy==2\"
+
+              # Clean previous build artifacts
+              rm -rf build dist *.egg-info
+
+              # Build wheel
+              \$PYTHON setup.py bdist_wheel
+          
+              # Copy wheel to shared folder
+              cp dist/*.whl wheels/
+            done
+          "
+
+      - name: Test wheels across Python 3.9–3.12 with unit tests
+        run: |
+          set -euxo pipefail
+          # for PYVER in 3.10 3.11 3.12; do
+          for PYVER in 3.9 3.10 3.11 3.12; do
+            # Get version tags
+            TAG="cp${PYVER/./}"
+
+            echo "Testing on Python $PYVER with tag $TAG"
+
+            docker run --rm \
+              -v $(pwd)/wheels:/wheels \
+              -v $(pwd)/tests:/tests \
+              python:$PYVER-slim /bin/bash -c "
+                set -euxo pipefail
+
+                apt-get update && apt-get install -y gcc python3-dev
+
+                python -m pip install --upgrade pip
+
+                # Find the matching wheel
+                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+                echo 'Installing wheel: ' \$WHEEL
+                python -m pip install \$WHEEL
+
+                # Run import and unit tests
+                python -c 'import genome_kit; print(genome_kit.__version__)'
+                ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+              "
+          done

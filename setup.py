@@ -1,4 +1,5 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
+import os
 
 from setuptools import setup, find_packages
 from setuptools.command.egg_info import egg_info
@@ -28,6 +29,18 @@ class egg_info_ex(egg_info):
         egg_info.run(self)
 
 if __name__ == "__main__":
+    install_requires = []
+    if os.environ.get("GK_BUILD_WHEELS", None) is not None:
+        install_requires = [
+            "appdirs>=1.4.0",
+            "numpy<2.0dev0",
+            "google-cloud-storage>=2.10.0",
+            "boto3",
+            "tqdm",
+            "setuptools",
+            "importlib-metadata",
+            "typing-extensions",
+        ]
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
@@ -41,6 +54,7 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.12",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
+        install_requires=install_requires,
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),
         name="genomekit",

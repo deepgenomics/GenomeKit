@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.5.3](https://github.com/deepgenomics/GenomeKit/compare/v6.5.2...v6.5.3) (2025-04-06)
+
+
+### Miscellaneous Chores
+
+* unpin gcs client to avoid conda conflicts ([#151](https://github.com/deepgenomics/GenomeKit/issues/151)) ([354f715](https://github.com/deepgenomics/GenomeKit/commit/34b94dfd023dd56890b7d6a9bbad54738dec0876))
+
 ## [6.5.2](https://github.com/deepgenomics/GenomeKit/compare/v6.5.1...v6.5.2) (2025-04-03)
 
 

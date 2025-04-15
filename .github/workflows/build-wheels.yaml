@@ -6,7 +6,6 @@ on:
     # only build+publish wheels on release-please tags
     tags: [ "v*" ]
     paths:
-      - ".github/actions/**"
       - ".github/workflows/**"
       - "conda-recipe/**"
       - "genome_kit/**"

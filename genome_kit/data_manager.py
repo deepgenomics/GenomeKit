@@ -255,8 +255,21 @@ class GCSDataManager(DataManager):
 
     @lru_cache
     def list_available_genomes(self):
+        names = set()
+
+        def get_genomes(filenames):
+            return (
+                name.rpartition(".")[0]
+                for name in filenames
+                if name.endswith(".2bit") or name.endswith(".cfg")
+            )
+
+        names.update(get_genomes(os.listdir(self.data_dir)))
+
         blobs = self.bucket.list_blobs()
-        return [blob.name.rpartition(".")[0] for blob in blobs if blob.name.endswith(".2bit") or blob.name.endswith(".cfg")]
+        names.update(get_genomes(blob.name for blob in blobs))
+
+        return sorted(names)
 
 class DefaultDataManager(DataManager):
     """A minimal data manager implementation that retrieves files from a S3 bucket.
@@ -351,12 +364,21 @@ class DefaultDataManager(DataManager):
     @lru_cache
     def list_available_genomes(self):
         names = set()
+
+        def get_genomes(filenames):
+            return (
+                name.rpartition(".")[0]
+                for name in filenames
+                if name.endswith(".2bit") or name.endswith(".cfg")
+            )
+
+        names.update(get_genomes(os.listdir(self.data_dir)))
+
         paginator = self.client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=self._bucket_name, Delimiter="/"):
-            if "Contents" not in page:
-                continue
-            for obj in page["Contents"]:
-                name: str = obj["Key"]
-                if name.endswith(".2bit") or name.endswith(".cfg"):
-                    names.add(name.rpartition(".")[0])
-        return sorted(list(names))
+        names.update(get_genomes(
+            obj["Key"]
+            for page in paginator.paginate(Bucket=self._bucket_name, Delimiter="/")
+            for obj in page.get("Contents", [])
+        ))
+
+        return sorted(names)

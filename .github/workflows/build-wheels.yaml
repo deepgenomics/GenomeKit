@@ -92,43 +92,40 @@ jobs:
           done
 
   build-arm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up QEMU for ARM emulation
-        uses: docker/setup-qemu-action@v3
 
       - name: Pre-pull manylinux aarch64 image
         run: docker pull quay.io/pypa/manylinux_2_28_aarch64
 
       - name: Build and repair wheels for ARM (Python 3.9–3.12)
         run: |
-          docker run --rm --platform linux/arm64 \
+          docker run --rm \
             -v $(pwd):/io \
             -e GK_BUILD_WHEELS=1 \
             quay.io/pypa/manylinux_2_28_aarch64 /bin/bash -c "
               set -euxo pipefail
-          
+
               PYTHONS=(
                 /opt/python/cp39-cp39/bin/python
                 /opt/python/cp310-cp310/bin/python
                 /opt/python/cp311-cp311/bin/python
                 /opt/python/cp312-cp312/bin/python
               )
-          
+
               cd /io
               mkdir -p wheels/arm
-          
+
               for PYTHON in \${PYTHONS[@]}; do
                 \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel \"numpy==2\"
-          
+
                 rm -rf build dist *.egg-info
-          
+
                 \$PYTHON setup.py bdist_wheel
-          
-                # separate dir to x86 wheels
+
                 cp dist/*.whl wheels/arm/
               done
             "
@@ -143,7 +140,6 @@ jobs:
             echo "Testing on Python $PYVER (ARM64) with tag $TAG"
 
             docker run --rm \
-              --platform linux/arm64 \
               -v $(pwd)/wheels/arm:/wheels \
               -v $(pwd)/tests:/tests \
               python:$PYVER-slim /bin/bash -c "

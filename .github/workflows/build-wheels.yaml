@@ -5,14 +5,14 @@ on:
   push:
     tags: [ "v*" ]
     paths:
-      - ".github/actions/**"
-      - ".github/workflows/**"
-      - "conda-recipe/**"
-      - "genome_kit/**"
-      - "setup.py"
-      - "setup/**"
-      - "src/**"
-      - "tests/**"
+    - ".github/actions/**"
+    - ".github/workflows/**"
+    - "conda-recipe/**"
+    - "genome_kit/**"
+    - "setup.py"
+    - "setup/**"
+    - "src/**"
+    - "tests/**"
 
 jobs:
   build:

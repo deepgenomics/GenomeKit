@@ -39,7 +39,10 @@ from urllib.request import urlopen
 
 
 eps = entry_points(group="genomekit.plugins.data_manager")
-DataManagerImpl = DefaultDataManager
+try:
+    DataManagerImpl = list(eps)[0].load()
+except:
+    DataManagerImpl = DefaultDataManager
 # Register an implementation of DataManager if you need to upload
 # new data
 data_manager: DataManager = DataManagerImpl(_config["DATA_DIR"])

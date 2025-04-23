@@ -30,9 +30,16 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: [["39", "3.9"], ["310", "3.10"], ["311", "3.11"], ["312", "3.12"]]
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
-    runs-on: ${{ matrix.platform[1] }}
+        include:
+          - {"pyver-short": "39", "python-version": "3.9", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "39", "python-version": "3.9", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "310", "python-version": "3.10", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "310", "python-version": "3.10", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "311", "python-version": "3.11", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +69,7 @@ jobs:
       - name: install mamba
         uses: ./.github/actions/install-mamba
         with:
-          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform[0] }}/1.5.7
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform }}/1.5.7
 
       - name: create test env
         shell: bash -l -e {0}
@@ -81,11 +88,11 @@ jobs:
           set -x
           micromamba activate test
           conda index ~/conda-bld
-          files=(~/conda-bld/*/*py${{ matrix.python-version[0] }}*.tar.bz2)
+          files=(~/conda-bld/*/*py${{ matrix.pyver-short }}*.tar.bz2)
           if [ ! -e "${files[0]}" ]; then
-              echo "No files matched for py${{ matrix.python-version[0] }}"
+              echo "No files matched for py${{ matrix.pyver-short }}"
               exit 1 
           fi          
-          conda mambabuild --croot /tmp/conda-bld -t $files --extra-deps python=${{ matrix.python-version[1] }}
+          conda mambabuild --croot /tmp/conda-bld -t $files --extra-deps python=${{ matrix.python-version }}
           conda clean -it
           set +x

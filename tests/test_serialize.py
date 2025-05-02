@@ -4,7 +4,8 @@ import pickle
 import os
 import unittest
 
-from genome_kit import Genome, Interval, Variant
+from genome_kit import Genome, Interval, Variant, VariantGenome
+from tests import MiniGenome
 
 
 class TestSerialize(unittest.TestCase):
@@ -32,6 +33,9 @@ class TestSerialize(unittest.TestCase):
                 genome.utr3s[-3],
                 genome.utr5s[-4],
             ]
+
+        anno_genome = MiniGenome("gencode.v29")
+        objs.append(VariantGenome(anno_genome, Variant.from_string('chr2:20:A:T', anno_genome)))
 
         # Check that pickling / unpickling works
         stored = pickle.dumps(objs, pickle.HIGHEST_PROTOCOL)

@@ -1,5 +1,21 @@
 # Changelog
 
+## [7.0.0](https://github.com/deepgenomics/GenomeKit/compare/v6.5.3...v7.0.0) (2025-05-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **appris/mane:** this change also fixes gencode.v41 to use the correct source (e107 now instead of e103).
+
+### Features
+
+* wheel distribution for linux on python 3.9-3.12 ([#150](https://github.com/deepgenomics/GenomeKit/issues/150)) ([6faecce](https://github.com/deepgenomics/GenomeKit/commit/6faecce77546c3ed0c0433b5a8f2e134463b1c86))
+
+
+### Bug Fixes
+
+* **appris/mane:** allow data source to determine availability ([#157](https://github.com/deepgenomics/GenomeKit/issues/157)) ([41c1fbe](https://github.com/deepgenomics/GenomeKit/commit/41c1fbe5c011d04504b08eef4435c50771c01471))
+
 ## [6.5.3](https://github.com/deepgenomics/GenomeKit/compare/v6.5.2...v6.5.3) (2025-04-06)
 
 

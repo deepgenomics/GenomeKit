@@ -30,26 +30,8 @@ _config = {
 APPRIS_BINARY_VERSION = 7
 
 
-def get_appris_version(annotation):
-    if any(x in annotation for x in ["Sscrofa11.1.98", ".m38.v"]):
-        return "2019_09.v29"
-    elif any(
-        x in annotation for x in ["gencode.v29", "gencode.vM19", "ncbi_refseq.v109"]
-    ):
-        return "2018_12.v28"
-    elif any(x in annotation for x in ["gencode.v41", "gencode.vM30"]):
-        return "2022_07.v47"
-    elif any(x in annotation for x in ["gencode.v47", "gencode.vM36"]):
-        return "2024_10.v49"
-    elif any(x in annotation for x in ["ncbi_refseq.v110"]):
-        return "2023_08.v48"
-    elif any(x in annotation for x in ["gencode.v27"]):
-        return "2018_02.v27"
-    return "2017_06.v23"
-
-
 def get_appris_filename(annotation):
-    return f"appris.{get_appris_version(annotation)}_{annotation}.v{APPRIS_BINARY_VERSION}.pkl"
+    return f"appris.{annotation}.v{APPRIS_BINARY_VERSION}.pkl"
 
 
 # MANE data file names
@@ -59,26 +41,8 @@ def get_appris_filename(annotation):
 #       and `git rm` the old test files
 MANE_BINARY_VERSION = 1
 
-_SUPPORTED_MANE_VERSIONS_BY_ANNO = {
-    "ncbi_refseq.hg38.p14_RS_2024_08": "1.4",
-    "ncbi_refseq.hg38.p14_RS_2024_08.mini": "1.4",
-    "gencode.v41": "1.0",
-    "gencode.v41.mini": "1.0",
-}
-
-
-def get_mane_version(annotation):
-    """
-    Get the MANE version based on the annotation version.
-    :raises ValueError: if there is no matching MANE version for the specified annotation
-    """
-    try:
-        return _SUPPORTED_MANE_VERSIONS_BY_ANNO[annotation]
-    except KeyError:
-        raise ValueError(f"MANE not supported for annotation {annotation}")
-
 
 def get_mane_filename(annotation):
     return (
-        f"mane.{get_mane_version(annotation)}_{annotation}.v{MANE_BINARY_VERSION}.pkl"
+        f"mane.{annotation}.v{MANE_BINARY_VERSION}.pkl"
     )

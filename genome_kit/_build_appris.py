@@ -11,10 +11,11 @@ import pickle
 import re
 import tarfile
 from collections import defaultdict
+from contextlib import suppress
 from tempfile import TemporaryDirectory
 
 from . import Genome, _build_annotations, gk_data
-from ._gk_data_config import get_appris_filename, get_appris_version
+from ._gk_data_config import get_appris_filename
 
 # Original sources from
 # see http://apprisws.bioinfo.cnio.es/pub/releases/2022_07.v47
@@ -37,33 +38,71 @@ from ._gk_data_config import get_appris_filename, get_appris_version
 TEST_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tests', 'data')
 assert os.path.isdir(TEST_DATA_DIR)
 
+
+def get_appris_principal_path(annotation):
+    # see http://appris.bioinfo.cnio.es/#/help/species
+
+    MISSING = (None, None, None)
+
+    def parse_ensembl(name):
+        if name == "Rnor_6.0.88":
+            return ("rattus_norvegicus", "e88v22", "2017_06.v23")
+        elif name == "Sscrofa11.1.98":
+            return ("sus_scrofa", "e98v29", "2019_09.v29")
+        return MISSING
+
+    def parse_gencode(name):
+        name = name[1:]
+        species = "mus_musculus" if name.startswith("M") else "homo_sapiens"
+
+        if name.startswith("19"):
+            return (species, "g19v22", "2017_06.v23")
+        elif name.startswith("25"):
+            return (species, "e87v22", "2017_06.v23")
+        elif any(name.startswith(x) for x in ["M15", "26"]):
+            return (species, "e88v22", "2017_06.v23")
+        elif name.startswith("27"):
+            return (species, "e91v27", "2018_02.v27")
+        elif any(name.startswith(x) for x in ["M19", "29"]):
+            return (species, "e94v28", "2018_12.v28")
+        elif any(name.startswith(x) for x in ["M30", "41"]):
+            return (species, "e107v47", "2022_07.v47")
+        elif any(name.startswith(x) for x in ["M36", "47"]):
+            return (species, "e113v49", "2024_10.v49")
+        return MISSING
+
+    def parse_ncbi(name):
+        if name == "v105.20190906":
+            return ("homo_sapiens", "rs105v22", "2017_06.v23")
+        elif name == "v109":
+            return ("homo_sapiens", "rs109v28", "2018_12.v28")
+        elif name == "m38.v106":
+            return ("mus_musculus", "rs106v29", "2019_09.v29")
+        elif name == "v110":
+            return ("homo_sapiens", "rs110v48", "2023_08.v48")
+        return MISSING
+
+    source, _, remainder = annotation.partition(".")
+
+    species, data_version, appris_version = {
+        "ensembl": parse_ensembl,
+        "gencode": parse_gencode,
+        "ncbi_refseq": parse_ncbi,
+        "ucsc_refseq": lambda _: ("homo_sapiens", "rs105v22", "2017_06.v23"),
+    }.get(source, lambda _: MISSING)(remainder)
+    if species is None:
+        raise ValueError(f"No APPRIS defined for: {annotation}")
+    # TODO: handle appris version > 99
+    assert int(appris_version[-2:]) >= int(data_version[-2:])
+
+    return (
+        "apprisws.bioinfo.cnio.es/pub/releases"
+        f"/{appris_version}/datafiles/{species}/{data_version}"
+        "/appris_data.principal.txt")
+
+
 APPRIS_DATA_HEADER = ['gene', 'geneID', 'transcriptID', 'ccds', 'principality']
 OUTPUT_DATA_HEADER = ['geneID', 'transcriptID', 'principalityIndex']
-PATH_FMT = ("apprisws.bioinfo.cnio.es"
-            "/pub/releases/{{appris_version}}/datafiles/{species}/{data_version}/appris_data.principal.txt")
-# see http://appris.bioinfo.cnio.es/#/help/species
-# TODO: investigate if this hardcoded mapping can be removed
-REMOTE_FILES = {
-    "gencode.v19": PATH_FMT.format(species="homo_sapiens", data_version="g19v22"),
-    "ucsc_refseq.2017-06-25": PATH_FMT.format(species="homo_sapiens", data_version="rs105v22"),
-    "ensembl.Rnor_6.0.88": PATH_FMT.format(species="rattus_norvegicus", data_version="e88v22"),
-    "ensembl.Sscrofa11.1.98": PATH_FMT.format(species="sus_scrofa", data_version="e98v29"),
-}
-# hg38
-REMOTE_FILES.update(("gencode.v{version}{lift}{basic}".format(version=version, lift=lift, basic=basic),
-                     PATH_FMT.format(species="homo_sapiens", data_version=data_version))
-                    for version, data_version in [(25, "e87v22"), (26, "e88v22"), (27, "e91v27"), (29, "e94v28"), (41, "e103v45"), (47, "e113v49")]
-                    for lift in ["", "lift37"] for basic in ["", ".basic"])
-# mouse
-REMOTE_FILES.update(("gencode.vM{version}{basic}".format(version=version, basic=basic),
-                     PATH_FMT.format(species="mus_musculus", data_version=data_version))
-                    for version, data_version in [(15, "e88v22"), (19, "e94v28"), (30, "e107v47"), (36, "e113v49")] for basic in ["", ".basic"])
-# ncbi refseq
-REMOTE_FILES.update(("ncbi_refseq.{version}".format(version=version),
-                     PATH_FMT.format(species="homo_sapiens", data_version=data_version))
-                    for version, data_version in [("v105.20190906", "rs105v22"), ("v109", "rs109v28"), ("v110", "rs110v48")])
-# finalize appris version path
-REMOTE_FILES = {k: v.format(appris_version=get_appris_version(k)) for k, v in REMOTE_FILES.items()}
 
 # archived via: wget -q -r -np -A appris_data.principal.txt --accept-regex 'homo_sapiens|mus_musculus|rattus_norvegicus|sus_scrofa' https://apprisws.bioinfo.cnio.es/pub/releases/2024_10.v49/datafiles/
 # and merged with previous backups.
@@ -248,7 +287,7 @@ def build_full_appris_file(annotation, source_file, upload: bool = False):
     try:
         data = _get_appris_data(source_file)
     except:  # noqa
-        print('Error building {}'.format(REMOTE_FILES[annotation]))
+        print('Error building {}'.format(annotation))
         raise
 
     # Build APPRIS structures specific to this GenomeKit annotation
@@ -275,8 +314,9 @@ def build_full_appris_files(upload: bool = False):
     with TemporaryDirectory() as tmpdir:
         tar.extractall(tmpdir)
 
-        for annotation in sorted(REMOTE_FILES.keys()):
-            build_full_appris_file(annotation, os.path.join(tmpdir, REMOTE_FILES[annotation]), upload)
+        for annotation in gk_data.data_manager.list_available_genomes():
+            with suppress(ValueError):
+                build_full_appris_file(annotation, os.path.join(tmpdir, get_appris_principal_path(annotation)), upload)
 
 
 def build_test_appris_file(annotation, source_file):
@@ -308,6 +348,6 @@ def build_test_appris_files():
         tar.extractall(tmpdir)
 
         for annotation in all_test_annotations:
-            if annotation == "gencode.v29lift37":
+            if annotation in ["gencode.v29lift37", "ncbi_refseq.hg38.p14_RS_2024_08"]:
                 continue  # leave this out to test missing APPRIS (test_appris_transcripts_unavailable)
-            build_test_appris_file(annotation + ".mini" , os.path.join(tmpdir, REMOTE_FILES[annotation]))
+            build_test_appris_file(annotation + ".mini" , os.path.join(tmpdir, get_appris_principal_path(annotation)))

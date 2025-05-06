@@ -4,7 +4,7 @@ from __future__ import annotations
 import gc
 import unittest
 
-from genome_kit import Genome, Interval, Variant
+from genome_kit import Genome, Interval, ManeNotAvailableError, Variant
 
 from . import MiniGenome
 
@@ -345,7 +345,7 @@ class TestGenome(unittest.TestCase):
 
     def test_mane_select_transcripts_unavailable(self):
         genome = MiniGenome("gencode.v29lift37")
-        with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
+        with self.assertRaises(ManeNotAvailableError):
             genome.mane_select_transcripts()
 
     def test_mane_select_gencode(self):
@@ -400,7 +400,7 @@ class TestGenome(unittest.TestCase):
 
     def test_mane_plus_clinical_transcripts_unavailable(self):
         genome = MiniGenome("gencode.v29lift37")
-        with self.assertRaisesRegex(ValueError, "MANE not supported for annotation"):
+        with self.assertRaises(ManeNotAvailableError):
             genome.mane_plus_clinical_transcripts()
 
     def test_mane_plus_clinical_gencode(self):

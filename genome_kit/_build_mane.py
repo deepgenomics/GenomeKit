@@ -6,17 +6,35 @@ import csv
 import gzip
 
 from genome_kit import gk_data
-from genome_kit._gk_data_config import get_mane_filename, get_mane_version
+from genome_kit._gk_data_config import get_mane_filename
 
 _PRIORITY = {
     "MANE Select": 0,
     "MANE Plus Clinical": 1,
 }
 
+_SUPPORTED_MANE_VERSIONS_BY_ANNO = {
+    "ncbi_refseq.hg38.p14_RS_2024_08": "1.4",
+    "ncbi_refseq.hg38.p14_RS_2024_08.mini": "1.4",
+    "gencode.v41": "1.0",
+    "gencode.v41.mini": "1.0",
+}
+
 _SUPPORTED_ANNOS = {
     "ncbi_refseq.hg38.p14_RS_2024_08": "1.4",
     "gencode.v41": "1.0",
 }
+
+
+def get_mane_version(annotation):
+    """
+    Get the MANE version based on the annotation version.
+    :raises ValueError: if there is no matching MANE version for the specified annotation
+    """
+    try:
+        return _SUPPORTED_MANE_VERSIONS_BY_ANNO[annotation]
+    except KeyError:
+        raise ValueError(f"MANE not supported for annotation {annotation}")
 
 
 def _unversioned_id(id: str) -> str:

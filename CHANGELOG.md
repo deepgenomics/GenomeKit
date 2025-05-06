@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.0](https://github.com/deepgenomics/GenomeKit/compare/v7.0.0...v7.1.0) (2025-05-06)
+
+
+### Features
+
+* wheel distribution for linux on python 3.9-3.12, arm architecture ([#156](https://github.com/deepgenomics/GenomeKit/issues/156)) ([4a3ed58](https://github.com/deepgenomics/GenomeKit/commit/4a3ed587768c77a5ee7482359d512320b0c8ea6f))
+
 ## [7.0.0](https://github.com/deepgenomics/GenomeKit/compare/v6.5.3...v7.0.0) (2025-05-06)
 
 

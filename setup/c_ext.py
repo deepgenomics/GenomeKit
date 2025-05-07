@@ -36,7 +36,7 @@ runtime_library_dirs = []
 if not [x for x in extract_stack(limit=20) if 'load_setup_py_data' in x[2]]:
     # don't load numpy if we just need the version to fill the conda-build meta.yaml template
     if os.environ.get('GK_CIBW', None) is not None:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy==2"])
+        subprocess.check_call(["pip", "install", "-U", "numpy==2"])
     import numpy as np
     include_dirs.append(np.get_include())
 

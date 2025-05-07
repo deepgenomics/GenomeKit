@@ -30,7 +30,6 @@ class egg_info_ex(egg_info):
 
 if __name__ == "__main__":
     install_requires = []
-    setup_requires = []
     if os.environ.get("GK_BUILD_WHEELS", None) is not None:
         install_requires = [
             "appdirs>=1.4.0",
@@ -42,8 +41,6 @@ if __name__ == "__main__":
             "importlib-metadata",
             "typing-extensions",
         ]
-    if os.environ.get("GK_CIBUILDWHEEL", None) is not None:
-        setup_requires=['numpy==2']
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
@@ -58,7 +55,6 @@ if __name__ == "__main__":
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         install_requires=install_requires,
-        setup_requires=setup_requires,
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),
         name="genomekit",

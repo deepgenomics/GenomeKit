@@ -11,6 +11,7 @@ on:
     - "conda-recipe/**"
     - "genome_kit/**"
     - "setup.py"
+    - "pyproject.toml"
     - "setup/**"
     - "src/**"
     - "tests/**"

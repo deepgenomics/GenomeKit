@@ -3,6 +3,7 @@ run-name: build-wheels
 
 on:
   push:
+    # only build+push docker on release-please tags
     tags: [ "v*" ]
     paths:
     - ".github/actions/**"
@@ -10,76 +11,284 @@ on:
     - "conda-recipe/**"
     - "genome_kit/**"
     - "setup.py"
+    - "_pyproject.toml"
     - "setup/**"
     - "src/**"
     - "tests/**"
 
 jobs:
-  build:
+  build-wheel-linux:
+    name: Build linux wheels for ${{ matrix.arch }}
     strategy:
       matrix:
-        arch: [x86_64, aarch64]
         include:
-          - arch: x86_64
-            image: quay.io/pypa/manylinux_2_28_x86_64
-            runner: ubuntu-latest
-            wheel_dir: wheels
-          - arch: aarch64
-            image: quay.io/pypa/manylinux_2_28_aarch64
-            runner: ubuntu-24.04-arm
-            wheel_dir: wheels/arm
+          - { runner: ubuntu-latest, arch: x86_64 }
+          - { runner: ubuntu-24.04-arm, arch: aarch64 }
 
     runs-on: ${{ matrix.runner }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Pre-pull manylinux image
-        run: docker pull ${{ matrix.image }}
+      - name: try to restore the linux wheels cache
+        id: restore_linux_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
 
-      - name: Build and repair wheels for Python 3.9–3.12 (${{ matrix.arch }})
-        run: |
-          docker run --rm -v $(pwd):/io -e GK_BUILD_WHEELS=1 ${{ matrix.image }} /bin/bash -c "
-            set -euxo pipefail
-            cd /io
-            mkdir -p ${{ matrix.wheel_dir }}
+      # skip remaining steps on cache hit
 
-            PYTHONS=(
-              /opt/python/cp39-cp39/bin/python
-              /opt/python/cp310-cp310/bin/python
-              /opt/python/cp311-cp311/bin/python
-              /opt/python/cp312-cp312/bin/python
-            )
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Rename pyproject.toml
+        run: mv _pyproject.toml pyproject.toml
 
-            for PYTHON in \${PYTHONS[@]}; do
-              \$PYTHON -m pip install -U pip setuptools wheel cmake auditwheel \"numpy==2\"
-              rm -rf build dist *.egg-info
-              \$PYTHON setup.py bdist_wheel
-              cp dist/*.whl ${{ matrix.wheel_dir }}/
-            done
-          "
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-      - name: Test wheels across Python 3.9–3.12 (${{ matrix.arch }})
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.23.3
+
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
+        env:
+          GK_BUILD_WHEELS: "1"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+          CIBW_ENVIRONMENT_PASS_LINUX: GK_BUILD_WHEELS
+          CIBW_SKIP: "*-musllinux_*"
+
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Test wheels across Python 3.9–3.12
         run: |
           set -euxo pipefail
 
           for PYVER in 3.9 3.10 3.11 3.12; do
-            TAG="cp${PYVER/./}"
-
-            echo "Testing on Python $PYVER (${{ matrix.arch }}) with tag $TAG"
+            PYVER_SHORT=${PYVER/./}
+            echo "Testing on Python $PYVER"
 
             docker run --rm \
-              -v $(pwd)/${{ matrix.wheel_dir }}:/wheels \
+              -v $(pwd)/wheelhouse:/wheels \
               -v $(pwd)/tests:/tests \
               python:$PYVER-slim /bin/bash -c "
                 set -euxo pipefail
-                apt-get update && apt-get install -y gcc python3-dev
-                python -m pip install --upgrade pip
-                WHEEL=\$(ls /wheels/*${TAG}*.whl | head -n 1)
+                WHEEL=\$(ls /wheels/*cp${PYVER_SHORT}*manylinux*.whl)
                 echo 'Installing wheel: ' \$WHEEL
                 python -m pip install \$WHEEL
                 python -c 'import genome_kit; print(genome_kit.__version__)'
                 ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
               "
           done
+
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: cache linux wheels
+        uses: actions/cache/save@v4
+        with:
+          # hashFiles() would produce a different key due to setup/*.pyc files created
+          key: ${{ steps.restore_linux_wheels.outputs.cache-primary-key }}
+          path: wheelhouse/*.whl
+
+
+  build-wheel-macos:
+    name: Build macos wheels
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: try to restore the macos wheels cache
+        id: restore_macos_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+
+      # skip remaining steps on cache hit
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: Rename pyproject.toml
+        run: mv _pyproject.toml pyproject.toml
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.23.3
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
+        env:
+          GK_BUILD_WHEELS: "1"
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: cache macos wheels
+        uses: actions/cache/save@v4
+        with:
+          # hashFiles() would produce a different key due to setup/*.pyc files created
+          key: ${{ steps.restore_macos_wheels.outputs.cache-primary-key }}
+          path: wheelhouse/*.whl
+
+
+  test-wheel-macos:
+    needs: build-wheel-macos
+    name: Test wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          # macos-14 == arm64, macos-13 == x86_64
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.9", "pyvershort": "39"}
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.10", "pyvershort": "310"}
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.11", "pyvershort": "311"}
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.12", "pyvershort": "312"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.9", "pyvershort": "39"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.10", "pyvershort": "310"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.11", "pyvershort": "311"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.12", "pyvershort": "312"}
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pyver }}
+
+      - uses: actions/checkout@v4
+
+      - name: Download built wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Verify GK module loads
+        run: |
+          set -euxo pipefail
+          ls -l wheelhouse/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          mv wheelhouse /tmp/
+          pushd /tmp # navigate away from repo dir to avoid loading the local files
+          pip install wheelhouse/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          python -c 'import genome_kit; print(genome_kit.__version__)'
+          popd
+
+      - name: Run unit tests
+        run: |
+          set -euxo pipefail
+          mv tests /tmp/
+          pushd /tmp
+          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs -p -I {} python -m unittest {}
+
+#  Use this section to test the publishing itself in a sandboxed environment
+#
+#  publish-to-testpypi:
+#    name: Publish to TestPyPI
+#    needs: [build-wheel-linux, test-wheel-macos]
+#    runs-on: ubuntu-latest
+#
+#    environment:
+#      name: testpypi
+#      url: https://test.pypi.org/p/genomekit
+#
+#    permissions:
+#      id-token: write  # mandatory for trusted publishing
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Restore the linux intel wheels cache
+#        id: restore_linux_intel_wheels
+#        uses: actions/cache/restore@v4
+#        with:
+#          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          path: wheelhouse/*.whl
+#          fail-on-cache-miss: true
+#
+#      - name: Restore the linux arm wheels cache
+#        id: restore_linux_arm_wheels
+#        uses: actions/cache/restore@v4
+#        with:
+#          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          path: wheelhouse/*.whl
+#          fail-on-cache-miss: true
+#
+#      - name: Restore the macos wheels cache
+#        id: restore_macos_wheels
+#        uses: actions/cache/restore@v4
+#        with:
+#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          path: wheelhouse/*.whl
+#          fail-on-cache-miss: true
+#
+#      - name: Debug see what's in wheelhouse dir
+#        run: |
+#          set -euxo pipefail
+#          ls -l wheelhouse/
+#
+#      - name: Publish distribution to TestPyPI
+#        # don't use a version tag with 3rd party actions
+#        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
+#          packages-dir: wheelhouse
+#          verbose: 'true'
+#          skip-existing: 'true'
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [build-wheel-linux, test-wheel-macos]
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/genomekit
+
+    permissions:
+      id-token: write  # mandatory for trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore the linux intel wheels cache
+        id: restore_linux_intel_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Restore the linux arm wheels cache
+        id: restore_linux_arm_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Restore the macos wheels cache
+        id: restore_macos_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Publish distribution to PyPI
+        # don't use a version tag with 3rd party actions
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+        with:
+          packages-dir: wheelhouse
+          verbose: 'true'

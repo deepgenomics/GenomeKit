@@ -85,6 +85,8 @@ jobs:
     runs-on: macos-14
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: try to restore the macos wheels cache
         id: restore_macos_wheels
         uses: actions/cache/restore@v4
@@ -93,9 +95,6 @@ jobs:
           path: dist
 
       # skip remaining steps on cache hit
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        uses: actions/checkout@v4
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -109,7 +108,7 @@ jobs:
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
+        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/ && git status
         env:
           GK_BUILD_WHEELS: "1"
           CIBW_ARCHS_MACOS: x86_64 arm64
@@ -117,8 +116,7 @@ jobs:
 #          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: cache mamba env
-        id: save_mamba_cache
+        name: cache macos wheels
         uses: actions/cache/save@v4
         with:
           key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}

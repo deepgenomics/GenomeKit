@@ -113,16 +113,10 @@ jobs:
     name: Test wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      include:
-        # macos-14 == arm64, macos-13 == x86_64
-        - {"os": "macos-14", "pyver": "3.10", "pyvershort": "310", "arch": "arm64"}
-#        - os: macos-14  # Apple Silicon
-#          pyver: 3.11
-#          pyvershort: 311
-#          arch: arm64
       matrix:
-        os: [macos-14]  # macOS 13 (Intel), macOS 14 (Apple Silicon)
-#        os: [macos-13, macos-14]  # macOS 13 (Intel), macOS 14 (Apple Silicon)
+        include:
+          # macos-14 == arm64, macos-13 == x86_64
+          - {"os": "macos-14", "pyver": "3.10", "pyvershort": "310", "arch": "arm64"}
 
     steps:
       - uses: actions/checkout@v4

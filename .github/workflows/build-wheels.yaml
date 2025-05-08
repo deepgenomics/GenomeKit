@@ -143,7 +143,8 @@ jobs:
       - name: Run unit tests
         run: |
           set -euxo pipefail
-          mv ../GenomeKit/tests tests
+          mv tests /tmp/
+          pushd /tmp
           ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
 
 

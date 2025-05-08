@@ -120,8 +120,6 @@ jobs:
           - {"os": "macos-14", "pyver": "3.10", "pyvershort": "310", "arch": "arm64"}
 
     steps:
-#      - uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -138,9 +136,7 @@ jobs:
         run: |
           set -euxo pipefail
           pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
-#          pushd tests
           python -c 'import genome_kit; print(genome_kit.__version__)'
-#          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
 
 
 #  publish-to-pypi:

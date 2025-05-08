@@ -112,8 +112,7 @@ jobs:
         env:
           GK_BUILD_WHEELS: "1"
           CIBW_ARCHS_MACOS: x86_64 arm64
-          CIBW_BUILD: "cp310-*"
-#          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: cache macos wheels
@@ -132,14 +131,14 @@ jobs:
       matrix:
         include:
           # macos-14 == arm64, macos-13 == x86_64
-#          - {"os": "macos-14", "arch": "arm64", "pyver": "3.9", "pyvershort": "39"}
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.9", "pyvershort": "39"}
           - {"os": "macos-14", "arch": "arm64", "pyver": "3.10", "pyvershort": "310"}
 #          - {"os": "macos-14", "arch": "arm64", "pyver": "3.11", "pyvershort": "311"}
 #          - {"os": "macos-14", "arch": "arm64", "pyver": "3.12", "pyvershort": "312"}
 #          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.9", "pyvershort": "39"}
           - {"os": "macos-13", "arch": "x86_64", "pyver": "3.10", "pyvershort": "310"}
-#          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.11", "pyvershort": "311"}
-#          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.12", "pyvershort": "312"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.11", "pyvershort": "311"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.12", "pyvershort": "312"}
 
     steps:
       - name: Set up Python
@@ -171,10 +170,7 @@ jobs:
           set -euxo pipefail
           mv tests /tmp/
           pushd /tmp
-          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./'
-          sleep 5
-          echo AAA
-          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs -I {} python -m unittest {}
+          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs -p -I {} python -m unittest {}
 
 
 #  publish-to-pypi:

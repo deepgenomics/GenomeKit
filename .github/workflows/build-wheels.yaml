@@ -80,52 +80,52 @@ jobs:
 #              "
 #          done
 
-  build-wheel-macos:
-    name: Build macos wheels
-    runs-on: macos-14
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: try to restore the macos wheels cache
-        id: restore_macos_wheels
-        uses: actions/cache/restore@v4
-        with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: dist
-
-      # skip remaining steps on cache hit
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.23.3
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
-        env:
-          GK_BUILD_WHEELS: "1"
-          CIBW_ARCHS_MACOS: x86_64 arm64
-          CIBW_BUILD: "cp310-*"
-#          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: cache macos wheels
-        uses: actions/cache/save@v4
-        with:
-          # don't recompute the hash, now git-ignored .pyc files are created under the setup dir
-          key: ${{ steps.restore_macos_wheels.outputs.cache-primary-key }}
-          path: wheelhouse/*.whl
+#  build-wheel-macos:
+#    name: Build macos wheels
+#    runs-on: macos-14
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: try to restore the macos wheels cache
+#        id: restore_macos_wheels
+#        uses: actions/cache/restore@v4
+#        with:
+#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+#          path: dist
+#
+#      # skip remaining steps on cache hit
+#
+#      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+#        name: Set up Python
+#        uses: actions/setup-python@v5
+#        with:
+#          python-version: '3.12'
+#
+#      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+#        name: Install cibuildwheel
+#        run: python -m pip install cibuildwheel==2.23.3
+#
+#      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+#        name: Build wheels
+#        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
+#        env:
+#          GK_BUILD_WHEELS: "1"
+#          CIBW_ARCHS_MACOS: x86_64 arm64
+#          CIBW_BUILD: "cp310-*"
+##          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+#
+#      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+#        name: cache macos wheels
+#        uses: actions/cache/save@v4
+#        with:
+#          # don't recompute the hash, now git-ignored .pyc files are created under the setup dir
+#          key: ${{ steps.restore_macos_wheels.outputs.cache-primary-key }}
+#          path: wheelhouse/*.whl
 
 
   test-wheel-macos:
-    needs: build-wheel-macos
+#    needs: build-wheel-macos
     name: Test wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -149,21 +149,18 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: mkdir cache target dir
-        run: mkdir -p /tmp/dist && sleep 30
-
       - name: Download built wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: /tmp/dist
+          key: macos-wheels-0815b664a095208e73ec1c44f4ce1f41b9163bad51ea674adc8e83ab4eac5043
+          path: dist
           fail-on-cache-miss: true
 
       - name: Verify GK module loads
         run: |
           set -euxo pipefail
-          ls -l /tmp/dist/
-          ls -l /tmp/dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          ls -l dist/
+          ls -l dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           pushd /tmp # navigate away from repo dir to avoid loading the local files
           pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'

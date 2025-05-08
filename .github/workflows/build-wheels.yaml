@@ -153,16 +153,17 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: macos-wheels-0815b664a095208e73ec1c44f4ce1f41b9163bad51ea674adc8e83ab4eac5043
-          path: dist
+          path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
       - name: Verify GK module loads
         run: |
           set -euxo pipefail
-          ls -l dist/
-          ls -l dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          ls -l wheelhouse/
+          ls -l wheelhouse/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          mv wheelhouse /tmp/
           pushd /tmp # navigate away from repo dir to avoid loading the local files
-          pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          pip install wheelhouse/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'
 
       - name: Run unit tests

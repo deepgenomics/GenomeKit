@@ -149,18 +149,21 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: mkdir cache target dir
+        run: mkdir -p /tmp/dist
+
       - name: Download built wheels
         uses: actions/cache/restore@v4
         with:
           key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: dist
+          path: /tmp/dist
           fail-on-cache-miss: true
 
       - name: Verify GK module loads
         run: |
           set -euxo pipefail
-          ls -l dist/
-          ls -l dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          ls -l /tmp/dist/
+          ls -l /tmp/dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           pushd /tmp # navigate away from repo dir to avoid loading the local files
           pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'

@@ -132,11 +132,19 @@ jobs:
           name: macos-wheels-${{ github.sha }}
           path: dist
 
-      - name: Run unit tests
+      - name: Verify GK wheel loads
         run: |
           set -euxo pipefail
           pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'
+
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: |
+          set -euxo pipefail
+          mv ../GenomeKit/tests tests
+          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
 
 
 #  publish-to-pypi:

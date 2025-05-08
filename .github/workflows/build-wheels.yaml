@@ -125,7 +125,7 @@ jobs:
 
 
   test-wheel-macos:
-#    needs: build-wheel-macos
+    needs: build-wheel-macos
     name: Test wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:

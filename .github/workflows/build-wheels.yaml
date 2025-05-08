@@ -133,14 +133,12 @@ jobs:
           name: macos-wheels-${{ github.sha }}
           path: dist
 
-      - name: Install wheel
-        run: |
-          pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
-
       - name: Run unit tests
         run: |
-          pip install pytest
-          pytest tests/
+          set -euxo pipefail
+          pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          python -c 'import genome_kit; print(genome_kit.__version__)'
+          ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
 
 
 #  publish-to-pypi:

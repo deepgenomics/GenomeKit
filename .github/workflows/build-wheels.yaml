@@ -108,28 +108,19 @@ jobs:
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/ && git status
+        run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
         env:
           GK_BUILD_WHEELS: "1"
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_BUILD: "cp310-*"
 #          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
 
-      - name: wtf
-        run: |
-          set -euxo pipefail
-          git status
-          git diff
-          find .github
-          find src
-          find genome_kit
-          find setup
-
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: cache macos wheels
         uses: actions/cache/save@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          # don't recompute the hash, now git-ignored .pyc files are created under the setup dir
+          key: ${{ steps.restore_macos_wheels.outputs.cache-primary-key }}
           path: wheelhouse/*.whl
 
 

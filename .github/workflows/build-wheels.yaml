@@ -152,14 +152,15 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: dist
+          path: ./dist
+          fail-on-cache-miss: true
 
       - name: Verify GK module loads
         run: |
           set -euxo pipefail
-          ls -l dist/
-          ls -l dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
-          pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          ls -l ./dist/
+          ls -l ./dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
+          pip install ./dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'
 
       - uses: actions/checkout@v4

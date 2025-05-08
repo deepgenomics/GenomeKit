@@ -157,6 +157,8 @@ jobs:
       - name: Verify GK module loads
         run: |
           set -euxo pipefail
+          ls -l dist/
+          ls -l dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           pip install dist/*cp${{ matrix.pyvershort }}*${{ matrix.arch }}.whl
           python -c 'import genome_kit; print(genome_kit.__version__)'
 

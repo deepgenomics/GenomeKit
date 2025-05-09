@@ -20,7 +20,9 @@ jobs:
   build-wheel-linux:
     strategy:
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm64]
+        include:
+          - { runner: ubuntu-latest, arch: x86_64 }
+          - { runner: ubuntu-24.04-arm64, arch: aarch64 }
 
     runs-on: ${{ matrix.runner }}
 
@@ -52,7 +54,7 @@ jobs:
         env:
           GK_BUILD_WHEELS: "1"
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 

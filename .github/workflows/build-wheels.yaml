@@ -64,18 +64,19 @@ jobs:
         run: |
           set -euxo pipefail
 
-          for PYVER in 39 310 311 312; do
+          for PYVER in 3.9 3.10 3.11 3.12; do
+            PYVER_SHORT=${PYVER/./}
             # slim => glibc, alpine => musl
             for ITEM in "slim manylinux" "alpine musllinux"; do
-              read DOCKER_TAG LIBC <<< $ITEM
-              echo "Testing on Python $PYVER $DOCKER_TAG"
+              read DOCKER_TAG_SUFFIX LIBC <<< $ITEM
+              echo "Testing on Python $PYVER $DOCKER_TAG_SUFFIX"
 
               docker run --rm \
                 -v $(pwd)/wheelhouse:/wheels \
                 -v $(pwd)/tests:/tests \
-                python:$PYVER-$DOCKER_TAG /bin/bash -c "
+                python:$PYVER-$DOCKER_TAG_SUFFIX /bin/bash -c "
                   set -euxo pipefail
-                  WHEEL=\$(ls /wheels/*cp${PYVER}*.whl | grep $LIBC | head -n 1)
+                  WHEEL=\$(ls /wheels/*cp${PYVER_SHORT}*.whl | grep $LIBC | head -n 1)
                   echo 'Installing wheel: ' \$WHEEL
                   python -m pip install \$WHEEL
                   python -c 'import genome_kit; print(genome_kit.__version__)'

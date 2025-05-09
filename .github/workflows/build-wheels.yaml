@@ -3,15 +3,15 @@ run-name: build-wheels
 
 on:
   push:
-    branches: ["test-build-macos-wheel"]
-#    tags: [ "v*" ]
+    # only build+push docker on release-please tags
+    tags: [ "v*" ]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
     - "conda-recipe/**"
     - "genome_kit/**"
     - "setup.py"
-    - "pyproject.toml"
+    - "_pyproject.toml"
     - "setup/**"
     - "src/**"
     - "tests/**"
@@ -34,10 +34,14 @@ jobs:
         id: restore_linux_wheels
         uses: actions/cache/restore@v4
         with:
-          key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
 
       # skip remaining steps on cache hit
+
+      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
+        name: Rename pyproject.toml
+        run: mv _pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -103,10 +107,14 @@ jobs:
         id: restore_macos_wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
 
       # skip remaining steps on cache hit
+
+      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
+        name: Rename pyproject.toml
+        run: mv _pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -163,7 +171,7 @@ jobs:
       - name: Download built wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
@@ -184,66 +192,16 @@ jobs:
           pushd /tmp
           ls tests/test_*.py | sed 's/\.py$//' | sed 's/tests\//tests./' | CI=1 xargs -p -I {} python -m unittest {}
 
-  publish-to-testpypi:
-    name: Publish to TestPyPI
-    needs: [build-wheel-linux, test-wheel-macos]
-    runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/genomekit
-
-    permissions:
-      id-token: write  # mandatory for trusted publishing
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Restore the linux intel wheels cache
-        id: restore_linux_intel_wheels
-        uses: actions/cache/restore@v4
-        with:
-          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: wheelhouse/*.whl
-          fail-on-cache-miss: true
-
-      - name: Restore the linux arm wheels cache
-        id: restore_linux_arm_wheels
-        uses: actions/cache/restore@v4
-        with:
-          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: wheelhouse/*.whl
-          fail-on-cache-miss: true
-
-      - name: Restore the macos wheels cache
-        id: restore_macos_wheels
-        uses: actions/cache/restore@v4
-        with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
-          path: wheelhouse/*.whl
-          fail-on-cache-miss: true
-
-      - name: Debug see what's in wheelhouse dir
-        run: |
-          set -euxo pipefail
-          ls -l wheelhouse/
-
-      - name: Publish distribution to TestPyPI
-        # don't use a version tag with 3rd party actions
-        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          packages-dir: wheelhouse
-          verbose: 'true'
-
-#  publish-to-pypi:
-#    name: Publish to PyPI
-#    needs: [publish-to-testpypi]
+#  Use this section to test the publishing itself in a sandboxed environment
+#
+#  publish-to-testpypi:
+#    name: Publish to TestPyPI
+#    needs: [build-wheel-linux, test-wheel-macos]
 #    runs-on: ubuntu-latest
 #
 #    environment:
-#      name: pypi
-#      url: https://pypi.org/p/genomekit
+#      name: testpypi
+#      url: https://test.pypi.org/p/genomekit
 #
 #    permissions:
 #      id-token: write  # mandatory for trusted publishing
@@ -255,7 +213,7 @@ jobs:
 #        id: restore_linux_intel_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
@@ -263,7 +221,7 @@ jobs:
 #        id: restore_linux_arm_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
@@ -271,12 +229,66 @@ jobs:
 #        id: restore_macos_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
-#      - name: Publish distribution to PyPI
+#      - name: Debug see what's in wheelhouse dir
+#        run: |
+#          set -euxo pipefail
+#          ls -l wheelhouse/
+#
+#      - name: Publish distribution to TestPyPI
 #        # don't use a version tag with 3rd party actions
 #        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 #        with:
+#          repository-url: https://test.pypi.org/legacy/
 #          packages-dir: wheelhouse
+#          verbose: 'true'
+#          skip-existing: 'true'
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [build-wheel-linux, test-wheel-macos]
+    runs-on: ubuntu-latest
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/genomekit
+
+    permissions:
+      id-token: write  # mandatory for trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore the linux intel wheels cache
+        id: restore_linux_intel_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Restore the linux arm wheels cache
+        id: restore_linux_arm_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Restore the macos wheels cache
+        id: restore_macos_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Publish distribution to PyPI
+        # don't use a version tag with 3rd party actions
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+        with:
+          packages-dir: wheelhouse
+          verbose: 'true'

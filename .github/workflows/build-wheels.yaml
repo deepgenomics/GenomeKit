@@ -58,6 +58,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
           CIBW_ENVIRONMENT_PASS_LINUX: GK_BUILD_WHEELS
+          CIBW_SKIP: "*-musllinux_*"
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
         name: Test wheels across Python 3.9–3.12
@@ -66,23 +67,19 @@ jobs:
 
           for PYVER in 3.9 3.10 3.11 3.12; do
             PYVER_SHORT=${PYVER/./}
-            # slim => glibc, alpine => musl
-            for ITEM in "slim manylinux" "alpine musllinux"; do
-              read DOCKER_TAG_SUFFIX LIBC <<< $ITEM
-              echo "Testing on Python $PYVER $DOCKER_TAG_SUFFIX"
+            echo "Testing on Python $PYVER"
 
-              docker run --rm \
-                -v $(pwd)/wheelhouse:/wheels \
-                -v $(pwd)/tests:/tests \
-                python:$PYVER-$DOCKER_TAG_SUFFIX /bin/bash -c "
-                  set -euxo pipefail
-                  WHEEL=\$(ls /wheels/*cp${PYVER_SHORT}*.whl | grep $LIBC | head -n 1)
-                  echo 'Installing wheel: ' \$WHEEL
-                  python -m pip install \$WHEEL
-                  python -c 'import genome_kit; print(genome_kit.__version__)'
-                  ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
-                "
-            done
+            docker run --rm \
+              -v $(pwd)/wheelhouse:/wheels \
+              -v $(pwd)/tests:/tests \
+              python:$PYVER-slim /bin/bash -c "
+                set -euxo pipefail
+                WHEEL=\$(ls /wheels/*cp${PYVER_SHORT}*manylinux*.whl)
+                echo 'Installing wheel: ' \$WHEEL
+                python -m pip install \$WHEEL
+                python -c 'import genome_kit; print(genome_kit.__version__)'
+                ls /tests/test_*.py | sed 's/\.py$//' | sed 's/\/tests\//tests./' | CI=1 xargs --verbose -I {} python -m unittest {}
+              "
           done
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}

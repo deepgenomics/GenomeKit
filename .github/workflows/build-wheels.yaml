@@ -18,6 +18,7 @@ on:
 
 jobs:
   build-wheel-linux:
+    name: Build linux wheels for ${{ matrix.arch }}
     strategy:
       matrix:
         include:

@@ -234,6 +234,7 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: wheelhouse
+          verbose: 'true'
 
 #  publish-to-pypi:
 #    name: Publish to PyPI

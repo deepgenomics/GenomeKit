@@ -204,8 +204,15 @@ jobs:
         with:
           key: linux-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
+
+      - name: Debug see what's in wheelhouse dir
+        run: |
+          set -euxo pipefail
+          ls -l wheelhouse/
+
       - name: Publish distribution to TestPyPI
         # don't use a version tag with 3rd party actions
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
         with:
           repository-url: https://test.pypi.org/legacy/
+          packages-dir: wheelhouse

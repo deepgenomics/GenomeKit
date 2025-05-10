@@ -8,7 +8,6 @@ on:
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"
-    - "conda-recipe/**"
     - "genome_kit/**"
     - "setup.py"
     - "_pyproject.toml"

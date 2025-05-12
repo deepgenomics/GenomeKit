@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import pickle
 from functools import partial
+from operator import attrgetter
 
 from . import _util
 from . import interval as _interval
@@ -208,7 +209,12 @@ class VariantGenome(object):
             return False
         if self.genome != other.genome:
             return False
-        if self.variants != other.variants:
+        # sort and normalize both sides
+        vself = sorted((vv for n in (v._normalized_variant for v in self.variants) for vv in n),
+                          key=attrgetter('start'))
+        vother = sorted((vv for n in (v._normalized_variant for v in other.variants) for vv in n),
+                          key=attrgetter('start'))
+        if vself != vother:
             return False
         return True
 

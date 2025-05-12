@@ -1,0 +1,5 @@
+# Specify build system requirements for pip wheel builds.
+# This way is incompatible with conda, which is why the file can't have the name pyproject.toml.
+# The file is renamed to pyproject.toml in Github Actions before starting the pip wheel build.
+[build-system]
+requires = ["setuptools>=42", "wheel", "numpy==2"]

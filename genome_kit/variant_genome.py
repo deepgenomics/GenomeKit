@@ -205,11 +205,12 @@ class VariantGenome(object):
         return self.genome.reference_genome
 
     def __eq__(self, other):
-        if not isinstance(other, VariantGenome):
+        if not issubclass(other, VariantGenome):
             return False
         if self.genome != other.genome:
             return False
-        # sort and normalize both sides
+        # sort and normalize both sides.
+        # `start` is ok to use here because VariantGenome doesn't support overlapping variants in any case.
         vself = sorted((vv for n in (v._normalized_variant for v in self.variants) for vv in n),
                           key=attrgetter('start'))
         vother = sorted((vv for n in (v._normalized_variant for v in other.variants) for vv in n),

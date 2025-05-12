@@ -40,8 +40,8 @@ jobs:
       # skip remaining steps on cache hit
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
-        name: Rename pyproject.toml
-        run: mv _pyproject.toml pyproject.toml
+        name: Move pyproject.toml
+        run: mv .github/workflows/pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -113,8 +113,8 @@ jobs:
       # skip remaining steps on cache hit
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Rename pyproject.toml
-        run: mv _pyproject.toml pyproject.toml
+        name: Move pyproject.toml
+        run: mv .github/workflows/pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python

@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.1.0](https://github.com/deepgenomics/GenomeKit/compare/v7.0.0...v7.1.0) (2025-05-13)
+
+
+### Features
+
+* publish pip wheels for linux+mac ([#163](https://github.com/deepgenomics/GenomeKit/issues/163)) ([100cc81](https://github.com/deepgenomics/GenomeKit/commit/100cc8141477769027ab981a6d5861b51ebc5e6a))
+* wheel distribution for linux on python 3.9-3.12, arm architecture ([#156](https://github.com/deepgenomics/GenomeKit/issues/156)) ([4a3ed58](https://github.com/deepgenomics/GenomeKit/commit/4a3ed587768c77a5ee7482359d512320b0c8ea6f))
+
+
+### Bug Fixes
+
+* allow VariantGenome to be serialized ([#161](https://github.com/deepgenomics/GenomeKit/issues/161)) ([18f3253](https://github.com/deepgenomics/GenomeKit/commit/18f32537acaced5a410e937de5bc48f5ae3088f7))
+
 ## [7.0.0](https://github.com/deepgenomics/GenomeKit/compare/v6.5.3...v7.0.0) (2025-05-06)
 
 

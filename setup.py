@@ -1,5 +1,6 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 import os
+from pathlib import Path
 
 from setuptools import setup, find_packages
 from setuptools.command.egg_info import egg_info
@@ -54,6 +55,8 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.12",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
+        long_description=(Path(__file__).parent / "README.md").read_text(),
+        long_description_content_type='text/markdown',
         install_requires=install_requires,
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),

@@ -205,7 +205,7 @@ class VariantGenome(object):
         return self.genome.reference_genome
 
     def __eq__(self, other):
-        if not isinstance(other, VariantGenome) and not issubclass(type(other), VariantGenome):
+        if not isinstance(other, VariantGenome):
             return False
         if self.genome != other.genome:
             return False

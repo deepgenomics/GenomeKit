@@ -1,7 +1,9 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 from __future__ import absolute_import
 
+import pickle
 from functools import partial
+from operator import attrgetter
 
 from . import _util
 from . import interval as _interval
@@ -198,10 +200,35 @@ class VariantGenome(object):
     def __repr__(self):
         return '<VariantGenome {} with {} variants>'.format(self.reference_genome, len(self.variants))
 
+    @property
+    def reference_genome(self):
+        return self.genome.reference_genome
+
+    def __eq__(self, other):
+        if not isinstance(other, VariantGenome):
+            return False
+        if self.genome != other.genome:
+            return False
+        # sort and normalize both sides.
+        # `start` is ok to use here because VariantGenome doesn't support overlapping variants in any case.
+        vself = sorted((vv for n in (v._normalized_variant for v in self.variants) for vv in n),
+                          key=attrgetter('start'))
+        vother = sorted((vv for n in (v._normalized_variant for v in other.variants) for vv in n),
+                          key=attrgetter('start'))
+        if vself != vother:
+            return False
+        return True
+
     def __getattr__(self, name):
         # Intercept any attribute requests that weren't found on the VariantGenome object itself,
         # and forward those requests to the Genome object we're wrapping.
 
-        # TODO: This is problematic: See DGENGINE-1401
-
         return self.genome.__getattribute__(name)
+
+    def __getstate__(self) -> bytes:
+        return pickle.dumps([self.genome, self.variants])
+
+    def __setstate__(self, state: bytes) -> None:
+        genome, variants = pickle.loads(state)
+        self.genome = genome
+        self.variants = variants

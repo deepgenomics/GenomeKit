@@ -72,7 +72,7 @@ if __name__ == "__main__":
         ext_modules=[c_ext.extension],
         test_suite="tests",
         tests_require=tests_require,
-        url=f"https://github.com/deepgenomics/GenomeKit/v{version}",
+        url=f"https://github.com/deepgenomics/GenomeKit",
         version=version,
         zip_safe=False,
     )

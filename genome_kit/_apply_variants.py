@@ -85,10 +85,6 @@ def apply_variants(sequence, variants, interval, reference_alignment=False):
 
     """
 
-    # TODO: How are anchor_offsets greater than the length of an insertion handled?
-    # The anchor offset should just implicitly be truncated to the length of the insertion.
-    # Need to test this.
-
     variants = sorted((vv for v in (x._normalized_variant for x in variants if x.chrom == interval.chrom) for vv in v),
                       key=attrgetter('start'))
     start, end = interval.as_dna0()

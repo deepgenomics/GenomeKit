@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import sys
 from . import MiniGenomeDNA, MiniGenome
 from genome_kit._apply_variants import apply_variants
 from genome_kit._apply_variants import _apply_variants_left_anchor
@@ -433,6 +434,30 @@ class TestApplyVariants(unittest.TestCase):
         interval = Interval("chr1", "+", 10, 12, 'test_genome', 10, 4)
         sequence = apply_variants(self.dna, [variant], interval)
         self.assertEqual('AG', sequence)
+
+        # Offset smaller than insertion length
+        variant = Variant.from_string("chr1:11::AATTT", self.genome)
+        interval = Interval("chr1", "+", 6, 15, 'test_genome', 10, 2)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('ACAATTTGT', sequence)
+
+        # Offset equal to insertion length
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 3)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('CTTTGT', sequence)
+
+        # Offset larger than insertion length
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 4)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('CTTTGT', sequence)
+
+        # Max offset
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2 ** 31 - 1)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('CTTTGT', sequence)
 
     def test_anchor_outside_interval(self):
         # Deletion between interval end and anchor

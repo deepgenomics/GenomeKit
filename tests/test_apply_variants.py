@@ -2,7 +2,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import sys
 from . import MiniGenomeDNA, MiniGenome
 from genome_kit._apply_variants import apply_variants
 from genome_kit._apply_variants import _apply_variants_left_anchor

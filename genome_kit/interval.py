@@ -50,7 +50,7 @@ class Interval(_cxx.Interval):
             `VariantGenome` and specifies how length-changing variants are
             applied. Conceptually, the anchor defines a fixed point when the
             sequence changes length. See
-            (https://deepgenomics.github.io/GenomeKit/anchors.html) for the details.
+            https://deepgenomics.github.io/GenomeKit/anchors.html for the details.
             The anchor can be any position in the interval. If anchor is
             `None`, then length-changing variants will change the length of the
             interval. Anchor can be a string: `5p` or `3p` sets the anchor to

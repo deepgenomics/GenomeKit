@@ -435,10 +435,10 @@ class TestApplyVariants(unittest.TestCase):
         self.assertEqual('AG', sequence)
 
         # Offset smaller than insertion length
-        variant = Variant.from_string("chr1:11::AATTT", self.genome)
-        interval = Interval("chr1", "+", 6, 15, 'test_genome', 10, 2)
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2)
         sequence = apply_variants(self.dna, [variant], interval)
-        self.assertEqual('ACAATTTGT', sequence)
+        self.assertEqual('ACTTTG', sequence)
 
         # Offset equal to insertion length
         variant = Variant.from_string("chr1:11::TTT", self.genome)

@@ -427,9 +427,8 @@ class TestApplyVariants(unittest.TestCase):
         variant = [Variant.from_string('chr1:21::AGTT', self.genome)]
         interval = Interval('chr1', '+', 15, 25, 'test_genome', 20, 2)
         sequence = apply_variants(self.dna, variant, interval)
-        # Original sequence
-        self.assertEqual('TACGTACGTA', self.dna(interval))
-        self.assertEqual(sequence, 'CGTAGTTACG')
+        self.assertEqual('TACGT'  'ACGTA', self.dna(interval))
+        self.assertEqual(  'CGTAGTTACG', sequence)
 
         variant = Variant.from_string("chr1:11::TTTTAGTTTT", self.genome)
         interval = Interval("chr1", "+", 10, 12, 'test_genome', 10, 4)
@@ -442,33 +441,29 @@ class TestApplyVariants(unittest.TestCase):
         variant = Variant.from_string("chr1:11::TTT", self.genome)
         interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2)
         sequence = apply_variants(self.dna, [variant], interval)
-        # Original sequence
-        self.assertEqual('GTACGT', self.dna(interval))
-        self.assertEqual('ACTTTG', sequence)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(  'ACTTTG', sequence)
 
         # Offset equal to insertion length
         variant = Variant.from_string("chr1:11::TTT", self.genome)
         interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 3)
         sequence = apply_variants(self.dna, [variant], interval)
-        # Original sequence
-        self.assertEqual('GTACGT', self.dna(interval))
-        self.assertEqual('CTTTGT', sequence)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
 
         # Offset larger than insertion length
         variant = Variant.from_string("chr1:11::TTT", self.genome)
         interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 4)
         sequence = apply_variants(self.dna, [variant], interval)
-        # Original sequence
-        self.assertEqual('GTACGT', self.dna(interval))
-        self.assertEqual('CTTTGT', sequence)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
 
         # Max offset
         variant = Variant.from_string("chr1:11::TTT", self.genome)
         interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2 ** 31 - 1)
         sequence = apply_variants(self.dna, [variant], interval)
-        # Original sequence
-        self.assertEqual('GTACGT', self.dna(interval))
-        self.assertEqual('CTTTGT', sequence)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
 
     def test_anchor_outside_interval(self):
         # Deletion between interval end and anchor

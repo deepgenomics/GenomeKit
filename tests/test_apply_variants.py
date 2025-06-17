@@ -427,12 +427,43 @@ class TestApplyVariants(unittest.TestCase):
         variant = [Variant.from_string('chr1:21::AGTT', self.genome)]
         interval = Interval('chr1', '+', 15, 25, 'test_genome', 20, 2)
         sequence = apply_variants(self.dna, variant, interval)
-        self.assertEqual(sequence, 'CGTAGTTACG')
+        self.assertEqual('TACGT'  'ACGTA', self.dna(interval))
+        self.assertEqual(  'CGTAGTTACG', sequence)
 
         variant = Variant.from_string("chr1:11::TTTTAGTTTT", self.genome)
         interval = Interval("chr1", "+", 10, 12, 'test_genome', 10, 4)
         sequence = apply_variants(self.dna, [variant], interval)
+        # Original sequence
+        self.assertEqual('GT', self.dna(interval))
         self.assertEqual('AG', sequence)
+
+        # Offset smaller than insertion length
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(  'ACTTTG', sequence)
+
+        # Offset equal to insertion length
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 3)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
+
+        # Offset larger than insertion length
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 4)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
+
+        # Max offset
+        variant = Variant.from_string("chr1:11::TTT", self.genome)
+        interval = Interval("chr1", "+", 6, 12, 'test_genome', 10, 2 ** 31 - 1)
+        sequence = apply_variants(self.dna, [variant], interval)
+        self.assertEqual('GTAC' 'GT', self.dna(interval))
+        self.assertEqual(   'CTTTGT', sequence)
 
     def test_anchor_outside_interval(self):
         # Deletion between interval end and anchor
@@ -555,46 +586,45 @@ class TestApplyVariants(unittest.TestCase):
 
     def test_reference_alignment_other_anchor_cases(self):
         genome37 = MiniGenome('test_genome')
-        variants = [Variant.from_string("chr1:11:GTA:ATG", genome37)]
 
-        # Test anchor==start
+        # Test anchor==start with substitution
+        substitution_variant = [Variant.from_string("chr1:11:GTA:ATG", genome37)]
         interval = Interval('chr1', '+', 5, 15, genome37, 5)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, substitution_variant, interval, reference_alignment=True)[1]
 
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-        # Test anchor==start
+        # Test anchor==end with substitution
         interval = Interval('chr1', '+', 5, 15, genome37, 15)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, substitution_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-        # Test anchor > end
+        # Test anchor > end with substitution
         interval = Interval('chr1', '+', 5, 15, genome37, 20)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, substitution_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
         # Test anchor < start with substitution
         interval = Interval('chr1', '+', 5, 15, genome37, 0)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, substitution_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-        # Test anchor < start with substitution
-        variants = [Variant.from_string("chr1:11::TT", self.genome)]
+        # Test anchor < start with insertion
+        insertion_variant = [Variant.from_string("chr1:11::TT", self.genome)]
         interval = Interval('chr1', '+', 5, 15, genome37, 0)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, insertion_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7])
 
-        # Test anchor middle of deletion
-        variants = [Variant.from_string("chr1:11:GT:", self.genome)]
-        interval = Interval('chr1', '+', 5, 15, genome37, 11)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
-        self.assertEqual(reference_alignment, [-1, 0, 1, 2, 3, 4, 7, 8, 9, 10])
-
-        # Test anchor middle of insertion
-        variants = [Variant.from_string("chr1:11::TT", self.genome)]
+        # Test anchor at end of interval with insertion
         interval = Interval('chr1', '+', 5, 15, genome37, 15)
-        reference_alignment = apply_variants(genome37.dna, variants, interval, reference_alignment=True)[1]
+        reference_alignment = apply_variants(genome37.dna, insertion_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [2, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9])
+
+        # Test anchor middle of deletion
+        deletion_variant = [Variant.from_string("chr1:11:GT:", self.genome)]
+        interval = Interval('chr1', '+', 5, 15, genome37, 11)
+        reference_alignment = apply_variants(genome37.dna, deletion_variant, interval, reference_alignment=True)[1]
+        self.assertEqual(reference_alignment, [-1, 0, 1, 2, 3, 4, 7, 8, 9, 10])
 
     def test_reference_alignment_exception(self):
         genome37 = MiniGenome('test_genome')

@@ -615,7 +615,7 @@ class TestApplyVariants(unittest.TestCase):
         reference_alignment = apply_variants(genome37.dna, insertion_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [0, 1, 2, 3, 4, (5, 0), (5, 1), 5, 6, 7])
 
-        # Test anchor end of interval with insertion
+        # Test anchor at end of interval with insertion
         interval = Interval('chr1', '+', 5, 15, genome37, 15)
         reference_alignment = apply_variants(genome37.dna, insertion_variant, interval, reference_alignment=True)[1]
         self.assertEqual(reference_alignment, [2, 3, 4, (5, 0), (5, 1), 5, 6, 7, 8, 9])

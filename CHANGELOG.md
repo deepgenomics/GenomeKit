@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.1.1](https://github.com/deepgenomics/GenomeKit/compare/v7.1.0...v7.1.1) (2025-06-17)
+
+
+### Documentation
+
+* show project description on https://pypi.org/project/genomekit/ ([#164](https://github.com/deepgenomics/GenomeKit/issues/164)) ([f13ed06](https://github.com/deepgenomics/GenomeKit/commit/f13ed06d90d2ddc0856b4749f323de2d7852ede8))
+
 ## [7.1.0](https://github.com/deepgenomics/GenomeKit/compare/v7.0.0...v7.1.0) (2025-05-13)
 
 

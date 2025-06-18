@@ -39,6 +39,8 @@ jobs:
           - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
           - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
           - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "313", "python-version": "3.13", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "313", "python-version": "3.13", "platform": "osx-64", "runs-on": "macos-latest"}
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4

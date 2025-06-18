@@ -12,3 +12,8 @@ python:
 #- '3.11'
 #- '3.12'
 - '3.13'
+
+# if not specified, default numpy version is 1.26
+# but py313 not supported for that version of numpy
+numpy:
+  - 2 # [py>=313]

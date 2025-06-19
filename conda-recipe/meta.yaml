@@ -1,0 +1,68 @@
+{% set version = "7.1.0" %}
+
+package:
+  name: genomekit
+  version: {{ version }}
+
+source:
+  url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: a124ef26234b42da3db8f83d676949b54995b0d2965e4eed22ede3ad8c73506a
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
+  skip: true  # [py>312 or py<39]
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - {{ stdlib("c") }}
+    - python                                 # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    # if not specified, default numpy version is 1.26
+    # but py313 not supported for that version of numpy
+    - numpy ==2                              # [py>=313 and build_platform != target_platform]
+    - numpy                                  # [py<313 and build_platform != target_platform]
+    - setuptools                             # [build_platform != target_platform]
+
+  host:
+    - appdirs
+    - numpy
+    - typing-extensions
+    - zlib
+    - python {{ python }}
+    - pip
+    - setuptools
+
+  run:
+    - appdirs
+    - google-cloud-storage
+    - boto3
+    - typing-extensions
+    - importlib-metadata
+    - tqdm
+    - python {{ python }}
+
+test:
+  imports:
+    - genome_kit
+  requires:
+    - pytest-cov
+    - pip
+  source_files:
+    - tests
+  commands:
+    - pip check
+    - python -m unittest discover
+
+about:
+  doc_url: https://deepgenomics.github.io/GenomeKit/
+  home: https://github.com/deepgenomics/GenomeKit
+  license: "Apache-2.0"
+  license_file: "LICENSE"
+  summary: GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.
+
+extra:
+  recipe-maintainers:
+    - s22chan
+    - ovesh

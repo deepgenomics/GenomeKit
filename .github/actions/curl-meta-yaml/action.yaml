@@ -14,14 +14,13 @@ runs:
         set -x
         mkdir -p conda-recipe
 
-        # If meta.yaml exists, use it directly without modifications
+        # If meta.yaml exists, use it (to allow quick iteration in feature branches)
         if [[ -f "conda-recipe/meta.yaml" ]]; then
-          echo "WARN: Using existing conda-recipe/meta.yaml file"
-          set +x
-          exit 0
+          echo "WARN: Using existing conda-recipe/meta.yaml"
+        else
+          curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         fi
 
-        curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
 
         export OS_TYPE=$(uname)

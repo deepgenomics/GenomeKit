@@ -46,7 +46,7 @@ jobs:
         name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
         name: Install cibuildwheel
@@ -57,7 +57,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse && ls -l wheelhouse/
         env:
           GK_BUILD_WHEELS: "1"
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
@@ -65,11 +65,11 @@ jobs:
           CIBW_SKIP: "*-musllinux_*"
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
-        name: Test wheels across Python 3.9–3.12
+        name: Test wheels across Python 3.9–3.13
         run: |
           set -euxo pipefail
 
-          for PYVER in 3.9 3.10 3.11 3.12; do
+          for PYVER in 3.9 3.10 3.11 3.12 3.13; do
             PYVER_SHORT=${PYVER/./}
             echo "Testing on Python $PYVER"
 
@@ -119,7 +119,7 @@ jobs:
         name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Install cibuildwheel
@@ -131,7 +131,7 @@ jobs:
         env:
           GK_BUILD_WHEELS: "1"
           CIBW_ARCHS_MACOS: x86_64 arm64
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: cache macos wheels
@@ -154,10 +154,12 @@ jobs:
           - {"os": "macos-14", "arch": "arm64", "pyver": "3.10", "pyvershort": "310"}
           - {"os": "macos-14", "arch": "arm64", "pyver": "3.11", "pyvershort": "311"}
           - {"os": "macos-14", "arch": "arm64", "pyver": "3.12", "pyvershort": "312"}
+          - {"os": "macos-14", "arch": "arm64", "pyver": "3.13", "pyvershort": "313"}
           - {"os": "macos-13", "arch": "x86_64", "pyver": "3.9", "pyvershort": "39"}
           - {"os": "macos-13", "arch": "x86_64", "pyver": "3.10", "pyvershort": "310"}
           - {"os": "macos-13", "arch": "x86_64", "pyver": "3.11", "pyvershort": "311"}
           - {"os": "macos-13", "arch": "x86_64", "pyver": "3.12", "pyvershort": "312"}
+          - {"os": "macos-13", "arch": "x86_64", "pyver": "3.13", "pyvershort": "313"}
 
     steps:
       - name: Set up Python

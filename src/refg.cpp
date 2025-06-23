@@ -42,7 +42,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 			config_path = resolve_datafile_path(prepend_dir(data_dir(), config_path));
 		}
 		GK_RETHROW(
-			"Could not resolve path: {}\nfor annotation: {}\nThis may result from an error within the datamanger",
+			"Could not resolve path: {}\nfor annotation: {}\nThis may result from an error within the datamanager",
 			config_path, config);
 		try {
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {

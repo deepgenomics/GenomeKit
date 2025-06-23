@@ -40,8 +40,10 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		std::string config_path{std::format("{}.cfg", config)};
 		try {
 			config_path = resolve_datafile_path(prepend_dir(data_dir(), config_path));
-		} catch (const value_error& e) {
 		}
+		GK_RETHROW(
+			"Could not resolve path: {}\nfor annotation: {}\nThis may result from an error within the datamanger",
+			config, config_path);
 		try {
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {
 				string_view k_v[2];

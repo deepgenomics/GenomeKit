@@ -172,7 +172,10 @@ def FileIO(filename, desc, mode, size, quiet):
             )
             yield decorated
 
-if _SUPPORT_GCS is True:
+if _SUPPORT_GCS is False:
+    class GCSDataManager(DataManager):
+        pass
+else:
     class GCSDataManager(DataManager):
         """A minimal data manager implementation that retrieves files from a GCS bucket."""
         def __init__(self, data_dir: str, bucket_name: str):

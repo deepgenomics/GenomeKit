@@ -43,7 +43,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		}
 		GK_RETHROW(
 			"Could not resolve path: {}\nfor annotation: {}\nThis may result from an error within the datamanger",
-			config, config_path);
+			config_path, config);
 		try {
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {
 				string_view k_v[2];

@@ -19,7 +19,10 @@ requirements:
     - {{ stdlib("c") }}
     - python                                 # [build_platform != target_platform]
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
-    - numpy                                  # [build_platform != target_platform]
+    # if not specified, default numpy version is 1.26
+    # but py313 not supported for that version of numpy
+    - numpy ==2                              # [py>=313 and build_platform != target_platform]
+    - numpy                                  # [py<313 and build_platform != target_platform]
     - setuptools                             # [build_platform != target_platform]
 
   host:

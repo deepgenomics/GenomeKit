@@ -79,7 +79,7 @@ jobs:
           set -x
           if [ ! -d "${HOME}/micromamba/envs/test" ]; then
             micromamba create -yqn test -c conda-forge \
-              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+              boa==0.16.0 mamba==1.5.7 conda==24.1.2
           fi
           set +x
 

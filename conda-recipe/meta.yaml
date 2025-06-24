@@ -25,7 +25,7 @@ requirements:
   host:
     - appdirs
     # don't know why, but if not specified, conda selects numpy v1.26, incompatible with py313
-    - {{ numpy }} # [py>=313]
+    - numpy {{ numpy }} # [py>=313]
     - numpy # [py<313]
     - typing-extensions
     - zlib

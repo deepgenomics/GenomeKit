@@ -174,7 +174,8 @@ def FileIO(filename, desc, mode, size, quiet):
 
 if _SUPPORT_GCS is False:
     class GCSDataManager(DataManager):
-        pass
+        def __init__(self, data_dir: str, bucket_name: str):
+            raise NotImplementedError("GCS support not available on py313")
 else:
     class GCSDataManager(DataManager):
         """A minimal data manager implementation that retrieves files from a GCS bucket."""

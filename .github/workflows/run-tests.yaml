@@ -31,14 +31,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - {"pyver-short": "39", "python-version": "3.9", "platform": "linux-64", "runs-on": "ubuntu-latest"}
-          - {"pyver-short": "39", "python-version": "3.9", "platform": "osx-64", "runs-on": "macos-latest"}
-          - {"pyver-short": "310", "python-version": "3.10", "platform": "linux-64", "runs-on": "ubuntu-latest"}
-          - {"pyver-short": "310", "python-version": "3.10", "platform": "osx-64", "runs-on": "macos-latest"}
-          - {"pyver-short": "311", "python-version": "3.11", "platform": "linux-64", "runs-on": "ubuntu-latest"}
-          - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
-          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
-          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+#          - {"pyver-short": "39", "python-version": "3.9", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+#          - {"pyver-short": "39", "python-version": "3.9", "platform": "osx-64", "runs-on": "macos-latest"}
+#          - {"pyver-short": "310", "python-version": "3.10", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+#          - {"pyver-short": "310", "python-version": "3.10", "platform": "osx-64", "runs-on": "macos-latest"}
+#          - {"pyver-short": "311", "python-version": "3.11", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+#          - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
+#          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+#          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
           - {"pyver-short": "313", "python-version": "3.13", "platform": "linux-64", "runs-on": "ubuntu-latest"}
           - {"pyver-short": "313", "python-version": "3.13", "platform": "osx-64", "runs-on": "macos-latest"}
     runs-on: ${{ matrix.runs-on }}

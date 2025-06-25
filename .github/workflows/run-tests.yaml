@@ -37,8 +37,8 @@ jobs:
 #          - {"pyver-short": "310", "python-version": "3.10", "platform": "osx-64", "runs-on": "macos-latest"}
 #          - {"pyver-short": "311", "python-version": "3.11", "platform": "linux-64", "runs-on": "ubuntu-latest"}
 #          - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
-#          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
-#          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
           - {"pyver-short": "313", "python-version": "3.13", "platform": "linux-64", "runs-on": "ubuntu-latest"}
           - {"pyver-short": "313", "python-version": "3.13", "platform": "osx-64", "runs-on": "macos-latest"}
     runs-on: ${{ matrix.runs-on }}
@@ -79,6 +79,8 @@ jobs:
           set -x
           if [ ! -d "${HOME}/micromamba/envs/test" ]; then
             micromamba create -yqn test -c conda-forge \
+              # inconsistently got "coverage 7.9.1 is not supported on this platform" so removed
+              # (not needed?)
               boa==0.16.0 mamba==1.5.7 conda==24.1.2
           fi
           set +x

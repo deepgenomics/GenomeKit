@@ -58,9 +58,11 @@ class ProgressPercentage(object):  # pragma: no cover
 
 class GKDataFileNotFoundError(Exception):
     """Exception raised when a requested GenomeKit data file is not found."""
-    def __init__(self, filename):
-        self.message = (f"GenomeKit data file '{filename}' not found. "
-                        "Please upload it using `genome_kit.gk_data.upload_file`.")
+    def __init__(self, filename, message=None):
+        self.message = message if message is not None else (
+            f"GenomeKit data file '{filename}' not found. "
+            "Please upload it using `genome_kit.gk_data.upload_file`."
+        )
         self.filename = filename
         super().__init__(self.message)
 
@@ -210,7 +212,10 @@ class GCSDataManager(DataManager):
         try:
             blob = self.bucket.blob(filename)
             if not blob.exists():
-                raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
+                raise GKDataFileNotFoundError(
+                    filename=filename,
+                    message=f"File '{filename}' not found in the GCS bucket",
+                )
         except Exception as e:
             if "GENOMEKIT_TRACE" in os.environ:
                 # give the user a hint in case of permission errors
@@ -313,7 +318,10 @@ class DefaultDataManager(DataManager):
             obj = self.client.head_object(Bucket=self._bucket_name, Key=filename)
         except ClientError as e:
             if e.response['Error']['Code'] == "404":
-                raise FileNotFoundError(f"File '{filename}' not found in the S3 bucket")
+                raise GKDataFileNotFoundError(
+                    filename=filename,
+                    message=f"File '{filename}' not found in the S3 bucket",
+                )
             else:
                 raise
         except Exception as e:

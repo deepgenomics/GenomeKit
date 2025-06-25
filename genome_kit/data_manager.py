@@ -55,6 +55,16 @@ class ProgressPercentage(object):  # pragma: no cover
     def __call__(self, bytes_amount):
         self.progress.update(bytes_amount)
 
+
+class GKDataFileNotFoundError(Exception):
+    """Exception raised when a requested GenomeKit data file is not found."""
+    def __init__(self, filename):
+        self.message = (f"GenomeKit data file '{filename}' not found. "
+                        "Please upload it using `genome_kit.gk_data.upload_file`.")
+        self.filename = filename
+        super().__init__(self.message)
+
+
 _S3_BUCKET = os.environ.get("GENOMEKIT_STORAGE_BUCKET", "genomekit-data-public")
 
 def _hashfile(afile, hasher, blocksize=65536):

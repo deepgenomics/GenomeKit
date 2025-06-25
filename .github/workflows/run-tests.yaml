@@ -91,6 +91,7 @@ jobs:
         run: |
           set -x
           micromamba activate test
+          conda --version
           conda index ~/conda-bld
           files=(~/conda-bld/*/*py${{ matrix.pyver-short }}*.tar.bz2)
           if [ ! -e "${files[0]}" ]; then

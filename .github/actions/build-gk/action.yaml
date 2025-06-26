@@ -39,8 +39,9 @@ runs:
       shell: bash -l -e {0}
       run: |
         set -x
+        # boa required for the mambabuild subcommand
         if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-          micromamba create -yqn build -c conda-forge mamba==1.5.8 conda=24.5 ccache
+          micromamba create -yqn build -c conda-forge boa==0.17.0 mamba==1.5.8 conda=24.5 ccache
         fi
         set +x
 

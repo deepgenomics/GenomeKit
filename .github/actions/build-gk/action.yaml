@@ -29,18 +29,18 @@ runs:
           ~/conda-bld
 
     - name: install mamba
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       uses: ./.github/actions/install-mamba
       with:
         installer-url: https://micro.mamba.pm/api/micromamba/${{ inputs.platform }}/1.5.8
 
     - name: create build env
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       shell: bash -l -e {0}
       run: |
         set -x
         if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-          micromamba create -yqn build -c conda-forge \
-            boa==0.17.0 mamba==1.5.8 conda=24.5 \
-            ccache
+          micromamba create -yqn build -c conda-forge boa==0.17.0 mamba==1.5.8 conda=24.5 ccache
         fi
         set +x
 
@@ -50,6 +50,7 @@ runs:
         env: build
 
     - name: save mamba gk ccache
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       id: save_mamba_gk_ccache
       uses: actions/cache@v4
       with:
@@ -61,6 +62,7 @@ runs:
           ~/.ccache
 
     - name: set compiler cache size
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       shell: bash -l -e {0}
       run: |
         set -x
@@ -81,6 +83,7 @@ runs:
         conda clean -it
 
     - name: cache mamba env
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       id: save_mamba_cache
       uses: actions/cache/save@v4
       with:
@@ -91,6 +94,7 @@ runs:
           ~/bin/micromamba
 
     - name: cache gk package tarballs
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       id: save_gk_pkg
       uses: actions/cache/save@v4
       with:

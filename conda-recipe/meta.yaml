@@ -47,6 +47,8 @@ test:
   imports:
     - genome_kit
   requires:
+    # inconsistently got "coverage 7.9.1 is not supported on this platform" so removed
+    # (not needed?)
     - pip
   source_files:
     - tests

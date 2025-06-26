@@ -47,7 +47,6 @@ test:
   imports:
     - genome_kit
   requires:
-    - pytest-cov
     - pip
   source_files:
     - tests

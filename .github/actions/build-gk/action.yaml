@@ -24,7 +24,7 @@ runs:
       id: restore_gk_pkg
       uses: actions/cache/restore@v4
       with:
-        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+        key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
         path: |
           ~/conda-bld
 

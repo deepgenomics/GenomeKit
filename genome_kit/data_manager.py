@@ -11,7 +11,12 @@ from functools import wraps, lru_cache
 from pathlib import Path
 from typing import Dict, Any
 
-from google.cloud import storage
+_SUPPORT_GCS = True
+try:
+    from google.cloud import storage
+except ImportError:
+    # google.cloud breaks build on py313
+    _SUPPORT_GCS = False
 import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
@@ -167,109 +172,114 @@ def FileIO(filename, desc, mode, size, quiet):
             )
             yield decorated
 
-class GCSDataManager(DataManager):
-    """A minimal data manager implementation that retrieves files from a GCS bucket."""
-    def __init__(self, data_dir: str, bucket_name: str):
-        """
-        Args:
-            data_dir: location where local files are cached
-            bucket_name: GCS bucket
-        """
-        self._bucket_name = bucket_name
-        super().__init__(data_dir)
+if _SUPPORT_GCS is False:
+    class GCSDataManager(DataManager):
+        def __init__(self, data_dir: str, bucket_name: str):
+            raise NotImplementedError("GCS support not available on py313")
+else:
+    class GCSDataManager(DataManager):
+        """A minimal data manager implementation that retrieves files from a GCS bucket."""
+        def __init__(self, data_dir: str, bucket_name: str):
+            """
+            Args:
+                data_dir: location where local files are cached
+                bucket_name: GCS bucket
+            """
+            self._bucket_name = bucket_name
+            super().__init__(data_dir)
 
-    @property
-    def bucket(self):
-        if not hasattr(self, "_bucket"):
-            gcloud_client = storage.Client()
+        @property
+        def bucket(self):
+            if not hasattr(self, "_bucket"):
+                gcloud_client = storage.Client()
+                try:
+                    self._bucket = gcloud_client.bucket(self._bucket_name, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+                except Exception as e:
+                    # give the user a hint in case of permission errors
+                    print(e, file=sys.stderr)
+                    raise
+
+            return self._bucket
+
+        def get_file(self, filename: str) -> str:
+            local_path = Path(self.data_dir, filename)
+
+            if local_path.exists():
+                return str(local_path)
+
             try:
-                self._bucket = gcloud_client.bucket(self._bucket_name, user_project=os.environ.get("GENOMEKIT_GCS_BILLING_PROJECT", None))
+                blob = self.bucket.blob(filename)
+                if not blob.exists():
+                    raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
             except Exception as e:
-                # give the user a hint in case of permission errors
-                print(e, file=sys.stderr)
+                if "GENOMEKIT_TRACE" in os.environ:
+                    # give the user a hint in case of permission errors
+                    print(e, file=sys.stderr)
                 raise
 
-        return self._bucket
+            # form a temporary filename to make the download safe
+            temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")
+            temp_file_path = str(Path(self.data_dir, temp_file.name))
+            try:
+                temp_file.close()
+                with FileIO(temp_file_path, filename, "wb", blob.size, quiet=False) as f:
+                    blob.download_to_file(f)
+            except:
+                os.remove(temp_file_path)
+                raise
+            # atomically (on POSIX) rename the file to the real one
+            os.rename(temp_file_path, local_path)
 
-    def get_file(self, filename: str) -> str:
-        local_path = Path(self.data_dir, filename)
-
-        if local_path.exists():
             return str(local_path)
 
-        try:
+        def _remote_equal(self, blob: storage.Blob, file_path: Path) -> bool:
+            remote_checksum = base64.b64decode(blob.md5_hash).hex()
+            with open(file_path, 'rb') as f:
+                local_checksum = _hashfile(f, hashlib.md5())
+            return remote_checksum == local_checksum
+
+        def upload_file(self, filepath: str, filename: str, metadata: Dict[str, str]=None):
             blob = self.bucket.blob(filename)
-            if not blob.exists():
-                raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
-        except Exception as e:
-            if "GENOMEKIT_TRACE" in os.environ:
-                # give the user a hint in case of permission errors
-                print(e, file=sys.stderr)
-            raise
 
-        # form a temporary filename to make the download safe
-        temp_file = tempfile.NamedTemporaryFile(delete=False, mode="wb", dir=self.data_dir, prefix=filename, suffix=".part")
-        temp_file_path = str(Path(self.data_dir, temp_file.name))
-        try:
-            temp_file.close()
-            with FileIO(temp_file_path, filename, "wb", blob.size, quiet=False) as f:
-                blob.download_to_file(f)
-        except:
-            os.remove(temp_file_path)
-            raise
-        # atomically (on POSIX) rename the file to the real one
-        os.rename(temp_file_path, local_path)
+            if blob.exists():
+                blob.reload()
+                if self._remote_equal(blob, Path(filepath)):
+                    logger.info(f"File '{filename}' already exists in the GCS bucket and is identical, skipping.")
+                    return
 
-        return str(local_path)
+                if "GK_UPLOAD_ALLOW_OVERWRITE" not in os.environ:
+                    raise ValueError(f"File '{filename}' already exists in the GCS bucket."
+                                     "Set GK_UPLOAD_ALLOW_OVERWRITE=1 to overwrite.")
+                else:
+                    logger.warning(f"Overwriting '{filename}' on the server.")
 
-    def _remote_equal(self, blob: storage.Blob, file_path: Path) -> bool:
-        remote_checksum = base64.b64decode(blob.md5_hash).hex()
-        with open(file_path, 'rb') as f:
-            local_checksum = _hashfile(f, hashlib.md5())
-        return remote_checksum == local_checksum
-
-    def upload_file(self, filepath: str, filename: str, metadata: Dict[str, str]=None):
-        blob = self.bucket.blob(filename)
-
-        if blob.exists():
-            blob.reload()
-            if self._remote_equal(blob, Path(filepath)):
-                logger.info(f"File '{filename}' already exists in the GCS bucket and is identical, skipping.")
-                return
-
-            if "GK_UPLOAD_ALLOW_OVERWRITE" not in os.environ:
-                raise ValueError(f"File '{filename}' already exists in the GCS bucket."
-                                 "Set GK_UPLOAD_ALLOW_OVERWRITE=1 to overwrite.")
+                if blob.metadata is None:
+                    blob.metadata = metadata
+                else:
+                    blob.metadata.update(metadata or {})
             else:
-                logger.warning(f"Overwriting '{filename}' on the server.")
-
-            if blob.metadata is None:
                 blob.metadata = metadata
-            else:
-                blob.metadata.update(metadata or {})
-        else:
-            blob.metadata = metadata
 
-        with FileIO(filepath, filename, "rb", os.path.getsize(filepath), quiet=False) as f:
-            blob.upload_from_file(f)
+            with FileIO(filepath, filename, "rb", os.path.getsize(filepath), quiet=False) as f:
+                blob.upload_from_file(f)
 
-    @lru_cache
-    def list_available_genomes(self):
-        names = set()
+        @lru_cache
+        def list_available_genomes(self):
+            names = set()
 
-        def get_genomes(filenames):
-            return (
-                name.rpartition(".")[0]
-                for name in filenames
-                if name.endswith(".2bit") or name.endswith(".cfg")
-            )
+            def get_genomes(filenames):
+                return (
+                    name.rpartition(".")[0]
+                    for name in filenames
+                    if name.endswith(".2bit") or name.endswith(".cfg")
+                )
 
-        names.update(get_genomes(os.listdir(self.data_dir)))
+            names.update(get_genomes(os.listdir(self.data_dir)))
 
-        blobs = self.bucket.list_blobs()
-        names.update(get_genomes(blob.name for blob in blobs))
+            blobs = self.bucket.list_blobs()
+            names.update(get_genomes(blob.name for blob in blobs))
 
-        return sorted(names)
+            return sorted(names)
 
 class DefaultDataManager(DataManager):
     """A minimal data manager implementation that retrieves files from a S3 bucket.

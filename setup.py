@@ -31,17 +31,6 @@ class egg_info_ex(egg_info):
 
 if __name__ == "__main__":
     install_requires = []
-    if os.environ.get("GK_BUILD_WHEELS", None) is not None:
-        install_requires = [
-            "appdirs>=1.4.0",
-            "numpy<2.0dev0",
-            "google-cloud-storage>=2.10.0",
-            "boto3",
-            "tqdm",
-            "setuptools",
-            "importlib-metadata",
-            "typing-extensions",
-        ]
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
@@ -53,6 +42,7 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
+            "Programming Language :: Python :: 3.13",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         long_description=(Path(__file__).parent / "README.md").read_text(),

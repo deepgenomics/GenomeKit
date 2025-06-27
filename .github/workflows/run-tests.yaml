@@ -39,6 +39,8 @@ jobs:
           - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
           - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
           - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "313", "python-version": "3.13", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "313", "python-version": "3.13", "platform": "osx-64", "runs-on": "macos-latest"}
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +63,7 @@ jobs:
         id: restore_gk_pkg
         uses: actions/cache/restore@v4
         with:
-          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+          key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
           path: |
             ~/conda-bld
           fail-on-cache-miss: true
@@ -74,10 +76,12 @@ jobs:
       - name: create test env
         shell: bash -l -e {0}
         run: |
+          # boa required for the mambabuild subcommand
           set -x
+          # inconsistently got "coverage 7.9.1 is not supported on this platform" so removed
+          # (not needed?)
           if [ ! -d "${HOME}/micromamba/envs/test" ]; then
-            micromamba create -yqn test -c conda-forge \
-              boa==0.16.0 mamba==1.5.7 conda==24.1.2 coverage
+            micromamba create -yqn test -c conda-forge boa==0.16.0 mamba==1.5.7 conda==24.1.2
           fi
           set +x
 

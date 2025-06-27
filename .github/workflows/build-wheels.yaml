@@ -104,14 +104,10 @@ jobs:
         id: restore_macos_wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
 
       # skip remaining steps on cache hit
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Rename pyproject.toml
-        run: mv _pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python

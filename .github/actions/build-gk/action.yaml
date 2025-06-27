@@ -28,6 +28,8 @@ runs:
         path: |
           ~/conda-bld
 
+      # skip remaining steps (except configure-conda) on cache hit
+
     - name: install mamba
       if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       uses: ./.github/actions/install-mamba

@@ -385,7 +385,7 @@ if __name__ == "__main__":
     if os.environ.get("GK_BUILD_WHEELS", None) is not None:
         install_requires = [
             "appdirs>=1.4.0",
-            "numpy=2; python_version>='3.13'",
+            "numpy=>2.0.0; python_version>='3.13'",
             "numpy<2.0dev0; python_version<'3.13'",
             "google-cloud-storage>=2.10.0",
             "boto3",

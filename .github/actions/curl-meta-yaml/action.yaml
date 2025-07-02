@@ -38,7 +38,8 @@ runs:
         # set the version to the local release-please version (for docs and docker publish)
         $SED_CMD "s/{% set version = \".+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
         # avoid error "No module named 'setup'" due to "from setup import c_ext" in setup.py
-        $SED_CMD "s/script: {{ PYTHON }} -m pip install --no-deps --ignore-installed ./script: PYTHONPATH=. {{ PYTHON }} -m pip install --no-deps --ignore-installed ./" conda-recipe/meta.yaml
+        # See if this can be removed
+        # $SED_CMD "s/script: {{ PYTHON }} -m pip install --no-deps --ignore-installed ./script: PYTHONPATH=. {{ PYTHON }} -m pip install --no-deps --ignore-installed ./" conda-recipe/meta.yaml
 
         head -40 conda-recipe/meta.yaml
         set +x

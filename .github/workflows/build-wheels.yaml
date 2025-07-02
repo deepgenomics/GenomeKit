@@ -126,8 +126,6 @@ jobs:
           GK_BUILD_WHEELS: "1"
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
-          CIBW_PIP_EXTRA_ARGS: "--no-deps --ignore-installed"
-          CIBW_ENVIRONMENT: "PYTHONPATH=."
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: cache macos wheels

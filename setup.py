@@ -382,6 +382,18 @@ else:
 
 if __name__ == "__main__":
     install_requires = []
+    if os.environ.get("GK_BUILD_WHEELS", None) is not None:
+        install_requires = [
+            "appdirs>=1.4.0",
+            "numpy=2; python_version>='3.13'",
+            "numpy<2.0dev0; python_version<'3.13'"
+            "google-cloud-storage>=2.10.0",
+            "boto3",
+            "tqdm",
+            "setuptools",
+            "importlib-metadata",
+            "typing-extensions",
+        ]
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",

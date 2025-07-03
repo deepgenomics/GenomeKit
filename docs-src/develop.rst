@@ -29,7 +29,7 @@ On M1 macs, you might need to set up the environment differently::
 
 Build the package in development mode::
 
-    pip install -e .
+    PYTHONPATH=. pip install -e . --no-build-isolation
 
 This builds the C++ extension and copies it into
 your source tree (``genome_kit/_cxx.so``).
@@ -65,7 +65,7 @@ Making changes
 
 If the C/C++ code changed, you must re-run the ``develop`` command::
 
-    pip install -e .
+    PYTHONPATH=. pip install -e . --no-build-isolation
 
 This includes switching branches, merging changes, or editing the C/C++ code
 yourself. *Forgetting this step may lead to unpredictable behaviour.*
@@ -161,7 +161,7 @@ Test data files reside in the source tree under ``tests/data``.
 To build them, you must have registered your source tree in
 develop mode::
 
-    pip install -e .
+    PYTHONPATH=. pip install -e . --no-build-isolation
 
 Now that your source tree is the default `genome_kit` import,
 the ``build`` subcommand will be able to find

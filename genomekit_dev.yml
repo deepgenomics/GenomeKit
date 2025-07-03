@@ -4,8 +4,8 @@ channels:
   - bioconda
 dependencies:
   - appdirs>=1.4.0
-  - numpy <2.0dev0
-  - python>=3.9.0,<3.13.0
+  - numpy
+  - python>=3.9.0,<3.14.0
   - tqdm
   - typing-extensions
   - zlib
@@ -16,7 +16,7 @@ dependencies:
   # dev + test dependencies
   - ccache
   - ipython
-  - pyperformance==1.0.4
+  # usage of pyperf was removed internally before open sourcing
   - pytest
   - sphinx
   - sphinx_rtd_theme

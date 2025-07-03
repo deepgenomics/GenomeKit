@@ -5,21 +5,41 @@ runs:
   steps:
     - shell: bash -l -e {0}
       run: |
+        # Fail if on main branch and conda-recipe/meta.yaml exists
+        if [[ "${GITHUB_REF_NAME}" == "main" && -f "conda-recipe/meta.yaml" ]]; then
+          echo "ERROR: conda-recipe/meta.yaml should not be committed to main. Failing build."
+          exit 1
+        fi
+
         set -x
         mkdir -p conda-recipe
-        curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
+
+        # If meta.yaml exists, use it (to allow quick iteration in feature branches)
+        if [[ -f "conda-recipe/meta.yaml" ]]; then
+          echo "WARN: Using existing conda-recipe/meta.yaml"
+        else
+          curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
+        fi
+
         export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
 
         export OS_TYPE=$(uname)
-        # - replace the (non-existent) tarball with local path
-        # - remove the related sha for that tarball
-        # - build for all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
-        # - set the version to the local release-please version (for docs and docker publish)
         if [[ "$OS_TYPE" == "Darwin" ]]; then
-          sed -i '' -E "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d;s/{% set version = \".+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+          SED_CMD="sed -i '' -E"
         else
-          sed -i -e    "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1; /sha256: /d; /skip: true /d;s/{% set version = \".\+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+          SED_CMD="sed -i"
         fi
+        # replace the (non-existent) tarball with local path
+        $SED_CMD "s|url: https://github.com/deepgenomics/GenomeKit/archive/refs/tags/v.*$|path: ../|1" conda-recipe/meta.yaml
+        # remove the related sha for that tarball
+        $SED_CMD "/sha256: /d" conda-recipe/meta.yaml
+        # build for all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
+        $SED_CMD "/skip: true /d" conda-recipe/meta.yaml
+        # set the version to the local release-please version (for docs and docker publish)
+        $SED_CMD "s/{% set version = \".+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+        # avoid error "No module named 'setup'" due to "from setup import c_ext" in setup.py
+        # See if this can be removed
+        # $SED_CMD "s/script: {{ PYTHON }} -m pip install --no-deps --ignore-installed ./script: PYTHONPATH=. {{ PYTHON }} -m pip install --no-deps --ignore-installed ./" conda-recipe/meta.yaml
 
-        head -10 conda-recipe/meta.yaml
+        head -40 conda-recipe/meta.yaml
         set +x

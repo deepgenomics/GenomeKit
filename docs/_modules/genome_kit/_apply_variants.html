@@ -164,10 +164,6 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: How are anchor_offsets greater than the length of an insertion handled?</span>
-    <span class="c1"># The anchor offset should just implicitly be truncated to the length of the insertion.</span>
-    <span class="c1"># Need to test this.</span>
-
     <span class="n">variants</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">vv</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">_normalized_variant</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variants</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">chrom</span> <span class="o">==</span> <span class="n">interval</span><span class="o">.</span><span class="n">chrom</span><span class="p">)</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">),</span>
                       <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
     <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_dna0</span><span class="p">()</span>

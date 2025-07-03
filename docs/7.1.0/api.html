@@ -398,7 +398,8 @@ genome will be used.</p></li>
 <li><p><strong>anchor</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#int" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <a class="reference external" href="https://docs.python.org/3.7/library/stdtypes.html#str" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference internal" href="#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> | None, optional) – The anchor is only relevant when extracting DNA from a
 <cite>VariantGenome</cite> and specifies how length-changing variants are
 applied. Conceptually, the anchor defines a fixed point when the
-sequence changes length. See (TODO: link) for the details.
+sequence changes length. See
+<a class="reference external" href="https://deepgenomics.github.io/GenomeKit/anchors.html">https://deepgenomics.github.io/GenomeKit/anchors.html</a> for the details.
 The anchor can be any position in the interval. If anchor is
 <cite>None</cite>, then length-changing variants will change the length of the
 interval. Anchor can be a string: <cite>5p</cite> or <cite>3p</cite> sets the anchor to
@@ -2034,7 +2035,7 @@ decoded to.</p>
 <li><p><strong>interval</strong> (<a class="reference internal" href="#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>) – The stranded query interval.</p></li>
 <li><p><strong>dtype</strong> (<a class="reference external" href="https://docs.python.org/3.7/library/functions.html#type" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a>) – Optional. The numpy dtype of the resulting array. Ignored if
 <code class="docutils literal notranslate"><span class="pre">out</span></code> is provided.</p></li>
-<li><p><strong>out</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – Optional. A numpy array to hold the result. If provided, it
+<li><p><strong>out</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a>) – Optional. A numpy array to hold the result. If provided, it
 overrides <code class="docutils literal notranslate"><span class="pre">dtype</span></code> and it must have a shape that the inputs
 broadcast to. If not provided or None, a freshly-allocated array
 is returned.</p></li>
@@ -2044,7 +2045,7 @@ is returned.</p></li>
 <dd class="field-even"><p>The decoded track data with <code class="docutils literal notranslate"><span class="pre">len(interval)</span></code> rows and <code class="docutils literal notranslate"><span class="pre">dim</span></code> columns.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4985,7 +4986,7 @@ supported.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>interval</strong> (<a class="reference internal" href="#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>) – A positive interval to query over all the read alignments.</p></li>
-<li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, optional) – The data type for the returned counts.</p></li>
+<li><p><strong>dtype</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dtype</span></code></a>, optional) – The data type for the returned counts.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -4994,7 +4995,7 @@ dimension is indexed via <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">PILEUP_T</span></code>, and <code class="docutils literal notranslate"><span class="pre">PILEUP_DEL</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -7306,7 +7307,7 @@ are accessed by <a class="reference internal" href="#genome_kit.VCFVariant" titl
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -7365,7 +7366,7 @@ are accessed by <a class="reference internal" href="#genome_kit.VCFVariant" titl
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.7/library/exceptions.html#KeyError" title="(in Python v3.7)"><strong>KeyError</strong></a> – Raised if <cite>format_id</cite> is unrecognized, either because it was not in the original VCF

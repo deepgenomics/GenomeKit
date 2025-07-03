@@ -224,8 +224,6 @@ The alignment confirms this is what happened::
       applied, *i.e.* the insertion is done on the left side of the anchor (so you could even set the anchor offset to
       ``MAX_INT`` if you always wanted to insert on the left of the anchor).
 
-.. todo::
-   Unittest that the code is correct for ``anchor_offset > len(interval)``.
 
 .. _anchors-outside-an-interval:
 

@@ -82,7 +82,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">distutils.spawn</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_executable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
@@ -103,7 +103,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dumps a FASTA containing the DNA sequence of refg, indexes it, and returns a context</span>
 <span class="sd">    that can be treated as the path to the fasta. The temporaries are deleted once the</span>
 <span class="sd">    context is closed.&quot;&quot;&quot;</span>
-    <span class="n">samtools</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s2">&quot;samtools&quot;</span><span class="p">)</span>
+    <span class="n">samtools</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;samtools&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">samtools</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;samtools must be installed in order to normalize VCFs&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
 
@@ -312,7 +312,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
                 <span class="c1"># Check requirements</span>
-                <span class="n">bcftools</span> <span class="o">=</span> <span class="n">find_executable</span><span class="p">(</span><span class="s2">&quot;bcftools&quot;</span><span class="p">)</span>
+                <span class="n">bcftools</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;bcftools&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">bcftools</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;bcftools must be installed to normalize VCFs&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
 

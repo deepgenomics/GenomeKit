@@ -293,13 +293,9 @@ applied, <em>i.e.</em> the insertion is done on the left side of the anchor (so 
 <code class="docutils literal notranslate"><span class="pre">MAX_INT</span></code> if you always wanted to insert on the left of the anchor).</p></li>
 </ol>
 </div>
-<div class="admonition-todo admonition" id="id3">
-<p class="admonition-title">Todo</p>
-<p>Unittest that the code is correct for <code class="docutils literal notranslate"><span class="pre">anchor_offset</span> <span class="pre">&gt;</span> <span class="pre">len(interval)</span></code>.</p>
-</div>
 </section>
 <section id="anchors-outside-an-interval">
-<span id="id4"></span><h2>Anchors outside an interval<a class="headerlink" href="#anchors-outside-an-interval" title="Link to this heading"></a></h2>
+<span id="id3"></span><h2>Anchors outside an interval<a class="headerlink" href="#anchors-outside-an-interval" title="Link to this heading"></a></h2>
 <p>It is even possible to define an anchor outside of an interval. This is primarily done for completeness to allow an
 interval to have its length or coordinates modified, but still work for feature extraction when the anchor stays the
 same. Conceptually, defining an anchor outside an interval is equivalent to extending the interval up to the anchor,

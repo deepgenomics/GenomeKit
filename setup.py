@@ -381,19 +381,6 @@ else:
     ccompiler.CCompiler.compile = gcc_parallel_ccompile
 
 if __name__ == "__main__":
-    install_requires = []
-    # TODO still needed?
-    if os.environ.get("GK_BUILD_WHEELS", None) is not None:
-        install_requires = [
-            "appdirs>=1.4.0",
-            "numpy<2.0dev0",
-            "google-cloud-storage>=2.10.0",
-            "boto3",
-            "tqdm",
-            "setuptools",
-            "importlib-metadata",
-            "typing-extensions",
-        ]
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
@@ -409,7 +396,6 @@ if __name__ == "__main__":
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         long_description=(Path(__file__).parent / "README.md").read_text(),
         long_description_content_type='text/markdown',
-        install_requires=install_requires,
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),
         name="genomekit",

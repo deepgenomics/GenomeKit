@@ -1,0 +1,100 @@
+name: run-unit-tests
+run-name: run unit tests
+on:
+  pull_request:
+    paths:
+    - ".github/actions/**"
+    - ".github/workflows/**"
+    - "conda-recipe/**"
+    - "genome_kit/**"
+    - "setup.py"
+    - "setup/**"
+    - "src/**"
+    - "tests/**"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
+    runs-on: ${{ matrix.platform[1] }}
+    if: "!startsWith(github.head_ref, 'release-please')"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/build-gk
+        with:
+          platform: ${{ matrix.platform[0] }}
+
+  test:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - {"pyver-short": "39", "python-version": "3.9", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "39", "python-version": "3.9", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "310", "python-version": "3.10", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "310", "python-version": "3.10", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "311", "python-version": "3.11", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "311", "python-version": "3.11", "platform": "osx-64", "runs-on": "macos-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "linux-64", "runs-on": "ubuntu-latest"}
+          - {"pyver-short": "312", "python-version": "3.12", "platform": "osx-64", "runs-on": "macos-latest"}
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: get meta.yaml from conda-forge for cache key calculation
+        uses: ./.github/actions/curl-meta-yaml
+
+      - name: restore mamba env
+        id: restore_mamba_cache
+        uses: actions/cache/restore@v4
+        with:
+          key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
+          path: |
+            ~/micromamba
+            ~/.condarc
+            ~/bin/micromamba
+          fail-on-cache-miss: true
+
+      - name: restore the gk package tarballs
+        id: restore_gk_pkg
+        uses: actions/cache/restore@v4
+        with:
+          key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+          path: |
+            ~/conda-bld
+          fail-on-cache-miss: true
+
+      - name: install mamba
+        uses: ./.github/actions/install-mamba
+        with:
+          installer-url: https://micro.mamba.pm/api/micromamba/${{ matrix.platform }}/1.5.7
+
+      - name: create test env
+        shell: bash -l -e {0}
+        run: |
+          # boa required for the mambabuild subcommand
+          set -x
+          # inconsistently got "coverage 7.9.1 is not supported on this platform" so removed
+          # (not needed?)
+          if [ ! -d "${HOME}/micromamba/envs/test" ]; then
+            micromamba create -yqn test -c conda-forge boa==0.16.0 mamba==1.5.7 conda==24.1.2
+          fi
+          set +x
+
+      - name: run unittests
+        id: run_unittests
+        shell: bash -l -e {0}
+        run: |
+          set -x
+          micromamba activate test
+          conda index ~/conda-bld
+          files=(~/conda-bld/*/*py${{ matrix.pyver-short }}*.tar.bz2)
+          if [ ! -e "${files[0]}" ]; then
+              echo "No files matched for py${{ matrix.pyver-short }}"
+              exit 1 
+          fi          
+          conda mambabuild --croot /tmp/conda-bld -t $files --extra-deps python=${{ matrix.python-version }}
+          conda clean -it
+          set +x

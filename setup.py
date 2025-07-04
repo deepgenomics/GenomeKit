@@ -1,18 +1,18 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 import os
 import platform
+import shutil
 import sys
 import sysconfig
 from glob import glob
 from pathlib import Path
 from traceback import extract_stack
 
-import shutil
 from setuptools import Extension
 from setuptools import setup, find_packages
+from setuptools._distutils import ccompiler
 from setuptools.command.build_ext import build_ext
 from setuptools.command.egg_info import egg_info
-
 
 COPYRIGHT_FILE = "COPYRIGHT.txt"
 LICENSE_FILE = "LICENSE"
@@ -251,6 +251,134 @@ extension = Extension(
 
 ##############################################################
 
+# TODO convert to meson or scikit-build
+
+# monkey-patch for parallel compilation
+# TODO
+# taken from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+
+PARALLEL_JOBS = 4  # number of parallel compilations
+
+
+def gcc_parallel_ccompile(self,
+                          sources,
+                          output_dir=None,
+                          macros=None,
+                          include_dirs=None,
+                          debug=0,
+                          extra_preargs=None,
+                          extra_postargs=None,
+                          depends=None):
+    # those lines are copied from distutils.ccompiler.CCompiler directly
+    macros, objects, extra_postargs, pp_opts, build = self._setup_compile(output_dir, macros, include_dirs, sources,
+                                                                          depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+    # parallel code
+    import multiprocessing.pool
+
+    def _single_compile(obj):
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+
+    # convert to list, imap is evaluated on-demand
+    list(multiprocessing.pool.ThreadPool(PARALLEL_JOBS).imap(_single_compile, objects))
+    return objects
+
+
+def windows_parallel_ccompile(self,
+                              sources,
+                              output_dir=None,
+                              macros=None,
+                              include_dirs=None,
+                              debug=0,
+                              extra_preargs=None,
+                              extra_postargs=None,
+                              depends=None):
+    if not self.initialized:
+        self.initialize()
+    compile_info = self._setup_compile(output_dir, macros, include_dirs, sources, depends, extra_postargs)
+    macros, objects, extra_postargs, pp_opts, build = compile_info
+
+    from distutils.errors import CompileError
+    from distutils.errors import DistutilsExecError
+
+    compile_opts = extra_preargs or []
+    compile_opts.append("/c")
+    compile_opts.extend(self.compile_options_debug if debug else self.compile_options)
+
+    def _compile_obj(obj):
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
+        if debug:
+            # pass the full pathname to MSVC in debug mode,
+            # this allows the debugger to find the source file
+            # without asking the user to browse for it
+            src = os.path.abspath(src)
+
+        if ext in self._c_extensions:
+            input_opt = "/Tc" + src
+        elif ext in self._cpp_extensions:
+            input_opt = "/Tp" + src
+        elif ext in self._rc_extensions:
+            # compile .RC to .RES file
+            input_opt = src
+            output_opt = "/fo" + obj
+            try:
+                self.spawn([self.rc] + pp_opts + [output_opt] + [input_opt])
+            except DistutilsExecError as msg:
+                raise CompileError(msg)
+            return
+        elif ext in self._mc_extensions:
+            # Compile .MC to .RC file to .RES file.
+            #   * "-h dir" specifies the directory for the
+            #     generated include file
+            #   * "-r dir" specifies the target directory of the
+            #     generated RC file and the binary message resource
+            #     it includes
+            #
+            # For now (since there are no options to change this),
+            # we use the source-directory for the include file and
+            # the build directory for the RC file and message
+            # resources. This works at least for win32all.
+            h_dir = os.path.dirname(src)
+            rc_dir = os.path.dirname(obj)
+            try:
+                # first compile .MC to .RC and .H file
+                self.spawn([self.mc] + ["-h", h_dir, "-r", rc_dir] + [src])
+                base, _ = os.path.splitext(os.path.basename(src))
+                rc_file = os.path.join(rc_dir, base + ".rc")
+                # then compile .RC to .RES file
+                self.spawn([self.rc] + ["/fo" + obj] + [rc_file])
+
+            except DistutilsExecError as msg:
+                raise CompileError(msg)
+            return
+        else:
+            # how to handle this file?
+            raise CompileError("Don't know how to compile %s to %s" % (src, obj))
+
+        output_opt = "/Fo" + obj
+        try:
+            self.spawn([self.cc] + compile_opts + pp_opts + [input_opt, output_opt] + extra_postargs)
+        except DistutilsExecError as msg:
+            raise CompileError(msg)
+
+    import multiprocessing.pool
+    list(multiprocessing.pool.ThreadPool(PARALLEL_JOBS).imap(_compile_obj, objects))
+
+    return objects
+
+
+if sys.platform == "win32":
+    import setuptools._distutils._msvccompiler
+    setuptools._distutils._msvccompiler.MSVCCompiler.compile = windows_parallel_ccompile
+else:
+    ccompiler.CCompiler.compile = gcc_parallel_ccompile
 
 if __name__ == "__main__":
     setup(

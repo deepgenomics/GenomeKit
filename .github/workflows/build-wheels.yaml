@@ -4,7 +4,7 @@ run-name: build-wheels
 on:
   push:
     # only build+push docker on release-please tags
-    tags: [ "v*" ]
+    branches: [ "test-wheel-ci" ]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"

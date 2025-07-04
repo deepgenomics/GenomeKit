@@ -253,7 +253,6 @@ extension = Extension(
 # TODO convert to meson or scikit-build
 
 # monkey-patch for parallel compilation
-# TODO
 # taken from http://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
 
 PARALLEL_JOBS = 4  # number of parallel compilations

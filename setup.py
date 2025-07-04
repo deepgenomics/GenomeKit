@@ -84,7 +84,7 @@ if toolset == "gcc":
     ccache = shutil.which('ccache')
     if ccache:
         os.environ["CC"] = "{} {}".format(ccache, os.environ.get("CC", "gcc"))
-        # TODO cannot use ccache in CXX since distutils hotpatches into LDSHARED:
+        # cannot use ccache in CXX since distutils hotpatches into LDSHARED:
         # https://github.com/python/cpython/blob/069306312addf87252e2dbf250fc7632fc8b7da3/Lib/distutils/unixccompiler.py#L191
         os.environ["LDSHARED"] = sysconfig.get_config_var("LDSHARED")
     else:

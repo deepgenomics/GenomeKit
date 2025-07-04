@@ -5,7 +5,7 @@ import contextlib
 import os
 import subprocess
 import tempfile
-from distutils.spawn import find_executable
+import shutil
 from typing import Optional, Union
 from typing_extensions import Literal
 
@@ -26,7 +26,7 @@ def _dump_fasta(genome, chrom_mapper):
     """Dumps a FASTA containing the DNA sequence of refg, indexes it, and returns a context
     that can be treated as the path to the fasta. The temporaries are deleted once the
     context is closed."""
-    samtools = find_executable("samtools")
+    samtools = shutil.which("samtools")
     if not samtools:
         raise RuntimeError("samtools must be installed in order to normalize VCFs")  # pragma: no cover
 
@@ -216,7 +216,7 @@ class VCFTable(_cxx.VCFTable):
         else:
             if normalize:
                 # Check requirements
-                bcftools = find_executable("bcftools")
+                bcftools = shutil.which("bcftools")
                 if not bcftools:
                     raise RuntimeError("bcftools must be installed to normalize VCFs")  # pragma: no cover
 

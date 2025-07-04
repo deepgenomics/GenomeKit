@@ -10,7 +10,7 @@ on:
     - ".github/workflows/**"
     - "genome_kit/**"
     - "setup.py"
-    - "_pyproject.toml"
+    - "pyproject.toml"
     - "setup/**"
     - "src/**"
     - "tests/**"
@@ -33,14 +33,10 @@ jobs:
         id: restore_linux_wheels
         uses: actions/cache/restore@v4
         with:
-          key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
 
       # skip remaining steps on cache hit
-
-      - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
-        name: Rename pyproject.toml
-        run: mv _pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_linux_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -106,14 +102,10 @@ jobs:
         id: restore_macos_wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
 
       # skip remaining steps on cache hit
-
-      - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
-        name: Rename pyproject.toml
-        run: mv _pyproject.toml pyproject.toml
 
       - if: ${{ steps.restore_macos_wheels.outputs.cache-hit != 'true' }}
         name: Set up Python
@@ -170,7 +162,7 @@ jobs:
       - name: Download built wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
@@ -212,7 +204,7 @@ jobs:
 #        id: restore_linux_intel_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
@@ -220,7 +212,7 @@ jobs:
 #        id: restore_linux_arm_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
@@ -228,7 +220,7 @@ jobs:
 #        id: restore_macos_wheels
 #        uses: actions/cache/restore@v4
 #        with:
-#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+#          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
@@ -265,7 +257,7 @@ jobs:
         id: restore_linux_intel_wheels
         uses: actions/cache/restore@v4
         with:
-          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: linux-wheels-x86_64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
@@ -273,7 +265,7 @@ jobs:
         id: restore_linux_arm_wheels
         uses: actions/cache/restore@v4
         with:
-          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: linux-wheels-aarch64-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
@@ -281,7 +273,7 @@ jobs:
         id: restore_macos_wheels
         uses: actions/cache/restore@v4
         with:
-          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', '_pyproject.toml', 'setup.py', 'setup/**') }}
+          key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 

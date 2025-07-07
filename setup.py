@@ -3,7 +3,7 @@ from pathlib import Path
 
 from setuptools import setup, find_packages
 from setuptools.command.egg_info import egg_info
-from setup import c_ext
+from . import c_ext
 
 COPYRIGHT_FILE = "COPYRIGHT.txt"
 LICENSE_FILE = "LICENSE"

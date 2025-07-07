@@ -1,7 +1,8 @@
 name: run-unit-tests
 run-name: run unit tests
 on:
-  pull_request:
+  push:
+    branches: [ "test-setuppy" ]
     paths:
     - ".github/actions/**"
     - ".github/workflows/**"

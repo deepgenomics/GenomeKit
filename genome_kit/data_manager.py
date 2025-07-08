@@ -18,6 +18,7 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 from tqdm.auto import tqdm
 from tqdm.utils import ObjectWrapper
+from . import _cxx
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ class ProgressPercentage(object):  # pragma: no cover
         self.progress.update(bytes_amount)
 
 
+@_cxx.register
 class GKDataFileNotFoundError(Exception):
     """Exception raised when a requested GenomeKit data file is not found."""
     def __init__(self, filename, message=None):

@@ -44,6 +44,8 @@ GK_DECL_ERROR_CLASS(key_error,       runtime_error)
 GK_DECL_ERROR_CLASS(memory_error,    runtime_error)
 GK_DECL_ERROR_CLASS(not_implemented_error,  runtime_error)
 GK_DECL_ERROR_CLASS(unreachable_code_error, runtime_error)
+// Special error case for when data manager fails to find a data file
+GK_DECL_ERROR_CLASS(gk_data_file_not_found_error, runtime_error)
 
 extern bool is_debugger_running();
 
@@ -110,6 +112,7 @@ extern bool is_debugger_running();
 	GK_CATCH_THROW_NESTED(memory, __VA_ARGS__) \
 	GK_CATCH_THROW_NESTED(not_implemented, __VA_ARGS__) \
 	GK_CATCH_THROW_NESTED(unreachable_code, __VA_ARGS__) \
+	GK_CATCH_THROW_NESTED(gk_data_file_not_found, __VA_ARGS__) \
 	GK_CATCH_THROW_NESTED(runtime, __VA_ARGS__)
 
 //! \brief If expr is false, throw an assertion_error.

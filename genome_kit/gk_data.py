@@ -21,8 +21,8 @@ from __future__ import division
 from __future__ import print_function
 import logging
 import os
-from typing import Dict
-from importlib_metadata import entry_points
+from typing import Dict, List
+from importlib_metadata import EntryPoint, entry_points
 
 
 from ._util import makedirs
@@ -40,13 +40,15 @@ from urllib.request import urlopen
 
 
 eps = entry_points(group="genomekit.plugins.data_manager")
+list_eps: List[EntryPoint] = list(eps)
+len_eps = len(list_eps)
 try:
-    if len(list(eps)) > 0:
-        DataManagerImpl = list(eps)[0].load()
-    if len(list(eps)) > 1:
+    if len_eps > 0:
+        DataManagerImpl = list_eps[0].load()
+    if len_eps > 1:
         logging.info("Multiple data manager plugins found. "
-                     f"Using the first one: {list(eps)[0].name}")
-    if len(list(eps)) == 0:
+                     f"Using the first one: {list_eps[0].name}")
+    if len_eps == 0:
         DataManagerImpl = DefaultDataManager
 except Exception as e:
     logging.debug(e.__traceback__)

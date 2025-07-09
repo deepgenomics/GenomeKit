@@ -71,6 +71,7 @@ static string resolve_datafile_path_with_python(string path)
 
 	// Check for error
 	if (!new_path_obj) {
+		// re-raise original error in case of GKDataFileNotFoundError, otherwise always raise ValueError
 		if (_gk_data_file_not_found_error && PyErr_ExceptionMatches(_gk_data_file_not_found_error)) {
 			GK_THROW(gk_data_file_not_found, "{}", traceback_format_exc_and_clear());
 		} else {

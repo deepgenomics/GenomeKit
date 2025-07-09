@@ -49,8 +49,7 @@ try:
     if len(list(eps)) == 0:
         DataManagerImpl = DefaultDataManager
 except Exception as e:
-    if "GENOMEKIT_TRACE" in os.environ:
-        logging.warning(e.__traceback__)
+    logging.debug(e.__traceback__)
     if len(eps) > 0:
         logging.warning("Failed to load the data manager plugin. "
                         "Falling back to the default data manager.")

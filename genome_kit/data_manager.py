@@ -60,11 +60,8 @@ class ProgressPercentage(object):  # pragma: no cover
 @_cxx.register
 class GKDataFileNotFoundError(Exception):
     """Exception raised when a requested GenomeKit data file is not found."""
-    def __init__(self, filename, message=None):
-        self.message = message if message is not None else (
-            f"GenomeKit data file '{filename}' not found. "
-            "Please upload it using `genome_kit.gk_data.upload_file`."
-        )
+    def __init__(self, filename, message):
+        self.message = message
         self.filename = filename
         super().__init__(self.message)
 

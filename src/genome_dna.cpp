@@ -43,6 +43,8 @@ void genome_dna::open()
 		_sourcefile = resolve_datafile_path(_sourcefile);
 	} catch (const value_error& e) {
 		print("{}\n", e.what());
+	} catch (const gk_data_file_not_found_error& e) {
+		print("{}\n", e.what());
 	}
 
 	// Open file, both memory mapped and with regular file handle

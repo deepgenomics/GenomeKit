@@ -320,7 +320,7 @@ class DefaultDataManager(DataManager):
                 raise GKDataFileNotFoundError(
                     filename=filename,
                     message=f"File '{filename}' not found in the S3 bucket",
-                )
+                ) from e
             else:
                 raise
         except Exception as e:

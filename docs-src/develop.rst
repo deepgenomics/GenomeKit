@@ -140,8 +140,8 @@ For a full set of options, run::
 Building full data files
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-For instructions on how to build annotation (dganno) files and assembly
-(2bit) files, see `Genomes <genomes.html>`_.
+For instructions on how to build annotation (dganno) files, assembly
+(2bit) files, and Appris/MANE files, see `Genomes <genomes.html>`_.
 
 Full-sized data files reside in a local user directory reserved
 for GenomeKit, downloaded from the data store on-demand.

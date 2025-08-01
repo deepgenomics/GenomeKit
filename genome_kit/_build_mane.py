@@ -18,6 +18,7 @@ _SUPPORTED_MANE_VERSIONS_BY_ANNO = {
     "ncbi_refseq.hg38.p14_RS_2024_08.mini": "1.4",
     "gencode.v41": "1.0",
     "gencode.v41.mini": "1.0",
+    "gencode.v46": "1.3",
 }
 
 _SUPPORTED_ANNOS = {

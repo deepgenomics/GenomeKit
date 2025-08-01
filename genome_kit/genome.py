@@ -604,7 +604,7 @@ class Genome(_cxx.Genome):
     def mane_select_transcripts(self, gene=None):
         """Returns a list of MANE Select transcript objects.
         If a gene is provided as input, a list of containing the single MANE Select transcript
-            for that gene, or an empty list if the gene has no MANE transcript.
+        for that gene, or an empty list if the gene has no MANE transcript.
 
         Parameters
         ----------
@@ -644,7 +644,7 @@ class Genome(_cxx.Genome):
     def mane_plus_clinical_transcripts(self, gene=None):
         """Returns a list of MANE Plus Clinical transcript objects.
         If a gene is provided as input, a list of MANE Plus Clinical transcripts
-            for that gene.
+        for that gene.
 
         Parameters
         ----------

@@ -76,28 +76,28 @@ Annotations
    contains metadata, such as ``refg=hg38``.
 
 
-Appris / MANE
+APPRIS / MANE
 -------------
 
-When adding an annotation, you can also generate Appris/MANE data files for it if public data is available.
+When adding an annotation, you can also generate APPRIS/MANE data files for it if public data is available.
 
-Appris files are available on https://apprisws.bioinfo.cnio.es/pub/releases/.
+APPRIS files are available on https://apprisws.bioinfo.cnio.es/pub/releases/.
 As noted in the `GenomeKit source code <https://github.com/deepgenomics/GenomeKit/blob/41c1fbe5c011d04504b08eef4435c50771c01471/genome_kit/_build_appris.py#L107>`_,
-we maintain a partial archive of Appris.
+we maintain a partial archive of APPRIS.
 
-Gencode
+GENCODE
 ^^^^^^^
 
-For Gencode annotations, first find the matching Ensembl release. For example, for Gencode v47, the matching Ensembl
-release is 113. So you'll need to find an Appris release that includes e113. The earliest release that includes e113 is
-2024_10.v49 (e113v49).
+For GENCODE annotations, first `find the matching Ensembl release <https://www.gencodegenes.org/human/releases.html>`_.
+For example, for GENCODE v47, the matching Ensembl release is 113. So you'll need to find an APPRIS release that
+includes e113. The earliest release that includes e113 is 2024_10.v49 (e113v49).
 
 If our archive doesn't already includes this release, you'll need to download the release and add it to the archive.
 
 RefSeq
 ^^^^^^
 
-You can similarly find the matching release for RefSeq annotations. For example, for RefSeq v110, the earliest Appris
+You can similarly find the matching release for RefSeq annotations. For example, for RefSeq v110, the earliest APPRIS
 release you can find rs110 is 2023_05.v48 (rs110v48).
 
 MANE
@@ -106,7 +106,7 @@ MANE
 For MANE releases, search through versions on https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/.
 Each MANE release includes a `README_versions.txt` the releated Ensembl and RefSeq releases.
 
-For help on building Appris/MANE:
+For help on building APPRIS/MANE:
 
   .. code-block:: Bash
 

@@ -222,7 +222,7 @@ def _gen_gk_appris_data(data, genome):
     def gencode(transcriptID):
         return re.sub(ensembl_transcript_prefix_pattern, "", transcriptID)
 
-    # Determine if the APPRIS data is for RefSeq or GENCODE BAsed on the first line
+    # Determine if the APPRIS data is for RefSeq or GENCODE based on the first line
     transcript_id = next(iter(next(iter(data.values()))))
     if re.fullmatch(ensembl_transcript_prefix_pattern + r'\d+', transcript_id):
         simplify_transcript = gencode

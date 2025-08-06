@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developers &mdash; GenomeKit 7.1.0 documentation</title>
+  <title>Developers &mdash; GenomeKit 7.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -14,7 +14,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=9e30f436"></script>
+      <script src="_static/documentation_options.js?v=0c4f2add"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -212,15 +212,15 @@ continuous integration testing.
 They are stored in the source tree under <code class="docutils literal notranslate"><span class="pre">tests/data</span></code>.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">genome_kit</span></code> module’s <code class="docutils literal notranslate"><span class="pre">build</span></code> command can be used to build full
-Appris/MANE data files, and Appris/MANE/dganno/2bit test data files.</p>
+APPRIS/MANE data files, and APPRIS/MANE/dganno/2bit test data files.</p>
 <p>For a full set of options, run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">genome_kit</span> <span class="n">build</span> <span class="o">--</span><span class="n">help</span>
 </pre></div>
 </div>
 <section id="building-full-data-files">
 <h3>Building full data files<a class="headerlink" href="#building-full-data-files" title="Link to this heading"></a></h3>
-<p>For instructions on how to build annotation (dganno) files and assembly
-(2bit) files, see <a class="reference external" href="genomes.html">Genomes</a>.</p>
+<p>For instructions on how to build annotation (dganno) files, assembly
+(2bit) files, and APPRIS/MANE files, see <a class="reference internal" href="genomes.html"><span class="doc">Genomes</span></a>.</p>
 <p>Full-sized data files reside in a local user directory reserved
 for GenomeKit, downloaded from the data store on-demand.</p>
 <div class="admonition note">
@@ -244,7 +244,7 @@ develop mode:</p>
 <p>Now that your source tree is the default <cite>genome_kit</cite> import,
 the <code class="docutils literal notranslate"><span class="pre">build</span></code> subcommand will be able to find
 your test data directory.</p>
-<p>To build test annotation, 2bit, Appris, and MANE files, use <cite>–test-&lt;type&gt;</cite>
+<p>To build test annotation, 2bit, APPRIS, and MANE files, use <cite>–test-&lt;type&gt;</cite>
 flags on the <code class="docutils literal notranslate"><span class="pre">build</span></code> subcommand:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">genome_kit</span> <span class="n">build</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="n">anno</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="mi">2</span><span class="n">bit</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="n">appris</span> <span class="o">--</span><span class="n">test</span><span class="o">-</span><span class="n">mane</span>
 </pre></div>

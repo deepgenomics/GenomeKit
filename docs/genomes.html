@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Genomes &mdash; GenomeKit 7.1.0 documentation</title>
+  <title>Genomes &mdash; GenomeKit 7.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -14,7 +14,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=9e30f436"></script>
+      <script src="_static/documentation_options.js?v=0c4f2add"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
@@ -52,6 +52,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#assemblies">Assemblies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#annotations">Annotations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#appris-mane">APPRIS / MANE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gencode">GENCODE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#refseq">RefSeq</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mane">MANE</a></li>
 </ul>
 </li>
 </ul>
@@ -154,6 +160,36 @@ and the <code class="docutils literal notranslate"><span class="pre">hash</span>
 contains metadata, such as <code class="docutils literal notranslate"><span class="pre">refg=hg38</span></code>.</p>
 </li>
 </ol>
+</section>
+</section>
+<section id="appris-mane">
+<h2>APPRIS / MANE<a class="headerlink" href="#appris-mane" title="Link to this heading"></a></h2>
+<p>When adding an annotation, you can also generate APPRIS/MANE data files for it if public data is available.</p>
+<p>APPRIS files are available on <a class="reference external" href="https://apprisws.bioinfo.cnio.es/pub/releases/">https://apprisws.bioinfo.cnio.es/pub/releases/</a>.
+As noted in the <a class="reference external" href="https://github.com/deepgenomics/GenomeKit/blob/41c1fbe5c011d04504b08eef4435c50771c01471/genome_kit/_build_appris.py#L107">GenomeKit source code</a>,
+we maintain a partial archive of APPRIS.</p>
+<section id="gencode">
+<h3>GENCODE<a class="headerlink" href="#gencode" title="Link to this heading"></a></h3>
+<p>For GENCODE annotations, first <a class="reference external" href="https://www.gencodegenes.org/human/releases.html">find the matching Ensembl release</a>.
+For example, for GENCODE v47, the matching Ensembl release is 113. So you’ll need to find an APPRIS release that
+includes e113. The earliest release that includes e113 is 2024_10.v49 (e113v49).</p>
+<p>If our archive doesn’t already includes this release, you’ll need to download the release and add it to the archive.</p>
+</section>
+<section id="refseq">
+<h3>RefSeq<a class="headerlink" href="#refseq" title="Link to this heading"></a></h3>
+<p>You can similarly find the matching release for RefSeq annotations. For example, for RefSeq v110, the earliest APPRIS
+release you can find rs110 is 2023_05.v48 (rs110v48).</p>
+</section>
+<section id="mane">
+<h3>MANE<a class="headerlink" href="#mane" title="Link to this heading"></a></h3>
+<p>For MANE releases, search through versions on <a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/">https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/</a>.
+Each MANE release includes a <cite>README_versions.txt</cite> the releated Ensembl and RefSeq releases.</p>
+<p>For help on building APPRIS/MANE:</p>
+<blockquote>
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>genome_kit<span class="w"> </span>build<span class="w"> </span>--help
+</pre></div>
+</div>
+</div></blockquote>
 </section>
 </section>
 </section>

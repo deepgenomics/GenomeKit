@@ -18,11 +18,13 @@ from . import Genome, _build_annotations, gk_data
 from ._gk_data_config import get_appris_filename
 
 # Original sources from
-# see http://apprisws.bioinfo.cnio.es/pub/releases/2022_07.v47
-# see http://apprisws.bioinfo.cnio.es/pub/releases/2019_09.v29
-# see http://apprisws.bioinfo.cnio.es/pub/releases/2018_12.v28
-# see http://apprisws.bioinfo.cnio.es/pub/releases/2018_02.v27
-# see http://apprisws.bioinfo.cnio.es/pub/releases/2017_06.v23
+# http://apprisws.bioinfo.cnio.es/pub/releases/2024_10.v49
+# http://apprisws.bioinfo.cnio.es/pub/releases/2023_08.v48
+# http://apprisws.bioinfo.cnio.es/pub/releases/2022_07.v47
+# http://apprisws.bioinfo.cnio.es/pub/releases/2019_09.v29
+# http://apprisws.bioinfo.cnio.es/pub/releases/2018_12.v28
+# http://apprisws.bioinfo.cnio.es/pub/releases/2018_02.v27
+# http://apprisws.bioinfo.cnio.es/pub/releases/2017_06.v23
 # Steps:
 #     - download the remote file, read it into memory
 #     - create a dictionary to index the APPRIS data by geneID
@@ -67,6 +69,8 @@ def get_appris_principal_path(annotation):
             return (species, "e94v28", "2018_12.v28")
         elif any(name.startswith(x) for x in ["M30", "41"]):
             return (species, "e107v47", "2022_07.v47")
+        elif name.startswith("46"):
+            return (species, "e112v48", "2024_10.v49")
         elif any(name.startswith(x) for x in ["M36", "47"]):
             return (species, "e113v49", "2024_10.v49")
         return MISSING
@@ -218,7 +222,7 @@ def _gen_gk_appris_data(data, genome):
     def gencode(transcriptID):
         return re.sub(ensembl_transcript_prefix_pattern, "", transcriptID)
 
-    # Determine if the APPRIS data is for RefSeq or Gencode based on the first line
+    # Determine if the APPRIS data is for RefSeq or GENCODE based on the first line
     transcript_id = next(iter(next(iter(data.values()))))
     if re.fullmatch(ensembl_transcript_prefix_pattern + r'\d+', transcript_id):
         simplify_transcript = gencode

@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.2.0](https://github.com/deepgenomics/GenomeKit/compare/v7.1.0...v7.2.0) (2025-08-06)
+
+
+### Features
+
+* add gencode.v46 ([#181](https://github.com/deepgenomics/GenomeKit/issues/181)) ([8fdbc33](https://github.com/deepgenomics/GenomeKit/commit/8fdbc33a6be2f6d653cce596934919529eac0797))
+* modernize usage of setuptools ([#176](https://github.com/deepgenomics/GenomeKit/issues/176)) ([412a00d](https://github.com/deepgenomics/GenomeKit/commit/412a00da0ab3b77df72cc729441e57b30edf4f95))
+
+
+### Documentation
+
+* show project description on https://pypi.org/project/genomekit/ ([#164](https://github.com/deepgenomics/GenomeKit/issues/164)) ([f13ed06](https://github.com/deepgenomics/GenomeKit/commit/f13ed06d90d2ddc0856b4749f323de2d7852ede8))
+
 ## [7.1.0](https://github.com/deepgenomics/GenomeKit/compare/v7.0.0...v7.1.0) (2025-05-13)
 
 

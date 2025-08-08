@@ -67,7 +67,7 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 			if (std::filesystem::exists(resolved)) {
 				alias_path = std::move(resolved);
 			}
-		} catch (const value_error&) {
+		} catch (const gk_data_file_not_found_error& e) {
 		}
 
 		chrom_names_t::mapping_t       mapping;
@@ -96,6 +96,8 @@ const chrom_names_t& get_chrom_names(refg_t refg, std::string_view data_dir)
 			try {
 				file_path = resolve_datafile_path(prepend_dir(data_dir, file_path));
 			} catch (const value_error& e) {
+				print("{}\n", e.what());
+			} catch (const gk_data_file_not_found_error& e) {
 				print("{}\n", e.what());
 			}
 			for (line_reader lr{file_path}; !lr.done(); ++lr) {

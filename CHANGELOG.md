@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.1](https://github.com/deepgenomics/GenomeKit/compare/v7.2.0...v7.2.1) (2025-08-11)
+
+
+### Documentation
+
+* clarify how to get a list of all genomes ([#182](https://github.com/deepgenomics/GenomeKit/issues/182)) ([912b201](https://github.com/deepgenomics/GenomeKit/commit/912b201c3cd7310984bd554a4050cab4e4d6b088))
+
 ## [7.2.0](https://github.com/deepgenomics/GenomeKit/compare/v7.1.0...v7.2.0) (2025-08-06)
 
 

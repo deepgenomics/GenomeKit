@@ -34,6 +34,10 @@ class Genome(_cxx.Genome):
         Genome("gencode.v29")
 
     The currently recognized strings depend on the data made available by data_manager.
+    To get a list of all available genomes::
+
+        genome_kit.gk_data.data_manager.list_available_genomes()
+
     Some common ones are::
 
         reference_genomes = [

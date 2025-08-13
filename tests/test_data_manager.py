@@ -3,6 +3,7 @@ import tempfile
 import unittest
 
 from genome_kit import DefaultDataManager, GCSDataManager
+from genome_kit.data_manager import GKDataFileNotFoundError
 from . import test_data_dir
 
 
@@ -55,6 +56,13 @@ class TestDefaultDataManager(unittest.TestCase):
 
         dm.client.delete_object(Bucket=dm._bucket_name, Key=filename)
 
+    @unittest.skipIf('CI' in os.environ, "can't provide AWS credentials in CI")
+    def test_nonexistent_genome(self):
+        dm = DefaultDataManager(test_data_dir)
+        with self.assertRaises(GKDataFileNotFoundError):
+            dm.get_file("nonexistent_genome.cfg")
+
+
 class TestGCSDataManager(unittest.TestCase):
     @unittest.skipIf('CI' in os.environ, "can't provide GCP credentials in CI")
     def test_get_file(self):
@@ -103,3 +111,9 @@ class TestGCSDataManager(unittest.TestCase):
         self.assertIn(f"File '{filename}' already exists", str(context.exception))
 
         dm.bucket.delete_blob(filename)
+
+    @unittest.skipIf('CI' in os.environ, "can't provide GCP credentials in CI")
+    def test_nonexistent_genome(self):
+        dm = GCSDataManager(test_data_dir, "genomekit-public-dg")
+        with self.assertRaises(GKDataFileNotFoundError):
+            dm.get_file("nonexistent_genome.cfg")

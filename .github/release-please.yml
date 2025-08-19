@@ -1,7 +1,0 @@
-releaseType: python
-handleGHRelease: true
-branches:
-  -
-    branch: main
-    releaseType: python
-    handleGHRelease: true

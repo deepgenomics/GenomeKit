@@ -51,7 +51,7 @@ try:
     if len_eps == 0:
         DataManagerImpl = DefaultDataManager
 except Exception as e:
-    logging.debug(e.__traceback__)
+    logging.debug(e, exc_info=True)
     if len(eps) > 0:
         logging.warning("Failed to load the data manager plugin. "
                         "Falling back to the default data manager.")

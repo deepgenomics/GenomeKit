@@ -56,7 +56,6 @@ class TestDefaultDataManager(unittest.TestCase):
 
         dm.client.delete_object(Bucket=dm._bucket_name, Key=filename)
 
-    @unittest.skipIf('CI' in os.environ, "can't provide AWS credentials in CI")
     def test_nonexistent_genome(self):
         dm = DefaultDataManager(test_data_dir)
         with self.assertRaises(GKDataFileNotFoundError):

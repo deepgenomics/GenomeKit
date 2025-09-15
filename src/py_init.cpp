@@ -28,7 +28,7 @@ BEGIN_NAMESPACE_GK
 // which we'll trigger each time C++ code asks for
 // a datafile path to be resolved.
 static PyObject* _py_resolve_datafile_path = nullptr;
-static PyObject* _gk_data_file_not_found_error{nullptr};
+static PyObject* _gk_data_file_not_found_error = nullptr;
 
 static string traceback_format_exc_and_clear()
 {

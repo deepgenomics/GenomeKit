@@ -55,7 +55,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 				break;
 			}
 		}
-		GK_RETHROW("Unable to determine reference genome from nnotation cfg file: {}", config);
+		GK_RETHROW("Unable to determine reference genome from anotation cfg file: {}", config);
 	}
 
 	const refg_t ref{fnv1a_hash64(name)};

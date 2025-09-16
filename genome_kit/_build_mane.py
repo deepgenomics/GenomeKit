@@ -112,6 +112,8 @@ def build_mane(mane_version: str, genome: gk.Genome):
 
 def build_full_mane_files(upload: bool = False):
     for anno in _SUPPORTED_MANE_VERSIONS_BY_ANNO:
+        if anno.endswith(".mini"):
+            continue
         genome = gk.Genome(anno)
         res = build_mane(get_mane_version(anno), genome)
         output_filename = get_mane_filename(anno)

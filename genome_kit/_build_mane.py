@@ -21,12 +21,6 @@ _SUPPORTED_MANE_VERSIONS_BY_ANNO = {
     "gencode.v46": "1.3",
 }
 
-_SUPPORTED_ANNOS = {
-    "ncbi_refseq.hg38.p14_RS_2024_08": "1.4",
-    "gencode.v41": "1.0",
-}
-
-
 def get_mane_version(annotation):
     """
     Get the MANE version based on the annotation version.
@@ -117,7 +111,9 @@ def build_mane(mane_version: str, genome: gk.Genome):
 
 
 def build_full_mane_files(upload: bool = False):
-    for anno in _SUPPORTED_ANNOS:
+    for anno in _SUPPORTED_MANE_VERSIONS_BY_ANNO:
+        if anno.endswith(".mini"):
+            continue
         genome = gk.Genome(anno)
         res = build_mane(get_mane_version(anno), genome)
         output_filename = get_mane_filename(anno)
@@ -167,5 +163,5 @@ def build_test_mane_file(mane_version, annotation):
 
 def build_test_mane_files():
     os.environ["GENOMEKIT_QUIET"] = "1"
-    for anno, mane_ver in _SUPPORTED_ANNOS.items():
+    for anno, mane_ver in _SUPPORTED_MANE_VERSIONS_BY_ANNO.items():
         build_test_mane_file(mane_ver, anno + ".mini")

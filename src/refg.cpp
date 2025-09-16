@@ -59,7 +59,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 	const refg_t ref{fnv1a_hash64(name)};
 
 	const auto [config_it, config_inserted] = _refg_by_config.try_emplace(std::string{config}, ref);
-	GK_CHECK(config_inserted, runtime, "hash collision, try renaming one of the annotations: '{}' and '{} on '{}'",
+	GK_CHECK(config_inserted, runtime, "hash collision, try renaming one of the annotations: '{}' and '{}' on '{}'",
 			 config_it->first, config, name);
 	const auto [name_it, name_inserted] = _names_by_refg.try_emplace(ref, name);
 	GK_CHECK(name_inserted || name_it->second == name, runtime,

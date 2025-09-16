@@ -484,7 +484,7 @@ class TestGenome(unittest.TestCase):
         self.assertEqual(g1._appris_principality_strings, g2._appris_principality_strings)
 
     def test_nonexistent_genome(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError, msg="Assembly is missing its chrom.sizes or annotation is missing its cfg file"):
             Genome("nonexistent_genome")
 
 

@@ -1,6 +1,8 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
+from urllib.error import HTTPError
 
 from genome_kit import DefaultDataManager, GCSDataManager
 from genome_kit.data_manager import GKDataFileNotFoundError
@@ -61,6 +63,13 @@ class TestDefaultDataManager(unittest.TestCase):
         with self.assertRaises(GKDataFileNotFoundError):
             dm.get_file("nonexistent_genome.cfg")
 
+    def test_permissions_error(self):
+        with self.assertRaises(HTTPError) as context, patch('genome_kit.data_manager.DefaultDataManager.client') as mock_client:
+            mock_client.head_object.side_effect = HTTPError(url=None, code=403, msg="Forbidden", hdrs=None, fp=None)
+            dm = DefaultDataManager(test_data_dir, require_auth=True)
+            dm.get_file("gencode.vM30.cfg")
+            assert context.code == 403
+
 
 class TestGCSDataManager(unittest.TestCase):
     @unittest.skipIf('CI' in os.environ, "can't provide GCP credentials in CI")
@@ -116,3 +125,10 @@ class TestGCSDataManager(unittest.TestCase):
         dm = GCSDataManager(test_data_dir, "genomekit-public-dg")
         with self.assertRaises(GKDataFileNotFoundError):
             dm.get_file("nonexistent_genome.cfg")
+
+    def test_permissions_error(self):
+        with self.assertRaises(HTTPError) as context, patch('genome_kit.data_manager.GCSDataManager.bucket') as mock_bucket:
+            mock_bucket.blob.side_effect = HTTPError(url=None, code=401, msg="Unauthorized", hdrs=None, fp=None)
+            dm = GCSDataManager(test_data_dir, "genomekit-public-dg")
+            dm.get_file("gencode.vM30.cfg")
+            assert context.code == 401

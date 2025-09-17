@@ -28,6 +28,7 @@ BEGIN_NAMESPACE_GK
 // which we'll trigger each time C++ code asks for
 // a datafile path to be resolved.
 static PyObject* _py_resolve_datafile_path = nullptr;
+static PyObject* _gk_data_file_not_found_error = nullptr;
 
 static string traceback_format_exc_and_clear()
 {
@@ -62,6 +63,7 @@ static string traceback_format_exc_and_clear()
 static string resolve_datafile_path_with_python(string path)
 {
 	GK_ASSERT(_py_resolve_datafile_path);
+	GK_ASSERT(_gk_data_file_not_found_error);
 
 	// new_path_obj = _gk_data.get_file(path)
 	PyObject* new_path_obj = PyObject_CallFunction(_py_resolve_datafile_path, "s", path.c_str());
@@ -69,7 +71,12 @@ static string resolve_datafile_path_with_python(string path)
 
 	// Check for error
 	if (!new_path_obj) {
-		GK_THROW(value, "{}", traceback_format_exc_and_clear());
+		// re-raise original error in case of GKDataFileNotFoundError, otherwise always raise ValueError
+		if (_gk_data_file_not_found_error && PyErr_ExceptionMatches(_gk_data_file_not_found_error)) {
+			GK_THROW(gk_data_file_not_found, "{}", traceback_format_exc_and_clear());
+		} else {
+			GK_THROW(value, "{}", traceback_format_exc_and_clear());
+		}
 	}
 
 	// Check for wrong return type
@@ -147,6 +154,12 @@ static PyObject* py_register(PyObject*, PyObject* args)
 	if (PyType_Check(arg)) {
 		auto* type = (PyTypeObject*)arg;
 
+		// No need to register this type, we just need a pointer for use in error type checking
+		if (!strcmp(type->tp_name, "GKDataFileNotFoundError")) {
+			_gk_data_file_not_found_error = arg;
+			Py_INCREF(arg);
+			return arg;
+		}
 		GKPY_REGISTER_CXX_DERIVED_BEGIN(Interval)
 			PyCheckSameBasicSize(type);        // Don't allow Python-defined Interval to grow struct size
 		GKPY_REGISTER_CXX_DERIVED_END

@@ -1480,6 +1480,8 @@ void genome_anno::open()
 		}
 	} catch (const value_error& e) {
 		print("{}\n", e.what());
+	} catch (const gk_data_file_not_found_error& e) {
+		print("{}\n", e.what());
 	}
 
 	// Memory map the source file

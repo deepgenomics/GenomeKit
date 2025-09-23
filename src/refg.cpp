@@ -32,7 +32,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		if (std::filesystem::exists(path)) {
 			name = config;
 		}
-	} catch (const value_error& e) {
+	} catch (const gk_data_file_not_found_error& e) {
 	}
 
 	if (std::empty(name)) {
@@ -40,7 +40,9 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 		std::string config_path{std::format("{}.cfg", config)};
 		try {
 			config_path = resolve_datafile_path(prepend_dir(data_dir(), config_path));
-		} catch (const value_error& e) {
+		} catch (const gk_data_file_not_found_error& e) {
+			GK_THROW(gk_data_file_not_found,
+					 "Assembly is missing its chrom.sizes or annotation is missing its cfg file: {}", config);
 		}
 		try {
 			for (line_reader lr{config_path}; !lr.done(); ++lr) {
@@ -53,7 +55,7 @@ refg_t refg_registry_t::as_refg(std::string_view config) const
 				break;
 			}
 		}
-		GK_RETHROW("Assembly is missing its chrom.sizes or annotation is missing its cfg file: {}", config);
+		GK_RETHROW("Unable to determine reference genome from annotation cfg file: {}", config);
 	}
 
 	const refg_t ref{fnv1a_hash64(name)};

@@ -19,9 +19,10 @@ Example
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import logging
 import os
-from typing import Dict
-from importlib_metadata import entry_points
+from typing import Dict, List
+from importlib_metadata import EntryPoint, entry_points
 
 
 from ._util import makedirs
@@ -39,9 +40,21 @@ from urllib.request import urlopen
 
 
 eps = entry_points(group="genomekit.plugins.data_manager")
+list_eps: List[EntryPoint] = list(eps)
+len_eps = len(list_eps)
 try:
-    DataManagerImpl = list(eps)[0].load()
-except:
+    if len_eps > 0:
+        DataManagerImpl = list_eps[0].load()
+    if len_eps > 1:
+        logging.info("Multiple data manager plugins found. "
+                     f"Using the first one: {list_eps[0].name}")
+    if len_eps == 0:
+        DataManagerImpl = DefaultDataManager
+except Exception as e:
+    logging.debug(e, exc_info=True)
+    if len(eps) > 0:
+        logging.warning("Failed to load the data manager plugin. "
+                        "Falling back to the default data manager.")
     DataManagerImpl = DefaultDataManager
 # Register an implementation of DataManager if you need to upload
 # new data

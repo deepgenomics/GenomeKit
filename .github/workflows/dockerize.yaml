@@ -71,6 +71,32 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Guard against pushing an existing version tag
+      - name: Fail if version tag already exists on Docker Hub
+        id: guard-duplicate-docker-tag
+        env:
+          DOCKER_REPO: deepgenomicsinc/genomekit
+          VERSION: ${{ steps.create-gk-env.outputs.PKG_VERSION }}
+        run: |
+          set -euo pipefail
+          tag="${VERSION}-py310"
+          url="https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/${tag}"
+          echo "Checking if ${DOCKER_REPO}:${tag} exists on Docker Hub..."
+          status=$(curl -fsS -o /dev/null -w "%{http_code}" "${url}")
+          case "$status" in
+            200)
+              echo "Error: ${DOCKER_REPO}:${tag} already exists on Docker Hub. Aborting publish."
+              exit 1
+              ;;
+            404)
+              echo "OK: ${DOCKER_REPO}:${tag} does not exist; continuing."
+              ;;
+            *)
+              echo "Error: Unexpected HTTP ${status} when checking ${url}" >&2
+              exit 2
+              ;;
+          esac
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

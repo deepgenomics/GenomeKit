@@ -36,7 +36,7 @@ runs:
         # build for all locally allowed versions of python (conda-recipe/conda_build_config.yaml)
         $SED_CMD "/skip: true /d" conda-recipe/meta.yaml
         # set the version to the local release-please version (for docs and docker publish)
-        $SED_CMD "s/{% set version = \".+\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+        $SED_CMD "s/{% set version = \"[^\"]*\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
 
         head -10 conda-recipe/meta.yaml
         set +x

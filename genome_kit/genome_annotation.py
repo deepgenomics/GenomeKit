@@ -78,7 +78,7 @@ class Gene(_cxx.Gene, Interval):
         This represents the `gene_type` field in most GFF3 annotations.
 
         For GENCODE/Ensembl/NCBI RefSeq, the result can be any standard `GENCODE biotype
-        <https://www.gencodegenes.org/gencode_biotypes.html>`_
+        <https://www.gencodegenes.org/pages/biotypes.html>`_
 
         For UCSC RefSeq, the result is "protein_coding" if any transcript is
         protein coding, and otherwise "non_coding".
@@ -438,7 +438,7 @@ class Transcript(_cxx.Tran, Interval):
         which may differ from the parent gene's `type`.
 
         For GENCODE/Ensembl/NCBI RefSeq, the result can be any standard `GENCODE biotype
-        <https://www.gencodegenes.org/gencode_biotypes.html>`_
+        <https://www.gencodegenes.org/pages/biotypes.html>`_
 
         For UCSC RefSeq, the result is either "protein_coding" or "non_coding".
 

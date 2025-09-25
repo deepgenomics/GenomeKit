@@ -18,7 +18,6 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 from tqdm.auto import tqdm
 from tqdm.utils import ObjectWrapper
-from . import _cxx
 
 logger = logging.getLogger(__name__)
 
@@ -55,16 +54,6 @@ class ProgressPercentage(object):  # pragma: no cover
 
     def __call__(self, bytes_amount):
         self.progress.update(bytes_amount)
-
-
-@_cxx.register
-class GKDataFileNotFoundError(Exception):
-    """Exception raised when a requested GenomeKit data file is not found."""
-    def __init__(self, filename, message):
-        self.message = message
-        self.filename = filename
-        super().__init__(self.message)
-
 
 _S3_BUCKET = os.environ.get("GENOMEKIT_STORAGE_BUCKET", "genomekit-data-public")
 
@@ -211,10 +200,7 @@ class GCSDataManager(DataManager):
         try:
             blob = self.bucket.blob(filename)
             if not blob.exists():
-                raise GKDataFileNotFoundError(
-                    filename=filename,
-                    message=f"File '{filename}' not found in the GCS bucket",
-                )
+                raise FileNotFoundError(f"File '{filename}' not found in the GCS bucket")
         except Exception as e:
             if "GENOMEKIT_TRACE" in os.environ:
                 # give the user a hint in case of permission errors
@@ -317,10 +303,7 @@ class DefaultDataManager(DataManager):
             obj = self.client.head_object(Bucket=self._bucket_name, Key=filename)
         except ClientError as e:
             if e.response['Error']['Code'] == "404":
-                raise GKDataFileNotFoundError(
-                    filename=filename,
-                    message=f"File '{filename}' not found in the S3 bucket",
-                ) from e
+                raise FileNotFoundError(f"File '{filename}' not found in the S3 bucket")
             else:
                 raise
         except Exception as e:

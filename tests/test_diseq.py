@@ -312,6 +312,106 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(dis.length, 0)
 
 
+class TestStrandMethods(unittest.TestCase):
+
+    def test_is_positive_strand_plus_on_coord(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertTrue(dis.is_positive_strand())
+
+    def test_is_positive_strand_minus_off_coord(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertTrue(dis.is_positive_strand())
+
+    def test_is_positive_strand_false_plus_off_coord(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertFalse(dis.is_positive_strand())
+
+    def test_is_positive_strand_false_minus_on_coord(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertFalse(dis.is_positive_strand())
+
+    def test_as_positive_strand_already_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        result = dis.as_positive_strand()
+        self.assertIs(result, dis)
+
+    def test_as_positive_strand_flips(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=False, start=10, end=80
+        )
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=10, end=80
+        )
+        result = dis.as_positive_strand()
+        self.assertTrue(result.is_positive_strand())
+        self.assertTrue(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+        self.assertEqual(result, expected)
+
+    def test_as_negative_strand_already_negative(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        result = dis.as_negative_strand()
+        self.assertIs(result, dis)
+
+    def test_as_negative_strand_flips(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True, start=10, end=80)
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=False, start=10, end=80
+        )
+        result = dis.as_negative_strand()
+        self.assertFalse(result.is_positive_strand())
+        self.assertFalse(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+        self.assertEqual(result, expected)
+
+    def test_as_opposite_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        opp = dis.as_opposite_strand()
+        self.assertFalse(opp.is_positive_strand())
+        opp2 = opp.as_opposite_strand()
+        self.assertTrue(opp2.is_positive_strand())
+
+    def test_strand_flip_preserves_coordinate_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        flipped = dis.as_opposite_strand()
+        self.assertEqual(flipped.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_idempotency(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertIs(dis.as_positive_strand().as_positive_strand(), dis)
+
+    def test_as_opposite_strand_preserves_start_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        opp = dis.as_opposite_strand()
+        self.assertEqual(opp.start, 10)
+        self.assertEqual(opp.end, 80)
+
+    def test_end5_end3_swap_on_opposite_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        # On coordinate strand: end5 at start, end3 at end
+        self.assertEqual(dis.end5_index, 10)
+        self.assertEqual(dis.end3_index, 80)
+        # Off coordinate strand: end5 at end, end3 at start
+        opp = dis.as_opposite_strand()
+        self.assertEqual(opp.end5_index, 80)
+        self.assertEqual(opp.end3_index, 10)
+
+
 class TestEndProperties(unittest.TestCase):
 
     def test_end5_default(self):
@@ -517,6 +617,341 @@ class TestDunderMethods(unittest.TestCase):
         dis = DisjointIntervalSequence(ivs)
         self.assertNotEqual(dis, "not a DIS")
         self.assertNotEqual(dis, 42)
+
+
+# Helper for shift/expand/relational tests
+# 2 exons on chr1+: [100,200) and [300,400), coordinate_length=200
+_COORD_IVS = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+
+
+def _dis(
+    start=0, end=200, on_coordinate_strand=True, coord_id="c", interval_id="i", ivs=None
+):
+    """Quick DIS factory for tests."""
+    return DisjointIntervalSequence(
+        ivs or _COORD_IVS,
+        coord_id=coord_id,
+        interval_id=interval_id,
+        on_coordinate_strand=on_coordinate_strand,
+        start=start,
+        end=end,
+    )
+
+
+class TestShift(unittest.TestCase):
+
+    def test_shift_positive(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 40)
+        self.assertEqual(shifted.end, 160)
+
+    def test_shift_negative(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(-10)
+        self.assertEqual(shifted.start, 20)
+        self.assertEqual(shifted.end, 140)
+
+    def test_shift_zero(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(0)
+        self.assertEqual(shifted, dis)
+
+    def test_shift_beyond_coordinate(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(60)
+        self.assertEqual(shifted.start, 90)
+        self.assertEqual(shifted.end, 210)
+
+    def test_shift_negative_beyond(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(-40)
+        self.assertEqual(shifted.start, -10)
+        self.assertEqual(shifted.end, 110)
+
+    def test_shift_zero_length(self):
+        dis = _dis(start=50, end=50)
+        shifted = dis.shift(5)
+        self.assertEqual(shifted.start, 55)
+        self.assertEqual(shifted.end, 55)
+        self.assertEqual(shifted.length, 0)
+
+    def test_shift_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1, downstream=-1
+        # shift(10) downstream → subtract 10 from both
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 20)
+        self.assertEqual(shifted.end, 140)
+
+    def test_shift_preserves_metadata(self):
+        dis = _dis(start=30, end=150, coord_id="mycoord", interval_id="myiv")
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.coord_id, "mycoord")
+        self.assertEqual(shifted.id, "myiv")
+        self.assertTrue(shifted.on_coordinate_strand)
+
+    def test_shift_preserves_coordinate_intervals(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.coordinate_intervals, dis.coordinate_intervals)
+
+
+class TestExpand(unittest.TestCase):
+
+    def test_expand_symmetric(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 155)
+
+    def test_expand_asymmetric(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5, 10)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 160)
+
+    def test_expand_upstream_only(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5, 0)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 150)
+
+    def test_expand_downstream_only(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(0, 10)
+        self.assertEqual(expanded.start, 30)
+        self.assertEqual(expanded.end, 160)
+
+    def test_expand_zero(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(0)
+        self.assertEqual(expanded, dis)
+
+    def test_expand_negative_contracts(self):
+        dis = _dis(start=30, end=150)
+        contracted = dis.expand(-5, -10)
+        self.assertEqual(contracted.start, 35)
+        self.assertEqual(contracted.end, 140)
+
+    def test_expand_contract_to_zero_length(self):
+        dis = _dis(start=30, end=150)  # length=120
+        contracted = dis.expand(-60, -60)
+        self.assertEqual(contracted.start, 90)
+        self.assertEqual(contracted.end, 90)
+        self.assertEqual(contracted.length, 0)
+
+    def test_expand_over_contraction_raises(self):
+        dis = _dis(start=30, end=150)  # length=120
+        with self.assertRaises(ValueError):
+            dis.expand(-70, -70)
+
+    def test_expand_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # end5=150, end3=30. expand(5): end5 moves to 155, end3 moves to 25
+        # start=min(155,25)=25, end=max(155,25)=155
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 155)
+
+    def test_expand_zero_length_interval(self):
+        dis = _dis(start=50, end=50)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 45)
+        self.assertEqual(expanded.end, 55)
+        self.assertEqual(expanded.length, 10)
+
+    def test_expand_beyond_coordinate(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(50, 0)
+        self.assertEqual(expanded.start, -20)
+
+    def test_expand_preserves_metadata(self):
+        dis = _dis(start=30, end=150, coord_id="c", interval_id="i")
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.coord_id, "c")
+        self.assertEqual(expanded.id, "i")
+        self.assertTrue(expanded.on_coordinate_strand)
+
+    def test_expand_preserves_coordinate_intervals(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.coordinate_intervals, dis.coordinate_intervals)
+
+
+class TestUpstreamOf(unittest.TestCase):
+
+    def test_upstream_of_true(self):
+        a = _dis(start=10, end=30)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_false_overlap(self):
+        a = _dis(start=10, end=60)
+        b = _dis(start=50, end=80)
+        self.assertFalse(a.upstream_of(b))
+
+    def test_upstream_of_adjacent(self):
+        a = _dis(start=10, end=50)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_same_false(self):
+        a = _dis(start=30, end=50)
+        self.assertFalse(a.upstream_of(a))
+
+    def test_upstream_of_zero_length(self):
+        a = _dis(start=30, end=30)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_both_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=50)
+        self.assertFalse(a.upstream_of(b))
+
+    def test_upstream_of_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1, upstream = higher indices
+        # a.start(100) >= b.end(80) → True
+        a = _dis(start=100, end=150, on_coordinate_strand=False)
+        b = _dis(start=50, end=80, on_coordinate_strand=False)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=10, end=30)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=30, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.upstream_of(b)
+
+    def test_different_coord_id_allowed(self):
+        a = _dis(start=10, end=30, coord_id="a")
+        b = _dis(start=50, end=80, coord_id="b")
+        self.assertTrue(a.upstream_of(b))
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=10, end=30, on_coordinate_strand=True)
+        b = _dis(start=50, end=80, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.upstream_of(b)
+
+    def test_non_dis_raises(self):
+        a = _dis(start=10, end=30)
+        with self.assertRaises(TypeError):
+            a.upstream_of("not a DIS")
+
+
+class TestDnstreamOf(unittest.TestCase):
+
+    def test_dnstream_of_true(self):
+        a = _dis(start=50, end=80)
+        b = _dis(start=10, end=30)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_dnstream_of_false(self):
+        a = _dis(start=10, end=30)
+        b = _dis(start=50, end=80)
+        self.assertFalse(a.dnstream_of(b))
+
+    def test_dnstream_of_adjacent(self):
+        a = _dis(start=50, end=80)
+        b = _dis(start=10, end=50)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_dnstream_of_same_false(self):
+        a = _dis(start=30, end=50)
+        self.assertFalse(a.dnstream_of(a))
+
+    def test_dnstream_of_both_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=50)
+        self.assertFalse(a.dnstream_of(b))
+
+    def test_dnstream_of_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # downstream = lower indices. a.end(80) <= b.start(100) → True
+        a = _dis(start=50, end=80, on_coordinate_strand=False)
+        b = _dis(start=100, end=150, on_coordinate_strand=False)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=50, end=80)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=30, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.dnstream_of(b)
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=50, end=80, on_coordinate_strand=True)
+        b = _dis(start=30, end=60, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.dnstream_of(b)
+
+
+class TestWithin(unittest.TestCase):
+
+    def test_within_true(self):
+        a = _dis(start=30, end=50)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_false(self):
+        a = _dis(start=10, end=80)
+        b = _dis(start=30, end=50)
+        self.assertFalse(a.within(b))
+
+    def test_within_self(self):
+        a = _dis(start=30, end=50)
+        self.assertTrue(a.within(a))
+
+    def test_within_zero_length(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_at_boundary(self):
+        a = _dis(start=10, end=80)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_zero_length_at_boundary(self):
+        a = _dis(start=10, end=10)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_zero_length_outside(self):
+        a = _dis(start=5, end=5)
+        b = _dis(start=10, end=80)
+        self.assertFalse(a.within(b))
+
+    def test_within_opposite_strand(self):
+        a = _dis(start=80, end=120, on_coordinate_strand=False)
+        b = _dis(start=50, end=150, on_coordinate_strand=False)
+        self.assertTrue(a.within(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=30, end=50)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=80, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.within(b)
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=30, end=50, on_coordinate_strand=True)
+        b = _dis(start=10, end=80, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.within(b)
+
+    def test_non_dis_raises(self):
+        a = _dis(start=30, end=50)
+        with self.assertRaises(TypeError):
+            a.within("not a DIS")
 
 
 if __name__ == "__main__":

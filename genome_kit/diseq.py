@@ -408,6 +408,48 @@ class DisjointIntervalSequence:
         """Length of the interval on the coordinate space."""
         return self.end - self.start
 
+    def _set_end5(self, end5: int) -> "DisjointIntervalSequence":
+        """Convenience method to update start/end based on a new end5 index."""
+        if end5 == self.end5_index:
+            return self  # No change
+        new_start, new_end = self._start, self._end
+        end5_difference = end5 - self.end5_index
+        is_moved_upstream = end5_difference * self._upstream_index_step() > 0
+        if is_moved_upstream and self._upstream_index_step() == -1:
+            new_start = new_start - abs(end5_difference)
+        elif is_moved_upstream and self._upstream_index_step() == 1:
+            new_end = new_end + abs(end5_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == -1:
+            new_start = new_start + abs(end5_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == 1:
+            new_end = new_end - abs(end5_difference)
+        if new_start > new_end:
+            raise ValueError(
+                f"Invalid end5 update: end5 index {end5} would be downstream of end3 index {self.end3_index}"
+            )
+        return self._from_end_indices(new_start, new_end)
+
+    def _set_end3(self, end3: int) -> "DisjointIntervalSequence":
+        """Convenience method to update start/end based on a new end3 index."""
+        if end3 == self.end3_index:
+            return self  # No change
+        new_start, new_end = self._start, self._end
+        end3_difference = end3 - self.end3_index
+        is_moved_upstream = end3_difference * self._upstream_index_step() > 0
+        if is_moved_upstream and self._upstream_index_step() == -1:
+            new_end = new_end - abs(end3_difference)
+        elif is_moved_upstream and self._upstream_index_step() == 1:
+            new_start = new_start + abs(end3_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == -1:
+            new_end = new_end + abs(end3_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == 1:
+            new_start = new_start - abs(end3_difference)
+        if new_start > new_end:
+            raise ValueError(
+                f"Invalid end3 update: end3 index {end3} would be upstream of end5 index {self.end5_index}"
+            )
+        return self._from_end_indices(new_start, new_end)
+
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
 
@@ -421,6 +463,192 @@ class DisjointIntervalSequence:
             return -1 if on_coordinate_strand else 1
         # POSITIVE_STRAND_LEFT_TO_RIGHT: effective strand determines direction
         return -1 if self.strand == "+" else 1
+
+    def _validate_same_coordinate_space(
+        self, other: "DisjointIntervalSequence"
+    ) -> None:
+        """Raise if other does not share the same coordinate space."""
+        if not isinstance(other, DisjointIntervalSequence):
+            raise TypeError(
+                f"Expected DisjointIntervalSequence, got {type(other).__name__}"
+            )
+        if self._coordinate_intervals != other._coordinate_intervals:
+            raise ValueError("DIS objects must share the same coordinate intervals")
+
+    def _from_end_indices(self, end5: int, end3: int) -> "DisjointIntervalSequence":
+        """Return a new DIS with the same coordinate space but different interval indices."""
+        # Validate end5 is upstream of or equal to end3
+        if self._upstream_index_step() == -1:
+            if end5 > end3:
+                raise ValueError(
+                    f"Invalid indices: end5 index {end5} is downstream of end3 index {end3}"
+                )
+        if self._upstream_index_step() == 1:
+            if end5 < end3:
+                raise ValueError(
+                    f"Invalid indices: end5 index {end5} is downstream of end3 index {end3}"
+                )
+        return DisjointIntervalSequence(
+            self._coordinate_intervals,
+            coord_id=self._coord_metadata.id,
+            interval_id=self._interval_metadata.id,
+            on_coordinate_strand=self.on_coordinate_strand,
+            start=min(end5, end3),
+            end=max(end5, end3),
+        )
+
+    def shift(self, amount: int) -> "DisjointIntervalSequence":
+        """Shift the interval downstream by amount (negative shifts upstream).
+
+        The coordinate space is unchanged. Only the interval indices move.
+        """
+        downstream_step = -self._upstream_index_step()
+        delta = amount * downstream_step
+        return self._from_end_indices(
+            self.end5_index + delta,
+            self.end3_index + delta,
+        )
+
+    def expand(
+        self, upstream: int, dnstream: int | None = None
+    ) -> "DisjointIntervalSequence":
+        """Expand the interval upstream and/or downstream.
+
+        Negative values contract the interval. Raises ValueError if contraction
+        would result in end5 being downstream of end3.
+
+        Args:
+            upstream: Bases to expand (or contract if negative) toward the 5' end.
+            dnstream: Bases to expand (or contract if negative) toward the 3' end.
+                Defaults to upstream (symmetric).
+        """
+        if dnstream is None:
+            dnstream = upstream
+        up_step = self._upstream_index_step()
+        down_step = -up_step
+        new_end5 = self.end5_index + (upstream * up_step)
+        new_end3 = self.end3_index + (dnstream * down_step)
+        # Validate end5 is still upstream of or equal to end3
+        if (new_end5 - new_end3) * up_step < 0:
+            raise ValueError(
+                "Invalid expansion: end5 would be downstream of end3 "
+                f"(end5={new_end5}, end3={new_end3})"
+            )
+        return self._from_end_indices(new_end5, new_end3)
+
+    def upstream_of(self, other: "DisjointIntervalSequence") -> bool:
+        """True if self is strictly upstream of other (no overlap).
+
+        Requires the same coordinate space and same on_coordinate_strand.
+        """
+        self._validate_same_coordinate_space(other)
+        if self.on_coordinate_strand != other.on_coordinate_strand:
+            raise ValueError("Cannot compare: intervals are on different strands")
+        if self.length == 0 and other.length == 0 and self.start == other.start:
+            return False
+        if self._upstream_index_step() == -1:
+            return self._end <= other.start
+        return self._start >= other.end
+
+    def dnstream_of(self, other: "DisjointIntervalSequence") -> bool:
+        """True if self is strictly downstream of other (no overlap).
+
+        Requires the same coordinate space and same on_coordinate_strand.
+        """
+        self._validate_same_coordinate_space(other)
+        if self.on_coordinate_strand != other.on_coordinate_strand:
+            raise ValueError("Cannot compare: intervals are on different strands")
+        if self.length == 0 and other.length == 0 and self.start == other.start:
+            return False
+        if self._upstream_index_step() == -1:
+            return self._start >= other.end
+        return self._end <= other.start
+
+    def within(self, other: "DisjointIntervalSequence") -> bool:
+        """True if self's interval is contained within other's interval.
+
+        Requires the same coordinate space and same on_coordinate_strand.
+        """
+        self._validate_same_coordinate_space(other)
+        if self.on_coordinate_strand != other.on_coordinate_strand:
+            raise ValueError("Cannot compare: intervals are on different strands")
+        return self._start >= other.start and self._end <= other.end
+
+    def is_positive_strand(self) -> bool:
+        """If the interval is on the positive strand.
+
+        Returns
+        -------
+        :py:class:`bool`
+        """
+        if self.transcript_strand == "+":
+            return True
+        return False
+
+    def as_positive_strand(self) -> "DisjointIntervalSequence":
+        """Return a DIS with the interval on the positive strand.
+
+        Returns ``self`` if already on the positive strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
+        if self.is_positive_strand():
+            return self
+        return self.as_opposite_strand()
+
+    def as_negative_strand(self) -> "DisjointIntervalSequence":
+        """Return a DIS with the interval on the negative strand.
+
+        Returns ``self`` if already on the negative strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
+        if not self.is_positive_strand():
+            return self
+        return self.as_opposite_strand()
+
+    def as_opposite_strand(self) -> "DisjointIntervalSequence":
+        """Return a new DIS with the interval on the opposite strand.
+
+        The coordinate intervals are unchanged. The interval's
+        ``on_coordinate_strand`` is flipped.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
+        return DisjointIntervalSequence(
+            self._coordinate_intervals,
+            coord_id=self._coord_metadata.id,
+            interval_id=self._interval_metadata.id,
+            on_coordinate_strand=not self.on_coordinate_strand,
+            start=self._start,
+            end=self._end,
+        )
+
+    def genomic_span(self) -> Interval:
+        """Smallest single Interval spanning all coordinate intervals.
+
+        Returns
+        -------
+        :py:class:`~genome_kit.Interval`
+            An interval from the minimum ``start`` to the maximum ``end``
+            across all coordinate intervals.
+        """
+        ivs = self._coordinate_intervals
+        return Interval(
+            ivs[0].chromosome,
+            ivs[0].strand,
+            min(iv.start for iv in ivs),
+            max(iv.end for iv in ivs),
+            ivs[0].reference_genome,
+        )
 
     def __len__(self) -> int:
         """Return the length of the interval."""

@@ -11,6 +11,17 @@ Interval
     :special-members:
     :members:
 
+DisjointIntervalSequence
+========================
+
+.. autoclass:: genome_kit.diseq.IndexDirection
+    :members:
+
+.. autoclass:: genome_kit.diseq.DisjointIntervalSequence
+    :special-members:
+    :members:
+    :exclude-members: shift, expand, upstream_of, dnstream_of, within
+
 Variant
 =======
 

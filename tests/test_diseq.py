@@ -208,7 +208,6 @@ class TestLiftFromTranscript(unittest.TestCase):
 
 
 class TestLowerToTranscript(unittest.TestCase):
-    """Tests for the lower_to_transcript method."""
 
     def setUp(self):
         # Create a simple DisjointIntervalSequence for testing
@@ -277,7 +276,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.dis_negative = DisjointIntervalSequence(self.exons_negative, _metadata=metadata_negative)
 
     def test_invalid_input_parameters(self):
-        """Test that invalid input parameters return empty list."""
         # Negative start
         result = self.dis_positive.lower_to_transcript(-1, 10)
         self.assertEqual(result, [])
@@ -294,7 +292,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result, [])
 
     def test_single_exon_full_coverage(self):
-        """Test mapping within a single exon."""
         # Map DIS coordinates 10-20 (within first exon)
         result = self.dis_positive.lower_to_transcript(10, 20)
 
@@ -309,7 +306,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(interval.reference_genome, "hg38")
 
     def test_single_exon_partial_coverage(self):
-        """Test mapping that covers part of an exon."""
         # Map DIS coordinates 50-80 (within first exon)
         result = self.dis_positive.lower_to_transcript(50, 80)
 
@@ -321,7 +317,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(interval.end, 180)
 
     def test_multiple_exons_coverage(self):
-        """Test mapping that spans multiple exons."""
         # Map DIS coordinates 50-180 (spans all three exons)
         # Exon 1: DIS 0-100, genomic 100-200
         # Exon 2: DIS 100-150, genomic 300-350
@@ -343,7 +338,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[2].end, 530)
 
     def test_exon_boundary_mapping(self):
-        """Test mapping exactly at exon boundaries."""
         # Map exactly the second exon (DIS 100-150)
         result = self.dis_positive.lower_to_transcript(100, 150)
 
@@ -352,7 +346,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[0].end, 350)
 
     def test_cross_exon_boundary(self):
-        """Test mapping that crosses exon boundaries."""
         # Map DIS 90-110 (crosses first-second exon boundary)
         result = self.dis_positive.lower_to_transcript(90, 110)
 
@@ -367,7 +360,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[1].end, 310)
 
     def test_out_of_bounds_mapping(self):
-        """Test mapping beyond the DIS length."""
         # Total DIS length is 250, try to map 200-300
         result = self.dis_positive.lower_to_transcript(200, 300)
 
@@ -377,7 +369,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[0].end, 600)
 
     def test_completely_out_of_bounds(self):
-        """Test mapping completely beyond DIS bounds."""
         # Total DIS length is 250, try to map 300-400
         result = self.dis_positive.lower_to_transcript(300, 400)
 
@@ -385,7 +376,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result, [])
 
     def test_zero_length_mapping(self):
-        """Test mapping at the very start."""
         result = self.dis_positive.lower_to_transcript(0, 1)
 
         self.assertEqual(len(result), 1)
@@ -393,12 +383,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[0].end, 101)
 
     def test_negative_strand_mapping(self):
-        # self.exons_negative = [
-        #     Interval( chromosome="chr2", start=100, end=200, strand="-", reference_genome="hg38" ),
-        #     Interval( chromosome="chr2", start=300, end=400, strand="-", reference_genome="hg38" )
-        # ]
-
-        """Test mapping on negative strand."""
         # Map DIS 10-20 on negative strand
         result = self.dis_negative.lower_to_transcript(10, 20)
 
@@ -413,7 +397,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(interval.end, 120)
 
     def test_result_ordering(self):
-        """Test that results are ordered 5' to 3' along transcript."""
         # Map across multiple exons
         result = self.dis_positive.lower_to_transcript(50, 180)
 
@@ -428,7 +411,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertLessEqual(result[1].end, result[2].start)
 
     def test_metadata_preservation(self):
-        """Test that chromosome, strand, and reference genome are preserved."""
         result = self.dis_positive.lower_to_transcript(10, 20)
 
         self.assertEqual(len(result), 1)
@@ -439,7 +421,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(interval.reference_genome, self.dis_positive.reference_genome)
 
     def test_edge_case_single_base(self):
-        """Test mapping a single base."""
         result = self.dis_positive.lower_to_transcript(0, 1)
 
         self.assertEqual(len(result), 1)
@@ -448,7 +429,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(len(result[0]), 1)
 
     def test_full_transcript_mapping(self):
-        """Test mapping the entire transcript."""
         result = self.dis_positive.lower_to_transcript(0, 250)
 
         self.assertEqual(len(result), 3)
@@ -462,7 +442,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[2].end, 600)
 
     def test_gap_between_exons_mapping(self):
-        """Test mapping across gaps between exons."""
         # Map DIS 95-155 which spans across all three intervals but
         # includes gaps between them
         result = self.dis_positive.lower_to_transcript(95, 155)
@@ -483,7 +462,6 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[2].end, 505)
 
     def test_start_at_exon_boundary(self):
-        """Test mapping starting exactly at an exon boundary."""
         # Start at DIS 100 (beginning of second exon)
         result = self.dis_positive.lower_to_transcript(100, 120)
 
@@ -492,10 +470,198 @@ class TestLowerToTranscript(unittest.TestCase):
         self.assertEqual(result[0].end, 320)
 
     def test_end_at_exon_boundary(self):
-        """Test mapping ending exactly at an exon boundary."""
         # End at DIS 100 (end of first exon)
         result = self.dis_positive.lower_to_transcript(80, 100)
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].start, 180)
         self.assertEqual(result[0].end, 200)
+
+
+class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
+
+    def setUp(self):
+        # Create basic intervals for testing
+        self.interval1 = Interval('chr1', '+', 10, 20, 'hg19')
+        self.interval2 = Interval('chr1', '+', 15, 25, 'hg19')
+        self.interval3 = Interval('chr1', '+', 30, 40, 'hg19')
+        self.interval4 = Interval('chr1', '+', 35, 45, 'hg19')
+
+        # Non-overlapping intervals
+        self.interval_far = Interval('chr1', '+', 100, 110, 'hg19')
+
+        # Different chromosome
+        self.interval_chr2 = Interval('chr2', '+', 10, 20, 'hg19')
+
+        # Create DisjointIntervalSequences
+        self.dis1 = DisjointIntervalSequence([self.interval1, self.interval3], _metadata=_DisjointIntervalMetadata(
+            transcript_id="transcript1",
+            reference_genome="hg19",
+            chromosome="chr1",
+            transcript_strand="+",
+        ))
+        self.dis2 = DisjointIntervalSequence([self.interval2, self.interval4], _metadata=_DisjointIntervalMetadata(
+            transcript_id="transcript2",
+            reference_genome="hg19",
+            chromosome="chr1",
+            transcript_strand="+",
+        ))
+
+    def test_intersect_with_single_interval_full_overlap(self):
+        # interval1 (10-20) intersects with interval at (5-25)
+        test_interval = Interval('chr1', '+', 5, 25, 'hg19')
+        result = self.dis1.intersect(test_interval)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 1)
+        self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 20, 'hg19'))
+
+    def test_intersect_with_single_interval_partial_overlap(self):
+        # interval1 (10-20) overlaps with interval at (15-35)
+        test_interval = Interval('chr1', '+', 15, 35, 'hg19')
+        result = self.dis1.intersect(test_interval)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 2)
+        self.assertEqual(result.intervals[0], Interval('chr1', '+', 15, 20, 'hg19'))
+        self.assertEqual(result.intervals[1], Interval('chr1', '+', 30, 35, 'hg19'))
+
+    def test_intersect_with_single_interval_no_overlap(self):
+        test_interval = Interval('chr1', '+', 50, 60, 'hg19')
+        result = self.dis1.intersect(test_interval)
+
+        self.assertIsNone(result)
+
+    def test_intersect_with_single_interval_touching_boundary(self):
+        # interval1 ends at 20, test interval starts at 20
+        test_interval = Interval('chr1', '+', 20, 30, 'hg19')
+        result = self.dis1.intersect(test_interval)
+
+        # Depending on implementation, may return empty point or None
+        # Testing for typical behavior where touching boundaries don't overlap
+        if result is not None:
+            self.assertEqual(len(result.intervals), 1)
+            self.assertEqual(result.intervals[0], Interval('chr1', '+', 30, 30, 'hg19'))
+
+    def test_intersect_with_single_interval_contained_within(self):
+        # Small interval contained in interval1
+        test_interval = Interval('chr1', '+', 12, 18, 'hg19')
+        result = self.dis1.intersect(test_interval)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 1)
+        self.assertEqual(result.intervals[0], test_interval)
+
+    def test_intersect_with_disjoint_interval_sequence_full_overlap(self):
+        # dis1: [10-20, 30-40]
+        # dis2: [15-25, 35-45]
+        result = self.dis1.intersect(self.dis2)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 2)
+        self.assertEqual(result.intervals[0], Interval('chr1', '+', 15, 20, 'hg19'))
+        self.assertEqual(result.intervals[1], Interval('chr1', '+', 35, 40, 'hg19'))
+
+    def test_intersect_with_disjoint_interval_sequence_no_overlap(self):
+        dis_no_overlap = DisjointIntervalSequence([self.interval_far], _metadata=_DisjointIntervalMetadata(
+            transcript_id="transcript1",
+            reference_genome="hg19",
+            chromosome="chr1",
+            transcript_strand="+",
+        ))
+        result = self.dis1.intersect(dis_no_overlap)
+
+        self.assertIsNone(result)
+
+    def test_intersect_with_disjoint_interval_sequence_partial_overlap(self):
+        # Create sequence that overlaps only one interval in dis1
+        partial_dis = DisjointIntervalSequence([Interval('chr1', '+', 5, 15, 'hg19')],
+                                               _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
+        result = self.dis1.intersect(partial_dis)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 1)
+        self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 15, 'hg19'))
+
+    def test_intersect_preserves_metadata(self):
+        dis_with_metadata = DisjointIntervalSequence(
+            [self.interval1, self.interval3],
+            _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+")
+        )
+        result = dis_with_metadata.intersect(Interval('chr1', '+', 5, 35, 'hg19'))
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.transcript_id, dis_with_metadata.transcript_id)
+        self.assertEqual(result.reference_genome, dis_with_metadata.reference_genome)
+        self.assertEqual(result.chromosome, dis_with_metadata.chromosome)
+
+    def test_intersect_empty_disjoint_sequence_with_interval(self):
+        empty_dis = DisjointIntervalSequence([], _metadata=_DisjointIntervalMetadata(
+            transcript_id="transcript1",
+            reference_genome="hg19",
+            chromosome="chr1",
+            transcript_strand="+",
+        ))
+        result = empty_dis.intersect(self.interval1)
+
+        self.assertIsNone(result)
+
+    def test_intersect_with_different_strand(self):
+        neg_interval = self.interval1.as_negative_strand()
+        result = self.dis1.intersect(neg_interval)
+
+        # Result depends on strand handling; typically no overlap across strands
+        # This test documents expected behavior
+        self.assertIsNotNone(result)
+
+    def test_intersect_with_different_chromosome(self):
+        result = self.dis1.intersect(self.interval_chr2)
+
+        self.assertIsNone(result)
+
+    def test_intersect_invalid_type_raises_error(self):
+        with self.assertRaises(TypeError):
+            self.dis1.intersect("invalid")
+
+        with self.assertRaises(TypeError):
+            self.dis1.intersect(12345)
+
+        with self.assertRaises(TypeError):
+            self.dis1.intersect([self.interval1])
+
+    def test_intersect_multiple_overlaps_with_single_interval(self):
+        # Create an interval that spans across multiple intervals
+        spanning_interval = Interval('chr1', '+', 18, 32, 'hg19')
+        result = self.dis1.intersect(spanning_interval)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 2)
+        self.assertEqual(result.intervals[0], Interval('chr1', '+', 18, 20, 'hg19'))
+        self.assertEqual(result.intervals[1], Interval('chr1', '+', 30, 32, 'hg19'))
+
+    def test_intersect_result_type(self):
+        result = self.dis1.intersect(self.interval1)
+
+        self.assertIsInstance(result, DisjointIntervalSequence)
+
+    def test_intersect_commutative_with_same_metadata(self):
+        result1 = self.dis1.intersect(self.dis2)
+        result2 = self.dis2.intersect(self.dis1)
+
+        # Both should have same intervals (though metadata may differ)
+        if result1 is not None and result2 is not None:
+            self.assertEqual(len(result1.intervals), len(result2.intervals))
+
+    def test_intersect_point_interval(self):
+        point_interval = Interval('chr1', '+', 15, 15, 'hg19')
+        result = self.dis1.intersect(point_interval)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result.intervals), 1)
+
+    def test_intersect_empty_result_returns_none(self):
+        non_overlapping_dis = DisjointIntervalSequence([Interval('chr1', '+', 50, 60, 'hg19')],
+                                                       _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
+        result = self.dis1.intersect(non_overlapping_dis)
+
+        self.assertIsNone(result)

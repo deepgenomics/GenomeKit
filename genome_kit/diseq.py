@@ -32,18 +32,21 @@ class DisjointIntervalSequence:
         Parameters are not part of the stable public API. Use
         `from_transcript()` or `from_exons()` instead.
         """
-        ival0 = _intervals[0]
-        # check that the _intervals have the same chr and strand
-        assert all([ival.chromosome == ival0.chromosome for ival in _intervals])
-        assert all([ival.strand == ival0.strand for ival in _intervals])
+        if len(_intervals) > 0:
+            ival0 = _intervals[0]
+            # check that the _intervals have the same chr and strand
+            assert all([ival.chromosome == ival0.chromosome for ival in _intervals])
+            assert all([ival.strand == ival0.strand for ival in _intervals])
 
-        # check that the _intervals are consistently anchored
-        assert all([ival.anchor == ival0.anchor for ival in _intervals])
-        assert all([ival.anchor_offset == ival0.anchor_offset for ival in _intervals])
-        # TODO reverse sort for negative strand?
-        _intervals = sorted(_intervals, key=lambda ival: ival.start if ival.strand == "+" else -ival.end)
+            # check that the _intervals are consistently anchored
+            assert all([ival.anchor == ival0.anchor for ival in _intervals])
+            assert all([ival.anchor_offset == ival0.anchor_offset for ival in _intervals])
+            # TODO reverse sort for negative strand?
+            _intervals = sorted(_intervals, key=lambda ival: ival.start if ival.strand == "+" else -ival.end)
+            self._intervals = _intervals
+        else:
+            self._intervals = []
 
-        self._intervals = _intervals
         self.transcript_id = _metadata.transcript_id
         self.reference_genome = _metadata.reference_genome
         self.chromosome = _metadata.chromosome
@@ -136,6 +139,100 @@ class DisjointIntervalSequence:
     def disjoint_end(self) -> int:
         """Total length in bases of all exons combined."""
         return self.end
+
+
+    # def shift(self, amount: int) -> "DisjointIntervalSequence":
+    #     """
+    #     Shift upstream/downstream in DIS coordinates.
+    #
+    #     Positive amount shifts towards the 3′ end of the transcript;
+    #     negative shifts towards the 5′ end.
+    #     """
+    #
+    # def expand(
+    #         self,
+    #         upstream: int,
+    #         dnstream: int | None = None,
+    # ) -> "DisjointIntervalSequence":
+    #     """
+    #     Expand in DIS coordinates. 'upstream' and 'dnstream' are 5′/3′
+    #     relative to the transcript, regardless of genomic strand.
+    #     """
+    #
+    def intersect(
+            self,
+            other: "DisjointIntervalSequence | Interval",
+    ) -> "DisjointIntervalSequence | None":
+        """
+        Computes the intersection of the current interval sequence with another interval
+        or disjoint interval sequence.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.Interval` | :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval or interval sequence to intersect with.
+
+        Returns
+        -------
+        :py:class:`~genome_kit.DisjointIntervalSequence` | :data:`None`
+            A DisjointIntervalSequence representing the intersection of intervals,
+                 or `None` if there is no overlap.
+        """
+        if isinstance(other, Interval):
+            intersected_intervals = []
+            for interval in self.intervals:
+                intersection = interval.intersect(other)
+                if intersection is not None:
+                    intersected_intervals.append(intersection)
+
+            if not intersected_intervals:
+                return None
+
+            return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
+                transcript_id=self.transcript_id,
+                reference_genome=self.reference_genome,
+                chromosome=self.chromosome,
+                transcript_strand=self.transcript_strand,
+            ))
+
+        if isinstance(other, DisjointIntervalSequence):
+            intersected_intervals = []
+            for self_interval in self.intervals:
+                for other_interval in other.intervals:
+                    intersection = self_interval.intersect(other_interval)
+                    if intersection is not None:
+                        intersected_intervals.append(intersection)
+
+            if not intersected_intervals:
+                return None
+
+            return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
+                transcript_id=self.transcript_id,
+                reference_genome=self.reference_genome,
+                chromosome=self.chromosome,
+                transcript_strand=self.transcript_strand,
+            ))
+
+        raise TypeError(f"Cannot intersect with type {type(other).__name__}")
+
+    # def subtract(
+    #         self,
+    #         other: "DisjointIntervalSequence | Interval",
+    # ) -> Sequence["DisjointIntervalSequence"]: ...
+    #
+    # # Predicates in DIS space (bool results)
+    # def overlaps(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+    # def contains(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+    # def within(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+    # def upstream_of(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+    # def dnstream_of(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+    #
+    # def distance(
+    #         self,
+    #         other: "DisjointIntervalSequence | Interval | Sequence[Interval] | Sequence[DisjointIntervalSequence]",
+    #         *,
+    #         method: Literal["midpoint", "end5", "end3"] = "midpoint",
+    # ) -> float | list[float]: ...
 
 
     def lift_from_transcript(

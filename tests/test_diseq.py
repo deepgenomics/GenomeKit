@@ -507,51 +507,6 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
             transcript_strand="+",
         ))
 
-    def test_intersect_with_single_interval_full_overlap(self):
-        # interval1 (10-20) intersects with interval at (5-25)
-        test_interval = Interval('chr1', '+', 5, 25, 'hg19')
-        result = self.dis1.intersect(test_interval)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 20, 'hg19'))
-
-    def test_intersect_with_single_interval_partial_overlap(self):
-        # interval1 (10-20) overlaps with interval at (15-35)
-        test_interval = Interval('chr1', '+', 15, 35, 'hg19')
-        result = self.dis1.intersect(test_interval)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-        self.assertEqual(result.intervals[0], Interval('chr1', '+', 15, 20, 'hg19'))
-        self.assertEqual(result.intervals[1], Interval('chr1', '+', 30, 35, 'hg19'))
-
-    def test_intersect_with_single_interval_no_overlap(self):
-        test_interval = Interval('chr1', '+', 50, 60, 'hg19')
-        result = self.dis1.intersect(test_interval)
-
-        self.assertIsNone(result)
-
-    def test_intersect_with_single_interval_touching_boundary(self):
-        # interval1 ends at 20, test interval starts at 20
-        test_interval = Interval('chr1', '+', 20, 30, 'hg19')
-        result = self.dis1.intersect(test_interval)
-
-        # Depending on implementation, may return empty point or None
-        # Testing for typical behavior where touching boundaries don't overlap
-        if result is not None:
-            self.assertEqual(len(result.intervals), 1)
-            self.assertEqual(result.intervals[0], Interval('chr1', '+', 30, 30, 'hg19'))
-
-    def test_intersect_with_single_interval_contained_within(self):
-        # Small interval contained in interval1
-        test_interval = Interval('chr1', '+', 12, 18, 'hg19')
-        result = self.dis1.intersect(test_interval)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0], test_interval)
-
     def test_intersect_with_disjoint_interval_sequence_full_overlap(self):
         # dis1: [10-20, 30-40]
         # dis2: [15-25, 35-45]
@@ -583,18 +538,6 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
         self.assertEqual(len(result.intervals), 1)
         self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 15, 'hg19'))
 
-    def test_intersect_preserves_metadata(self):
-        dis_with_metadata = DisjointIntervalSequence(
-            [self.interval1, self.interval3],
-            _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+")
-        )
-        result = dis_with_metadata.intersect(Interval('chr1', '+', 5, 35, 'hg19'))
-
-        self.assertIsNotNone(result)
-        self.assertEqual(result.transcript_id, dis_with_metadata.transcript_id)
-        self.assertEqual(result.reference_genome, dis_with_metadata.reference_genome)
-        self.assertEqual(result.chromosome, dis_with_metadata.chromosome)
-
     def test_intersect_empty_disjoint_sequence_with_interval(self):
         empty_dis = DisjointIntervalSequence([], _metadata=_DisjointIntervalMetadata(
             transcript_id="transcript1",
@@ -606,43 +549,12 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_intersect_with_different_strand(self):
-        neg_interval = self.interval1.as_negative_strand()
-        result = self.dis1.intersect(neg_interval)
-
-        # Result depends on strand handling; typically no overlap across strands
-        # This test documents expected behavior
-        self.assertIsNotNone(result)
-
-    def test_intersect_with_different_chromosome(self):
-        result = self.dis1.intersect(self.interval_chr2)
-
-        self.assertIsNone(result)
-
     def test_intersect_invalid_type_raises_error(self):
         with self.assertRaises(TypeError):
             self.dis1.intersect("invalid")
 
         with self.assertRaises(TypeError):
             self.dis1.intersect(12345)
-
-        with self.assertRaises(TypeError):
-            self.dis1.intersect([self.interval1])
-
-    def test_intersect_multiple_overlaps_with_single_interval(self):
-        # Create an interval that spans across multiple intervals
-        spanning_interval = Interval('chr1', '+', 18, 32, 'hg19')
-        result = self.dis1.intersect(spanning_interval)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-        self.assertEqual(result.intervals[0], Interval('chr1', '+', 18, 20, 'hg19'))
-        self.assertEqual(result.intervals[1], Interval('chr1', '+', 30, 32, 'hg19'))
-
-    def test_intersect_result_type(self):
-        result = self.dis1.intersect(self.interval1)
-
-        self.assertIsInstance(result, DisjointIntervalSequence)
 
     def test_intersect_commutative_with_same_metadata(self):
         result1 = self.dis1.intersect(self.dis2)
@@ -651,13 +563,6 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
         # Both should have same intervals (though metadata may differ)
         if result1 is not None and result2 is not None:
             self.assertEqual(len(result1.intervals), len(result2.intervals))
-
-    def test_intersect_point_interval(self):
-        point_interval = Interval('chr1', '+', 15, 15, 'hg19')
-        result = self.dis1.intersect(point_interval)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
 
     def test_intersect_empty_result_returns_none(self):
         non_overlapping_dis = DisjointIntervalSequence([Interval('chr1', '+', 50, 60, 'hg19')],

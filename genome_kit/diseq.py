@@ -161,16 +161,15 @@ class DisjointIntervalSequence:
     #
     def intersect(
             self,
-            other: "DisjointIntervalSequence | Interval",
+            other: "DisjointIntervalSequence",
     ) -> "DisjointIntervalSequence | None":
         """
-        Computes the intersection of the current interval sequence with another interval
-        or disjoint interval sequence.
+        Computes the intersection of the current interval sequence with another disjoint interval sequence.
 
         Parameters
         ----------
-        other : :py:class:`~genome_kit.Interval` | :py:class:`~genome_kit.DisjointIntervalSequence`
-            The other interval or interval sequence to intersect with.
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to intersect with.
 
         Returns
         -------
@@ -178,58 +177,75 @@ class DisjointIntervalSequence:
             A DisjointIntervalSequence representing the intersection of intervals,
                  or `None` if there is no overlap.
         """
-        if isinstance(other, Interval):
-            intersected_intervals = []
-            for interval in self.intervals:
-                intersection = interval.intersect(other)
+        intersected_intervals = []
+        for self_interval in self.intervals:
+            for other_interval in other.intervals:
+                intersection = self_interval.intersect(other_interval)
                 if intersection is not None:
                     intersected_intervals.append(intersection)
 
-            if not intersected_intervals:
-                return None
+        if not intersected_intervals:
+            return None
 
-            return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
-                transcript_id=self.transcript_id,
-                reference_genome=self.reference_genome,
-                chromosome=self.chromosome,
-                transcript_strand=self.transcript_strand,
-            ))
+        return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
+            transcript_id=self.transcript_id,
+            reference_genome=self.reference_genome,
+            chromosome=self.chromosome,
+            transcript_strand=self.transcript_strand,
+        ))
 
-        if isinstance(other, DisjointIntervalSequence):
-            intersected_intervals = []
-            for self_interval in self.intervals:
-                for other_interval in other.intervals:
-                    intersection = self_interval.intersect(other_interval)
-                    if intersection is not None:
-                        intersected_intervals.append(intersection)
+    def subtract(
+            self,
+            other: "DisjointIntervalSequence",
+    ) -> "DisjointIntervalSequence":
+        """
+        Returns a DisjointIntervalSequence representing this DisjointIntervalSequence with its
+        intersection of another interval removed.
 
-            if not intersected_intervals:
-                return None
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            DisjointIntervalSequence to subtract its intersection from this interval.
 
-            return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
-                transcript_id=self.transcript_id,
-                reference_genome=self.reference_genome,
-                chromosome=self.chromosome,
-                transcript_strand=self.transcript_strand,
-            ))
+        Returns
+        -------
+        :py:class:`~genome_kit.DisjointIntervalSequence`
+            A DisjointIntervalSequence representing this DisjointIntervalSequence with its
+            intersection of another interval removed.
+        """
+        result_intervals = []
 
-        raise TypeError(f"Cannot intersect with type {type(other).__name__}")
+        # For each interval in self, subtract the intersection with other
+        for self_interval in self._intervals:
+            # Get the parts of self_interval that don't overlap with any interval in other_diseq
+            remaining = [self_interval]
 
-    # def subtract(
-    #         self,
-    #         other: "DisjointIntervalSequence | Interval",
-    # ) -> Sequence["DisjointIntervalSequence"]: ...
-    #
-    # # Predicates in DIS space (bool results)
-    # def overlaps(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
-    # def contains(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
-    # def within(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
-    # def upstream_of(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
-    # def dnstream_of(self, other: "DisjointIntervalSequence | Interval") -> bool: ...
+            for other_interval in other._intervals:
+                new_remaining = []
+                for interval in remaining:
+                    # Subtract the intersection from this interval
+                    subtracted = interval.subtract(other_interval)
+                    new_remaining.extend(subtracted)
+                remaining = new_remaining
+
+            result_intervals.extend(remaining)
+
+        return DisjointIntervalSequence(result_intervals, _metadata=_DisjointIntervalMetadata(
+            transcript_id=self.transcript_id,
+            reference_genome=self.reference_genome,
+            chromosome=self.chromosome,
+            transcript_strand=self.transcript_strand,
+        ))
+
+    # def overlaps(self, other: "DisjointIntervalSequence") -> bool: ...
+    # def contains(self, other: "DisjointIntervalSequence") -> bool: ...
+    # def within(self, other: "DisjointIntervalSequence") -> bool: ...
+    # def upstream_of(self, other: "DisjointIntervalSequence") -> bool: ...
+    # def dnstream_of(self, other: "DisjointIntervalSequence") -> bool: ...
     #
     # def distance(
     #         self,
-    #         other: "DisjointIntervalSequence | Interval | Sequence[Interval] | Sequence[DisjointIntervalSequence]",
+    #         other: "DisjointIntervalSequence",
     #         *,
     #         method: Literal["midpoint", "end5", "end3"] = "midpoint",
     # ) -> float | list[float]: ...

@@ -237,18 +237,170 @@ class DisjointIntervalSequence:
             transcript_strand=self.transcript_strand,
         ))
 
-    # def overlaps(self, other: "DisjointIntervalSequence") -> bool: ...
-    # def contains(self, other: "DisjointIntervalSequence") -> bool: ...
-    # def within(self, other: "DisjointIntervalSequence") -> bool: ...
-    # def upstream_of(self, other: "DisjointIntervalSequence") -> bool: ...
-    # def dnstream_of(self, other: "DisjointIntervalSequence") -> bool: ...
-    #
-    # def distance(
-    #         self,
-    #         other: "DisjointIntervalSequence",
-    #         *,
-    #         method: Literal["midpoint", "end5", "end3"] = "midpoint",
-    # ) -> float | list[float]: ...
+    def overlaps(self, other: "DisjointIntervalSequence") -> bool:
+        """
+        Checks if this interval sequence overlaps with another.
+
+        An overlap is defined as any pair of intervals, one from each
+        sequence, that have at least one base pair in common.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to check for overlap.
+
+        Returns
+        -------
+        bool
+            `True` if there is any overlap, `False` otherwise.
+        """
+        if self.chromosome != other.chromosome:
+            return False
+
+        for self_interval in self.intervals:
+            for other_interval in other.intervals:
+                if self_interval.overlaps(other_interval):
+                    return True
+
+        return False
+
+    def contains(self, other: "DisjointIntervalSequence") -> bool:
+        """
+        Checks if the `other` interval sequence is entirely contained within this one.
+
+        This is true if every interval in `other` is completely covered by the
+        intervals in this sequence. In other words, the genomic region of `other`
+        is a subset of the genomic region of `self`.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to check.
+
+        Returns
+        -------
+        bool
+            `True` if `other` is contained within this sequence, `False` otherwise.
+        """
+        if self.chromosome != other.chromosome:
+            return False
+
+        # TODO what should the semantics be if transcript_strand differs?
+
+        # If `other` is contained in `self`, then subtracting `self` from `other`
+        # should result in an empty set of intervals.
+        remainder = other.subtract(self)
+        return len(remainder) == 0
+
+    def within(self, other: "DisjointIntervalSequence") -> bool:
+        """
+        Checks if this interval sequence is entirely contained within another one.
+
+        This is true if every interval in this sequence is completely covered by the
+        intervals in the `other` sequence. In other words, the genomic region of `self`
+        is a subset of the genomic region of `other`.
+
+        This is the inverse of :py:meth:`~genome_kit.DisjointIntervalSequence.contains`.
+        `a.within(b)` is equivalent to `b.contains(a)`.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to check.
+
+        Returns
+        -------
+        bool
+            `True` if this sequence is contained within `other`, `False` otherwise.
+        """
+        return other.contains(self)
+
+    def upstream_of(self, other: "DisjointIntervalSequence") -> bool:
+        """
+        Checks if this entire interval sequence is upstream of another one.
+
+        This is true if the 3' end of this sequence is upstream of the 5'
+        end of the `other` sequence, without any overlap. The direction
+        is determined by the transcript strand.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to compare against.
+
+        Returns
+        -------
+        bool
+            `True` if this sequence is entirely upstream of `other`.
+        """
+        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+            return False
+        return self.genomic_span.upstream_of(other.genomic_span)
+
+    def dnstream_of(self, other: "DisjointIntervalSequence") -> bool:
+        """
+        Checks if this entire interval sequence is downstream of another one.
+
+        This is true if the 5' end of this sequence is downstream of the 3'
+        end of the `other` sequence, without any overlap. The direction
+        is determined by the transcript strand.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to compare against.
+
+        Returns
+        -------
+        bool
+            `True` if this sequence is entirely downstream of `other`.
+        """
+        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+            return False
+        return self.genomic_span.dnstream_of(other.genomic_span)
+
+
+    def distance(
+            self,
+            other: "DisjointIntervalSequence",
+            *,
+            method: Literal["midpoint", "end5", "end3"] = "midpoint",
+    ) -> float:
+        """
+        Calculates the distance between the genomic spans of two interval sequences.
+
+        The distance is measured between the outermost boundaries (genomic spans)
+        of the two sequences. It does not account for the internal exon/intron
+        structure.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence.
+        method : {'midpoint', 'end5', 'end3'}, optional
+            The method to use for distance calculation:
+            - 'midpoint': Distance between the midpoints of the genomic spans.
+            - 'end5': Distance between the 5' ends of the genomic spans.
+            - 'end3': Distance between the 3' ends of the genomic spans.
+
+        Returns
+        -------
+        float
+            The calculated distance in base pairs.
+
+        Raises
+        ------
+        ValueError
+            If the sequences are on different chromosomes or strands.
+        """
+        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+            raise ValueError(
+                "Cannot calculate distance between sequences on different chromosomes or strands."
+            )
+
+        # The distance between two DisjointIntervalSequences is defined as the
+        # distance between their genomic spans.
+        return self.genomic_span.distance(other.genomic_span, method=method)
 
 
     def lift_from_transcript(

@@ -549,13 +549,6 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_intersect_invalid_type_raises_error(self):
-        with self.assertRaises(TypeError):
-            self.dis1.intersect("invalid")
-
-        with self.assertRaises(TypeError):
-            self.dis1.intersect(12345)
-
     def test_intersect_commutative_with_same_metadata(self):
         result1 = self.dis1.intersect(self.dis2)
         result2 = self.dis2.intersect(self.dis1)

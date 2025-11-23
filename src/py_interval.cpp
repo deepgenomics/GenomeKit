@@ -10,10 +10,12 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #define GK_CHECK_REFG(a, b) \
 	GK_CHECK((a).refg == (b).refg, value, "Coordinate system mismatch, {} and {}.", (a), (b));
 
-#define GKPY_INTERVAL_BOOL_METHOD_ONEARG(pyname, method) \
-	GKPY_METHOD_BEGIN_ONEARG(pyname, method) \
-		const Py##pyname::value_t& c = Py##pyname::value(selfo); \
-		if (PyInterval::check(arg)) { const interval_t& a = PyInterval::value(arg); GK_CHECK_REFG(c, a); GKPY_RETURN_BOOL(c.method(a)); } \
+#define GKPY_INTERVAL_BOOL_METHOD_ONEARG(method) \
+	GKPY_METHOD_BEGIN_ONEARG(Interval, method) \
+		const PyInterval::value_t& x = PyInterval::value(selfo); \
+		auto y = PyInterval::value(arg); \
+		GK_CHECK(y.same_chrom(x) && y.same_strand(x), value, "Cannot call {} on intervals {} and {}: different strands or coordinate systems.", #method, x, y); \
+		if (PyInterval::check(arg)) { const interval_t& a = PyInterval::value(arg); GK_CHECK_REFG(x, a); GKPY_RETURN_BOOL(x.method(a)); } \
 		GK_THROW(type, "argument must be an Interval, not '{}'", Py_TYPE(arg)->tp_name); \
 	GKPY_METHOD_END
 
@@ -270,6 +272,7 @@ GKPY_METHOD_BEGIN_ONEARG(Interval, intersect)
 	auto x = PyInterval::value(selfo);
 	if (PyInterval::check(arg)) {
 		auto y = PyInterval::value(arg);
+		GK_CHECK(y.same_chrom(x) && y.same_strand(x), value, "Cannot intersect {} and {}: different strands or coordinate systems.", x, y);
 		if (((PyInterval*)selfo)->get_anchor() != invalid_pos || ((PyInterval*)arg)->get_anchor() != invalid_pos) {
 			GK_THROW(value, "anchored intersection ({}, {}) is not supported.", x, y);
 		}
@@ -285,11 +288,11 @@ GKPY_METHOD_BEGIN_ONEARG(Interval, intersect)
 	}
 	GK_THROW(type, "argument must be Interval, not '{}'", Py_TYPE(arg)->tp_name);
 GKPY_METHOD_END
-GKPY_INTERVAL_BOOL_METHOD_ONEARG(Interval, upstream_of)
-GKPY_INTERVAL_BOOL_METHOD_ONEARG(Interval, dnstream_of)
-GKPY_INTERVAL_BOOL_METHOD_ONEARG(Interval, contains)
-GKPY_INTERVAL_BOOL_METHOD_ONEARG(Interval, within)
-GKPY_INTERVAL_BOOL_METHOD_ONEARG(Interval, overlaps)
+GKPY_INTERVAL_BOOL_METHOD_ONEARG(upstream_of)
+GKPY_INTERVAL_BOOL_METHOD_ONEARG(dnstream_of)
+GKPY_INTERVAL_BOOL_METHOD_ONEARG(contains)
+GKPY_INTERVAL_BOOL_METHOD_ONEARG(within)
+GKPY_INTERVAL_BOOL_METHOD_ONEARG(overlaps)
 GKPY_INTERVAL_BOOL_METHOD_NOARG(Interval, is_pos_strand)
 GKPY_METHOD_BEGIN_ONEARG(Interval, as_positive_strand)
 	return PyInterval::create(PyInterval::value(selfo).as_pos_strand(), self->get_anchor(), self->get_anchor_offset());

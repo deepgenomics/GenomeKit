@@ -693,6 +693,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(neg_mid.intersect(neg_inside), neg_inside)
 
         self.assertIsNone(left.intersect(Interval(left.chrom, left.strand, left.start, left.end, 'hg38.p12')))
+        self.assertIsNone(left.intersect(Interval('chr2', left.strand, left.start, left.end, left.reference_genome)))
         self.assertIsNone(neg_left.intersect(left))
 
         with self.assertRaises(ValueError):

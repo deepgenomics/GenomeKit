@@ -272,7 +272,9 @@ GKPY_METHOD_BEGIN_ONEARG(Interval, intersect)
 	auto x = PyInterval::value(selfo);
 	if (PyInterval::check(arg)) {
 		auto y = PyInterval::value(arg);
-		GK_CHECK(y.same_chrom(x) && y.same_strand(x), value, "Cannot intersect {} and {}: different strands or coordinate systems.", x, y);
+		if (!y.same_strand(x)) {
+			GKPY_RETURN_NONE;
+		}
 		if (((PyInterval*)selfo)->get_anchor() != invalid_pos || ((PyInterval*)arg)->get_anchor() != invalid_pos) {
 			GK_THROW(value, "anchored intersection ({}, {}) is not supported.", x, y);
 		}

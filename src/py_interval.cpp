@@ -12,10 +12,8 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 
 #define GKPY_INTERVAL_BOOL_METHOD_ONEARG(method) \
 	GKPY_METHOD_BEGIN_ONEARG(Interval, method) \
-		const PyInterval::value_t& x = PyInterval::value(selfo); \
-		auto y = PyInterval::value(arg); \
-		GK_CHECK(y.same_chrom(x) && y.same_strand(x), value, "Cannot call {} on intervals {} and {}: different strands or coordinate systems.", #method, x, y); \
-		if (PyInterval::check(arg)) { const interval_t& a = PyInterval::value(arg); GK_CHECK_REFG(x, a); GKPY_RETURN_BOOL(x.method(a)); } \
+		const PyInterval::value_t& c = PyInterval::value(selfo); \
+		if (PyInterval::check(arg)) { const interval_t& a = PyInterval::value(arg); GK_CHECK_REFG(c, a); GKPY_RETURN_BOOL(c.method(a)); } \
 		GK_THROW(type, "argument must be an Interval, not '{}'", Py_TYPE(arg)->tp_name); \
 	GKPY_METHOD_END
 

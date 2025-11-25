@@ -444,6 +444,7 @@ class TestInterval(unittest.TestCase):
         self.assertTrue(c.upstream_of(a))
         self.assertFalse(b.upstream_of(a))
         self.assertTrue(a.overlaps(b))
+        self.assertFalse(a.overlaps(c))
 
         self.assertTrue(a.dnstream_of(c))
         self.assertFalse(a.dnstream_of(b))
@@ -501,6 +502,7 @@ class TestInterval(unittest.TestCase):
         self.assertTrue(a.upstream_of(c))
         self.assertFalse(a.upstream_of(b))
         self.assertTrue(a.overlaps(b))
+        self.assertFalse(a.overlaps(c))
 
         self.assertTrue(c.dnstream_of(a))
         self.assertFalse(b.dnstream_of(a))

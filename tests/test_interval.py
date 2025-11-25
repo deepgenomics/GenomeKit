@@ -443,12 +443,17 @@ class TestInterval(unittest.TestCase):
 
         self.assertTrue(c.upstream_of(a))
         self.assertFalse(b.upstream_of(a))
+        self.assertTrue(a.overlaps(b))
+        self.assertFalse(a.overlaps(c))
 
         self.assertTrue(a.dnstream_of(c))
         self.assertFalse(a.dnstream_of(b))
 
         self.assertTrue(a.contains(d))
         self.assertFalse(a.contains(b))
+
+        self.assertTrue(d.within(a))
+        self.assertFalse(b.within(a))
 
         self.assertTrue(a.upstream_of(Interval.from_rna1('chr1', 21, 21, 'hg19')))
         self.assertFalse(a.upstream_of(Interval.from_rna1('chr1', 20, 20, 'hg19')))
@@ -476,6 +481,18 @@ class TestInterval(unittest.TestCase):
         with self.assertRaises(ValueError):
             d != e
 
+        # test incompatible strand/chromosome
+        self.assertFalse(c.upstream_of(a.as_opposite_strand()))
+        self.assertFalse(c.upstream_of(Interval('chr2', a.strand, a.start, a.end, a.refg)))
+        self.assertFalse(a.dnstream_of(c.as_opposite_strand()))
+        self.assertFalse(a.dnstream_of(Interval('chr2', c.strand, c.start, c.end, c.refg)))
+        self.assertFalse(a.contains(d.as_opposite_strand()))
+        self.assertFalse(a.contains(Interval('chr2', d.strand, d.start, d.end, d.refg)))
+        self.assertFalse(d.within(a.as_opposite_strand()))
+        self.assertFalse(d.within(Interval('chr2', a.strand, a.start, a.end, a.refg)))
+        self.assertFalse(a.overlaps(b.as_opposite_strand()))
+        self.assertFalse(a.overlaps(Interval('chr2', b.strand, b.start, b.end, b.refg)))
+
     def test_comparisons_reverse(self):
         a = Interval.from_rna1('chr1', -20, -10, 'hg19')
         b = Interval.from_rna1('chr1', -15, -5, 'hg19')
@@ -485,6 +502,7 @@ class TestInterval(unittest.TestCase):
         self.assertTrue(a.upstream_of(c))
         self.assertFalse(a.upstream_of(b))
         self.assertTrue(a.overlaps(b))
+        self.assertFalse(a.overlaps(c))
 
         self.assertTrue(c.dnstream_of(a))
         self.assertFalse(b.dnstream_of(a))
@@ -501,6 +519,17 @@ class TestInterval(unittest.TestCase):
 
         self.assertTrue(a.dnstream_of(Interval.from_rna1('chr1', -21, -21, 'hg19')))
         self.assertFalse(a.dnstream_of(Interval.from_rna1('chr1', -20, -20, 'hg19')))
+
+        # test incompatible strand/chromosome
+        self.assertFalse(a.upstream_of(c.as_opposite_strand()))
+        self.assertFalse(a.upstream_of(Interval('chr2', c.strand, c.start, c.end, c.refg)))
+        self.assertFalse(c.dnstream_of(a.as_opposite_strand()))
+        self.assertFalse(c.dnstream_of(Interval('chr2', a.strand, a.start, a.end, a.refg)))
+        self.assertFalse(a.contains(d.as_opposite_strand()))
+        self.assertFalse(a.contains(Interval('chr2', d.strand, d.start, d.end, d.refg)))
+        self.assertFalse(d.within(Interval('chr2', a.strand, a.start, a.end, a.refg)))
+        self.assertFalse(a.overlaps(b.as_opposite_strand()))
+        self.assertFalse(a.overlaps(Interval('chr2', b.strand, b.start, b.end, b.refg)))
 
     def test_input_validation(self):
 
@@ -693,6 +722,7 @@ class TestInterval(unittest.TestCase):
         self.assertEqual(neg_mid.intersect(neg_inside), neg_inside)
 
         self.assertIsNone(left.intersect(Interval(left.chrom, left.strand, left.start, left.end, 'hg38.p12')))
+        self.assertIsNone(left.intersect(Interval('chr2', left.strand, left.start, left.end, left.reference_genome)))
         self.assertIsNone(neg_left.intersect(left))
 
         with self.assertRaises(ValueError):

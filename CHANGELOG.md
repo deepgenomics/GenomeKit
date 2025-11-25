@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.2](https://github.com/deepgenomics/GenomeKit/compare/v7.2.1...v7.2.2) (2025-11-25)
+
+
+### Bug Fixes
+
+* intersect() with mismtached chrom ([#191](https://github.com/deepgenomics/GenomeKit/issues/191)) ([8c59110](https://github.com/deepgenomics/GenomeKit/commit/8c59110c5be29a00dad0837e0fcb0598262b97be)), closes [#189](https://github.com/deepgenomics/GenomeKit/issues/189)
+
 ## [7.2.1](https://github.com/deepgenomics/GenomeKit/compare/v7.2.0...v7.2.1) (2025-09-23)
 
 

@@ -1,6 +1,6 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 import unittest
-from genome_kit import Interval, Variant
+from genome_kit import Genome, Interval, Variant
 from . import MiniGenome
 
 
@@ -48,6 +48,19 @@ class TestVariant(unittest.TestCase):
         genome37 = MiniGenome('test_genome')
         variant = Variant.from_string("2:1:A:T", genome37)
         self.assertEqual(variant.chromosome, 'chr2')
+
+    def test_chr_prefix_not_added_for_non_chr_prefixed_genome(self):
+        """Test that 'chr' prefix is NOT added for genomes with non-chr-prefixed chromosomes (e.g., Ensembl)."""
+        nochr_genome = MiniGenome('test_genome_nochr')
+
+        # Verify this genome has both chr-prefixed and non-chr-prefixed chromosome names
+        self.assertIn('chr1', nochr_genome.chromosomes)
+        self.assertIn('NC_000003.1', nochr_genome.chromosomes)
+
+        # Creating a variant with a non-chr-prefixed chromosome should preserve the name
+        # Position 1 (1-based) on NC_000003.1 has 'G' as the reference (sequence starts with 'GGCCAATT...')
+        variant = Variant.from_string("NC_000003.1:1:G:T", nochr_genome)
+        self.assertEqual(variant.chromosome, 'NC_000003.1')
 
     def test_preprocess_variants(self):
         variants = u'1:,,,10:c:g'

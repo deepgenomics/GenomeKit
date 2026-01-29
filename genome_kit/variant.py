@@ -156,7 +156,7 @@ class Variant(_cxx.Variant, Interval):
         except ValueError:
             raise ValueError("Invalid position in variant: {}".format(variant))
 
-        chromosome, ref, alt = Variant._preprocess_variant(chromosome, ref, alt)
+        chromosome, ref, alt = Variant._preprocess_variant(chromosome, ref, alt, reference_genome)
         variant_obj = Variant(chromosome, position, ref, alt, reference_genome)
         try:
             variant_obj._validate_variant(reference_genome)
@@ -307,9 +307,12 @@ class Variant(_cxx.Variant, Interval):
         return Variant(self.chrom, start, ref, alt, self.refg)
 
     @staticmethod
-    def _preprocess_variant(chromosome, ref, alt):
+    def _preprocess_variant(chromosome, ref, alt, genome):
+        # Only add 'chr' prefix if the chromosome doesn't exist but chr+chromosome does
         if not chromosome.startswith('chr'):
-            chromosome = 'chr' + chromosome
+            chr_prefixed = 'chr' + chromosome
+            if chr_prefixed in genome.chromosomes:
+                chromosome = chr_prefixed
 
         ref = ref.upper()
         alt = alt.upper()

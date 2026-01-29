@@ -248,6 +248,14 @@ def build_test_2bit_files():
     })
     build_test_2bit_file_from_seq('test_genome_alt', {'chr1': 'AAAA', 'chr2': 'CCCC'})
 
+    # A genome with a mix of chr-prefixed and non-chr-prefixed chromosome names
+    build_test_2bit_file_from_seq('test_genome_nochr', {
+        'chr1': 'AACCTTTTACGTAAACCCGGGTTTACCGGAAATGGATTAA',
+        'chr2': 'TTGGAACCTTGGAACCTTGGAACCTTGGAACCTTGGAACC',
+        'NC_000003.1': 'GGCCAATTGGCCAATTGGCCAATTGGCCAATTGGCCAATT',
+        'NC_000004.1': 'AATTGGCCAATTGGCCAATTGGCCAATTGGCCAATTGGCC'
+    })
+
 
 def build_test_annotation_gff3(regions, chrom_aliases, infile, outfile):
     """Extracts GFF3 elements contained entirely within chrom:start-end

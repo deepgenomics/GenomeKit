@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.2.3](https://github.com/deepgenomics/GenomeKit/compare/v7.2.2...v7.2.3) (2026-01-30)
+
+
+### Bug Fixes
+
+* add condition for prepending chr to variant chromosome ([#195](https://github.com/deepgenomics/GenomeKit/issues/195)) ([8abe006](https://github.com/deepgenomics/GenomeKit/commit/8abe0065b5ad77372f2cad9f7b21c7025a41f183))
+
 ## [7.2.2](https://github.com/deepgenomics/GenomeKit/compare/v7.2.1...v7.2.2) (2025-11-25)
 
 

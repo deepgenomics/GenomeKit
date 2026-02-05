@@ -69,6 +69,8 @@ def get_appris_principal_path(annotation):
             return (species, "e94v28", "2018_12.v28")
         elif any(name.startswith(x) for x in ["M30", "41"]):
             return (species, "e107v47", "2022_07.v47")
+        elif name.startswith("M31"):
+            return (species, "e108v48", "2024_10.v49")
         elif name.startswith("46"):
             return (species, "e112v48", "2024_10.v49")
         elif any(name.startswith(x) for x in ["M36", "47"]):

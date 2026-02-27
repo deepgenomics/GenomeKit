@@ -4,6 +4,7 @@ from typing import Sequence, Literal
 
 from genome_kit import Interval, Genome, Transcript
 
+
 @dataclass
 class _DisjointIntervalMetadata:
     transcript_id: str
@@ -19,14 +20,13 @@ class DisjointIntervalSequence:
     The coordinate system is 0-based, half-open: [0, length).
     """
 
-
     def __init__(
-            self,
-            _intervals: Sequence[Interval],
-            *,
-            _metadata: _DisjointIntervalMetadata,
-            disjoint_interval_start: int | None = None,
-            disjoint_interval_end: int | None = None,
+        self,
+        _intervals: Sequence[Interval],
+        *,
+        _metadata: _DisjointIntervalMetadata,
+        disjoint_interval_start: int | None = None,
+        disjoint_interval_end: int | None = None,
     ):
         """
         Low-level constructor.
@@ -42,9 +42,14 @@ class DisjointIntervalSequence:
 
             # check that the _intervals are consistently anchored
             assert all([ival.anchor == ival0.anchor for ival in _intervals])
-            assert all([ival.anchor_offset == ival0.anchor_offset for ival in _intervals])
+            assert all(
+                [ival.anchor_offset == ival0.anchor_offset for ival in _intervals]
+            )
             # TODO reverse sort for negative strand?
-            _intervals = sorted(_intervals, key=lambda ival: ival.start if ival.strand == "+" else -ival.end)
+            _intervals = sorted(
+                _intervals,
+                key=lambda ival: ival.start if ival.strand == "+" else -ival.end,
+            )
             self._intervals = _intervals
         else:
             self._intervals = []
@@ -55,30 +60,35 @@ class DisjointIntervalSequence:
 
     @classmethod
     def from_interval(
-            cls,
-            exons: Sequence[Interval],
-            *,
-            transcript_id: str | None = None,
-            reference_genome: str | Genome | None = None,
-            disjoint_interval_start: int | None = None,
-            disjoint_interval_end: int | None = None,
+        cls,
+        exons: Sequence[Interval],
+        *,
+        transcript_id: str | None = None,
+        reference_genome: str | Genome | None = None,
+        disjoint_interval_start: int | None = None,
+        disjoint_interval_end: int | None = None,
     ) -> "DisjointIntervalSequence":
 
-        return cls(exons, _metadata=_DisjointIntervalMetadata(
-            transcript_id=transcript_id,
-            reference_genome=reference_genome,
-            chromosome=exons[0].chromosome,
-            transcript_strand=exons[0].strand,
-        ), disjoint_interval_start=disjoint_interval_start, disjoint_interval_end=disjoint_interval_end)
+        return cls(
+            exons,
+            _metadata=_DisjointIntervalMetadata(
+                transcript_id=transcript_id,
+                reference_genome=reference_genome,
+                chromosome=exons[0].chromosome,
+                transcript_strand=exons[0].strand,
+            ),
+            disjoint_interval_start=disjoint_interval_start,
+            disjoint_interval_end=disjoint_interval_end,
+        )
 
     @classmethod
     def from_transcript(
-            cls,
-            transcript: Transcript,
-            *,
-            region: Literal["exons", "cds", "utr5", "utr3"] = "exons",
-            disjoint_interval_start: int | None = None,
-            disjoint_interval_end: int | None = None,
+        cls,
+        transcript: Transcript,
+        *,
+        region: Literal["exons", "cds", "utr5", "utr3"] = "exons",
+        disjoint_interval_start: int | None = None,
+        disjoint_interval_end: int | None = None,
     ) -> "DisjointIntervalSequence":
         if region == "exons":
             intervals = transcript.exons
@@ -91,12 +101,17 @@ class DisjointIntervalSequence:
         else:
             raise ValueError(f"Invalid region: {region}")
 
-        return cls(intervals, _metadata=_DisjointIntervalMetadata(
-            transcript_id=transcript.id,
-            reference_genome=transcript.reference_genome,
-            chromosome=intervals[0].chromosome,
-            transcript_strand=intervals[0].strand,
-        ), disjoint_interval_start=disjoint_interval_start, disjoint_interval_end=disjoint_interval_end)
+        return cls(
+            intervals,
+            _metadata=_DisjointIntervalMetadata(
+                transcript_id=transcript.id,
+                reference_genome=transcript.reference_genome,
+                chromosome=intervals[0].chromosome,
+                transcript_strand=intervals[0].strand,
+            ),
+            disjoint_interval_start=disjoint_interval_start,
+            disjoint_interval_end=disjoint_interval_end,
+        )
 
     @classmethod
     def dna(cls, disjoint_interval_sequence: "DisjointIntervalSequence") -> str:
@@ -190,7 +205,9 @@ class DisjointIntervalSequence:
         """Strand of the transcript of the underlying intervals making up the DIS."""
         pass
 
-    def shift(self, amount: int, with_coordinate_space: bool = False) -> "DisjointIntervalSequence":
+    def shift(
+        self, amount: int, with_coordinate_space: bool = False
+    ) -> "DisjointIntervalSequence":
         """
         Shift disjoint interval upstream/downstream along DIS coordinate-space by the specified amount.
 
@@ -202,11 +219,11 @@ class DisjointIntervalSequence:
         pass
 
     def expand(
-            self,
-            upstream: int,
-            dnstream: int | None = None,
-            with_interval: bool = True,
-            with_coordinate_space: bool = False,
+        self,
+        upstream: int,
+        dnstream: int | None = None,
+        with_interval: bool = True,
+        with_coordinate_space: bool = False,
     ) -> "DisjointIntervalSequence":
         """
         Expand in DIS coordinates. 'upstream' and 'dnstream' are 5′/3′
@@ -215,24 +232,30 @@ class DisjointIntervalSequence:
         `with_interval` and `with_coordinate_space` control whether the expansion is applied to the disjoint interval, the coordinate-space, or both.
         """
 
-
     # Like expand, but uses absolute positions on the coordinate-space rather than relative to the coordinate-space ends.
-    def cut(start: int, end: int, with_interval: bool = True, with_coordinate_space: bool = False) -> "DisjointIntervalSequence":
+    def cut(
+        start: int,
+        end: int,
+        with_interval: bool = True,
+        with_coordinate_space: bool = False,
+    ) -> "DisjointIntervalSequence":
         """Cut the disjoint interval to the specified start/end positions in DIS coordinates.
-        `with_interval` and `with_coordinate_space` control whether the cut is applied to the disjoint interval, the coordinate-space, or both."""
+        `with_interval` and `with_coordinate_space` control whether the cut is applied to the disjoint interval, the coordinate-space, or both.
+        """
         pass
 
     # Like cut, but uses absolute coordinates of the disjoint interval, rather than coordinates on the coordinate-space.
     def slice(start: int, end: int, clip: bool = False) -> "DisjointIntervalSequence":
         """Get a slice of disjoint interval from the specified start/end positions relative to the disjoint interval start index.
         `clip` controls whether the coordinate space of the resulting slice is clipped to the slice (if True) or remains the same as the original DIS (if False).
-        negative values for start/end are interpreted as relative to the disjoint interval end index."""
+        negative values for start/end are interpreted as relative to the disjoint interval end index.
+        """
         pass
 
     def intersect(
-            self,
-            other: "DisjointIntervalSequence",
-            clip: bool = False,
+        self,
+        other: "DisjointIntervalSequence",
+        clip: bool = False,
     ) -> "DisjointIntervalSequence | None":
         """
         Computes the intersection of the current interval sequence with another disjoint interval sequence.
@@ -260,17 +283,20 @@ class DisjointIntervalSequence:
         if not intersected_intervals:
             return None
 
-        return DisjointIntervalSequence(intersected_intervals, _metadata=_DisjointIntervalMetadata(
-            transcript_id=self.transcript_id,
-            reference_genome=self.reference_genome,
-            chromosome=self.chromosome,
-            transcript_strand=self.transcript_strand,
-        ))
+        return DisjointIntervalSequence(
+            intersected_intervals,
+            _metadata=_DisjointIntervalMetadata(
+                transcript_id=self.transcript_id,
+                reference_genome=self.reference_genome,
+                chromosome=self.chromosome,
+                transcript_strand=self.transcript_strand,
+            ),
+        )
 
     def subtract(
-            self,
-            other: "DisjointIntervalSequence",
-            with_coordinate_space: bool = True,
+        self,
+        other: "DisjointIntervalSequence",
+        with_coordinate_space: bool = True,
     ) -> "DisjointIntervalSequence":
         """
         Returns a DisjointIntervalSequence representing this DisjointIntervalSequence with its
@@ -306,12 +332,15 @@ class DisjointIntervalSequence:
 
             result_intervals.extend(remaining)
 
-        return DisjointIntervalSequence(result_intervals, _metadata=_DisjointIntervalMetadata(
-            transcript_id=self.transcript_id,
-            reference_genome=self.reference_genome,
-            chromosome=self.chromosome,
-            transcript_strand=self.transcript_strand,
-        ))
+        return DisjointIntervalSequence(
+            result_intervals,
+            _metadata=_DisjointIntervalMetadata(
+                transcript_id=self.transcript_id,
+                reference_genome=self.reference_genome,
+                chromosome=self.chromosome,
+                transcript_strand=self.transcript_strand,
+            ),
+        )
 
     def overlaps(self, other: "DisjointIntervalSequence") -> bool:
         """
@@ -409,7 +438,10 @@ class DisjointIntervalSequence:
         bool
             `True` if this sequence is entirely upstream of `other`.
         """
-        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+        if (
+            self.chromosome != other.chromosome
+            or self.transcript_strand != other.transcript_strand
+        ):
             return False
         return self.genomic_span.upstream_of(other.genomic_span)
 
@@ -431,15 +463,18 @@ class DisjointIntervalSequence:
         bool
             `True` if this sequence is entirely downstream of `other`.
         """
-        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+        if (
+            self.chromosome != other.chromosome
+            or self.transcript_strand != other.transcript_strand
+        ):
             return False
         return self.genomic_span.dnstream_of(other.genomic_span)
 
     def distance(
-            self,
-            other: "DisjointIntervalSequence",
-            *,
-            method: Literal["midpoint", "end5", "end3"] = "midpoint",
+        self,
+        other: "DisjointIntervalSequence",
+        *,
+        method: Literal["midpoint", "end5", "end3"] = "midpoint",
     ) -> float:
         """
         Calculates the distance between the genomic spans of two interval sequences.
@@ -468,7 +503,10 @@ class DisjointIntervalSequence:
         ValueError
             If the sequences are on different chromosomes or strands.
         """
-        if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
+        if (
+            self.chromosome != other.chromosome
+            or self.transcript_strand != other.transcript_strand
+        ):
             raise ValueError(
                 "Cannot calculate distance between sequences on different chromosomes or strands."
             )
@@ -476,7 +514,6 @@ class DisjointIntervalSequence:
         # The distance between two DisjointIntervalSequences is defined as the
         # distance between their genomic spans.
         return self.genomic_span.distance(other.genomic_span, method=method)
-
 
     def lift_from_transcript(
         self,
@@ -497,7 +534,7 @@ class DisjointIntervalSequence:
             - returns the overlap of `interval` with this DIS projected
               into DIS coordinates, or None if there is no overlap at all.
         """
-        if (src.chromosome != self.chromosome or src.strand != self.transcript_strand):
+        if src.chromosome != self.chromosome or src.strand != self.transcript_strand:
             raise ValueError(f"Interval chromosome/strand mismatch")
 
         # Find overlapping intervals and compute DIS coordinates
@@ -529,7 +566,7 @@ class DisjointIntervalSequence:
                     start=dis_start,
                     end=dis_end,
                     anchor=segment.anchor,
-                    anchor_offset=segment.anchor_offset
+                    anchor_offset=segment.anchor_offset,
                 )
                 result_intervals.append(dis_interval)
 
@@ -556,7 +593,7 @@ class DisjointIntervalSequence:
                 reference_genome=self.reference_genome,
                 chromosome=self.chromosome,
                 transcript_strand=self.transcript_strand,
-            )
+            ),
         )
 
     def lower_to_transcript(
@@ -606,7 +643,7 @@ class DisjointIntervalSequence:
                     start=genomic_start,
                     end=genomic_end,
                     strand=segment.strand,
-                    reference_genome=segment.reference_genome
+                    reference_genome=segment.reference_genome,
                 )
                 result.append(interval)
 

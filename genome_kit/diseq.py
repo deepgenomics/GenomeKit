@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 from typing import Sequence, Literal
 
 from genome_kit import Interval, Genome, Transcript
@@ -25,6 +25,8 @@ class DisjointIntervalSequence:
             _intervals: Sequence[Interval],
             *,
             _metadata: _DisjointIntervalMetadata,
+            disjoint_interval_start: int | None = None,
+            disjoint_interval_end: int | None = None,
     ):
         """
         Low-level constructor.
@@ -47,19 +49,19 @@ class DisjointIntervalSequence:
         else:
             self._intervals = []
 
-        self.transcript_id = _metadata.transcript_id
-        self.reference_genome = _metadata.reference_genome
-        self.chromosome = _metadata.chromosome
-        self.transcript_strand = _metadata.transcript_strand
+        self._metadata = _metadata
+        self._disjoint_interval_start = disjoint_interval_start
+        self._disjoint_interval_end = disjoint_interval_end
 
     @classmethod
-    def from_exons(
+    def from_interval(
             cls,
             exons: Sequence[Interval],
             *,
             transcript_id: str | None = None,
             reference_genome: str | Genome | None = None,
-            name: str | None = None,
+            disjoint_interval_start: int | None = None,
+            disjoint_interval_end: int | None = None,
     ) -> "DisjointIntervalSequence":
 
         return cls(exons, _metadata=_DisjointIntervalMetadata(
@@ -67,7 +69,7 @@ class DisjointIntervalSequence:
             reference_genome=reference_genome,
             chromosome=exons[0].chromosome,
             transcript_strand=exons[0].strand,
-        ))
+        ), disjoint_interval_start=disjoint_interval_start, disjoint_interval_end=disjoint_interval_end)
 
     @classmethod
     def from_transcript(
@@ -75,7 +77,8 @@ class DisjointIntervalSequence:
             transcript: Transcript,
             *,
             region: Literal["exons", "cds", "utr5", "utr3"] = "exons",
-            name: str | None = None,
+            disjoint_interval_start: int | None = None,
+            disjoint_interval_end: int | None = None,
     ) -> "DisjointIntervalSequence":
         if region == "exons":
             intervals = transcript.exons
@@ -93,17 +96,38 @@ class DisjointIntervalSequence:
             reference_genome=transcript.reference_genome,
             chromosome=intervals[0].chromosome,
             transcript_strand=intervals[0].strand,
-        ))
+        ), disjoint_interval_start=disjoint_interval_start, disjoint_interval_end=disjoint_interval_end)
 
+    @classmethod
+    def dna(cls, disjoint_interval_sequence: "DisjointIntervalSequence") -> str:
+        """Get the spliced DNA sequence of the DIS."""
+        pass
 
     @property
-    def intervals(self) -> tuple[Interval, ...]:
-        """Underlying genomic exonic intervals, sorted 5′→3′."""
+    def coordinate_intervals(self) -> tuple[Interval, ...]:
+        """Underlying genomic intervals of the disjoint coordinate-space, sorted 5′→3′."""
         return tuple(self._intervals)
 
     @property
+    def intervals(self) -> tuple[Interval, ...]:
+        """Underlying genomic intervals, sorted 5′→3′."""
+        pass
+
+    @property
     def genomic_span(self) -> Interval:
-        """Smallest Interval spanning all exons."""
+        """Smallest Interval spanning disjoint interval."""
+        return Interval(
+            chromosome=self._intervals[0].chromosome,
+            start=self._intervals[0].start,
+            end=self._intervals[-1].end,
+            strand=self._intervals[0].strand,
+            anchor=self._intervals[0].anchor,
+            anchor_offset=self._intervals[0].anchor_offset,
+        )
+
+    @property
+    def genomic_coordinate_span(self) -> Interval:
+        """Smallest Interval spanning disjoint coordinate-space."""
         return Interval(
             chromosome=self._intervals[0].chromosome,
             start=self._intervals[0].start,
@@ -115,53 +139,100 @@ class DisjointIntervalSequence:
 
     @property
     def start(self) -> int:
+        """Start index of the disjoint interval in DIS coordinates."""
+        return self._disjoint_interval_start
+
+    @property
+    def end(self) -> int:
+        """End index of the disjoint interval in DIS coordinates."""
+        return self._disjoint_interval_end
+
+    @property
+    def coordinate_start(self) -> int:
         """Always 0 in DIS coordinates."""
         return 0
 
     @property
-    def end(self) -> int:
-        """Total length in bases of all exons combined."""
+    def coordinate_end(self) -> int:
+        """End index of disjoint coordinate-space."""
         return sum(i.length for i in self._intervals)
 
     @property
     def length(self) -> int:
-        return self.end
+        """Length of the disjoint interval in bases in DIS coordinates."""
+        return self.end - self.start
+
+    @property
+    def coordinate_length(self) -> int:
+        """Length of the disjoint coordinate-space in bases in DIS coordinates."""
+        return self.coordinate_end
 
     def __len__(self) -> int:
-        return self.end
+        return self.length
 
     @property
-    def disjoint_start(self) -> int:
-        """Always 0 in DIS coordinates."""
-        return 0
+    def transcript_id(self) -> str | None:
+        """Transcript ID of the underlying intervals making up the DIS."""
+        pass
 
     @property
-    def disjoint_end(self) -> int:
-        """Total length in bases of all exons combined."""
-        return self.end
+    def reference_genome(self) -> str | None:
+        """Reference genome of the underlying intervals making up the DIS."""
+        pass
+
+    @property
+    def chromosome(self) -> str:
+        """Chromosome of the underlying intervals making up the DIS."""
+        pass
+
+    @property
+    def transcript_strand(self) -> Literal["+", "-"]:
+        """Strand of the transcript of the underlying intervals making up the DIS."""
+        pass
+
+    def shift(self, amount: int, with_coordinate_space: bool = False) -> "DisjointIntervalSequence":
+        """
+        Shift disjoint interval upstream/downstream along DIS coordinate-space by the specified amount.
+
+        Positive amount shifts towards the 3′ end of the transcript;
+        negative shifts towards the 5′ end.
+
+        If `with_coordinate_space` is `True`, then the shift is applied to both the disjoint interval and the coordinate-space.
+        """
+        pass
+
+    def expand(
+            self,
+            upstream: int,
+            dnstream: int | None = None,
+            with_interval: bool = True,
+            with_coordinate_space: bool = False,
+    ) -> "DisjointIntervalSequence":
+        """
+        Expand in DIS coordinates. 'upstream' and 'dnstream' are 5′/3′
+        relative to the transcript, regardless of genomic strand.
+
+        `with_interval` and `with_coordinate_space` control whether the expansion is applied to the disjoint interval, the coordinate-space, or both.
+        """
 
 
-    # def shift(self, amount: int) -> "DisjointIntervalSequence":
-    #     """
-    #     Shift upstream/downstream in DIS coordinates.
-    #
-    #     Positive amount shifts towards the 3′ end of the transcript;
-    #     negative shifts towards the 5′ end.
-    #     """
-    #
-    # def expand(
-    #         self,
-    #         upstream: int,
-    #         dnstream: int | None = None,
-    # ) -> "DisjointIntervalSequence":
-    #     """
-    #     Expand in DIS coordinates. 'upstream' and 'dnstream' are 5′/3′
-    #     relative to the transcript, regardless of genomic strand.
-    #     """
-    #
+    # Like expand, but uses absolute positions on the coordinate-space rather than relative to the coordinate-space ends.
+    def cut(start: int, end: int, with_interval: bool = True, with_coordinate_space: bool = False) -> "DisjointIntervalSequence":
+        """Cut the disjoint interval to the specified start/end positions in DIS coordinates.
+        `with_interval` and `with_coordinate_space` control whether the cut is applied to the disjoint interval, the coordinate-space, or both."""
+        pass
+
+    # Like cut, but uses absolute coordinates of the disjoint interval, rather than coordinates on the coordinate-space.
+    def slice(start: int, end: int, clip: bool = False) -> "DisjointIntervalSequence":
+        """Get a slice of disjoint interval from the specified start/end positions relative to the disjoint interval start index.
+        `clip` controls whether the coordinate space of the resulting slice is clipped to the slice (if True) or remains the same as the original DIS (if False).
+        negative values for start/end are interpreted as relative to the disjoint interval end index."""
+        pass
+
     def intersect(
             self,
             other: "DisjointIntervalSequence",
+            clip: bool = False,
     ) -> "DisjointIntervalSequence | None":
         """
         Computes the intersection of the current interval sequence with another disjoint interval sequence.
@@ -170,6 +241,8 @@ class DisjointIntervalSequence:
         ----------
         other : :py:class:`~genome_kit.DisjointIntervalSequence`
             The other interval sequence to intersect with.
+        clip : bool, optional
+            If `True`, the resulting DisjointIntervalSequence's coordinate space is clipped to the intersection
 
         Returns
         -------
@@ -197,6 +270,7 @@ class DisjointIntervalSequence:
     def subtract(
             self,
             other: "DisjointIntervalSequence",
+            with_coordinate_space: bool = True,
     ) -> "DisjointIntervalSequence":
         """
         Returns a DisjointIntervalSequence representing this DisjointIntervalSequence with its
@@ -206,6 +280,8 @@ class DisjointIntervalSequence:
         ----------
         other : :py:class:`~genome_kit.DisjointIntervalSequence`
             DisjointIntervalSequence to subtract its intersection from this interval.
+        with_coordinate_space : bool, optional
+            If `False`, the coordinate space of the resulting DisjointIntervalSequence remains unchaged. Raises a ValueError if the resulting disjoint interval on the coordinate-space is not contiguous.
 
         Returns
         -------
@@ -358,7 +434,6 @@ class DisjointIntervalSequence:
         if self.chromosome != other.chromosome or self.transcript_strand != other.transcript_strand:
             return False
         return self.genomic_span.dnstream_of(other.genomic_span)
-
 
     def distance(
             self,

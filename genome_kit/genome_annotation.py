@@ -319,10 +319,14 @@ class GeneTable(_cxx.GeneTable):
     def __getitem__(self, index):  # pragma: no cover
         """Lookup a gene by index or ID string.
 
+        In the case of more than one match, an arbitrary matching gene is returned.
+
         If `index` is a string the gene with matching ``id`` is returned (by linear search)::
 
             gene = genes['ENSG00000115275']  # MOGS gene
 
+        In the case of more than one match, an arbitrary matching gene is returned. This is common in
+        (but not limited to) pseudoautosomal genes.
         If the ID string has a version suffix (``'ENSG00000115275.11'``) then the match must be exact.
 
         One can also iterate over all genes::
@@ -343,6 +347,29 @@ class GeneTable(_cxx.GeneTable):
            The gene object identified by the given index.
         """
         return mock_result(Gene)
+
+    @mock
+    def find_by_id(self, id):  # pragma: no cover
+        """Return all genes matching an ID string.
+
+        If `index` is a string, all genes with matching ``id`` are returned (by linear search)::
+
+            genes = genome.genes.find_by_id('ENSG00000115275')
+
+        If the ID string has a version suffix (``'ENSG00000115275.11'``) then the match must be exact.
+
+        Parameters
+        ----------
+        id : :py:class:`str`
+            The ID string to search for.
+
+        Returns
+        -------
+        :py:class:`list` of :py:class:`~genome_kit.Gene`
+            All genes whose ID matches `id` (may be empty).
+        """
+        mock_unreachable()
+        return [Gene()]
 
     def first_by_name(self, name: str) -> Optional[Gene]:
         """
@@ -783,9 +810,14 @@ class TranscriptTable(_cxx.TranTable):
     def __getitem__(self, index):  # pragma: no cover
         """Lookup a transcript by index or ID string.
 
+        In the case of more than one match, an arbitrary matching transcript is returned.
+
         If `index` is a string the transcript with matching ``id`` is returned (by linear search)::
 
             tran = transcripts['ENST00000233616']  # MOGS transcript
+
+        In the case of more than one match, an arbitrary matching transcript is returned. This is common in
+        (but not limited to) pseudoautosomal genes.
 
         If the ID string has a version suffix (``'ENST00000233616.8'``) then the match must be exact.
 
@@ -807,6 +839,32 @@ class TranscriptTable(_cxx.TranTable):
            The transcript object identified by the given index.
         """
         return mock_result(Transcript)
+
+    @mock
+    def find_by_id(self, id):  # pragma: no cover
+        """Return all transcripts matching an ID string.
+
+        Unlike :py:meth:`__getitem__`, this method returns a list of all matches::
+
+            trans = genome.transcripts.find_by_id('ENST00000233616')
+
+        A versioned ID (e.g. ``'ENST00000233616.2'``) matches all transcripts whose
+        full ``id`` exactly matches.
+        A version-stripped ID (e.g. ``'ENST00000233616'``) matches all transcripts whose
+        full ``id`` starts with that prefix followed by ``'.'``.
+
+        Parameters
+        ----------
+        id : :py:class:`str`
+            The ID string to search for.
+
+        Returns
+        -------
+        :py:class:`list` of :py:class:`~genome_kit.Transcript`
+            All transcripts whose ID matches `id` (may be empty).
+        """
+        mock_unreachable()
+        return [Transcript()]
 
     def __repr__(self):
         return "<TranscriptTable, len = {}>".format(len(self))

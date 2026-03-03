@@ -256,6 +256,41 @@ PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 	return nullptr;
 }
 
+template <typename T> // T = PyGene, PyTran -- anything that when unpacked has an 'id' member.
+PyObject* PyGenomeAnnoTable_FindAllByID(PyObject* selfo, PyObject* args)
+{
+	PyObject* key = nullptr;
+	if (!PyArg_ParseTuple(args, "O", &key))
+		return nullptr;
+	if (!PyString_Check(key)) {
+		PyErr_SetString(PyExc_TypeError, "id must be a string");
+		return nullptr;
+	}
+	auto*       self    = (typename T::Table*)selfo;
+	auto&       table   = *self->table;
+	const char* id_str  = PyString_AS_STRING(key);
+	size_t      key_len = strlen(id_str);
+
+	PyObject* result = PyList_New(0);
+	if (!result)
+		return nullptr;
+	for (index_t i = 0; i < (index_t)table.size(); ++i) {
+		typename T::unpacked_value v{table[i], table};
+		const char* vid = v.id;
+		if (strcmp(vid, id_str) == 0 ||
+		    (strncmp(vid, id_str, key_len) == 0 && vid[key_len] == '.')) {
+			PyObject* item = PyTable_GetItem<T>(selfo, (Py_ssize_t)i);
+			if (!item || PyList_Append(result, item) < 0) {
+				Py_XDECREF(item);
+				Py_DECREF(result);
+				return nullptr;
+			}
+			Py_DECREF(item);
+		}
+	}
+	return result;
+}
+
 ////////////////////////////////////////////////////////////
 // Gene, GeneTable
 ////////////////////////////////////////////////////////////
@@ -312,8 +347,14 @@ GKPY_VALUE_SUBTYPEOBJ_BEGIN(Gene, as_ptr) // as_ptr because we always point to a
 	tp_methods = PyGene_Methods;
 GKPY_VALUE_SUBTYPEOBJ_END
 
+static PyMethodDef PyGeneTable_Methods[] = {
+	{"find_by_id", (PyCFunction)PyGenomeAnnoTable_FindAllByID<PyGene>, METH_VARARGS, nullptr},
+	{NULL}
+};
+
 GKPY_GENOME_ANNO_TABLE_BEGIN(Gene, genes)
 	mp_subscript = PyGenomeAnnoTable_GetSubscript_ByID<PyGene>;
+	tp_methods   = PyGeneTable_Methods;
 GKPY_GENOME_ANNO_TABLE_END
 
 ////////////////////////////////////////////////////////////
@@ -387,8 +428,14 @@ GKPY_VALUE_SUBTYPEOBJ_BEGIN(Tran, as_ptr) // as_ptr because we always point to a
 	tp_methods = PyTran_Methods;
 GKPY_VALUE_SUBTYPEOBJ_END
 
+static PyMethodDef PyTranTable_Methods[] = {
+	{"find_by_id", (PyCFunction)PyGenomeAnnoTable_FindAllByID<PyTran>, METH_VARARGS, nullptr},
+	{NULL}
+};
+
 GKPY_GENOME_ANNO_TABLE_BEGIN(Tran, trans)
 	mp_subscript = PyGenomeAnnoTable_GetSubscript_ByID<PyTran>;
+	tp_methods   = PyTranTable_Methods;
 GKPY_GENOME_ANNO_TABLE_END
 
 ////////////////////////////////////////////////////////////

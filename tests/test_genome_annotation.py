@@ -209,6 +209,38 @@ class TestCommon(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "internal type"):
             type('chr1', '+', 0, 0, self.genome)
 
+    def test_find_by_id(self):
+        # exact full-ID match with duplicates returns multiple results
+        result = self.genome.transcripts.find_by_id("ENST00000233331.12")
+        self.assertEqual(len(result), 2)
+        self.assertTrue(all(t.id == "ENST00000233331.12" for t in result))
+
+        # same transcript prefix with multiple matches
+        result = self.genome.transcripts.find_by_id("ENST00000233331")
+        self.assertEqual(len(result), 3)
+        self.assertEqual({t.id for t in result}, {"ENST00000233331.11", "ENST00000233331.12"})
+
+        # one exact match
+        result = self.genome.transcripts.find_by_id("ENST00000233331.11")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, "ENST00000233331.11")
+
+        # no matches
+        self.assertEqual(self.genome.transcripts.find_by_id("ENST99999999999"), [])
+
+        # same gene prefix
+        result = self.genome.genes.find_by_id("ENSG00000115274")
+        self.assertEqual(len(result), 2)
+        self.assertEqual({g.id for g in result}, {"ENSG00000115274.14", "ENSG00000115274.15"})
+
+        # one exact match
+        result = self.genome.genes.find_by_id("ENSG00000115274.14")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, "ENSG00000115274.14")
+
+        # no matches
+        self.assertEqual(self.genome.genes.find_by_id("ENSG99999999999"), [])
+
     def test_pythonic_indexing(self):
 
         # Check that genes table can be indexed by integer in the usual Python-esque way
@@ -303,10 +335,10 @@ class TestGencode(unittest.TestCase):
         # For mini genome chr2_74682100_74692599_h37 (INO80B, INO80B-WBP1, WBP1, MOGS).
         # expected = (num_end5_within, num_end3_within, num_within, num_overlap, num_exact)
         check(("chr2", "-",     0, 11000), (1, 1, 1, 1, 0))  # - strand (MOGS)
-        check(("chr2", "+",     0, 11000), (3, 3, 3, 3, 0))  # + strand (INO80B, INO80B-WBP1, WBP1)
-        check(("chr2", "+",    49,  2987), (2, 1, 1, 2, 1))  # INO80B exactly
-        check(("chr2", "+",    50,  2987), (1, 1, 0, 2, 0))  # INO80B +1 5p end
-        check(("chr2", "+",    49,  2986), (2, 0, 0, 2, 0))  # INO80B -1 3p end
+        check(("chr2", "+",     0, 11000), (4, 4, 4, 4, 0))  # + strand (INO80B x2, INO80B-WBP1, WBP1)
+        check(("chr2", "+",    49,  2987), (3, 2, 2, 3, 1))  # INO80B exactly (2 genes overlap)
+        check(("chr2", "+",    50,  2987), (1, 2, 0, 3, 0))  # INO80B +1 5p end
+        check(("chr2", "+",    49,  2986), (3, 1, 1, 3, 0))  # INO80B -1 3p end
         check(("chr2", "-",  6083, 10437), (1, 1, 1, 1, 1))  # MOGS exactly
         check(("chr2", "-",  6083, 10436), (0, 1, 0, 1, 0))  # MOGS -1 5p end
         check(("chr2", "-",  6084, 10437), (1, 0, 0, 1, 0))  # MOGS +1 3p end
@@ -320,7 +352,7 @@ class TestGencode(unittest.TestCase):
         # For mini genome chr2_74682100_74692599_h37 (INO80B, INO80B-WBP1, WBP1, MOGS).
         # expected = (num_end5_within, num_end3_within, num_within, num_overlap, num_exact)
         check(("chr2", "-",     0, 11000), (20, 20, 20, 20, 0))  # - strand (MOGS)
-        check(("chr2", "+",     0, 11000), (25, 25, 25, 25, 0))  # + strand (INO80B, INO80B-WBP1, WBP1)
+        check(("chr2", "+",     0, 11000), (28, 28, 28, 28, 0))  # + strand (INO80B, INO80B-WBP1, WBP1)
         check(("chr2", "+",  3495,  5883), ( 7, 12,  7, 16, 1))  # ENST00000409737.5 exactly
         check(("chr2", "+",  3496,  5883), ( 6, 12,  6, 16, 0))  # ENST00000409737.5 +1 5p end
         check(("chr2", "+",  3495,  5882), ( 7, 11,  6, 16, 0))  # ENST00000409737.5 -1 3p end

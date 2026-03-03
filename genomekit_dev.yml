@@ -12,6 +12,8 @@ dependencies:
   - importlib-metadata
   - google-cloud-storage
   - boto3
+  - grpcio=1.74.0
+  - grpcio-status=1.74.0
 
   # dev + test dependencies
   - ccache

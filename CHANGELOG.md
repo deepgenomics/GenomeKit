@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.3.0](https://github.com/deepgenomics/GenomeKit/compare/v7.2.3...v7.3.0) (2026-03-04)
+
+
+### Features
+
+* support gencode vM31 appris ([#197](https://github.com/deepgenomics/GenomeKit/issues/197)) ([f0c6222](https://github.com/deepgenomics/GenomeKit/commit/f0c6222d0343f7e20c0bb788667cc94dc7482333))
+
 ## [7.2.3](https://github.com/deepgenomics/GenomeKit/compare/v7.2.2...v7.2.3) (2026-01-30)
 
 

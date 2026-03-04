@@ -7,7 +7,9 @@ from genome_kit import Interval, Genome, Transcript
 
 @dataclass
 class _DisjointIntervalMetadata:
-    transcript_id: str
+    # TODO: Conditionally set this by querying if a transcript ID exists for the underlying
+    # intervals whenever a modification is made
+    transcript_id: str | None
     reference_genome: str
     chromosome: str
     transcript_strand: Literal["+", "-"]
@@ -64,7 +66,6 @@ class DisjointIntervalSequence:
         exons: Sequence[Interval],
         *,
         transcript_id: str | None = None,
-        reference_genome: str | Genome | None = None,
         disjoint_interval_start: int | None = None,
         disjoint_interval_end: int | None = None,
     ) -> "DisjointIntervalSequence":
@@ -73,7 +74,7 @@ class DisjointIntervalSequence:
             exons,
             _metadata=_DisjointIntervalMetadata(
                 transcript_id=transcript_id,
-                reference_genome=reference_genome,
+                reference_genome=exons[0].reference_genome,
                 chromosome=exons[0].chromosome,
                 transcript_strand=exons[0].strand,
             ),
@@ -93,11 +94,11 @@ class DisjointIntervalSequence:
         if region == "exons":
             intervals = transcript.exons
         elif region == "cds":
-            intervals = transcript.cds_exons
+            intervals = transcript.cdss
         elif region == "utr5":
-            intervals = transcript.utr5_exons
+            intervals = transcript.utr5s
         elif region == "utr3":
-            intervals = transcript.utr3_exons
+            intervals = transcript.utr3s
         else:
             raise ValueError(f"Invalid region: {region}")
 
@@ -122,11 +123,6 @@ class DisjointIntervalSequence:
     def coordinate_intervals(self) -> tuple[Interval, ...]:
         """Underlying genomic intervals of the disjoint coordinate-space, sorted 5′→3′."""
         return tuple(self._intervals)
-
-    @property
-    def intervals(self) -> tuple[Interval, ...]:
-        """Underlying genomic intervals, sorted 5′→3′."""
-        pass
 
     @property
     def genomic_span(self) -> Interval:
@@ -255,7 +251,6 @@ class DisjointIntervalSequence:
     def intersect(
         self,
         other: "DisjointIntervalSequence",
-        clip: bool = False,
     ) -> "DisjointIntervalSequence | None":
         """
         Computes the intersection of the current interval sequence with another disjoint interval sequence.
@@ -264,8 +259,6 @@ class DisjointIntervalSequence:
         ----------
         other : :py:class:`~genome_kit.DisjointIntervalSequence`
             The other interval sequence to intersect with.
-        clip : bool, optional
-            If `True`, the resulting DisjointIntervalSequence's coordinate space is clipped to the intersection
 
         Returns
         -------
@@ -292,6 +285,26 @@ class DisjointIntervalSequence:
                 transcript_strand=self.transcript_strand,
             ),
         )
+
+    def coordinate_intersect(
+        self,
+        other: "DisjointIntervalSequence",
+    ) -> "DisjointIntervalSequence | None":
+        """
+        Computes the intersection of the coordinate spaces of this disjoint interval sequence with another disjoint interval sequence.
+
+        Parameters
+        ----------
+        other : :py:class:`~genome_kit.DisjointIntervalSequence`
+            The other interval sequence to intersect coordinate spaces with.
+
+        Returns
+        -------
+        :py:class:`~genome_kit.DisjointIntervalSequence` | :data:`None`
+            A DisjointIntervalSequence representing the intersection of coordinate spaces,
+                 or `None` if there is no overlap.
+        """
+        pass
 
     def subtract(
         self,
@@ -514,6 +527,17 @@ class DisjointIntervalSequence:
         # The distance between two DisjointIntervalSequences is defined as the
         # distance between their genomic spans.
         return self.genomic_span.distance(other.genomic_span, method=method)
+
+    def lift_from_disjoint_interval_sequence(
+        self,
+        other: "DisjointIntervalSequence",
+    ) -> "Optional[DisjointIntervalSequence]":
+        """
+        Lift an interval from another DisjointIntervalSequence onto this DIS.
+
+        Returns a DisjointIntervalSequence representing the interval in this DIS's coordinate system, or None if there is no overlap between the two DISs.
+        """
+        pass
 
     def lift_from_transcript(
         self,

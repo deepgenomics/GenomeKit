@@ -913,7 +913,7 @@ class Exon(_cxx.Exon, Interval):
 
         Returns
         -------
-        :py:class:`~genome_kit.Utr5` | :py:data:`None`
+        :py:class:`~genome_kit.Utr` | :py:data:`None`
             The UTR5 contained within this exon, if any.
         """
         return mock_result(Utr)
@@ -925,7 +925,7 @@ class Exon(_cxx.Exon, Interval):
 
         Returns
         -------
-        :py:class:`~genome_kit.Utr3` | :py:data:`None`
+        :py:class:`~genome_kit.Utr` | :py:data:`None`
             The UTR3 contained within this exon, if any.
         """
         return mock_result(Utr)

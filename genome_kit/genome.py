@@ -277,7 +277,7 @@ class Genome(_cxx.Genome):
         :py:class:`~genome_kit.Utr5Table`
            An object that supports looping or queries over annotated coding sequences.
         """
-        return mock_result(_ga.Utr5Table)
+        return mock_result(_ga.UtrTable)
 
     @mock
     @property
@@ -291,7 +291,7 @@ class Genome(_cxx.Genome):
         :py:class:`~genome_kit.Utr3Table`
            An object that supports looping or queries over annotated coding sequences.
         """
-        return mock_result(_ga.Utr3Table)
+        return mock_result(_ga.UtrTable)
 
     def find_motif(self, interval, motif, match_position=0, find_overlapping_motifs=False):
         """Find a genomic motif in an interval on a :py:class:`~genome_kit.Genome`.

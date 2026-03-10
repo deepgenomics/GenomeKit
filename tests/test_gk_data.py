@@ -36,6 +36,16 @@ class TestGkData(unittest.TestCase):
         assert "gencode.v41" in gk_data.data_manager.list_available_genomes()
         assert "macFas5" in gk_data.data_manager.list_available_genomes()
 
+    @unittest.skipIf('CI' in os.environ, "can't provide AWS credentials in CI")
+    def test_list_available_annotations_by_assembly(self):
+        result = gk_data.data_manager.list_available_annotations_by_assembly()
+        assert isinstance(result, dict)
+        assert "gencode.v41" in result["hg38.p13"]
+        assert "gencode.vM30" in result["mm39"]
+        assert "gencode.vM31" in result["mm39"]
+        assert len(result["mm39"]) > 1
+        assert "hg38" not in result # no annotations for hg38
+
 
 class TestWGet(unittest.TestCase):
     """Test the `gk_data.wget` function."""

@@ -137,6 +137,16 @@ class DataManager(ABC):
         """List all available genomes in the data manager"""
         raise NotImplementedError("Descendant classes must implement list_available_genomes")
 
+    def list_available_annotations_by_assembly(self):
+        """List all available assemblies and their annotations.
+
+        Returns
+        -------
+        dict
+            A dict where keys are assembly names and values are sorted lists of annotation names.
+        """
+        raise NotImplementedError("Descendant classes must implement list_available_annotations_by_assembly")
+
 class CallbackIOWrapper(ObjectWrapper, object):
     def __init__(self, callback, stream):
         super(CallbackIOWrapper, self).__init__(stream)
@@ -285,6 +295,35 @@ class GCSDataManager(DataManager):
 
         return sorted(names)
 
+    @lru_cache
+    def list_available_annotations_by_assembly(self):
+        result = {}
+
+        def parse_refg(content):
+            for line in content.splitlines():
+                if line.startswith("refg="):
+                    return line[5:]
+            return None
+
+        local_names = set(os.listdir(self.data_dir))
+        for filename in local_names:
+            if filename.endswith(".cfg"):
+                annotation = filename.rpartition(".")[0]
+                with open(Path(self.data_dir, filename)) as f:
+                    refg = parse_refg(f.read())
+                if refg:
+                    result.setdefault(refg, []).append(annotation)
+
+        blobs = self.bucket.list_blobs()
+        for blob in blobs:
+            if blob.name.endswith(".cfg") and blob.name not in local_names:
+                annotation = blob.name.rpartition(".")[0]
+                refg = parse_refg(blob.download_as_text())
+                if refg:
+                    result.setdefault(refg, []).append(annotation)
+
+        return {k: sorted(v) for k, v in sorted(result.items())}
+
 class DefaultDataManager(DataManager):
     """A minimal data manager implementation that retrieves files from a S3 bucket.
     When using the default bucket, uploads are only supported for GenomeKit maintainers."""
@@ -399,3 +438,35 @@ class DefaultDataManager(DataManager):
         ))
 
         return sorted(names)
+
+    @lru_cache
+    def list_available_annotations_by_assembly(self):
+        result = {}
+
+        def parse_refg(content):
+            for line in content.splitlines():
+                if line.startswith("refg="):
+                    return line[5:]
+            return None
+
+        local_names = set(os.listdir(self.data_dir))
+        for filename in local_names:
+            if filename.endswith(".cfg"):
+                annotation = filename.rpartition(".")[0]
+                with open(Path(self.data_dir, filename)) as f:
+                    refg = parse_refg(f.read())
+                if refg:
+                    result.setdefault(refg, []).append(annotation)
+
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket_name, Delimiter="/"):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                if key.endswith(".cfg") and key not in local_names:
+                    annotation = key.rpartition(".")[0]
+                    response = self.client.get_object(Bucket=self._bucket_name, Key=key)
+                    refg = parse_refg(response["Body"].read().decode())
+                    if refg:
+                        result.setdefault(refg, []).append(annotation)
+
+        return {k: sorted(v) for k, v in sorted(result.items())}

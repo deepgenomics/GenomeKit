@@ -622,12 +622,9 @@ class DisjointIntervalSequence:
 
     def lower_to_transcript(
         self,
-        start: int,
-        end: int,
     ) -> list[Interval]:
         """
-        Lower [start, end) in DIS coordinates to one or more genomic
-        Intervals in transcript/genomic coordinates.
+        Lower DIS to one or more genomic Intervals in transcript/genomic coordinates.
 
         The returned Intervals:
             - lie on the same chromosome/strand/reference_genome as the exons,

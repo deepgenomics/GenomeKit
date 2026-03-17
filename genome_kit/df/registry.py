@@ -1,0 +1,351 @@
+from dataclasses import dataclass
+from functools import cache
+from typing import Callable
+
+import polars as pl
+
+import genome_kit as gk
+
+from .gk_structs import (
+    CdsStruct,
+    ExonStruct,
+    GeneStruct,
+    GenomeStruct,
+    GkDfType,
+    GkDfVersion,
+    IntervalStruct,
+    IntronStruct,
+    TranscriptStruct,
+    UtrStruct,
+)
+
+# mapping from GenomeKit object types to the gkdf type strings
+GK_TO_STRUCT: dict[type[gk.GenomeAnnotation], GkDfType] = {
+    gk.Genome: GkDfType.GENOME,
+    gk.Interval: GkDfType.INTERVAL,
+    gk.Transcript: GkDfType.TRANSCRIPT,
+    gk.Gene: GkDfType.GENE,
+    gk.Exon: GkDfType.EXON,
+    gk.Intron: GkDfType.INTRON,
+    gk.Cds: GkDfType.CDS,
+    gk.Utr: GkDfType.UTR,
+}
+
+
+# entry for the gkdf registry
+@dataclass
+class GKTypeEntry:
+    struct: pl.Struct
+    serializer: Callable[[pl.Series], pl.Series]
+    deserializer: Callable[[pl.Series], pl.Series]
+
+
+_GKDF_TYPE_FIELD = "gkdf_type"
+_SCHEMA_VERSION_FIELD = "schema_version"
+
+SUPPORTED_VERSIONS = {v for v in GkDfVersion.__members__.values()}
+
+
+def _serialize_genome(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Genome objects by genome name."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.GENOME.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                # config gives annotation genome name if applicable
+                "genome_str": genome.config,
+            }
+            for genome in s
+        ],
+        dtype=GenomeStruct,
+    )
+
+
+def _deserialize_genome(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of GenomeStruct back into GenomeKit Genome objects."""
+    return pl.Series(
+        name=s.name,
+        values=[gk.Genome(struct["genome_str"]) for struct in s],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_interval(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Interval objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.INTERVAL.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "chromosome": interval.chrom,
+                "strand": interval.strand,
+                "start": interval.start,
+                "end": interval.end,
+                # intervals related to reference genome only
+                "genome_str": interval.reference_genome,
+            }
+            for interval in s
+        ],
+        dtype=IntervalStruct,
+    )
+
+
+def _deserialize_interval(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of IntervalStruct back into GenomeKit Interval objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Interval(
+                chromosome=struct["chrom"],
+                strand=struct["strand"],
+                start=struct["start"],
+                end=struct["end"],
+                reference_genome=struct["genome_str"],
+            )
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_transcript(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Transcript objects."""
+
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.TRANSCRIPT.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "transcript_table_index": transcript.annotation_genome.transcripts.index_of(
+                    transcript
+                ),
+                "genome_str": transcript.annotation_genome.config,
+            }
+            for transcript in s
+        ],
+        dtype=TranscriptStruct,
+    )
+
+
+def _deserialize_transcript(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of TranscriptStruct back into GenomeKit Transcript objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Genome(struct["genome_str"]).transcripts[
+                struct["transcript_table_index"]
+            ]
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_gene(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Gene objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.GENE.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "gene_table_index": gene.annotation_genome.genes.index_of(gene),
+                "genome_str": gene.annotation_genome.config,
+            }
+            for gene in s
+        ],
+        dtype=GeneStruct,
+    )
+
+
+def _deserialize_gene(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of GeneStruct back into GenomeKit Gene objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Genome(struct["genome_str"]).genes[struct["gene_table_index"]]
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_exon(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Exon objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.EXON.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "exon_table_index": exon.annotation_genome.exons.index_of(exon),
+                "genome_str": exon.annotation_genome.config,
+            }
+            for exon in s
+        ],
+        dtype=ExonStruct,
+    )
+
+
+def _deserialize_exon(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of ExonStruct back into GenomeKit Exon objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Genome(struct["genome_str"]).exons[struct["exon_table_index"]]
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_intron(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Intron objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.INTRON.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "intron_table_index": intron.annotation_genome.introns.index_of(intron),
+                "genome_str": intron.annotation_genome.config,
+            }
+            for intron in s
+        ],
+        dtype=IntronStruct,
+    )
+
+
+def _deserialize_intron(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of IntronStruct back into GenomeKit Intron objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Genome(struct["genome_str"]).introns[struct["intron_table_index"]]
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_cds(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Cds objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            {
+                _GKDF_TYPE_FIELD: GkDfType.CDS.value,
+                _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                "cds_table_index": cds.annotation_genome.cdss.index_of(cds),
+                "genome_str": cds.annotation_genome.config,
+            }
+            for cds in s
+        ],
+        dtype=CdsStruct,
+    )
+
+
+def _deserialize_cds(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of CDSStruct back into GenomeKit Cds objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            gk.Genome(struct["genome_str"]).cdss[struct["cds_table_index"]]
+            for struct in s
+        ],
+        dtype=pl.Object,
+    )
+
+
+def _serialize_utr(s: pl.Series) -> pl.Series:
+    """Serialize a Series of GenomeKit Utr objects.
+
+    UTRs serialized with their index within the relevant table.
+    """
+    values = []
+    for utr in s:
+        ser_dict = {
+            _GKDF_TYPE_FIELD: GkDfType.UTR.value,
+            _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+        }
+        genome = utr.annotation_genome
+        try:
+            ser_dict["utr_table_index"] = genome.utr5s.index_of(utr)
+            ser_dict["utr_type"] = "5prime"
+        except ValueError:
+            ser_dict["utr_table_index"] = genome.utr3s.index_of(utr)
+            ser_dict["utr_type"] = "3prime"
+
+        ser_dict["genome_str"] = genome.config
+        values.append(ser_dict)
+
+    return pl.Series(
+        name=s.name,
+        values=values,
+        dtype=UtrStruct,
+    )
+
+
+def _deserialize_utr(s: pl.Series) -> pl.Series:
+    """Deserialize a Series of UtrStruct back into GenomeKit Utr objects."""
+    return pl.Series(
+        name=s.name,
+        values=[
+            (
+                gk.Genome(struct["genome_str"]).utr5s[struct["utr_table_index"]]
+                if struct["utr_type"] == "5prime"
+                else gk.Genome(struct["genome_str"]).utr3s[struct["utr_table_index"]]
+            )
+            for struct in s
+        ],
+    )
+
+
+REGISTRY: dict[GkDfVersion, dict[GkDfType, GKTypeEntry]] = {
+    GkDfVersion.V1: {
+        GkDfType.GENOME: GKTypeEntry(
+            struct=GenomeStruct,
+            serializer=_serialize_genome,
+            deserializer=_deserialize_genome,
+        ),
+        GkDfType.INTERVAL: GKTypeEntry(
+            struct=IntervalStruct,
+            serializer=_serialize_interval,
+            deserializer=_deserialize_interval,
+        ),
+        GkDfType.TRANSCRIPT: GKTypeEntry(
+            struct=TranscriptStruct,
+            serializer=_serialize_transcript,
+            deserializer=_deserialize_transcript,
+        ),
+        GkDfType.GENE: GKTypeEntry(
+            struct=GeneStruct,
+            serializer=_serialize_gene,
+            deserializer=_deserialize_gene,
+        ),
+        GkDfType.EXON: GKTypeEntry(
+            struct=ExonStruct,
+            serializer=_serialize_exon,
+            deserializer=_deserialize_exon,
+        ),
+        GkDfType.INTRON: GKTypeEntry(
+            struct=IntronStruct,
+            serializer=_serialize_intron,
+            deserializer=_deserialize_intron,
+        ),
+        GkDfType.CDS: GKTypeEntry(
+            struct=CdsStruct,
+            serializer=_serialize_cds,
+            deserializer=_deserialize_cds,
+        ),
+        GkDfType.UTR: GKTypeEntry(
+            struct=UtrStruct,
+            serializer=_serialize_utr,
+            deserializer=_deserialize_utr,
+        ),
+    }
+}

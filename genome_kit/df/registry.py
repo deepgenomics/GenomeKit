@@ -113,7 +113,6 @@ def _deserialize_interval(s: pl.Series) -> pl.Series:
 
 def _serialize_transcript(s: pl.Series) -> pl.Series:
     """Serialize a Series of GenomeKit Transcript objects."""
-
     return pl.Series(
         name=s.name,
         values=[
@@ -262,10 +261,7 @@ def _deserialize_cds(s: pl.Series) -> pl.Series:
 
 
 def _serialize_utr(s: pl.Series) -> pl.Series:
-    """Serialize a Series of GenomeKit Utr objects.
-
-    UTRs serialized with their index within the relevant table.
-    """
+    """Serialize a Series of GenomeKit Utr objects."""
     values = []
     for utr in s:
         ser_dict = {

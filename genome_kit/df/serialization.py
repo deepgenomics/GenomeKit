@@ -160,9 +160,7 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
         )
 
 
-def from_parquet(
-    path: str, columns: list[str] | None = None, lazy: bool = False
-) -> pl.DataFrame | pl.LazyFrame:
+def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
 
     Args:

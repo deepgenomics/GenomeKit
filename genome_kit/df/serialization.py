@@ -1,6 +1,5 @@
 import functools
 import json
-import time
 import warnings
 from collections.abc import Callable
 from inspect import signature

@@ -32,9 +32,7 @@ def _map_batches_safe(fn: Callable):
     return wrapper
 
 
-def detect_gk_cols(
-    lf: pl.LazyFrame, columns: list[str] | None = None
-) -> dict[str, GkDfType]:
+def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
     """Detect columns in the LazyFrame that contains GenomeKit objects.
 
     Args:
@@ -47,9 +45,6 @@ def detect_gk_cols(
 
     lf_cols = lf.collect_schema().names()
 
-    if not columns:
-        columns = lf_cols
-
     target_cols = {}
 
     # polars Struct inferred from first row, same behaviour as Polars
@@ -57,11 +52,8 @@ def detect_gk_cols(
     # materialize the first row to check data types, need the exact type not pl.Object
     first_row = lf.head(1).collect()[0]
 
-    for col in columns:
-        if col not in lf_cols:
-            raise ValueError(
-                f"Column '{col}' not found in the DataFrame, please check the column names and try again."
-            )
+    # TODO: support list of GenomeKit objects
+    for col in lf_cols:
         # item from first row of the column
         col_type = GK_TO_STRUCT.get(type(first_row[col][0]), None)
 
@@ -75,24 +67,17 @@ def detect_gk_cols(
 
 
 # TODO: add union of pd.DataFrame
-def to_parquet(
-    df: pl.DataFrame | pl.LazyFrame,
-    path: str,
-    columns: list[str] | None = None,
-) -> None:
+def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
     """Serialize a DataFrame with GenomeKit objects to a Parquet file.
 
     Args:
         df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
-        columns: Optional list of column names to serialize. If None, all GenomeKit
-            columns will be serialized.
-
     """
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
 
-    target_cols = detect_gk_cols(df, columns)
+    target_cols = detect_gk_cols(df)
 
     if not target_cols:
         warnings.warn(
@@ -160,13 +145,31 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
         )
 
 
+def _deserialize_gk_cols(
+    lf: pl.LazyFrame, target_cols: dict[str, GkDfType]
+) -> pl.LazyFrame:
+    """Deserialize columns containing GenomeKit objects.
+
+    Args:
+        lf: The LazyFrame containing the serialized GenomeKit objects.
+        target_cols: A dictionary mapping column names to their corresponding GkDf types.
+    """
+    return lf.with_columns(
+        pl.col(col)
+        .map_batches(
+            _map_batches_safe(REGISTRY[CURRENT_VERSION][target_cols[col]].deserializer),
+            return_dtype=pl.Object,
+        )
+        .alias(col)
+        for col in target_cols
+    )
+
+
 def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
 
     Args:
         path: The file path to read the Parquet file from.
-        columns: Optional list of columns to deserialize. If None, all detected
-            GenomeKit columns will be deserialized.
         lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
 
     Returns:
@@ -183,14 +186,6 @@ def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     # on opening dganno files
     _init_gk_annotations(lf, target_cols)
 
-    lf = lf.with_columns(
-        pl.col(col)
-        .map_batches(
-            _map_batches_safe(REGISTRY[CURRENT_VERSION][target_cols[col]].deserializer),
-            return_dtype=pl.Object,
-        )
-        .alias(col)
-        for col in target_cols
-    )
+    lf = _deserialize_gk_cols(lf, target_cols)
 
     return lf if lazy else lf.collect()

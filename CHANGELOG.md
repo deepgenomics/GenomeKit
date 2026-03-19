@@ -1,5 +1,18 @@
 # Changelog
 
+## [7.3.0](https://github.com/deepgenomics/GenomeKit/compare/v7.2.3...v7.3.0) (2026-03-19)
+
+
+### Features
+
+* list annos by assembly ([#202](https://github.com/deepgenomics/GenomeKit/issues/202)) ([fd0204c](https://github.com/deepgenomics/GenomeKit/commit/fd0204c8a2f2d6c1b7902a68e2509993ad46e786))
+* support gencode vM31 appris ([#197](https://github.com/deepgenomics/GenomeKit/issues/197)) ([f0c6222](https://github.com/deepgenomics/GenomeKit/commit/f0c6222d0343f7e20c0bb788667cc94dc7482333))
+
+
+### Documentation
+
+* fix utr class name ([#200](https://github.com/deepgenomics/GenomeKit/issues/200)) ([49e42e7](https://github.com/deepgenomics/GenomeKit/commit/49e42e7bfa7c7bc817bdfe118993af30d5062dab))
+
 ## [7.2.3](https://github.com/deepgenomics/GenomeKit/compare/v7.2.2...v7.2.3) (2026-01-30)
 
 

@@ -277,8 +277,7 @@ PyObject* PyGenomeAnnoTable_FindAllByID(PyObject* selfo, PyObject* args)
 	for (index_t i = 0; i < (index_t)table.size(); ++i) {
 		typename T::unpacked_value v{table[i], table};
 		const char* vid = v.id;
-		if (strcmp(vid, id_str) == 0 ||
-		    (strncmp(vid, id_str, key_len) == 0 && vid[key_len] == '.')) {
+		if (strncmp(vid, id_str, key_len) == 0 && (vid[key_len] == '.') || vid[key_len] == '\0') {
 			PyObject* item = PyTable_GetItem<T>(selfo, (Py_ssize_t)i);
 			if (!item || PyList_Append(result, item) < 0) {
 				Py_XDECREF(item);

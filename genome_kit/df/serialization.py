@@ -1,15 +1,20 @@
+from __future__ import annotations
+
 import functools
 import json
 import warnings
 from collections.abc import Callable
 from inspect import signature
+from typing import TYPE_CHECKING
 
-import polars as pl
+if TYPE_CHECKING:
+    import polars as pl
 
 import genome_kit as gk
+from genome_kit._optional import require_polars
 
 from .gk_structs import CURRENT_VERSION, GkDfType, GkDfVersion
-from .registry import GK_TO_STRUCT, REGISTRY
+from .registry import GK_TO_STRUCT, get_registry
 
 
 def _map_batches_safe(fn: Callable):
@@ -74,6 +79,8 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
         df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
     """
+    pl = require_polars()
+
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
 
@@ -86,11 +93,12 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
         df.sink_parquet(path)
         return
 
-    df = df.with_columns(
+    registry = get_registry()
+    df = df.with_columns(  # TODO check if with_columns_seq has better performance
         pl.col(col)
         .map_batches(
-            _map_batches_safe(REGISTRY[CURRENT_VERSION][target_cols[col]].serializer),
-            return_dtype=REGISTRY[CURRENT_VERSION][target_cols[col]].struct,
+            _map_batches_safe(registry[CURRENT_VERSION][target_cols[col]].serializer),
+            return_dtype=registry[CURRENT_VERSION][target_cols[col]].struct,
         )
         .alias(col)
         for col in target_cols
@@ -105,7 +113,9 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
     df.sink_parquet(path, metadata=metadata)
 
 
-def _init_gk_annotations(lf: pl.LazyFrame, target_cols: dict[str, GkDfType]) -> None:
+def _init_gk_annotations(
+    lf: pl.LazyFrame, target_cols: dict[str, GkDfType]
+) -> list[gk.Genome]:
     """Initialize GenomeKit annotations for all unique genomes in the LazyFrame.
 
     Prevents race conditions when opening dganno files during polars operations.
@@ -114,6 +124,10 @@ def _init_gk_annotations(lf: pl.LazyFrame, target_cols: dict[str, GkDfType]) -> 
         lf: The LazyFrame containing the serialized GenomeKit objects.
         target_cols: A dictionary mapping column names to their corresponding GenomeKit types.
     """
+    pl = require_polars()
+
+    annotations = []
+
     genomes_exprs = [pl.col(c).struct.field("genome_str") for c in target_cols.keys()]
     genomes = (
         lf.select(
@@ -127,8 +141,11 @@ def _init_gk_annotations(lf: pl.LazyFrame, target_cols: dict[str, GkDfType]) -> 
         .to_list()
     )
 
+    # warms annotations for all unique genomes in the file
     for genome_str in genomes:
-        gk.Genome(genome_str).genes
+        annotations.append(gk.Genome(genome_str).genes)
+
+    return annotations
 
 
 def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
@@ -154,10 +171,13 @@ def _deserialize_gk_cols(
         lf: The LazyFrame containing the serialized GenomeKit objects.
         target_cols: A dictionary mapping column names to their corresponding GkDf types.
     """
-    return lf.with_columns(
+    pl = require_polars()
+    registry = get_registry()
+
+    return lf.with_columns_seq(
         pl.col(col)
         .map_batches(
-            _map_batches_safe(REGISTRY[CURRENT_VERSION][target_cols[col]].deserializer),
+            _map_batches_safe(registry[CURRENT_VERSION][target_cols[col]].deserializer),
             return_dtype=pl.Object,
         )
         .alias(col)
@@ -175,6 +195,7 @@ def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     Returns:
         A Polars DataFrame or LazyFrame with deserialized GenomeKit objects.
     """
+    pl = require_polars()
 
     metadata = pl.read_parquet_metadata(path)
     _validate_gkdf_metadata(metadata)
@@ -182,9 +203,10 @@ def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
 
     lf = pl.scan_parquet(path)
 
-    # collect unique genome strings in the file to initialize, prevents race conditions
-    # on opening dganno files
-    _init_gk_annotations(lf, target_cols)
+    # collect unique genome strings in the file and initialize, prevents race conditions
+    # on opening dganno files.
+    # genomes returned in dummy variable to keep weak reference alive for deserialization
+    _ = _init_gk_annotations(lf, target_cols)
 
     lf = _deserialize_gk_cols(lf, target_cols)
 

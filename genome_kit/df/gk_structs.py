@@ -1,12 +1,22 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from genome_kit._optional import require_polars
 
 if TYPE_CHECKING:  # import polars for type checking
     import polars as pl
+
+# minimal shim for python <3.11 compatability
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        def __str__(self):
+            return str(self.value)
+
 
 
 class GkDfType(StrEnum):

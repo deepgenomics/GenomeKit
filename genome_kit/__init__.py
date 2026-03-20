@@ -49,6 +49,7 @@ from .variant import Variant, VariantTable
 from .variant_genome import VariantGenome
 from .vcf_table import VCFTable, VCFVariant
 from . import serialize
+from .df import to_parquet, from_parquet
 
 #########################################################################
 

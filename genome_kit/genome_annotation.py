@@ -349,8 +349,8 @@ class GeneTable(_cxx.GeneTable):
         return mock_result(Gene)
 
     @mock
-    def find_by_id(self, id):  # pragma: no cover
-        """Return all genes matching an ID string.
+    def find_by_id(self, id: str) -> list[Gene]:  # pragma: no cover
+        """Return a list of all genes matching an ID string (may be empty).
 
         If `index` is a string, all genes with matching ``id`` are returned (by linear search)::
 
@@ -360,23 +360,14 @@ class GeneTable(_cxx.GeneTable):
 
         Parameters
         ----------
-        id : :py:class:`str`
-            The ID string to search for.
-
-        Returns
-        -------
-        :py:class:`list` of :py:class:`~genome_kit.Gene`
-            All genes whose ID matches `id` (may be empty).
+        id : The ID string to search for.
         """
         mock_unreachable()
         return [Gene()]
 
     def first_by_name(self, name: str) -> Optional[Gene]:
         """
-        Returns
-        -------
-        :py:class:`~genome_kit.Gene`
-            The first gene with the specified name or None if none matched.
+        Return the first gene with the specified name or None if none matched.
         """
         return next((gene for gene in self if gene.name == name), None)
 

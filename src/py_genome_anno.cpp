@@ -225,6 +225,8 @@ GKPY_TEMPLATE_SUBTYPEOBJ_BEGIN(template <typename T>, GenomeAnnoTable<T>)
 	tp_clear = PyGenomeAnnoTable_Clear<T>;
 GKPY_TEMPLATE_SUBTYPEOBJ_END
 
+// for string-type keys, if the key matches multiple entries, the first one (in annotation data source file order) will
+// be returned. This is now guaranteed by the API.
 template <typename T> // T = PyGene, PyTran -- anything that when unpacked has an 'id' member.
 PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 {
@@ -243,6 +245,7 @@ PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 				for (const char* end = v.id; end != nullptr; end = strchr(end + 1, '.')) {
 					self->index_by_id.emplace(string(v.id, end), i);
 				}
+				// emplace ensures that the first match wins
 				self->index_by_id.emplace(v.id, i);  // full id
 			}
 		}

@@ -319,7 +319,7 @@ class GeneTable(_cxx.GeneTable):
     def __getitem__(self, index):  # pragma: no cover
         """Lookup a gene by index or ID string.
 
-        In the case of more than one match, an arbitrary matching gene is returned.
+        In the case of more than one match, the first matching gene (in source data order) is returned.
 
         If `index` is a string the gene with matching ``id`` is returned (by linear search)::
 
@@ -801,7 +801,7 @@ class TranscriptTable(_cxx.TranTable):
     def __getitem__(self, index):  # pragma: no cover
         """Lookup a transcript by index or ID string.
 
-        In the case of more than one match, an arbitrary matching transcript is returned.
+        In the case of more than one match, the first matching transcript (in source data order) is returned.
 
         If `index` is a string the transcript with matching ``id`` is returned (by linear search)::
 

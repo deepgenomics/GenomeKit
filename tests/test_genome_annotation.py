@@ -241,6 +241,13 @@ class TestCommon(unittest.TestCase):
         # no matches
         self.assertEqual(self.genome.genes.find_by_id("ENSG99999999999"), [])
 
+    def test_empty_string_key_raises(self):
+        # Looking up an empty string should raise KeyError, not silently return the first element
+        with self.assertRaises(KeyError):
+            self.genome.genes[""]
+        with self.assertRaises(KeyError):
+            self.genome.transcripts[""]
+
     def test_pythonic_indexing(self):
 
         # Check that genes table can be indexed by integer in the usual Python-esque way

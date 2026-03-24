@@ -10,6 +10,17 @@ from genome_kit import Interval, Transcript
 # ---------------------------------------------------------------------------
 
 class IndexDirection(enum.Enum):
+    """Controls how indices are assigned to the 5' and 3' ends of a coordinate space.
+    Changing this value will result in undefined behaviour for
+    :py:class:`DisjointIntervalSequence` objects created under a different convention.
+
+    ``TRANSCRIPT_FIVE_TO_THREE``
+        Index 0 is always at the coordinate transcript's 5' end, regardless of genomic strand.
+
+    ``POSITIVE_STRAND_LEFT_TO_RIGHT``
+        Index 0 is always at the leftmost genomic position relative to the positive strand.
+        On the negative strand, this means the 3' end is at index 0.
+    """
     TRANSCRIPT_FIVE_TO_THREE = "transcript_five_to_three"
     POSITIVE_STRAND_LEFT_TO_RIGHT = "positive_strand_left_to_right"
 
@@ -37,18 +48,43 @@ class _IntervalMetadata:
 # ---------------------------------------------------------------------------
 
 class DisjointIntervalSequence:
-    """A flattened coordinate system over a sequence of disjoint genomic Intervals."""
+    """A flattened coordinate system over a sequence of disjoint genomic Intervals.
+
+    A DIS represents two layers:
+
+    - A **coordinate space** defined by a sequence of non-overlapping genomic
+      :py:class:`~genome_kit.Interval` objects (e.g. the exons of a transcript),
+      which are flattened into a contiguous 0-based index space. Indices for the
+      coordinate space are assigned according to the current :py:class:`IndexDirection`
+      value.
+    - An **interval** within that coordinate space, defined by a 5' and 3' index.
+      The interval may lie on the same, or opposite, strand as the coordinate space.
+
+    Use :py:meth:`from_transcript` or :py:meth:`from_intervals` to construct
+    instances rather than calling the constructor directly.
+    """
 
     _index_direction: IndexDirection = IndexDirection.TRANSCRIPT_FIVE_TO_THREE
 
     @classmethod
     def set_index_direction(cls, direction: IndexDirection) -> None:
-        """Set the index direction convention for all DIS instances."""
+        """Set the index direction convention for all DIS instances.
+
+        Parameters
+        ----------
+        direction : :py:class:`IndexDirection`
+            The index direction convention to use.
+        """
         cls._index_direction = direction
 
     @classmethod
     def get_index_direction(cls) -> IndexDirection:
-        """Get the current index direction convention."""
+        """Get the current index direction convention.
+
+        Returns
+        -------
+        :py:class:`IndexDirection`
+        """
         return cls._index_direction
 
     def __init__(
@@ -61,28 +97,37 @@ class DisjointIntervalSequence:
         interval_end5_index: int | None = None,
         interval_end3_index: int | None = None,
     ):
-        """
-        Low-level constructor.
+        """Low-level constructor.
 
-        Parameters are not part of the stable public API. Use
-        `from_transcript()` or `from_exons()` instead.
+        Prefer :py:meth:`from_transcript` or :py:meth:`from_intervals` for
+        public construction.
 
-        Args:
-            coordinate_intervals: Non-empty sequence of non-overlapping Intervals
-                on the same chromosome, strand, and reference genome.
-            coord_id: Optional identifier for the coordinate space.
-            interval_id: Optional identifier for the interval.
-            on_coordinate_strand: Whether the interval is on the same strand as
-                the coordinate intervals.
-            interval_end5_index: 5' index of the interval in the coordinate space.
-                Defaults to the full coordinate span.
-            interval_end3_index: 3' index of the interval in the coordinate space.
-                Defaults to the full coordinate span.
+        Parameters
+        ----------
+        coordinate_intervals : Sequence[:py:class:`~genome_kit.Interval`]
+            Non-empty sequence of non-overlapping Intervals on the same
+            chromosome, strand, and reference genome.
+        coord_id : :py:class:`str` or None
+            Optional identifier for the coordinate space.
+        interval_id : :py:class:`str` or None
+            Optional identifier for the interval.
+        on_coordinate_strand : :py:class:`bool`
+            Whether the interval is on the same strand as the coordinate
+            intervals.
+        interval_end5_index : :py:class:`int` or None
+            5' index of the interval in the coordinate space. Defaults to
+            the full coordinate span.
+        interval_end3_index : :py:class:`int` or None
+            3' index of the interval in the coordinate space. Defaults to
+            the full coordinate span.
 
-        Raises:
-            ValueError: If intervals are empty, inconsistent, or overlapping,
-                or if index values are out of range.
-            TypeError: If any element is not an Interval.
+        Raises
+        ------
+        ValueError
+            If intervals are empty, inconsistent, overlapping, or if end5
+            is downstream of end3.
+        TypeError
+            If any element is not an Interval.
         """
         if len(coordinate_intervals) == 0:
             raise ValueError("coordinate_intervals must be non-empty")
@@ -174,15 +219,24 @@ class DisjointIntervalSequence:
         coord_id: str | None = None,
         interval_id: str | None = None,
     ) -> "DisjointIntervalSequence":
-        """Construct a DIS from a sequence of Intervals (or Exon/Cds/Utr objects).
+        """Construct a DIS from a sequence of Intervals
+        (or :py:class:`~genome_kit.Exon`/:py:class:`~genome_kit.Cds`/:py:class:`~genome_kit.Utr` objects).
 
         If elements have an ``.interval`` attribute (e.g. Exon, Cds, Utr),
         the plain Interval is extracted automatically.
 
-        Args:
-            intervals: Sequence of Interval or annotation objects with ``.interval``.
-            coord_id: Optional identifier for the coordinate space.
-            interval_id: Optional identifier for the interval.
+        Parameters
+        ----------
+        intervals : Sequence[:py:class:`~genome_kit.Interval`]
+            Sequence of Interval or annotation objects with ``.interval``.
+        coord_id : :py:class:`str` or None
+            Optional identifier for the coordinate space.
+        interval_id : :py:class:`str` or None
+            Optional identifier for the interval.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
         """
         # Extract .interval if items are Exon/Cds/Utr
         coord_intervals = []
@@ -204,14 +258,26 @@ class DisjointIntervalSequence:
     ) -> "DisjointIntervalSequence":
         """Construct a DIS from a transcript's exons, CDS, or UTR regions.
 
-        Args:
-            transcript: The source Transcript object.
-            region: Which region to extract — "exons", "cds", "utr5", or "utr3".
-            coord_id: Optional coordinate ID. Defaults to ``transcript.id``.
-            interval_id: Optional interval ID. Defaults to ``transcript.id``.
+        Parameters
+        ----------
+        transcript : :py:class:`~genome_kit.Transcript`
+            The source Transcript object.
+        region : :py:class:`str`
+            Which region to extract — ``"exons"``, ``"cds"``,
+            ``"utr5"``, or ``"utr3"``.
+        coord_id : :py:class:`str` or None
+            Optional coordinate ID. Defaults to ``transcript.id``.
+        interval_id : :py:class:`str` or None
+            Optional interval ID. Defaults to ``transcript.id``.
 
-        Raises:
-            ValueError: If region is not one of the allowed values.
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+
+        Raises
+        ------
+        ValueError
+            If region is not one of the allowed values.
         """
         match region:
             case "exons":
@@ -367,7 +433,7 @@ class DisjointIntervalSequence:
 
     @property
     def length(self) -> int:
-        """Length of the interval in the coordinate space."""
+        """Length of the interval on the coordinate space."""
         return abs(self._interval_end3_index - self._interval_end5_index)
 
     # -------------------------------------------------------------------
@@ -508,25 +574,54 @@ class DisjointIntervalSequence:
     # -------------------------------------------------------------------
 
     def is_positive_strand(self) -> bool:
-        """True if the interval is on the positive strand."""
+        """If the interval is on the positive strand.
+
+        Returns
+        -------
+        :py:class:`bool`
+        """
         if self.transcript_strand == "+":
             return True
         return False
 
     def as_positive_strand(self) -> "DisjointIntervalSequence":
-        """Return a DIS with the interval on the positive strand. Returns self if already positive."""
+        """Return a DIS with the interval on the positive strand.
+
+        Returns ``self`` if already on the positive strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
         if self.is_positive_strand():
             return self
         return self.as_opposite_strand()
 
     def as_negative_strand(self) -> "DisjointIntervalSequence":
-        """Return a DIS with the interval on the negative strand. Returns self if already negative."""
+        """Return a DIS with the interval on the negative strand.
+
+        Returns ``self`` if already on the negative strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
         if not self.is_positive_strand():
             return self
         return self.as_opposite_strand()
 
     def as_opposite_strand(self) -> "DisjointIntervalSequence":
-        """Return a new DIS with the interval on the opposite strand."""
+        """Return a new DIS with the interval on the opposite strand.
+
+        The coordinate intervals are unchanged. The interval's
+        ``on_coordinate_strand`` is flipped and end5/end3 indices are swapped.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
         return DisjointIntervalSequence(
             self._coordinate_intervals,
             coord_id=self._coord_metadata.id,
@@ -541,8 +636,22 @@ class DisjointIntervalSequence:
     # -------------------------------------------------------------------
 
     def genomic_span(self) -> Interval:
-        """Smallest single genomic Interval representing the DIS, that spans the disjoint genomic coordinate intervals."""
-        pass
+        """Smallest single Interval spanning all coordinate intervals.
+
+        Returns
+        -------
+        :py:class:`~genome_kit.Interval`
+            An interval from the minimum ``start`` to the maximum ``end``
+            across all coordinate intervals.
+        """
+        ivs = self._coordinate_intervals
+        return Interval(
+            ivs[0].chromosome,
+            ivs[0].strand,
+            min(iv.start for iv in ivs),
+            max(iv.end for iv in ivs),
+            ivs[0].reference_genome,
+        )
 
     def __len__(self) -> int:
         """Return the length of the interval."""

@@ -225,6 +225,8 @@ GKPY_TEMPLATE_SUBTYPEOBJ_BEGIN(template <typename T>, GenomeAnnoTable<T>)
 	tp_clear = PyGenomeAnnoTable_Clear<T>;
 GKPY_TEMPLATE_SUBTYPEOBJ_END
 
+// for string-type keys, if the key matches multiple entries, the first one (in annotation data source file order) will
+// be returned. This is now guaranteed by the API.
 template <typename T> // T = PyGene, PyTran -- anything that when unpacked has an 'id' member.
 PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 {
@@ -243,6 +245,7 @@ PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 				for (const char* end = v.id; end != nullptr; end = strchr(end + 1, '.')) {
 					self->index_by_id.emplace(string(v.id, end), i);
 				}
+				// emplace ensures that the first match wins
 				self->index_by_id.emplace(v.id, i);  // full id
 			}
 		}
@@ -254,6 +257,40 @@ PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 	}
 	PyErr_SetObject(PyExc_KeyError, key);
 	return nullptr;
+}
+
+template <typename T> // T = PyGene, PyTran -- anything that when unpacked has an 'id' member.
+PyObject* PyGenomeAnnoTable_FindAllByID(PyObject* selfo, PyObject* args)
+{
+	PyObject* key = nullptr;
+	if (!PyArg_ParseTuple(args, "O", &key))
+		return nullptr;
+	if (!PyString_Check(key)) {
+		PyErr_SetString(PyExc_TypeError, "id must be a string");
+		return nullptr;
+	}
+	auto*       self    = (typename T::Table*)selfo;
+	auto&       table   = *self->table;
+	const char* id_str  = PyString_AS_STRING(key);
+	size_t      key_len = strlen(id_str);
+
+	PyObject* result = PyList_New(0);
+	if (!result)
+		return nullptr;
+	for (index_t i = 0; i < (index_t)table.size(); ++i) {
+		typename T::unpacked_value v{table[i], table};
+		const char* vid = v.id;
+		if (strncmp(vid, id_str, key_len) == 0 && (vid[key_len] == '.' || vid[key_len] == '\0')) {
+			PyObject* item = PyTable_GetItem<T>(selfo, (Py_ssize_t)i);
+			if (!item || PyList_Append(result, item) < 0) {
+				Py_XDECREF(item);
+				Py_DECREF(result);
+				return nullptr;
+			}
+			Py_DECREF(item);
+		}
+	}
+	return result;
 }
 
 ////////////////////////////////////////////////////////////
@@ -312,8 +349,14 @@ GKPY_VALUE_SUBTYPEOBJ_BEGIN(Gene, as_ptr) // as_ptr because we always point to a
 	tp_methods = PyGene_Methods;
 GKPY_VALUE_SUBTYPEOBJ_END
 
+static PyMethodDef PyGeneTable_Methods[] = {
+	{"find_by_id", (PyCFunction)PyGenomeAnnoTable_FindAllByID<PyGene>, METH_VARARGS, nullptr},
+	{NULL}
+};
+
 GKPY_GENOME_ANNO_TABLE_BEGIN(Gene, genes)
 	mp_subscript = PyGenomeAnnoTable_GetSubscript_ByID<PyGene>;
+	tp_methods   = PyGeneTable_Methods;
 GKPY_GENOME_ANNO_TABLE_END
 
 ////////////////////////////////////////////////////////////
@@ -387,8 +430,14 @@ GKPY_VALUE_SUBTYPEOBJ_BEGIN(Tran, as_ptr) // as_ptr because we always point to a
 	tp_methods = PyTran_Methods;
 GKPY_VALUE_SUBTYPEOBJ_END
 
+static PyMethodDef PyTranTable_Methods[] = {
+	{"find_by_id", (PyCFunction)PyGenomeAnnoTable_FindAllByID<PyTran>, METH_VARARGS, nullptr},
+	{NULL}
+};
+
 GKPY_GENOME_ANNO_TABLE_BEGIN(Tran, trans)
 	mp_subscript = PyGenomeAnnoTable_GetSubscript_ByID<PyTran>;
+	tp_methods   = PyTranTable_Methods;
 GKPY_GENOME_ANNO_TABLE_END
 
 ////////////////////////////////////////////////////////////

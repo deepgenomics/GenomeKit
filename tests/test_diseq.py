@@ -1,6 +1,6 @@
 import unittest
 from genome_kit import Interval, Genome
-from genome_kit.diseq import DisjointIntervalSequence, _DisjointIntervalMetadata
+from genome_kit.diseq import DisjointIntervalSequence, _DisjointCoordinateMetadata
 
 
 class TestLiftFromTranscript(unittest.TestCase):
@@ -15,8 +15,8 @@ class TestLiftFromTranscript(unittest.TestCase):
         ]
         self.dis_plus = DisjointIntervalSequence(
             _intervals=exons_plus,
-            _metadata=_DisjointIntervalMetadata(
-                transcript_id="test_transcript_plus",
+            _coord_metadata=_DisjointCoordinateMetadata(
+                id="test_transcript_plus",
                 reference_genome="hg19",
                 chromosome="chr1",
                 transcript_strand="+",
@@ -29,8 +29,8 @@ class TestLiftFromTranscript(unittest.TestCase):
         ]
         self.dis_minus = DisjointIntervalSequence(
             _intervals=exons_minus,
-            _metadata=_DisjointIntervalMetadata(
-                transcript_id="test_transcript_minus",
+            _coord_metadata=_DisjointCoordinateMetadata(
+                id="test_transcript_minus",
                 reference_genome="hg19",
                 chromosome="chr1",
                 transcript_strand="-",
@@ -173,7 +173,7 @@ class TestLiftFromTranscript(unittest.TestCase):
 
         result = self.dis_plus.lift_from_transcript(interval, clip=False)
 
-        self.assertEqual(result.transcript_id, "test_transcript_plus")
+        self.assertEqual(result.id, "test_transcript_plus")
         self.assertEqual(result.reference_genome, "hg19")
         self.assertEqual(result.chromosome, "chr1")
         self.assertEqual(result.transcript_strand, "+")
@@ -240,14 +240,14 @@ class TestLowerToTranscript(unittest.TestCase):
             )
         ]
 
-        metadata_positive = _DisjointIntervalMetadata(
-            transcript_id="test_transcript",
+        metadata_positive = _DisjointCoordinateMetadata(
+            id="test_transcript",
             reference_genome="hg38",
             chromosome="chr1",
             transcript_strand="+",
         )
 
-        self.dis_positive = DisjointIntervalSequence(self.exons_positive, _metadata=metadata_positive)
+        self.dis_positive = DisjointIntervalSequence(self.exons_positive, _coord_metadata=metadata_positive)
 
         self.exons_negative = [
             Interval(
@@ -266,14 +266,14 @@ class TestLowerToTranscript(unittest.TestCase):
             )
         ]
 
-        metadata_negative = _DisjointIntervalMetadata(
-            transcript_id="test_transcript_neg",
+        metadata_negative = _DisjointCoordinateMetadata(
+            id="test_transcript_neg",
             reference_genome="hg38",
             chromosome="chr2",
             transcript_strand="-",
         )
 
-        self.dis_negative = DisjointIntervalSequence(self.exons_negative, _metadata=metadata_negative)
+        self.dis_negative = DisjointIntervalSequence(self.exons_negative, _coord_metadata=metadata_negative)
 
     def test_invalid_input_parameters(self):
         # Negative start
@@ -494,14 +494,14 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
         self.interval_chr2 = Interval('chr2', '+', 10, 20, 'hg19')
 
         # Create DisjointIntervalSequences
-        self.dis1 = DisjointIntervalSequence([self.interval1, self.interval3], _metadata=_DisjointIntervalMetadata(
-            transcript_id="transcript1",
+        self.dis1 = DisjointIntervalSequence([self.interval1, self.interval3], _coord_metadata=_DisjointCoordinateMetadata(
+            id="transcript1",
             reference_genome="hg19",
             chromosome="chr1",
             transcript_strand="+",
         ))
-        self.dis2 = DisjointIntervalSequence([self.interval2, self.interval4], _metadata=_DisjointIntervalMetadata(
-            transcript_id="transcript2",
+        self.dis2 = DisjointIntervalSequence([self.interval2, self.interval4], _coord_metadata=_DisjointCoordinateMetadata(
+            id="transcript2",
             reference_genome="hg19",
             chromosome="chr1",
             transcript_strand="+",
@@ -518,8 +518,8 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
         self.assertEqual(result.intervals[1], Interval('chr1', '+', 35, 40, 'hg19'))
 
     def test_intersect_with_disjoint_interval_sequence_no_overlap(self):
-        dis_no_overlap = DisjointIntervalSequence([self.interval_far], _metadata=_DisjointIntervalMetadata(
-            transcript_id="transcript1",
+        dis_no_overlap = DisjointIntervalSequence([self.interval_far], _coord_metadata=_DisjointCoordinateMetadata(
+            id="transcript1",
             reference_genome="hg19",
             chromosome="chr1",
             transcript_strand="+",
@@ -531,7 +531,7 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
     def test_intersect_with_disjoint_interval_sequence_partial_overlap(self):
         # Create sequence that overlaps only one interval in dis1
         partial_dis = DisjointIntervalSequence([Interval('chr1', '+', 5, 15, 'hg19')],
-                                               _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
+                                               _coord_metadata=_DisjointCoordinateMetadata(id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
         result = self.dis1.intersect(partial_dis)
 
         self.assertIsNotNone(result)
@@ -539,8 +539,8 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
         self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 15, 'hg19'))
 
     def test_intersect_empty_disjoint_sequence_with_interval(self):
-        empty_dis = DisjointIntervalSequence([], _metadata=_DisjointIntervalMetadata(
-            transcript_id="transcript1",
+        empty_dis = DisjointIntervalSequence([], _coord_metadata=_DisjointCoordinateMetadata(
+            id="transcript1",
             reference_genome="hg19",
             chromosome="chr1",
             transcript_strand="+",
@@ -559,7 +559,7 @@ class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
 
     def test_intersect_empty_result_returns_none(self):
         non_overlapping_dis = DisjointIntervalSequence([Interval('chr1', '+', 50, 60, 'hg19')],
-                                                       _metadata=_DisjointIntervalMetadata(transcript_id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
+                                                       _coord_metadata=_DisjointCoordinateMetadata(id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
         result = self.dis1.intersect(non_overlapping_dis)
 
         self.assertIsNone(result)
@@ -574,9 +574,9 @@ class TestDisjointIntervalSequenceFromInterval(unittest.TestCase):
         self.other_transcript_id = genome.transcripts[2001].transcript_id
 
     def test_from_interval(self):
-        dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals, transcript_id=self.transcript_id)
+        dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals, id=self.transcript_id)
         self.assertEqual(dis.coordinate_intervals, self.disjoint_intervals)
-        self.assertEqual(dis.transcript_id, self.transcript_id)
+        self.assertEqual(dis.id, self.transcript_id)
         self.assertEqual(dis.reference_genome, self.disjoint_intervals[0].reference_genome)
         self.assertEqual(dis.chromosome, self.disjoint_intervals[0].chromosome)
         self.assertEqual(dis.transcript_strand, self.disjoint_intervals[0].strand)
@@ -593,17 +593,17 @@ class TestDisjointIntervalSequenceFromInterval(unittest.TestCase):
     def test_no_transcript_id(self):
         dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals)
         self.assertEqual(dis.coordinate_intervals, self.disjoint_intervals)
-        self.assertEqual(dis.transcript_id, self.transcript_id)
+        self.assertEqual(dis.id, self.transcript_id)
 
     def test_mismatched_transcript_id(self):
         with self.assertRaises(ValueError):
             DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals, transcript_id=self.other_transcript_id)
+                self.disjoint_intervals, id=self.other_transcript_id)
 
     def test_nonexistent_transcript_id(self):
         with self.assertRaises(ValueError):
             DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals, transcript_id="invalid_transcript_id")
+                self.disjoint_intervals, id="invalid_transcript_id")
 
     def test_set_disjoint_interval_boundaries(self):
         dis = DisjointIntervalSequence.from_interval(
@@ -737,7 +737,7 @@ class TestDisjointIntervalSequenceFromTranscript(unittest.TestCase):
     def test_from_transcript(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript)
         self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
-        self.assertEqual(dis.transcript_id, self.transcript_id)
+        self.assertEqual(dis.id, self.transcript_id)
         self.assertEqual(dis.reference_genome, self.disjoint_exons[0].reference_genome)
         self.assertEqual(dis.chromosome, self.disjoint_exons[0].chromosome)
         self.assertEqual(dis.transcript_strand, self.disjoint_exons[0].strand)

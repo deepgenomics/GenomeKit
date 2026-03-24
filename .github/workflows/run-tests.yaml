@@ -115,7 +115,7 @@ jobs:
           extra_deps=(python=${{ matrix.python-version }})   
           # run command with optional extra deps
           if [ "$GK_EXTRAS" = "df" ]; then
-            extra_deps+=("polars=1.36.1")
+            extra_deps+=("polars=1.34.0")
           fi
           conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --extra-deps "${extra_deps[@]}"
           conda clean -it

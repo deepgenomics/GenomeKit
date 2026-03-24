@@ -112,7 +112,7 @@ jobs:
               exit 1 
           fi
           
-          extra_deps=(python = ${{ matrix.python-version }})   
+          extra_deps=(python=${{ matrix.python-version }})   
           # run command with optional extra deps
           if [ "$GK_EXTRAS" = "df" ]; then
             extra_deps+=("polars=1.36.1")

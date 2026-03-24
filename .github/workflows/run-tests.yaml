@@ -17,15 +17,20 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: [["linux-64", "ubuntu-latest"], ["osx-64", "macos-latest"]]
-    runs-on: ${{ matrix.platform[1] }}
+        platform: ["linux-64", "osx-64"]
+        include:
+          - platform: "linux-64"
+            runs-on: "ubuntu-latest"
+          - platform: "osx-64"
+            runs-on: "macos-latest"
+    runs-on: ${{ matrix.runs-on }}
     if: "!startsWith(github.head_ref, 'release-please')"
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/build-gk
         with:
-          platform: ${{ matrix.platform[0] }}
+          platform: ${{ matrix.platform }}
 
   test:
     needs: build
@@ -34,13 +39,19 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
         platform: ["linux-64", "osx-64"]
         extras: ["none", "df"]
-        include:
-          - {"python-version": "3.9", "pyver-short": "39"}
-          - {"python-version": "3.10", "pyver-short": "310"}
-          - {"python-version": "3.11", "pyver-short": "311"}
-          - {"python-version": "3.12", "pyver-short": "312"}
-          - {"platform": "osx-64", "runs-on": "macos-latest"}
-          - {"platform": "linux-64", "runs-on": "ubuntu-latest"}
+        include: # specify additional fields for all configs
+          - python-version: "3.9"
+            pyver-short: "39"
+          - python-version: "3.10"
+            pyver-short: "310"
+          - python-version: "3.11"
+            pyver-short: "311"
+          - python-version: "3.12"
+            pyver-short: "312"
+          - platform: "osx-64"
+            runs-on: "macos-latest"
+          - platform: "linux-64"
+            runs-on: "ubuntu-latest"
 
     runs-on: ${{ matrix.runs-on }}
     steps:
@@ -103,7 +114,7 @@ jobs:
           
           build_cmd=(conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --python "${{ matrix.python-version }}")
           if [ "$GK_EXTRAS" = "df" ]; then
-            build_cmd+=("--extra-deps" "polars=1.39.2")
+            build_cmd+=("--extra-deps" "polars=1.36.1")
           fi
           # run command with optional extra deps
           "${build_cmd[@]}"

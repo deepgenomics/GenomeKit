@@ -112,11 +112,11 @@ jobs:
               exit 1 
           fi
           
-          build_cmd=(conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --python "${{ matrix.python-version }}")
-          if [ "$GK_EXTRAS" = "df" ]; then
-            build_cmd+=("--extra-deps" "polars=1.36.1")
-          fi
+          extra_deps=(python = ${{ matrix.python-version }})   
           # run command with optional extra deps
-          "${build_cmd[@]}"
+          if [ "$GK_EXTRAS" = "df" ]; then
+            extra_deps+=("polars=1.36.1")
+          fi
+          conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --extra-deps "${extra_deps[@]}"
           conda clean -it
           set +x

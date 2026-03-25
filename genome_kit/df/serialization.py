@@ -146,6 +146,10 @@ def _init_gk_annotations(
 
     # warms annotations for all unique genomes in the file
     for genome_str in genomes:
+        genome = gk.Genome(genome_str)
+        if genome.config == genome.reference_genome:
+            # identifies reference genomes, instead of annotation genomes
+            continue
         annotations.append(gk.Genome(genome_str).genes)
 
     return annotations

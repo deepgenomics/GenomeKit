@@ -3,12 +3,14 @@ import importlib.util
 from genome_kit import Genome, Interval
 from genome_kit.df import from_parquet, to_parquet
 from . import MiniGenome
-import polars as pl
+
 import tempfile
 import unittest
 from pathlib import Path
 
-
+HAS_POLARS = importlib.util.find_spec("polars") is not None
+if HAS_POLARS:
+    import polars as pl
 
 class TestGkdfRoundTrip(unittest.TestCase):
     @classmethod
@@ -32,7 +34,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
             self.assertEqual(re_df.item(), df.item())
 
-
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_interval(self):
         interval = Interval("chr5", "+", 2000, 3000, "hg19")
         df = pl.DataFrame({"interval": [interval]})
@@ -42,7 +44,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
         re_df = from_parquet(path, lazy=False)
         self.assertEqual(re_df.item(), df.item())
 
-
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_transcript(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -56,6 +58,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_gene(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -68,6 +71,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_exon(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -81,6 +85,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_intron(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -94,6 +99,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_cds(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -107,6 +113,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr3(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -120,6 +127,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr5(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:

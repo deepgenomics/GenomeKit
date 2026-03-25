@@ -57,7 +57,7 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
             pl.Field("strand", pl.Utf8),
             pl.Field("start", pl.Int32),
             pl.Field("end", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # reference or annotation genome
+            pl.Field("genome_str", pl.Utf8),  # reference genome
         ]
     )
 
@@ -66,6 +66,7 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
             pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             # index of transcript within annotation genome transcript table
+            # Int32 matches index type in C++ backend (see src/table.g:22)
             pl.Field("transcript_table_index", pl.Int32),
             pl.Field("genome_str", pl.Utf8),  # annotation genome
         ]

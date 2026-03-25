@@ -1,16 +1,17 @@
 import importlib.util
-
-from genome_kit import Genome, Interval
-from genome_kit.df import from_parquet, to_parquet
-from . import MiniGenome
-
 import tempfile
 import unittest
 from pathlib import Path
 
+from genome_kit import Genome, Interval
+from genome_kit.df import from_parquet, to_parquet
+
+from . import MiniGenome
+
 HAS_POLARS = importlib.util.find_spec("polars") is not None
 if HAS_POLARS:
     import polars as pl
+
 
 class TestGkdfRoundTrip(unittest.TestCase):
     @classmethod
@@ -57,7 +58,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
-
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_gene(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
@@ -84,7 +84,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
-
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_intron(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
@@ -97,7 +96,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             to_parquet(df, path)
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
-
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_cds(self):
@@ -112,7 +110,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
-
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr3(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
@@ -125,7 +122,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             to_parquet(df, path)
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
-
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr5(self):
@@ -140,8 +136,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
-
-    
 
 if __name__ == "__main__":
     unittest.main()

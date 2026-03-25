@@ -96,7 +96,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     # intervals related to reference genome only
                     "genome_str": interval.reference_genome,
                 }
-                if interval is not None else None
+                if interval is not None
+                else None
                 for interval in s
             ],
             dtype=gkdf_structs[GkDfType.INTERVAL],
@@ -114,7 +115,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     end=struct["end"],
                     reference_genome=struct["genome_str"],
                 )
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -133,7 +135,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     ),
                     "genome_str": transcript.annotation_genome.config,
                 }
-                if transcript is not None else None
+                if transcript is not None
+                else None
                 for transcript in s
             ],
             dtype=gkdf_structs[GkDfType.TRANSCRIPT],
@@ -147,7 +150,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                 gk.Genome(struct["genome_str"]).transcripts[
                     struct["transcript_table_index"]
                 ]
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -164,7 +168,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     "gene_table_index": gene.annotation_genome.genes.index_of(gene),
                     "genome_str": gene.annotation_genome.config,
                 }
-                if gene is not None else None
+                if gene is not None
+                else None
                 for gene in s
             ],
             dtype=gkdf_structs[GkDfType.GENE],
@@ -176,7 +181,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             name=s.name,
             values=[
                 gk.Genome(struct["genome_str"]).genes[struct["gene_table_index"]]
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -193,7 +199,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     "exon_table_index": exon.annotation_genome.exons.index_of(exon),
                     "genome_str": exon.annotation_genome.config,
                 }
-                if exon is not None else None
+                if exon is not None
+                else None
                 for exon in s
             ],
             dtype=gkdf_structs[GkDfType.EXON],
@@ -205,7 +212,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             name=s.name,
             values=[
                 gk.Genome(struct["genome_str"]).exons[struct["exon_table_index"]]
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -224,7 +232,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     ),
                     "genome_str": intron.annotation_genome.config,
                 }
-                if intron is not None else None
+                if intron is not None
+                else None
                 for intron in s
             ],
             dtype=gkdf_structs[GkDfType.INTRON],
@@ -236,7 +245,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             name=s.name,
             values=[
                 gk.Genome(struct["genome_str"]).introns[struct["intron_table_index"]]
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -253,7 +263,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     "cds_table_index": cds.annotation_genome.cdss.index_of(cds),
                     "genome_str": cds.annotation_genome.config,
                 }
-                if cds is not None else None
+                if cds is not None
+                else None
                 for cds in s
             ],
             dtype=gkdf_structs[GkDfType.CDS],
@@ -265,7 +276,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             name=s.name,
             values=[
                 gk.Genome(struct["genome_str"]).cdss[struct["cds_table_index"]]
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
             dtype=pl.Object,
@@ -311,7 +323,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                         struct["utr_table_index"]
                     ]
                 )
-                if struct is not None else None
+                if struct is not None
+                else None
                 for struct in s
             ],
         )

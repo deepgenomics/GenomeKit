@@ -18,7 +18,6 @@ except ImportError:
             return str(self.value)
 
 
-
 class GkDfType(StrEnum):
     GENOME = "genome"
     INTERVAL = "interval"

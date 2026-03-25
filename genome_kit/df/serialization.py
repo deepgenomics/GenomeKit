@@ -97,7 +97,7 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
 
     registry = get_registry()
 
-    df = df.with_columns( 
+    df = df.with_columns(
         pl.col(col)
         .map_batches(
             _map_batches_safe(registry[CURRENT_VERSION][target_cols[col]].serializer),
@@ -167,7 +167,9 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
         raise ValueError(
             "Invalid or missing gkdf_version in Parquet metadata, unable to deserialize GenomeKit objects. "
         )
-    assert metadata.get("target_cols") is not None, "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
+    assert metadata.get("target_cols") is not None, (
+        "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
+    )
 
 
 def _deserialize_gk_cols(

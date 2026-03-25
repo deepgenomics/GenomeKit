@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Callable
 from inspect import signature
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 if TYPE_CHECKING:
     import polars as pl
@@ -57,7 +58,7 @@ def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
     # materialize the first row to check data types, need the exact type not pl.Object
     first_row = lf.head(1).collect()[0]
 
-    # TODO: support list of GenomeKit objects
+    # TODO: support list of GenomeKit objects, all of list assumed same type as first
     for col in lf_cols:
         # item from first row of the column
         col_type = GK_TO_STRUCT.get(type(first_row[col][0]), None)
@@ -72,7 +73,7 @@ def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
 
 
 # TODO: add union of pd.DataFrame
-def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
+def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
     """Serialize a DataFrame with GenomeKit objects to a Parquet file.
 
     Args:
@@ -81,6 +82,7 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str) -> None:
     """
     pl = require_polars()
 
+    path = Path(path)
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
 
@@ -187,7 +189,7 @@ def _deserialize_gk_cols(
     )
 
 
-def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
+def from_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
 
     Args:
@@ -199,6 +201,7 @@ def from_parquet(path: str, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     """
     pl = require_polars()
 
+    path = Path(path)
     metadata = pl.read_parquet_metadata(path)
     _validate_gkdf_metadata(metadata)
     target_cols = json.loads(metadata.get("target_cols"))

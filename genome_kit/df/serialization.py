@@ -163,6 +163,7 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
         raise ValueError(
             "Invalid or missing gkdf_version in Parquet metadata, unable to deserialize GenomeKit objects. "
         )
+    assert metadata.get("target_cols") is not None, "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
 
 
 def _deserialize_gk_cols(

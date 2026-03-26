@@ -17,12 +17,14 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: ["linux-64", "osx-64"]
+        platform: ["linux-64", "osx-arm64", "osx-64"]
         include:
           - platform: "linux-64"
             runs-on: "ubuntu-latest"
-          - platform: "osx-64"
+          - platform: "osx-arm64"
             runs-on: "macos-latest"
+          - platform: "osx-64"
+            runs-on: "macos-26-intel"
     runs-on: ${{ matrix.runs-on }}
     if: "!startsWith(github.head_ref, 'release-please')"
     steps:
@@ -37,7 +39,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        platform: ["linux-64", "osx-64"]
+        platform: ["linux-64", "osx-arm64", "osx-64"]
         extras: ["none", "df"]
         include: # specify additional fields for all configs
           - python-version: "3.9"
@@ -48,8 +50,10 @@ jobs:
             pyver-short: "311"
           - python-version: "3.12"
             pyver-short: "312"
-          - platform: "osx-64"
+          - platform: "osx-arm64"
             runs-on: "macos-latest"
+          - platform: "osx-64"
+            runs-on: "macos-26-intel"
           - platform: "linux-64"
             runs-on: "ubuntu-latest"
 

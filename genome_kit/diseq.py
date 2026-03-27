@@ -2,12 +2,9 @@ import enum
 from dataclasses import dataclass
 from typing import Sequence, Literal
 
-from genome_kit import Interval, Transcript
+from .interval import Interval
+from .genome_annotation import Transcript
 
-
-# ---------------------------------------------------------------------------
-# Index direction toggle
-# ---------------------------------------------------------------------------
 
 class IndexDirection(enum.Enum):
     """Controls how indices are assigned to the 5' and 3' ends of a coordinate space.
@@ -21,13 +18,10 @@ class IndexDirection(enum.Enum):
         Index 0 is always at the leftmost genomic position relative to the positive strand.
         On the negative strand, this means the 3' end is at index 0.
     """
+
     TRANSCRIPT_FIVE_TO_THREE = "transcript_five_to_three"
     POSITIVE_STRAND_LEFT_TO_RIGHT = "positive_strand_left_to_right"
 
-
-# ---------------------------------------------------------------------------
-# Metadata dataclasses
-# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class _CoordinateMetadata:
@@ -42,10 +36,6 @@ class _IntervalMetadata:
     id: str | None
     on_coordinate_strand: bool
 
-
-# ---------------------------------------------------------------------------
-# DisjointIntervalSequence
-# ---------------------------------------------------------------------------
 
 class DisjointIntervalSequence:
     """A flattened coordinate system over a sequence of disjoint genomic Intervals.
@@ -94,8 +84,8 @@ class DisjointIntervalSequence:
         coord_id: str | None = None,
         interval_id: str | None = None,
         on_coordinate_strand: bool = True,
-        interval_end5_index: int | None = None,
-        interval_end3_index: int | None = None,
+        start: int | None = None,
+        end: int | None = None,
     ):
         """Low-level constructor.
 
@@ -114,18 +104,17 @@ class DisjointIntervalSequence:
         on_coordinate_strand : :py:class:`bool`
             Whether the interval is on the same strand as the coordinate
             intervals.
-        interval_end5_index : :py:class:`int` or None
-            5' index of the interval in the coordinate space. Defaults to
-            the full coordinate span.
-        interval_end3_index : :py:class:`int` or None
-            3' index of the interval in the coordinate space. Defaults to
-            the full coordinate span.
+        start : :py:class:`int` or None
+            start index of the interval in the coordinate space. Defaults to 0
+        end : :py:class:`int` or None
+            end index of the interval in the coordinate space. Defaults to the length
+            of the coordinate space.
 
         Raises
         ------
         ValueError
-            If intervals are empty, inconsistent, overlapping, or if end5
-            is downstream of end3.
+            If intervals are empty, inconsistent, overlapping, or if start
+            is greater than end.
         TypeError
             If any element is not an Interval.
         """
@@ -177,8 +166,6 @@ class DisjointIntervalSequence:
 
         self._coordinate_intervals: tuple[Interval, ...] = tuple(sorted_intervals)
 
-        self._coordinate_length: int = sum(len(iv) for iv in sorted_intervals)
-
         self._coord_metadata = _CoordinateMetadata(
             id=coord_id,
             reference_genome=iv0.reference_genome,
@@ -190,26 +177,20 @@ class DisjointIntervalSequence:
             on_coordinate_strand=on_coordinate_strand,
         )
 
-        # Default interval end5/end3 to span the full coordinate
-        if interval_end5_index is None:
-            interval_end5_index = self.coordinate_end5_index if on_coordinate_strand else self.coordinate_end3_index
-        if interval_end3_index is None:
-            interval_end3_index = self.coordinate_end3_index if on_coordinate_strand else self.coordinate_end5_index
+        # Default interval start/end to span the full coordinate
+        if start is None:
+            start = 0
+        if end is None:
+            end = self.coordinate_length
 
-        # Validate that end5 is upstream of or equal to end3
-        up_step = self._upstream_index_step(on_coordinate_strand)
-        if (interval_end5_index - interval_end3_index) * up_step < 0:
+        # Validate that start is less than or equal to end
+        if start > end:
             raise ValueError(
-                f"interval_end5_index={interval_end5_index} must be upstream of or equal to "
-                f"interval_end3_index={interval_end3_index} (upstream_step={up_step})"
+                f"start index {start} cannot be greater than end index {end}"
             )
 
-        self._interval_end5_index: int = interval_end5_index
-        self._interval_end3_index: int = interval_end3_index
-
-    # -------------------------------------------------------------------
-    # Public constructors
-    # -------------------------------------------------------------------
+        self._start: int = start
+        self._end: int = end
 
     @classmethod
     def from_intervals(
@@ -298,10 +279,6 @@ class DisjointIntervalSequence:
 
         return cls(coord_intervals, coord_id=coord_id, interval_id=interval_id)
 
-    # -------------------------------------------------------------------
-    # Coordinate metadata properties
-    # -------------------------------------------------------------------
-
     @property
     def coord_id(self) -> str | None:
         """Identifier for the coordinate space, or None."""
@@ -321,10 +298,6 @@ class DisjointIntervalSequence:
     def coord_transcript_strand(self) -> Literal["+", "-"]:
         """Strand of the coordinate intervals (the transcript strand)."""
         return self._coord_metadata.transcript_strand
-
-    # -------------------------------------------------------------------
-    # Interval metadata properties
-    # -------------------------------------------------------------------
 
     @property
     def id(self) -> str | None:
@@ -346,66 +319,73 @@ class DisjointIntervalSequence:
             return "-"
         return "+"
 
-    # -------------------------------------------------------------------
-    # Coordinate index properties (toggle-dependent)
-    # -------------------------------------------------------------------
-
     @property
     def coordinate_end5_index(self) -> int:
-        """5' index of the coordinate space. Depends on the index direction toggle."""
+        """5' index of the coordinate space."""
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
             return 0
-        # direction is POSITIVE_STRAND_LEFT_TO_RIGHT
         if self.coord_transcript_strand == "+":
             return 0
-        return self._coordinate_length
+        return self.coordinate_length
 
     @property
     def coordinate_end3_index(self) -> int:
-        """3' index of the coordinate space. Depends on the index direction toggle."""
+        """3' index of the coordinate space."""
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
-            return self._coordinate_length
+            return self.coordinate_length
         if self.coord_transcript_strand == "+":
-            return self._coordinate_length
+            return self.coordinate_length
         return 0
 
-    # -------------------------------------------------------------------
-    # Interval index properties
-    # -------------------------------------------------------------------
+    @property
+    def end5_index(self) -> int:
+        """5' index of the interval."""
+        if self._upstream_index_step() == -1:
+            return self._start
+        return self._end
 
     @property
-    def interval_end5_index(self) -> int:
-        """5' index of the interval in the coordinate space."""
-        return self._interval_end5_index
+    def end3_index(self) -> int:
+        """3' index of the interval."""
+        if self._upstream_index_step() == -1:
+            return self._end
+        return self._start
 
     @property
-    def interval_end3_index(self) -> int:
-        """3' index of the interval in the coordinate space."""
-        return self._interval_end3_index
+    def start(self) -> int:
+        """Start index of the interval in the coordinate space. Not necessarily the 5' end."""
+        return self._start
 
-    # -------------------------------------------------------------------
-    # End properties (0-length DIS at boundaries)
-    # -------------------------------------------------------------------
+    @property
+    def end(self) -> int:
+        """End index of the interval in the coordinate space. Not necessarily the 3' end."""
+        return self._end
 
-    def _at_index(self, idx: int, on_coordinate_strand: bool) -> "DisjointIntervalSequence":
+    def _at_index(
+        self, idx: int, on_coordinate_strand: bool
+    ) -> "DisjointIntervalSequence":
         """Return a 0-length DIS at the given index position."""
         return DisjointIntervalSequence(
             self._coordinate_intervals,
             coord_id=self._coord_metadata.id,
             on_coordinate_strand=on_coordinate_strand,
-            interval_end5_index=idx,
-            interval_end3_index=idx,
+            start=idx,
+            end=idx,
         )
 
     @property
     def end5(self) -> "DisjointIntervalSequence":
         """0-length DIS at the interval's 5' end."""
-        return self._at_index(self._interval_end5_index, on_coordinate_strand=self.on_coordinate_strand)
+        return self._at_index(
+            self.end5_index, on_coordinate_strand=self.on_coordinate_strand
+        )
 
     @property
     def end3(self) -> "DisjointIntervalSequence":
         """0-length DIS at the interval's 3' end."""
-        return self._at_index(self._interval_end3_index, on_coordinate_strand=self.on_coordinate_strand)
+        return self._at_index(
+            self.end3_index, on_coordinate_strand=self.on_coordinate_strand
+        )
 
     @property
     def coord_end5(self) -> "DisjointIntervalSequence":
@@ -417,10 +397,6 @@ class DisjointIntervalSequence:
         """0-length DIS at the coordinate space's 3' end."""
         return self._at_index(self.coordinate_end3_index, on_coordinate_strand=True)
 
-    # -------------------------------------------------------------------
-    # Other properties
-    # -------------------------------------------------------------------
-
     @property
     def coordinate_intervals(self) -> tuple[Interval, ...]:
         """The underlying genomic intervals of the coordinate-space, sorted 5'->3'."""
@@ -429,16 +405,54 @@ class DisjointIntervalSequence:
     @property
     def coordinate_length(self) -> int:
         """Total length of the coordinate space in bases."""
-        return self._coordinate_length
+        return sum(len(iv) for iv in self._coordinate_intervals)
 
     @property
     def length(self) -> int:
         """Length of the interval on the coordinate space."""
-        return abs(self._interval_end3_index - self._interval_end5_index)
+        return self.end - self.start
 
-    # -------------------------------------------------------------------
-    # Private helpers
-    # -------------------------------------------------------------------
+    def _set_end5(self, end5: int) -> "DisjointIntervalSequence":
+        """Convenience method to update start/end based on a new end5 index."""
+        if end5 == self.end5_index:
+            return self  # No change
+        new_start, new_end = self._start, self._end
+        end5_difference = end5 - self.end5_index
+        is_moved_upstream = end5_difference * self._upstream_index_step() > 0
+        if is_moved_upstream and self._upstream_index_step() == -1:
+            new_start = new_start - abs(end5_difference)
+        elif is_moved_upstream and self._upstream_index_step() == 1:
+            new_end = new_end + abs(end5_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == -1:
+            new_start = new_start + abs(end5_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == 1:
+            new_end = new_end - abs(end5_difference)
+        if new_start > new_end:
+            raise ValueError(
+                f"Invalid end5 update: end5 index {end5} would be downstream of end3 index {self.end3_index}"
+            )
+        return self._from_end_indices(new_start, new_end)
+
+    def _set_end3(self, end3: int) -> "DisjointIntervalSequence":
+        """Convenience method to update start/end based on a new end3 index."""
+        if end3 == self.end3_index:
+            return self  # No change
+        new_start, new_end = self._start, self._end
+        end3_difference = end3 - self.end3_index
+        is_moved_upstream = end3_difference * self._upstream_index_step() > 0
+        if is_moved_upstream and self._upstream_index_step() == -1:
+            new_end = new_end - abs(end3_difference)
+        elif is_moved_upstream and self._upstream_index_step() == 1:
+            new_start = new_start + abs(end3_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == -1:
+            new_end = new_end + abs(end3_difference)
+        elif not is_moved_upstream and self._upstream_index_step() == 1:
+            new_start = new_start - abs(end3_difference)
+        if new_start > new_end:
+            raise ValueError(
+                f"Invalid end3 update: end3 index {end3} would be upstream of end5 index {self.end5_index}"
+            )
+        return self._from_end_indices(new_start, new_end)
 
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
@@ -452,37 +466,40 @@ class DisjointIntervalSequence:
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
             return -1 if on_coordinate_strand else 1
         # POSITIVE_STRAND_LEFT_TO_RIGHT: effective strand determines direction
-        # + strand coord + on_coord_strand → effective +, upstream = -1
-        # + strand coord + off_coord_strand → effective -, upstream = +1
-        # - strand coord + on_coord_strand → effective -, upstream = +1
-        # - strand coord + off_coord_strand → effective +, upstream = -1
-        on_positive = (
-            (self.coord_transcript_strand == "+" and on_coordinate_strand)
-            or (self.coord_transcript_strand == "-" and not on_coordinate_strand)
-        )
-        return -1 if on_positive else 1
+        return -1 if self.transcript_strand == "+" else 1
 
-    def _validate_same_coordinate_space(self, other: "DisjointIntervalSequence") -> None:
+    def _validate_same_coordinate_space(
+        self, other: "DisjointIntervalSequence"
+    ) -> None:
         """Raise if other does not share the same coordinate space."""
         if not isinstance(other, DisjointIntervalSequence):
-            raise TypeError(f"Expected DisjointIntervalSequence, got {type(other).__name__}")
+            raise TypeError(
+                f"Expected DisjointIntervalSequence, got {type(other).__name__}"
+            )
         if self._coordinate_intervals != other._coordinate_intervals:
             raise ValueError("DIS objects must share the same coordinate intervals")
 
-    def _from_indices(self, end5: int, end3: int) -> "DisjointIntervalSequence":
+    def _from_end_indices(self, end5: int, end3: int) -> "DisjointIntervalSequence":
         """Return a new DIS with the same coordinate space but different interval indices."""
+        # Validate end5 is upstream of or equal to end3
+        if self._upstream_index_step() == -1:
+            if end5 > end3:
+                raise ValueError(
+                    f"Invalid indices: end5 index {end5} is downstream of end3 index {end3}"
+                )
+        if self._upstream_index_step() == 1:
+            if end5 < end3:
+                raise ValueError(
+                    f"Invalid indices: end5 index {end5} is downstream of end3 index {end3}"
+                )
         return DisjointIntervalSequence(
             self._coordinate_intervals,
             coord_id=self._coord_metadata.id,
             interval_id=self._interval_metadata.id,
             on_coordinate_strand=self.on_coordinate_strand,
-            interval_end5_index=end5,
-            interval_end3_index=end3,
+            start=min(end5, end3),
+            end=max(end5, end3),
         )
-
-    # -------------------------------------------------------------------
-    # Interval transform methods
-    # -------------------------------------------------------------------
 
     def shift(self, amount: int) -> "DisjointIntervalSequence":
         """Shift the interval downstream by amount (negative shifts upstream).
@@ -491,12 +508,14 @@ class DisjointIntervalSequence:
         """
         downstream_step = -self._upstream_index_step()
         delta = amount * downstream_step
-        return self._from_indices(
-            self._interval_end5_index + delta,
-            self._interval_end3_index + delta,
+        return self._from_end_indices(
+            self.end5_index + delta,
+            self.end3_index + delta,
         )
 
-    def expand(self, upstream: int, dnstream: int | None = None) -> "DisjointIntervalSequence":
+    def expand(
+        self, upstream: int, dnstream: int | None = None
+    ) -> "DisjointIntervalSequence":
         """Expand the interval upstream and/or downstream.
 
         Negative values contract the interval. Raises ValueError if contraction
@@ -510,19 +529,16 @@ class DisjointIntervalSequence:
         if dnstream is None:
             dnstream = upstream
         up_step = self._upstream_index_step()
-        new_end5 = self._interval_end5_index + upstream * up_step
-        new_end3 = self._interval_end3_index - dnstream * up_step
+        down_step = -up_step
+        new_end5 = self.end5_index + (upstream * up_step)
+        new_end3 = self.end3_index + (dnstream * down_step)
         # Validate end5 is still upstream of or equal to end3
         if (new_end5 - new_end3) * up_step < 0:
             raise ValueError(
                 "Invalid expansion: end5 would be downstream of end3 "
                 f"(end5={new_end5}, end3={new_end3})"
             )
-        return self._from_indices(new_end5, new_end3)
-
-    # -------------------------------------------------------------------
-    # Relational methods
-    # -------------------------------------------------------------------
+        return self._from_end_indices(new_end5, new_end3)
 
     def upstream_of(self, other: "DisjointIntervalSequence") -> bool:
         """True if self is strictly upstream of other (no overlap).
@@ -532,12 +548,11 @@ class DisjointIntervalSequence:
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
             raise ValueError("Cannot compare: intervals are on different strands")
-        if (self.length == 0 and other.length == 0
-                and self._interval_end5_index == other._interval_end5_index):
+        if self.length == 0 and other.length == 0 and self.start == other.start:
             return False
-        up_step = self._upstream_index_step()
-        # self's 3' end must be at or upstream of other's 5' end
-        return (self._interval_end3_index - other._interval_end5_index) * up_step >= 0
+        if self._upstream_index_step() == -1:
+            return self._end <= other.start
+        return self._start >= other.end
 
     def dnstream_of(self, other: "DisjointIntervalSequence") -> bool:
         """True if self is strictly downstream of other (no overlap).
@@ -547,12 +562,11 @@ class DisjointIntervalSequence:
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
             raise ValueError("Cannot compare: intervals are on different strands")
-        if (self.length == 0 and other.length == 0
-                and self._interval_end5_index == other._interval_end5_index):
+        if self.length == 0 and other.length == 0 and self.start == other.start:
             return False
-        up_step = self._upstream_index_step()
-        # self's 5' end must be at or downstream of other's 3' end
-        return (self._interval_end5_index - other._interval_end3_index) * up_step <= 0
+        if self._upstream_index_step() == -1:
+            return self._start >= other.end
+        return self._end <= other.start
 
     def within(self, other: "DisjointIntervalSequence") -> bool:
         """True if self's interval is contained within other's interval.
@@ -562,16 +576,7 @@ class DisjointIntervalSequence:
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
             raise ValueError("Cannot compare: intervals are on different strands")
-        up_step = self._upstream_index_step()
-        # self's end5 must be downstream of or equal to other's end5
-        end5_ok = (self._interval_end5_index - other._interval_end5_index) * up_step <= 0
-        # self's end3 must be upstream of or equal to other's end3
-        end3_ok = (self._interval_end3_index - other._interval_end3_index) * up_step >= 0
-        return end5_ok and end3_ok
-
-    # -------------------------------------------------------------------
-    # Strand methods
-    # -------------------------------------------------------------------
+        return self._start >= other.start and self._end <= other.end
 
     def is_positive_strand(self) -> bool:
         """If the interval is on the positive strand.
@@ -616,7 +621,7 @@ class DisjointIntervalSequence:
         """Return a new DIS with the interval on the opposite strand.
 
         The coordinate intervals are unchanged. The interval's
-        ``on_coordinate_strand`` is flipped and end5/end3 indices are swapped.
+        ``on_coordinate_strand`` is flipped.
 
         Returns
         -------
@@ -627,13 +632,9 @@ class DisjointIntervalSequence:
             coord_id=self._coord_metadata.id,
             interval_id=self._interval_metadata.id,
             on_coordinate_strand=not self.on_coordinate_strand,
-            interval_end5_index=self._interval_end3_index,
-            interval_end3_index=self._interval_end5_index,
+            start=self._start,
+            end=self._end,
         )
-
-    # -------------------------------------------------------------------
-    # Other methods
-    # -------------------------------------------------------------------
 
     def genomic_span(self) -> Interval:
         """Smallest single Interval spanning all coordinate intervals.
@@ -665,19 +666,27 @@ class DisjointIntervalSequence:
             f"id={self._interval_metadata.id!r}, "
             f"{self.chromosome}:{self.coord_transcript_strand}, "
             f"len={self.length}, "
-            f"coord_intervals={len(self._coordinate_intervals)})"
-            f"end5={self.interval_end5_index}, "
-            f"end3={self.interval_end3_index})"
+            f"coord_intervals={self._coordinate_intervals})"
+            f"start={self._start}, "
+            f"end={self._end}, "
+            f"end5={self.end5_index}, "
+            f"end3={self.end3_index})"
         )
 
     def __eq__(self, other: object) -> bool:
         """Equality based on coordinate intervals, metadata, and index values."""
         if not isinstance(other, DisjointIntervalSequence):
             return NotImplemented
-        return (
+        try:
+            # If refg mismatch, ValueError is raised
             self._coordinate_intervals == other._coordinate_intervals
-            and self._coord_metadata == other._coord_metadata
+        except ValueError:
+            breakpoint()
+            return False
+        return (
+            self._coord_metadata == other._coord_metadata
             and self._interval_metadata == other._interval_metadata
-            and self._interval_end5_index == other._interval_end5_index
-            and self._interval_end3_index == other._interval_end3_index
+            and self._start == other._start
+            and self._end == other._end
+            and self._coordinate_intervals == other._coordinate_intervals
         )

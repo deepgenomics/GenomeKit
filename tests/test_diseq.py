@@ -1,847 +1,957 @@
 import unittest
 from genome_kit import Interval, Genome
-from genome_kit.diseq import DisjointIntervalSequence, _DisjointCoordinateMetadata
+from genome_kit.diseq import DisjointIntervalSequence
 
+REFG = "hg19"
 
-class TestLiftFromTranscript(unittest.TestCase):
-    # TODO add negative strand tests for all cases
 
-    def setUp(self):
-        self.genome = Genome("hg19")
+def _make_intervals(specs, refg=REFG):
+    """Helper: specs is list of (chrom, strand, start, end)."""
+    return [
+        Interval(chrom, strand, start, end, refg) for chrom, strand, start, end in specs
+    ]
 
-        exons_plus = [
-            Interval("chr1", "+", 100, 200, self.genome.refg),
-            Interval("chr1", "+", 300, 400, self.genome.refg),
-        ]
-        self.dis_plus = DisjointIntervalSequence(
-            _intervals=exons_plus,
-            _coord_metadata=_DisjointCoordinateMetadata(
-                id="test_transcript_plus",
-                reference_genome="hg19",
-                chromosome="chr1",
-                transcript_strand="+",
-            )
-        )
 
-        exons_minus = [
-            Interval("chr1", "-", 300, 400, self.genome.refg),  # First in 5'->3' order
-            Interval("chr1", "-", 100, 200, self.genome.refg),  # Second in 5'->3' order
-        ]
-        self.dis_minus = DisjointIntervalSequence(
-            _intervals=exons_minus,
-            _coord_metadata=_DisjointCoordinateMetadata(
-                id="test_transcript_minus",
-                reference_genome="hg19",
-                chromosome="chr1",
-                transcript_strand="-",
-            )
-        )
+class TestInit(unittest.TestCase):
 
-    def test_chromosome_mismatch(self):
-        interval = Interval("chr2", "+", 150, 180, self.genome.refg)
+    def test_non_interval_raises(self):
+        with self.assertRaises(TypeError):
+            DisjointIntervalSequence(["not an interval"])
+        with self.assertRaises(TypeError):
+            DisjointIntervalSequence([42])
+        iv = Interval("chr1", "+", 100, 200, REFG)
+        with self.assertRaises(TypeError):
+            DisjointIntervalSequence([iv, "bad"])
 
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=False)
-        self.assertIn("chromosome/strand mismatch", str(cm.exception))
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=True)
-        self.assertIn("chromosome/strand mismatch", str(cm.exception))
-
-    def test_strand_mismatch(self):
-        interval = Interval("chr1", "-", 150, 180, self.genome.refg)
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=False)
-        self.assertIn("chromosome/strand mismatch", str(cm.exception))
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=True)
-        self.assertIn("chromosome/strand mismatch", str(cm.exception))
-
-    def test_no_overlap_no_clip(self):
-        interval = Interval("chr1", "+", 250, 280, self.genome.refg)  # In intron
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=False)
-        self.assertIn("does not overlap with any exons", str(cm.exception))
-
-    def test_no_overlap_with_clip(self):
-        interval = Interval("chr1", "+", 250, 280, self.genome.refg)  # In intron
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=True)
-        self.assertIsNone(result)
-
-    def test_fully_contained_single_exon_plus_strand(self):
-        interval = Interval("chr1", "+", 120, 150, self.genome.refg)  # Within first exon
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0].start, 20)  # 120 - 100 = 20 in DIS coordinates
-        self.assertEqual(result.intervals[0].end, 50)    # 150 - 100 = 50 in DIS coordinates
-        self.assertEqual(result.intervals[0].chromosome, "chr1")
-        self.assertEqual(result.intervals[0].strand, "+")
-
-    def test_fully_contained_single_exon_minus_strand(self):
-        interval = Interval("chr1", "-", 320, 350, self.genome.refg)  # Within first exon
-
-        result = self.dis_minus.lift_from_transcript(interval, clip=False)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        # For minus strand: exon is 300-400, interval is 320-350
-        # In DIS coordinates: 400-350=50 to 400-320=80
-        self.assertEqual(result.intervals[0].start, 50)
-        self.assertEqual(result.intervals[0].end, 80)
-
-    def test_spans_two_exons_plus_strand(self):
-        interval = Interval("chr1", "+", 150, 350, self.genome.refg)  # Spans both exons
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-
-        # First interval: 150-200 in genomic -> 50-100 in DIS
-        self.assertEqual(result.intervals[0].start, 50)
-        self.assertEqual(result.intervals[0].end, 100)
-
-        # Second interval: 300-350 in genomic -> 100-150 in DIS
-        self.assertEqual(result.intervals[1].start, 100)
-        self.assertEqual(result.intervals[1].end, 150)
-
-    def test_partial_overlap_with_clip(self):
-        interval = Interval("chr1", "+", 50, 350, self.genome.refg)  # Entire first exon + part of second
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=True)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-
-        # First interval: entire first exon 100-200 -> 0-100 in DIS
-        self.assertEqual(result.intervals[0].start, 0)
-        self.assertEqual(result.intervals[0].end, 100)
-
-        # Second interval: partial second exon 300-350 -> 100-150 in DIS
-        self.assertEqual(result.intervals[1].start, 100)
-        self.assertEqual(result.intervals[1].end, 150)
-
-    def test_partial_overlap_no_clip_raises(self):
-        interval = Interval("chr1", "+", 50, 150, self.genome.refg)  # Extends before first exon
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=False)
-        self.assertIn("extends beyond exon boundaries", str(cm.exception))
-
-    def test_spans_intron_with_clip(self):
-        interval = Interval("chr1", "+", 180, 320, self.genome.refg)  # Spans intron 200-300
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=True)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-
-        # First part: 180-200 -> 80-100 in DIS
-        self.assertEqual(result.intervals[0].start, 80)
-        self.assertEqual(result.intervals[0].end, 100)
-
-        # Second part: 300-320 -> 100-120 in DIS
-        self.assertEqual(result.intervals[1].start, 100)
-        self.assertEqual(result.intervals[1].end, 120)
-
-    def test_spans_intron_no_clip_raises(self):
-        interval = Interval("chr1", "+", 180, 320, self.genome.refg)  # Spans intron
-
-        with self.assertRaises(ValueError) as cm:
-            self.dis_plus.lift_from_transcript(interval, clip=False)
-        self.assertIn("extends beyond exon boundaries", str(cm.exception))
-
-    def test_exact_exon_boundaries(self):
-        interval = Interval("chr1", "+", 100, 200, self.genome.refg)  # Exact first exon
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0].start, 0)
-        self.assertEqual(result.intervals[0].end, 100)
-
-    def test_metadata_preservation(self):
-        interval = Interval("chr1", "+", 120, 150, self.genome.refg)
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-
-        self.assertEqual(result.id, "test_transcript_plus")
-        self.assertEqual(result.reference_genome, "hg19")
-        self.assertEqual(result.chromosome, "chr1")
-        self.assertEqual(result.transcript_strand, "+")
-
-    def test_empty_interval(self):
-        interval = Interval("chr1", "+", 150, 150, self.genome.refg)
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=True)
-        self.assertIsNone(result)
-
-    def test_result_interval_properties(self):
-        interval = Interval("chr1", "+", 120, 150, self.genome.refg)
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-        result_interval = result.intervals[0]
-
-        # Check that anchor properties are preserved from source exon
-        source_exon = self.dis_plus.intervals[0]
-        self.assertEqual(result_interval.anchor, source_exon.anchor)
-        self.assertEqual(result_interval.anchor_offset, source_exon.anchor_offset)
-
-    def test_single_base_interval(self):
-        interval = Interval("chr1", "+", 120, 121, self.genome.refg)  # Single base
-
-        result = self.dis_plus.lift_from_transcript(interval, clip=False)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0].start, 20)
-        self.assertEqual(result.intervals[0].end, 21)
-        self.assertEqual(len(result.intervals[0]), 1)
-
-
-class TestLowerToTranscript(unittest.TestCase):
-
-    def setUp(self):
-        # Create a simple DisjointIntervalSequence for testing
-        # Create three exons on chromosome 1, positive strand
-        # Exon 1: 100-200 (length 100, DIS 0-100)
-        # Exon 2: 300-350 (length 50, DIS 100-150)
-        # Exon 3: 500-600 (length 100, DIS 150-250)
-        # Total DIS length: 250
-        self.exons_positive = [
-            Interval(
-                chromosome="chr1",
-                start=100,
-                end=200,
-                strand="+",
-                reference_genome="hg38"
-            ),
-            Interval(
-                chromosome="chr1",
-                start=300,
-                end=350,
-                strand="+",
-                reference_genome="hg38"
-            ),
-            Interval(
-                chromosome="chr1",
-                start=500,
-                end=600,
-                strand="+",
-                reference_genome="hg38"
-            )
-        ]
-
-        metadata_positive = _DisjointCoordinateMetadata(
-            id="test_transcript",
-            reference_genome="hg38",
-            chromosome="chr1",
-            transcript_strand="+",
-        )
-
-        self.dis_positive = DisjointIntervalSequence(self.exons_positive, _coord_metadata=metadata_positive)
-
-        self.exons_negative = [
-            Interval(
-                chromosome="chr2",
-                start=100,
-                end=200,
-                strand="-",
-                reference_genome="hg38"
-            ),
-            Interval(
-                chromosome="chr2",
-                start=300,
-                end=400,
-                strand="-",
-                reference_genome="hg38"
-            )
-        ]
-
-        metadata_negative = _DisjointCoordinateMetadata(
-            id="test_transcript_neg",
-            reference_genome="hg38",
-            chromosome="chr2",
-            transcript_strand="-",
-        )
-
-        self.dis_negative = DisjointIntervalSequence(self.exons_negative, _coord_metadata=metadata_negative)
-
-    def test_invalid_input_parameters(self):
-        # Negative start
-        result = self.dis_positive.lower_to_transcript(-1, 10)
-        self.assertEqual(result, [])
-
-        # Negative end
-        result = self.dis_positive.lower_to_transcript(0, -1)
-        self.assertEqual(result, [])
-
-        # start >= end
-        result = self.dis_positive.lower_to_transcript(10, 10)
-        self.assertEqual(result, [])
-
-        result = self.dis_positive.lower_to_transcript(10, 5)
-        self.assertEqual(result, [])
-
-    def test_single_exon_full_coverage(self):
-        # Map DIS coordinates 10-20 (within first exon)
-        result = self.dis_positive.lower_to_transcript(10, 20)
-
-        self.assertEqual(len(result), 1)
-        interval = result[0]
-
-        # Should map to genomic coordinates 110-120
-        self.assertEqual(interval.chromosome, "chr1")
-        self.assertEqual(interval.start, 110)
-        self.assertEqual(interval.end, 120)
-        self.assertEqual(interval.strand, "+")
-        self.assertEqual(interval.reference_genome, "hg38")
-
-    def test_single_exon_partial_coverage(self):
-        # Map DIS coordinates 50-80 (within first exon)
-        result = self.dis_positive.lower_to_transcript(50, 80)
-
-        self.assertEqual(len(result), 1)
-        interval = result[0]
-
-        # Should map to genomic coordinates 150-180
-        self.assertEqual(interval.start, 150)
-        self.assertEqual(interval.end, 180)
-
-    def test_multiple_exons_coverage(self):
-        # Map DIS coordinates 50-180 (spans all three exons)
-        # Exon 1: DIS 0-100, genomic 100-200
-        # Exon 2: DIS 100-150, genomic 300-350
-        # Exon 3: DIS 150-250, genomic 500-600
-        result = self.dis_positive.lower_to_transcript(50, 180)
-
-        self.assertEqual(len(result), 3)
-
-        # First interval (partial first exon: DIS 50-100 -> genomic 150-200)
-        self.assertEqual(result[0].start, 150)
-        self.assertEqual(result[0].end, 200)
-
-        # Second interval (full second exon: DIS 100-150 -> genomic 300-350)
-        self.assertEqual(result[1].start, 300)
-        self.assertEqual(result[1].end, 350)
-
-        # Third interval (partial third exon: DIS 150-180 -> genomic 500-530)
-        self.assertEqual(result[2].start, 500)
-        self.assertEqual(result[2].end, 530)
-
-    def test_exon_boundary_mapping(self):
-        # Map exactly the second exon (DIS 100-150)
-        result = self.dis_positive.lower_to_transcript(100, 150)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 300)
-        self.assertEqual(result[0].end, 350)
-
-    def test_cross_exon_boundary(self):
-        # Map DIS 90-110 (crosses first-second exon boundary)
-        result = self.dis_positive.lower_to_transcript(90, 110)
-
-        self.assertEqual(len(result), 2)
-
-        # Part of first exon (DIS 90-100 -> genomic 190-200)
-        self.assertEqual(result[0].start, 190)
-        self.assertEqual(result[0].end, 200)
-
-        # Part of second exon (DIS 100-110 -> genomic 300-310)
-        self.assertEqual(result[1].start, 300)
-        self.assertEqual(result[1].end, 310)
-
-    def test_out_of_bounds_mapping(self):
-        # Total DIS length is 250, try to map 200-300
-        result = self.dis_positive.lower_to_transcript(200, 300)
-
-        self.assertEqual(len(result), 1)
-        # Should only cover the last exon from DIS 200-250 -> genomic 550-600
-        self.assertEqual(result[0].start, 550)
-        self.assertEqual(result[0].end, 600)
-
-    def test_completely_out_of_bounds(self):
-        # Total DIS length is 250, try to map 300-400
-        result = self.dis_positive.lower_to_transcript(300, 400)
-
-        # Should return empty list since range is completely out of bounds
-        self.assertEqual(result, [])
-
-    def test_zero_length_mapping(self):
-        result = self.dis_positive.lower_to_transcript(0, 1)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 100)
-        self.assertEqual(result[0].end, 101)
-
-    def test_negative_strand_mapping(self):
-        # Map DIS 10-20 on negative strand
-        result = self.dis_negative.lower_to_transcript(10, 20)
-
-        self.assertEqual(len(result), 1)
-        interval = result[0]
-
-        self.assertEqual(interval.chromosome, "chr2")
-        self.assertEqual(interval.strand, "-")
-        self.assertEqual(interval.reference_genome, "hg38")
-        # For negative strand, should still map to genomic coordinates 110-120
-        self.assertEqual(interval.start, 110)
-        self.assertEqual(interval.end, 120)
-
-    def test_result_ordering(self):
-        # Map across multiple exons
-        result = self.dis_positive.lower_to_transcript(50, 180)
-
-        # Results should be in transcript order (5' to 3')
-        self.assertEqual(len(result), 3)
-
-        # For positive strand, genomic coordinates should be ascending
-        self.assertLess(result[0].start, result[1].start)
-        self.assertLess(result[1].start, result[2].start)
-        # Non-overlapping intervals
-        self.assertLessEqual(result[0].end, result[1].start)
-        self.assertLessEqual(result[1].end, result[2].start)
-
-    def test_metadata_preservation(self):
-        result = self.dis_positive.lower_to_transcript(10, 20)
-
-        self.assertEqual(len(result), 1)
-        interval = result[0]
-
-        self.assertEqual(interval.chromosome, self.dis_positive.chromosome)
-        self.assertEqual(interval.strand, self.dis_positive.transcript_strand)
-        self.assertEqual(interval.reference_genome, self.dis_positive.reference_genome)
-
-    def test_edge_case_single_base(self):
-        result = self.dis_positive.lower_to_transcript(0, 1)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 100)
-        self.assertEqual(result[0].end, 101)
-        self.assertEqual(len(result[0]), 1)
-
-    def test_full_transcript_mapping(self):
-        result = self.dis_positive.lower_to_transcript(0, 250)
-
-        self.assertEqual(len(result), 3)
-
-        # Should cover all three exons completely
-        self.assertEqual(result[0].start, 100)
-        self.assertEqual(result[0].end, 200)
-        self.assertEqual(result[1].start, 300)
-        self.assertEqual(result[1].end, 350)
-        self.assertEqual(result[2].start, 500)
-        self.assertEqual(result[2].end, 600)
-
-    def test_gap_between_exons_mapping(self):
-        # Map DIS 95-155 which spans across all three intervals but
-        # includes gaps between them
-        result = self.dis_positive.lower_to_transcript(95, 155)
-
-        self.assertEqual(len(result), 3)
-
-        # Should get parts of all three exons
-        # First exon: DIS 95-100 -> genomic 195-200
-        self.assertEqual(result[0].start, 195)
-        self.assertEqual(result[0].end, 200)
-
-        # Second exon: DIS 100-150 -> genomic 300-350 (full exon)
-        self.assertEqual(result[1].start, 300)
-        self.assertEqual(result[1].end, 350)
-
-        # Third exon: DIS 150-155 -> genomic 500-505
-        self.assertEqual(result[2].start, 500)
-        self.assertEqual(result[2].end, 505)
-
-    def test_start_at_exon_boundary(self):
-        # Start at DIS 100 (beginning of second exon)
-        result = self.dis_positive.lower_to_transcript(100, 120)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 300)
-        self.assertEqual(result[0].end, 320)
-
-    def test_end_at_exon_boundary(self):
-        # End at DIS 100 (end of first exon)
-        result = self.dis_positive.lower_to_transcript(80, 100)
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 180)
-        self.assertEqual(result[0].end, 200)
-
-
-class TestDisjointIntervalSequenceIntersect(unittest.TestCase):
-
-    def setUp(self):
-        # Create basic intervals for testing
-        self.interval1 = Interval('chr1', '+', 10, 20, 'hg19')
-        self.interval2 = Interval('chr1', '+', 15, 25, 'hg19')
-        self.interval3 = Interval('chr1', '+', 30, 40, 'hg19')
-        self.interval4 = Interval('chr1', '+', 35, 45, 'hg19')
-
-        # Non-overlapping intervals
-        self.interval_far = Interval('chr1', '+', 100, 110, 'hg19')
-
-        # Different chromosome
-        self.interval_chr2 = Interval('chr2', '+', 10, 20, 'hg19')
-
-        # Create DisjointIntervalSequences
-        self.dis1 = DisjointIntervalSequence([self.interval1, self.interval3], _coord_metadata=_DisjointCoordinateMetadata(
-            id="transcript1",
-            reference_genome="hg19",
-            chromosome="chr1",
-            transcript_strand="+",
-        ))
-        self.dis2 = DisjointIntervalSequence([self.interval2, self.interval4], _coord_metadata=_DisjointCoordinateMetadata(
-            id="transcript2",
-            reference_genome="hg19",
-            chromosome="chr1",
-            transcript_strand="+",
-        ))
-
-    def test_intersect_with_disjoint_interval_sequence_full_overlap(self):
-        # dis1: [10-20, 30-40]
-        # dis2: [15-25, 35-45]
-        result = self.dis1.intersect(self.dis2)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 2)
-        self.assertEqual(result.intervals[0], Interval('chr1', '+', 15, 20, 'hg19'))
-        self.assertEqual(result.intervals[1], Interval('chr1', '+', 35, 40, 'hg19'))
-
-    def test_intersect_with_disjoint_interval_sequence_no_overlap(self):
-        dis_no_overlap = DisjointIntervalSequence([self.interval_far], _coord_metadata=_DisjointCoordinateMetadata(
-            id="transcript1",
-            reference_genome="hg19",
-            chromosome="chr1",
-            transcript_strand="+",
-        ))
-        result = self.dis1.intersect(dis_no_overlap)
-
-        self.assertIsNone(result)
-
-    def test_intersect_with_disjoint_interval_sequence_partial_overlap(self):
-        # Create sequence that overlaps only one interval in dis1
-        partial_dis = DisjointIntervalSequence([Interval('chr1', '+', 5, 15, 'hg19')],
-                                               _coord_metadata=_DisjointCoordinateMetadata(id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
-        result = self.dis1.intersect(partial_dis)
-
-        self.assertIsNotNone(result)
-        self.assertEqual(len(result.intervals), 1)
-        self.assertEqual(result.intervals[0], Interval('chr1', '+', 10, 15, 'hg19'))
-
-    def test_intersect_empty_disjoint_sequence_with_interval(self):
-        empty_dis = DisjointIntervalSequence([], _coord_metadata=_DisjointCoordinateMetadata(
-            id="transcript1",
-            reference_genome="hg19",
-            chromosome="chr1",
-            transcript_strand="+",
-        ))
-        result = empty_dis.intersect(self.interval1)
-
-        self.assertIsNone(result)
-
-    def test_intersect_commutative_with_same_metadata(self):
-        result1 = self.dis1.intersect(self.dis2)
-        result2 = self.dis2.intersect(self.dis1)
-
-        # Both should have same intervals (though metadata may differ)
-        if result1 is not None and result2 is not None:
-            self.assertEqual(len(result1.intervals), len(result2.intervals))
-
-    def test_intersect_empty_result_returns_none(self):
-        non_overlapping_dis = DisjointIntervalSequence([Interval('chr1', '+', 50, 60, 'hg19')],
-                                                       _coord_metadata=_DisjointCoordinateMetadata(id="transcript1", reference_genome="hg19", chromosome="chr1", transcript_strand="+"))
-        result = self.dis1.intersect(non_overlapping_dis)
-
-        self.assertIsNone(result)
-
-
-class TestDisjointIntervalSequenceFromInterval(unittest.TestCase):
-
-    def setUp(self):
-        genome = Genome("gencode.v41")
-        self.disjoint_intervals = [x.interval for x in genome.transcripts[2000].exons]
-        self.transcript_id = genome.transcripts[2000].transcript_id
-        self.other_transcript_id = genome.transcripts[2001].transcript_id
-
-    def test_from_interval(self):
-        dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals, id=self.transcript_id)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_intervals)
-        self.assertEqual(dis.id, self.transcript_id)
-        self.assertEqual(dis.reference_genome, self.disjoint_intervals[0].reference_genome)
-        self.assertEqual(dis.chromosome, self.disjoint_intervals[0].chromosome)
-        self.assertEqual(dis.transcript_strand, self.disjoint_intervals[0].strand)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(interval) for interval in self.disjoint_intervals))
-
-    def test_intervals_unordered(self):
-        start, *middle, end = [x.interval for x in self.genome.transcripts[2000].exons]
-        disordered_intervals = [end, *middle, start]
-        disordered_dis = DisjointIntervalSequence.from_interval(disordered_intervals)
-        ordered_dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals)
-        self.assertEqual(disordered_dis, ordered_dis)
-
-    def test_no_transcript_id(self):
-        dis = DisjointIntervalSequence.from_interval(self.disjoint_intervals)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_intervals)
-        self.assertEqual(dis.id, self.transcript_id)
-
-    def test_mismatched_transcript_id(self):
+    def test_empty_list_raises(self):
         with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals, id=self.other_transcript_id)
+            DisjointIntervalSequence([])
 
-    def test_nonexistent_transcript_id(self):
+    def test_mixed_chromosomes_raises(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr2", "+", 300, 400)])
         with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals, id="invalid_transcript_id")
+            DisjointIntervalSequence(ivs)
 
-    def test_set_disjoint_interval_boundaries(self):
-        dis = DisjointIntervalSequence.from_interval(
-            self.disjoint_intervals, disjoint_interval_start=10, disjoint_interval_end=20)
-        self.assertEqual(dis.start, 10)
-        self.assertEqual(dis.end, 20)
-
-    def test_set_disjoint_interval_boundaries_one_bp(self):
-        dis = DisjointIntervalSequence.from_interval(
-            self.disjoint_intervals, disjoint_interval_start=15, disjoint_interval_end=16)
-        self.assertEqual(dis.start, 15)
-        self.assertEqual(dis.end, 16)
-
-    def test_disjoint_interval_boundaries_start_gt_end(self):
+    def test_mixed_strands_raises(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "-", 300, 400)])
         with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals,
-                disjoint_interval_start=20,
-                disjoint_interval_end=10)
+            DisjointIntervalSequence(ivs)
 
-    def test_disjoint_interval_boundaries_negative_start(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals,
-                disjoint_interval_start=-5,
-                disjoint_interval_end=10)
-
-    def test_disjoint_interval_boundaries_zero_length(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals,
-                disjoint_interval_start=10,
-                disjoint_interval_end=10)
-
-    def test_disjoint_interval_boundaries_beyond_coord_end(self):
-        coord_end = sum(len(interval) for interval in self.disjoint_intervals)
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_interval(
-                self.disjoint_intervals,
-                disjoint_interval_start=coord_end + 10,
-                disjoint_interval_end=coord_end + 20)
-
-    def test_empty_intervals(self):
-        with self.assertRaises((ValueError)):
-            DisjointIntervalSequence.from_interval([])
-
-    def test_intervals_overlapping(self):
-        ref_genome = self.disjoint_intervals[0].reference_genome
-        chrom = self.disjoint_intervals[0].chromosome
-        strand = self.disjoint_intervals[0].strand
-        overlapping = [
-            Interval(chrom, strand, 100, 200, ref_genome),
-            Interval(chrom, strand, 150, 250, ref_genome),
-        ]
-        with self.assertRaises((ValueError)):
-            DisjointIntervalSequence.from_interval(overlapping)
-
-    def test_intervals_different_chromosomes(self):
-        ref_genome = self.disjoint_intervals[0].reference_genome
-        diff_chr = [
-            Interval("chr1", "+", 100, 200, ref_genome),
-            Interval("chr2", "+", 300, 400, ref_genome),
-        ]
-        with self.assertRaises((AssertionError, ValueError)):
-            DisjointIntervalSequence.from_interval(diff_chr)
-
-    def test_intervals_different_strands(self):
-        ref_genome = self.disjoint_intervals[0].reference_genome
-        chrom = self.disjoint_intervals[0].chromosome
-        diff_strand = [
-            Interval(chrom, "+", 100, 200, ref_genome),
-            Interval(chrom, "-", 300, 400, ref_genome),
-        ]
-        with self.assertRaises((ValueError)):
-            DisjointIntervalSequence.from_interval(diff_strand)
-
-    def test_intervals_different_reference_genomes(self):
-        diff_ref = [
+    def test_mixed_reference_genomes_raises(self):
+        ivs = [
             Interval("chr1", "+", 100, 200, "hg19"),
             Interval("chr1", "+", 300, 400, "hg38"),
         ]
-        with self.assertRaises((ValueError)):
-            DisjointIntervalSequence.from_interval(diff_ref)
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence(ivs)
 
-    def test_single_interval(self):
-        single = [self.disjoint_intervals[0]]
-        dis = DisjointIntervalSequence.from_interval(single)
-        self.assertEqual(len(dis.coordinate_intervals), 1)
-        self.assertEqual(dis.coordinate_intervals[0], single[0])
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, len(single[0]))
+    def test_overlapping_intervals_raises(self):
+        ivs = _make_intervals([("chr1", "+", 100, 250), ("chr1", "+", 200, 400)])
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence(ivs)
 
-    def test_adjacent_intervals(self):
-        ref_genome = self.disjoint_intervals[0].reference_genome
-        chrom = self.disjoint_intervals[0].chromosome
-        strand = self.disjoint_intervals[0].strand
-        adjacent_intervals = [
-            Interval(chrom, strand, 100, 200, ref_genome),
-            Interval(chrom, strand, 200, 300, ref_genome),
-        ]
-        dis = DisjointIntervalSequence.from_interval(adjacent_intervals)
-        self.assertEqual(len(dis.coordinate_intervals), 2)
+    def test_overlapping_intervals_negative_strand_raises(self):
+        ivs = _make_intervals([("chr1", "-", 100, 250), ("chr1", "-", 200, 400)])
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence(ivs)
+
+    def test_adjacent_intervals_ok(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_length, 200)
+        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
+
+    def test_sorts_out_of_order_positive(self):
+        ivs = _make_intervals([("chr1", "+", 300, 400), ("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_intervals[0].start, 100)
+        self.assertEqual(dis.coordinate_intervals[1].start, 300)
+
+    def test_sorts_out_of_order_negative(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_intervals[0].end, 400)
+        self.assertEqual(dis.coordinate_intervals[1].end, 200)
+
+    def test_coordinate_length(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 450)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_length, 250)
+
+    def test_start_end_default_to_full_interval(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
         self.assertEqual(dis.start, 0)
         self.assertEqual(dis.end, 200)
 
-    def test_only_disjoint_interval_start(self):
-        dis = DisjointIntervalSequence.from_interval(
-            self.disjoint_intervals, disjoint_interval_start=10)
+    def test_out_of_bounds_indices_allowed(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])  # coord_length=100
+        dis = DisjointIntervalSequence(ivs, start=-10, end=50)
+        self.assertEqual(dis.start, -10)
+        dis2 = DisjointIntervalSequence(ivs, start=10, end=300)
+        self.assertEqual(dis2.end, 300)
+        dis3 = DisjointIntervalSequence(ivs, start=-100, end=300)
+        self.assertEqual(dis3.start, -100)
+        self.assertEqual(dis3.end, 300)
+        dis4 = DisjointIntervalSequence(ivs, start=300, end=300)
+        self.assertEqual(dis4.start, 300)
+        self.assertEqual(dis4.end, 300)
+        dis5 = DisjointIntervalSequence(ivs, start=-300, end=-300)
+        self.assertEqual(dis5.start, -300)
+        self.assertEqual(dis5.end, -300)
+
+    def test_start_greater_than_end_raises(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence(ivs, start=80, end=10)
+
+    def test_start_equals_end_allowed(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=50)
+        self.assertEqual(dis.length, 0)
+
+    def test_custom_interval_indices(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=50)
         self.assertEqual(dis.start, 10)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_intervals))
-
-    def test_only_disjoint_interval_end(self):
-        dis = DisjointIntervalSequence.from_interval(
-            self.disjoint_intervals, disjoint_interval_end=20)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, 20)
+        self.assertEqual(dis.end, 50)
+        self.assertEqual(dis.length, 40)
 
 
-class TestDisjointIntervalSequenceFromTranscript(unittest.TestCase):
+class TestFromIntervals(unittest.TestCase):
 
     def setUp(self):
         self.genome = Genome("gencode.v41")
-        self.transcript = self.genome.transcripts[2000]
-        self.disjoint_exons = [x.interval for x in self.transcript.exons]
-        self.disjoint_cdss = [x.interval for x in self.transcript.cdss]
-        self.disjoint_utr5s = [x.interval for x in self.transcript.utr5s]
-        self.disjoint_utr3s = [x.interval for x in self.transcript.utr3s]
-        self.transcript_id = self.transcript.transcript_id
-        self.other_transcript_id = self.genome.transcripts[2001].transcript_id
+        self.transcript = self.genome.transcripts[2002]
 
-    def test_from_transcript(self):
-        dis = DisjointIntervalSequence.from_transcript(self.transcript)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
-        self.assertEqual(dis.id, self.transcript_id)
-        self.assertEqual(dis.reference_genome, self.disjoint_exons[0].reference_genome)
-        self.assertEqual(dis.chromosome, self.disjoint_exons[0].chromosome)
-        self.assertEqual(dis.transcript_strand, self.disjoint_exons[0].strand)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(interval) for interval in self.disjoint_exons))
+    def test_happy_path(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence.from_intervals(ivs, coord_id="mycoord")
+        self.assertEqual(dis.coord_id, "mycoord")
+        self.assertEqual(dis.coordinate_length, 200)
+        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
 
-    def test_from_transcript_region_exons(self):
+    def test_coord_and_interval_id_independent(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence.from_intervals(
+            ivs, coord_id="c1", interval_id="i1"
+        )
+        self.assertEqual(dis.coord_id, "c1")
+        self.assertEqual(dis.id, "i1")
+
+    def test_single_interval(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence.from_intervals(ivs)
+        self.assertEqual(len(dis.coordinate_intervals), 1)
+        self.assertEqual(dis.coordinate_length, 100)
+        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
+
+    def test_adjacent_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence.from_intervals(ivs)
+        self.assertEqual(dis.coordinate_length, 200)
+        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
+
+    def test_extracts_interval_from_exon(self):
+        exons = list(self.transcript.exons)
+        dis = DisjointIntervalSequence.from_intervals(exons)
+        expected = tuple(e.interval for e in self.transcript.exons)
+        self.assertEqual(dis.coordinate_intervals, expected)
+
+    def test_extracts_interval_from_cds(self):
+        cdss = list(self.transcript.cdss)
+        dis = DisjointIntervalSequence.from_intervals(cdss)
+        expected = tuple(c.interval for c in self.transcript.cdss)
+        self.assertEqual(dis.coordinate_intervals, expected)
+
+    def test_extracts_interval_from_utr5(self):
+        utr5s = list(self.transcript.utr5s)
+        dis = DisjointIntervalSequence.from_intervals(utr5s)
+        expected = tuple(u.interval for u in self.transcript.utr5s)
+        self.assertEqual(dis.coordinate_intervals, expected)
+
+    def test_extracts_interval_from_utr3(self):
+        utr3s = list(self.transcript.utr3s)
+        dis = DisjointIntervalSequence.from_intervals(utr3s)
+        expected = tuple(u.interval for u in self.transcript.utr3s)
+        self.assertEqual(dis.coordinate_intervals, expected)
+
+    def test_metadata_defaults_to_none(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence.from_intervals(ivs)
+        self.assertEqual(dis.coord_id, None)
+        self.assertEqual(dis.id, None)
+        self.assertEqual(dis.reference_genome, REFG)
+        self.assertEqual(dis.chromosome, "chr1")
+        self.assertEqual(dis.coord_transcript_strand, "+")
+
+
+class TestFromTranscript(unittest.TestCase):
+
+    def setUp(self):
+        self.genome = Genome("gencode.v41")
+        self.transcript = self.genome.transcripts[2002]
+
+    def test_exons_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="exons")
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_exons))
+        expected = tuple(e.interval for e in self.transcript.exons)
+        self.assertEqual(dis.coordinate_intervals, expected)
 
-    def test_from_transcript_region_cds(self):
+    def test_cds_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="cds")
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_cdss)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_cdss))
+        expected = tuple(c.interval for c in self.transcript.cdss)
+        self.assertEqual(dis.coordinate_intervals, expected)
 
-    def test_from_transcript_region_utr5(self):
+    def test_utr5_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="utr5")
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_utr5s)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_utr5s))
+        expected = tuple(u.interval for u in self.transcript.utr5s)
+        self.assertEqual(dis.coordinate_intervals, expected)
 
-    def test_from_transcript_region_utr3(self):
+    def test_utr3_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="utr3")
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_utr3s)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_utr3s))
+        expected = tuple(u.interval for u in self.transcript.utr3s)
+        self.assertEqual(dis.coordinate_intervals, expected)
 
-    def test_from_transcript_with_interval_boundaries(self):
-        dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, disjoint_interval_start=10, disjoint_interval_end=20)
-        self.assertEqual(dis.start, 10)
-        self.assertEqual(dis.end, 20)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
+    def test_metadata_defaults_to_transcript_id(self):
+        dis = DisjointIntervalSequence.from_transcript(self.transcript)
+        self.assertEqual(dis.coord_id, self.transcript.id)
+        self.assertEqual(dis.id, self.transcript.id)
+        self.assertEqual(dis.reference_genome, self.transcript.reference_genome)
+        self.assertEqual(dis.chromosome, self.transcript.chromosome)
+        self.assertEqual(dis.coord_transcript_strand, self.transcript.strand)
 
-    def test_from_transcript_with_interval_boundaries_one_bp(self):
-        dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, disjoint_interval_start=0, disjoint_interval_end=1)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, 1)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
-
-    def test_invalid_region_type(self):
+    def test_invalid_region_raises(self):
         with self.assertRaises(ValueError):
             DisjointIntervalSequence.from_transcript(self.transcript, region="invalid")
 
-    def test_invalid_region_type_introns(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_transcript(self.transcript, region="introns")
-
-    def test_interval_boundaries_start_gt_end(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_transcript(
-                self.transcript, disjoint_interval_start=20, disjoint_interval_end=10)
-
-    def test_interval_boundaries_negative_start(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_transcript(
-                self.transcript, disjoint_interval_start=-5, disjoint_interval_end=10)
-
-    def test_interval_boundaries_zero_length(self):
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_transcript(
-                self.transcript, disjoint_interval_start=10, disjoint_interval_end=10)
-
-    def test_interval_boundaries_beyond_coord_end(self):
-        coord_end = sum(len(i) for i in self.disjoint_exons)
-        with self.assertRaises(ValueError):
-            DisjointIntervalSequence.from_transcript(
-                self.transcript,
-                disjoint_interval_start=coord_end + 10,
-                disjoint_interval_end=coord_end + 20)
-
-    def test_regions_produce_distinct_intervals(self):
-        dis_exons = DisjointIntervalSequence.from_transcript(self.transcript, region="exons")
-        dis_cds = DisjointIntervalSequence.from_transcript(self.transcript, region="cds")
-        dis_utr5 = DisjointIntervalSequence.from_transcript(self.transcript, region="utr5")
-        dis_utr3 = DisjointIntervalSequence.from_transcript(self.transcript, region="utr3")
-
-        # CDS, UTR5, UTR3 should each be distinct from full exons
-        self.assertNotEqual(dis_exons.coordinate_intervals, dis_cds.coordinate_intervals)
-        self.assertNotEqual(dis_exons.coordinate_intervals, dis_utr5.coordinate_intervals)
-        self.assertNotEqual(dis_exons.coordinate_intervals, dis_utr3.coordinate_intervals)
-
-        # UTRs and CDS should be mutually distinct
-        self.assertNotEqual(dis_cds.coordinate_intervals, dis_utr5.coordinate_intervals)
-        self.assertNotEqual(dis_cds.coordinate_intervals, dis_utr3.coordinate_intervals)
-        self.assertNotEqual(dis_utr5.coordinate_intervals, dis_utr3.coordinate_intervals)
-
-        # CDS + UTRs total length should equal exons total length
-        self.assertEqual(dis_exons.end, dis_cds.end + dis_utr5.end + dis_utr3.end)
-
-    def test_only_disjoint_interval_start(self):
+    def test_custom_id_overrides(self):
         dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, disjoint_interval_start=10)
+            self.transcript, coord_id="custom_coord", interval_id="custom_iv"
+        )
+        self.assertEqual(dis.coord_id, "custom_coord")
+        self.assertEqual(dis.id, "custom_iv")
+
+
+class TestProperties(unittest.TestCase):
+
+    def test_metadata_getters_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, coord_id="c", interval_id="i")
+        self.assertEqual(dis.coord_id, "c")
+        self.assertEqual(dis.id, "i")
+        self.assertEqual(dis.reference_genome, REFG)
+        self.assertEqual(dis.chromosome, "chr1")
+        self.assertEqual(dis.coord_transcript_strand, "+")
+        self.assertTrue(dis.on_coordinate_strand)
+
+    def test_on_coordinate_strand_false(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertFalse(dis.on_coordinate_strand)
+
+    def test_coord_transcript_strand_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coord_transcript_strand, "+")
+
+    def test_coord_transcript_strand_negative(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coord_transcript_strand, "-")
+
+    def test_coord_transcript_strand_unaffected_by_on_coordinate_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertEqual(dis.coord_transcript_strand, "+")
+
+    def test_transcript_strand_on_coordinate_strand_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertEqual(dis.transcript_strand, "+")
+
+    def test_transcript_strand_on_coordinate_strand_negative(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertEqual(dis.transcript_strand, "-")
+
+    def test_transcript_strand_off_coordinate_strand_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertEqual(dis.transcript_strand, "-")
+
+    def test_transcript_strand_off_coordinate_strand_negative(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertEqual(dis.transcript_strand, "+")
+
+    def test_start_and_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=150)
         self.assertEqual(dis.start, 10)
-        self.assertEqual(dis.end, sum(len(i) for i in self.disjoint_exons))
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
+        self.assertEqual(dis.end, 150)
 
-    def test_only_disjoint_interval_end(self):
-        dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, disjoint_interval_end=20)
-        self.assertEqual(dis.start, 0)
-        self.assertEqual(dis.end, 20)
-        self.assertEqual(dis.coordinate_intervals, self.disjoint_exons)
+    def test_coordinate_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=150)
+        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
+
+    def test_coordinate_length(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_length, 200)
+
+    def test_length(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=150)
+        self.assertEqual(dis.length, 140)
+
+    def test_length_zero(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=50)
+        self.assertEqual(dis.length, 0)
+
+
+class TestStrandMethods(unittest.TestCase):
+
+    def test_is_positive_strand_plus_on_coord(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertTrue(dis.is_positive_strand())
+
+    def test_is_positive_strand_minus_off_coord(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertTrue(dis.is_positive_strand())
+
+    def test_is_positive_strand_false_plus_off_coord(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertFalse(dis.is_positive_strand())
+
+    def test_is_positive_strand_false_minus_on_coord(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertFalse(dis.is_positive_strand())
+
+    def test_as_positive_strand_already_positive(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        result = dis.as_positive_strand()
+        self.assertIs(result, dis)
+
+    def test_as_positive_strand_flips(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=False, start=10, end=80
+        )
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=10, end=80
+        )
+        result = dis.as_positive_strand()
+        self.assertTrue(result.is_positive_strand())
+        self.assertTrue(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+        self.assertEqual(result, expected)
+
+    def test_as_negative_strand_already_negative(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        result = dis.as_negative_strand()
+        self.assertIs(result, dis)
+
+    def test_as_negative_strand_flips(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True, start=10, end=80)
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=False, start=10, end=80
+        )
+        result = dis.as_negative_strand()
+        self.assertFalse(result.is_positive_strand())
+        self.assertFalse(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+        self.assertEqual(result, expected)
+
+    def test_as_opposite_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        opp = dis.as_opposite_strand()
+        self.assertFalse(opp.is_positive_strand())
+        opp2 = opp.as_opposite_strand()
+        self.assertTrue(opp2.is_positive_strand())
+
+    def test_strand_flip_preserves_coordinate_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        flipped = dis.as_opposite_strand()
+        self.assertEqual(flipped.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_idempotency(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertIs(dis.as_positive_strand().as_positive_strand(), dis)
+
+    def test_as_opposite_strand_preserves_start_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        opp = dis.as_opposite_strand()
+        self.assertEqual(opp.start, 10)
+        self.assertEqual(opp.end, 80)
+
+    def test_end5_end3_swap_on_opposite_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        # On coordinate strand: end5 at start, end3 at end
+        self.assertEqual(dis.end5_index, 10)
+        self.assertEqual(dis.end3_index, 80)
+        # Off coordinate strand: end5 at end, end3 at start
+        opp = dis.as_opposite_strand()
+        self.assertEqual(opp.end5_index, 80)
+        self.assertEqual(opp.end3_index, 10)
+
+
+class TestEndProperties(unittest.TestCase):
+
+    def test_end5_default(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, coord_id="c", interval_id="i")
+        # On coordinate strand: end5_index == start (0), end3_index == end (200)
+        self.assertEqual(dis.end5_index, 0)
+        self.assertEqual(dis.end3_index, 200)
+        e5 = dis.end5
+        self.assertEqual(len(e5), 0)
+        self.assertEqual(e5.start, 0)
+        self.assertEqual(e5.end, 0)
+        self.assertEqual(e5.coord_id, "c")
+        self.assertEqual(e5.id, None)
+        expected = DisjointIntervalSequence(
+            ivs, coord_id="c", interval_id=None, on_coordinate_strand=True, start=0, end=0
+        )
+        self.assertEqual(e5, expected)
+
+    def test_end3_default(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        e3 = dis.end3
+        self.assertEqual(len(e3), 0)
+        self.assertEqual(e3.start, 200)
+        self.assertEqual(e3.end, 200)
+        self.assertEqual(dis.end3_index, 200)
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=200, end=200
+        )
+        self.assertEqual(e3, expected)
+
+    def test_end5_end3_with_custom_indices(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=30, end=150)
+        # On coordinate strand: end5_index == start, end3_index == end
+        e5 = dis.end5
+        e3 = dis.end3
+        self.assertEqual(e5.start, 30)
+        self.assertEqual(e5.end, 30)
+        self.assertEqual(e3.start, 150)
+        self.assertEqual(e3.end, 150)
+        self.assertEqual(dis.end5_index, 30)
+        self.assertEqual(dis.end3_index, 150)
+        expected_e5 = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=30, end=30
+        )
+        expected_e3 = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=150, end=150
+        )
+        self.assertEqual(e5, expected_e5)
+        self.assertEqual(e3, expected_e3)
+
+    def test_coord_end5(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        ce5 = dis.coord_end5
+        self.assertEqual(len(ce5), 0)
+        self.assertEqual(ce5.start, 0)
+        self.assertEqual(ce5.end, 0)
+        self.assertEqual(ce5.end5_index, 0)
+        self.assertEqual(ce5.end3_index, 0)
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=0, end=0
+        )
+        self.assertEqual(ce5, expected)
+
+    def test_coord_end3(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        ce3 = dis.coord_end3
+        self.assertEqual(len(ce3), 0)
+        self.assertEqual(ce3.start, 100)
+        self.assertEqual(ce3.end, 100)
+        self.assertEqual(ce3.end5_index, 100)
+        self.assertEqual(ce3.end3_index, 100)
+        expected = DisjointIntervalSequence(
+            ivs, on_coordinate_strand=True, start=100, end=100
+        )
+        self.assertEqual(ce3, expected)
+
+    def test_end_preserves_coordinate_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.end5.coordinate_intervals, dis.coordinate_intervals)
+        self.assertEqual(dis.end3.coordinate_intervals, dis.coordinate_intervals)
+        self.assertEqual(dis.coord_end5.coordinate_intervals, dis.coordinate_intervals)
+        self.assertEqual(dis.coord_end3.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_end_preserves_on_coordinate_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertFalse(dis.end5.on_coordinate_strand)
+        self.assertFalse(dis.end3.on_coordinate_strand)
+
+    def test_coord_end_independent_of_on_coordinate_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertTrue(dis.coord_end5.on_coordinate_strand)
+        self.assertTrue(dis.coord_end3.on_coordinate_strand)
+
+    def test_end5_end3_opposite_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(
+            ivs, start=30, end=150, on_coordinate_strand=False
+        )
+        # Off coord strand: end5 at end (150), end3 at start (30)
+        self.assertEqual(dis.end5_index, 150)
+        self.assertEqual(dis.end3_index, 30)
+        e5 = dis.end5
+        e3 = dis.end3
+        self.assertEqual(e5.start, 150)
+        self.assertEqual(e5.end, 150)
+        self.assertEqual(e3.start, 30)
+        self.assertEqual(e3.end, 30)
+
+
+class TestDunderMethods(unittest.TestCase):
+
+    def test_len(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(len(dis), 200)
+
+    def test_len_with_custom_indices(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        self.assertEqual(len(dis), 70)
+
+    def test_repr(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, coord_id="ENST0001", interval_id="IV1")
+        r = repr(dis)
+        self.assertIn("DisjointIntervalSequence(", r)
+        self.assertIn("coord_id='ENST0001'", r)
+        self.assertIn("id='IV1'", r)
+        self.assertIn("chr1:+", r)
+        self.assertIn("len=200", r)
+        self.assertIn('coord_intervals=(Interval("chr1", "+", 100, 200, "hg19"), Interval("chr1", "+", 300, 400, "hg19"))', r)
+        self.assertIn("start=0", r)
+        self.assertIn("end=200", r)
+        self.assertIn("end5=0", r)
+        self.assertIn("end3=200", r)
+
+    def test_eq_same(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, coord_id="x", interval_id="i")
+        b = DisjointIntervalSequence(ivs, coord_id="x", interval_id="i")
+        self.assertEqual(a, b)
+
+    def test_eq_different_coord_id(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, coord_id="x")
+        b = DisjointIntervalSequence(ivs, coord_id="y")
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_interval_id(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, interval_id="x")
+        b = DisjointIntervalSequence(ivs, interval_id="y")
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_on_coordinate_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        b = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_chrom(self):
+        a = DisjointIntervalSequence(_make_intervals([("chr1", "+", 100, 200)]))
+        b = DisjointIntervalSequence(_make_intervals([("chr2", "+", 100, 200)]))
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_refg(self):
+        a = DisjointIntervalSequence([Interval("chr1", "+", 100, 200, "hg19")])
+        b = DisjointIntervalSequence([Interval("chr1", "+", 100, 200, "hg38")])
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_strand(self):
+        a = DisjointIntervalSequence(_make_intervals([("chr1", "+", 100, 200)]))
+        b = DisjointIntervalSequence(_make_intervals([("chr1", "-", 100, 200)]))
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_coordinate_intervals(self):
+        a = DisjointIntervalSequence(_make_intervals([("chr1", "+", 100, 200)]))
+        b = DisjointIntervalSequence(_make_intervals([("chr1", "+", 100, 300)]))
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_start(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, start=0, end=50)
+        b = DisjointIntervalSequence(ivs, start=10, end=50)
+        self.assertNotEqual(a, b)
+
+    def test_eq_different_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        a = DisjointIntervalSequence(ivs, start=0, end=50)
+        b = DisjointIntervalSequence(ivs, start=0, end=60)
+        self.assertNotEqual(a, b)
+
+    def test_eq_non_dis(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertNotEqual(dis, "not a DIS")
+        self.assertNotEqual(dis, 42)
+
+
+# Helper for shift/expand/relational tests
+# 2 exons on chr1+: [100,200) and [300,400), coordinate_length=200
+_COORD_IVS = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+
+
+def _dis(
+    start=0, end=200, on_coordinate_strand=True, coord_id="c", interval_id="i", ivs=None
+):
+    """Quick DIS factory for tests."""
+    return DisjointIntervalSequence(
+        ivs or _COORD_IVS,
+        coord_id=coord_id,
+        interval_id=interval_id,
+        on_coordinate_strand=on_coordinate_strand,
+        start=start,
+        end=end,
+    )
+
+
+class TestShift(unittest.TestCase):
+
+    def test_shift_positive(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 40)
+        self.assertEqual(shifted.end, 160)
+
+    def test_shift_negative(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(-10)
+        self.assertEqual(shifted.start, 20)
+        self.assertEqual(shifted.end, 140)
+
+    def test_shift_zero(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(0)
+        self.assertEqual(shifted, dis)
+
+    def test_shift_beyond_coordinate(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(60)
+        self.assertEqual(shifted.start, 90)
+        self.assertEqual(shifted.end, 210)
+
+    def test_shift_negative_beyond(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(-40)
+        self.assertEqual(shifted.start, -10)
+        self.assertEqual(shifted.end, 110)
+
+    def test_shift_zero_length(self):
+        dis = _dis(start=50, end=50)
+        shifted = dis.shift(5)
+        self.assertEqual(shifted.start, 55)
+        self.assertEqual(shifted.end, 55)
+        self.assertEqual(shifted.length, 0)
+
+    def test_shift_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1, downstream=-1
+        # shift(10) downstream → subtract 10 from both
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 20)
+        self.assertEqual(shifted.end, 140)
+
+    def test_shift_preserves_metadata(self):
+        dis = _dis(start=30, end=150, coord_id="mycoord", interval_id="myiv")
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.coord_id, "mycoord")
+        self.assertEqual(shifted.id, "myiv")
+        self.assertTrue(shifted.on_coordinate_strand)
+
+    def test_shift_preserves_coordinate_intervals(self):
+        dis = _dis(start=30, end=150)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.coordinate_intervals, dis.coordinate_intervals)
+
+
+class TestExpand(unittest.TestCase):
+
+    def test_expand_symmetric(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 155)
+
+    def test_expand_asymmetric(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5, 10)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 160)
+
+    def test_expand_upstream_only(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5, 0)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 150)
+
+    def test_expand_downstream_only(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(0, 10)
+        self.assertEqual(expanded.start, 30)
+        self.assertEqual(expanded.end, 160)
+
+    def test_expand_zero(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(0)
+        self.assertEqual(expanded, dis)
+
+    def test_expand_negative_contracts(self):
+        dis = _dis(start=30, end=150)
+        contracted = dis.expand(-5, -10)
+        self.assertEqual(contracted.start, 35)
+        self.assertEqual(contracted.end, 140)
+
+    def test_expand_contract_to_zero_length(self):
+        dis = _dis(start=30, end=150)  # length=120
+        contracted = dis.expand(-60, -60)
+        self.assertEqual(contracted.start, 90)
+        self.assertEqual(contracted.end, 90)
+        self.assertEqual(contracted.length, 0)
+
+    def test_expand_over_contraction_raises(self):
+        dis = _dis(start=30, end=150)  # length=120
+        with self.assertRaises(ValueError):
+            dis.expand(-70, -70)
+
+    def test_expand_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # end5=150, end3=30. expand(5): end5 moves to 155, end3 moves to 25
+        # start=min(155,25)=25, end=max(155,25)=155
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 155)
+
+    def test_expand_zero_length_interval(self):
+        dis = _dis(start=50, end=50)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 45)
+        self.assertEqual(expanded.end, 55)
+        self.assertEqual(expanded.length, 10)
+
+    def test_expand_beyond_coordinate(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(50, 0)
+        self.assertEqual(expanded.start, -20)
+
+    def test_expand_preserves_metadata(self):
+        dis = _dis(start=30, end=150, coord_id="c", interval_id="i")
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.coord_id, "c")
+        self.assertEqual(expanded.id, "i")
+        self.assertTrue(expanded.on_coordinate_strand)
+
+    def test_expand_preserves_coordinate_intervals(self):
+        dis = _dis(start=30, end=150)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.coordinate_intervals, dis.coordinate_intervals)
+
+
+class TestUpstreamOf(unittest.TestCase):
+
+    def test_upstream_of_true(self):
+        a = _dis(start=10, end=30)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_false_overlap(self):
+        a = _dis(start=10, end=60)
+        b = _dis(start=50, end=80)
+        self.assertFalse(a.upstream_of(b))
+
+    def test_upstream_of_adjacent(self):
+        a = _dis(start=10, end=50)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_same_false(self):
+        a = _dis(start=30, end=50)
+        self.assertFalse(a.upstream_of(a))
+
+    def test_upstream_of_zero_length(self):
+        a = _dis(start=30, end=30)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_both_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=50)
+        self.assertFalse(a.upstream_of(b))
+
+    def test_upstream_of_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1, upstream = higher indices
+        # a.start(100) >= b.end(80) → True
+        a = _dis(start=100, end=150, on_coordinate_strand=False)
+        b = _dis(start=50, end=80, on_coordinate_strand=False)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=10, end=30)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=30, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.upstream_of(b)
+
+    def test_different_coord_id_allowed(self):
+        a = _dis(start=10, end=30, coord_id="a")
+        b = _dis(start=50, end=80, coord_id="b")
+        self.assertTrue(a.upstream_of(b))
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=10, end=30, on_coordinate_strand=True)
+        b = _dis(start=50, end=80, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.upstream_of(b)
+
+    def test_non_dis_raises(self):
+        a = _dis(start=10, end=30)
+        with self.assertRaises(TypeError):
+            a.upstream_of("not a DIS")
+
+
+class TestDnstreamOf(unittest.TestCase):
+
+    def test_dnstream_of_true(self):
+        a = _dis(start=50, end=80)
+        b = _dis(start=10, end=30)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_dnstream_of_false(self):
+        a = _dis(start=10, end=30)
+        b = _dis(start=50, end=80)
+        self.assertFalse(a.dnstream_of(b))
+
+    def test_dnstream_of_adjacent(self):
+        a = _dis(start=50, end=80)
+        b = _dis(start=10, end=50)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_dnstream_of_same_false(self):
+        a = _dis(start=30, end=50)
+        self.assertFalse(a.dnstream_of(a))
+
+    def test_dnstream_of_both_zero_length_same_pos(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=50, end=50)
+        self.assertFalse(a.dnstream_of(b))
+
+    def test_dnstream_of_opposite_strand(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # downstream = lower indices. a.end(80) <= b.start(100) → True
+        a = _dis(start=50, end=80, on_coordinate_strand=False)
+        b = _dis(start=100, end=150, on_coordinate_strand=False)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=50, end=80)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=30, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.dnstream_of(b)
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=50, end=80, on_coordinate_strand=True)
+        b = _dis(start=30, end=60, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.dnstream_of(b)
+
+
+class TestWithin(unittest.TestCase):
+
+    def test_within_true(self):
+        a = _dis(start=30, end=50)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_false(self):
+        a = _dis(start=10, end=80)
+        b = _dis(start=30, end=50)
+        self.assertFalse(a.within(b))
+
+    def test_within_self(self):
+        a = _dis(start=30, end=50)
+        self.assertTrue(a.within(a))
+
+    def test_within_zero_length(self):
+        a = _dis(start=50, end=50)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_at_boundary(self):
+        a = _dis(start=10, end=80)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_zero_length_at_boundary(self):
+        a = _dis(start=10, end=10)
+        b = _dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_zero_length_outside(self):
+        a = _dis(start=5, end=5)
+        b = _dis(start=10, end=80)
+        self.assertFalse(a.within(b))
+
+    def test_within_opposite_strand(self):
+        a = _dis(start=80, end=120, on_coordinate_strand=False)
+        b = _dis(start=50, end=150, on_coordinate_strand=False)
+        self.assertTrue(a.within(b))
+
+    def test_different_coord_space_raises(self):
+        a = _dis(start=30, end=50)
+        other_ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 500, 600)])
+        b = _dis(start=10, end=80, ivs=other_ivs)
+        with self.assertRaises(ValueError):
+            a.within(b)
+
+    def test_different_on_coord_strand_raises(self):
+        a = _dis(start=30, end=50, on_coordinate_strand=True)
+        b = _dis(start=10, end=80, on_coordinate_strand=False)
+        with self.assertRaises(ValueError):
+            a.within(b)
+
+    def test_non_dis_raises(self):
+        a = _dis(start=30, end=50)
+        with self.assertRaises(TypeError):
+            a.within("not a DIS")
+
+
+if __name__ == "__main__":
+    unittest.main()

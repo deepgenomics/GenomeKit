@@ -20,7 +20,6 @@ DisjointIntervalSequence
 .. autoclass:: genome_kit.diseq.DisjointIntervalSequence
     :special-members:
     :members:
-    :exclude-members: shift, expand, upstream_of, dnstream_of, within
 
 Variant
 =======

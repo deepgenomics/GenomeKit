@@ -242,7 +242,7 @@ PyObject* PyGenomeAnnoTable_GetSubscript_ByID(PyObject* selfo, PyObject* key)
 			// return the first found
 			for (index_t i = 0; i < table.size(); ++i) {  // update all versioned prefixes
 				typename T::unpacked_value v{table[i], table};
-				for (const char* end = v.id; end != nullptr; end = strchr(end + 1, '.')) {
+				for (const char* end = strchr(v.id, '.'); end != nullptr; end = strchr(end + 1, '.')) {
 					self->index_by_id.emplace(string(v.id, end), i);
 				}
 				// emplace ensures that the first match wins

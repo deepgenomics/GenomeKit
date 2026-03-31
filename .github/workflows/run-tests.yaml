@@ -40,6 +40,7 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
         platform: ["linux-64", "osx-arm64", "osx-64"]
+        extras: ["none", "df"]
         include: # specify additional fields for all configs
           - python-version: "3.10"
             pyver-short: "310"
@@ -100,6 +101,8 @@ jobs:
       - name: run unittests
         id: run_unittests
         shell: bash -l -e {0}
+        env:
+          GK_EXTRAS: ${{ matrix.extras }}
         run: |
           set -x
           micromamba activate test
@@ -108,7 +111,12 @@ jobs:
           if [ ! -e "${files[0]}" ]; then
               echo "No files matched for py${{ matrix.pyver-short }}"
               exit 1 
-          fi          
-          conda mambabuild --croot /tmp/conda-bld -t $files --extra-deps python=${{ matrix.python-version }}
+          fi
+          extra_deps=(python=${{ matrix.python-version }})   
+          # run command with optional extra deps
+          if [ "$GK_EXTRAS" = "df" ]; then
+            extra_deps+=("polars=1.39.3")
+          fi
+          conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --extra-deps "${extra_deps[@]}"
           conda clean -it
           set +x

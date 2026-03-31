@@ -136,6 +136,83 @@ class TestGkdfRoundTrip(unittest.TestCase):
             re_df = from_parquet(path, lazy=False)
             self.assertEqual(re_df.item(), df.item())
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_intervals(self):
+        intervals = [
+            Interval("chr1", "+", 2000, 3000, "hg19"),
+            Interval("chr4", "-", 5000, 6000, "hg19"),
+        ]
+        df = pl.DataFrame({"intervals": [intervals]}, schema={"intervals": pl.Object})
+
+        path = self.tmp_dir_path / "list_of_intervals.parquet"
+        to_parquet(df, path)
+        re_df = from_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_genomes(self):
+        genomes = [Genome("hg38.p12"), Genome("gencode.v41")]
+        df = pl.DataFrame({"genomes": [genomes]}, schema={"genomes": pl.Object})
+
+        path = self.tmp_dir_path / "list_of_genomes.parquet"
+        to_parquet(df, path)
+        re_df = from_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_transcripts(self):
+        g = Genome("gencode.v41")
+        transcripts = list(g.transcripts)[:10]
+        df = pl.DataFrame(
+            {"transcripts": [transcripts]}, schema={"transcripts": pl.Object}
+        )
+
+        path = self.tmp_dir_path / "list_of_transcripts.parquet"
+        to_parquet(df, path)
+        re_df = from_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_multiple_types(self):
+        g = Genome("gencode.v41")
+
+        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+        transcript = g.genes[0].transcripts[0]
+        gene = g.genes[0]
+        exon = g.exons[0]
+
+        df = pl.DataFrame(
+            {
+                "interval": [interval],
+                "transcript": [transcript],
+                "gene": [gene],
+                "exon": [exon],
+            }
+        )
+
+        path = self.tmp_dir_path / "multiple_types.parquet"
+        to_parquet(df, path)
+        re_df = from_parquet(path, lazy=False)
+        self.assertEqual(re_df["interval"].item(), df["interval"].item())
+        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
+        self.assertEqual(re_df["gene"].item(), df["gene"].item())
+        self.assertEqual(re_df["exon"].item(), df["exon"].item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_multiple_genomes(self):
+        # test dataframe with multiple reference genomes in a single column
+        g1 = Genome("gencode.v41")
+        g2 = Genome("ucsc_refseq.2017-06-25")
+
+        genes = [g1.genes[0], g2.genes[0]]
+        df = pl.DataFrame({"genes": genes}, schema={"genes": pl.Object})
+
+        path = self.tmp_dir_path / "multiple_genomes.parquet"
+        to_parquet(df, path)
+        re_df = from_parquet(path, lazy=False)
+        self.assertEqual(re_df["genes"][0], df["genes"][0])
+        self.assertEqual(re_df["genes"][1], df["genes"][1])
+
 
 if __name__ == "__main__":
     unittest.main()

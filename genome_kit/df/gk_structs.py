@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from genome_kit._optional import require_polars
@@ -27,6 +28,29 @@ class GkDfType(StrEnum):
     INTRON = "intron"
     CDS = "cds"
     UTR = "utr"
+
+
+class CellType(StrEnum):
+    SCALAR = "scalar"
+    LIST = "list"
+
+
+@dataclass(frozen=True)
+class ColumnInfo:
+    """Dataclass to store metadata about a single column in a dataframe.
+
+    Assumes that all cells in a column have the saame type. If the cell contains a list,
+    assumes all items in the list are of the same type.
+    """
+
+    cell_type: CellType
+    gkdf_type: GkDfType
+
+    def to_dict(self) -> dict:
+        return {
+            "cell_type": self.cell_type.value,
+            "gkdf_type": self.gkdf_type.value,
+        }
 
 
 class GkDfVersion(StrEnum):

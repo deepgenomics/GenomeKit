@@ -5,8 +5,8 @@ import json
 import warnings
 from collections.abc import Callable
 from inspect import signature
-from typing import TYPE_CHECKING
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import polars as pl
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 import genome_kit as gk
 from genome_kit._optional import require_polars
 
-from .gk_structs import CURRENT_VERSION, GkDfType, GkDfVersion
+from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfVersion
 from .registry import GK_TO_STRUCT, get_registry
 
 
@@ -38,7 +38,7 @@ def _map_batches_safe(fn: Callable):
     return wrapper
 
 
-def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
+def _detect_gk_cols(lf: pl.LazyFrame) -> dict[str, ColumnInfo]:
     """Detect columns in the LazyFrame that contains GenomeKit objects.
 
     Args:
@@ -46,7 +46,8 @@ def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
         columns: Optional list of column names to check. If None, all columns will be checked.
 
     Returns:
-        A dictionary mapping column names to their corresponding GenomeKit types.
+        A dictionary mapping column names to the ColumnInfo dataclass containing the
+        GkDfType and CellType for the column.
     """
 
     lf_cols = lf.collect_schema().names()
@@ -58,18 +59,56 @@ def detect_gk_cols(lf: pl.LazyFrame) -> dict[str, GkDfType]:
     # materialize the first row to check data types, need the exact type not pl.Object
     first_row = lf.head(1).collect()[0]
 
-    # TODO: support list of GenomeKit objects, all of list assumed same type as first
     for col in lf_cols:
+        item = first_row[col][0]
+        if type(item) == list:
+            cell_type = CellType.LIST
+            if item:
+                # infer type based on the first item in the list
+                item = item[0]
+            else:
+                # empty list, assume not a list of GenomeKit objects
+                continue
+        else:
+            cell_type = CellType.SCALAR
+
         # item from first row of the column
-        col_type = GK_TO_STRUCT.get(type(first_row[col][0]), None)
+        col_type = GK_TO_STRUCT.get(type(item), None)
 
         if col_type is None:
             # column is not a genomekit type, so no serialization needed
-            pass
-        else:
-            target_cols[col] = col_type
+            continue
+
+        target_cols[col] = ColumnInfo(cell_type=cell_type, gkdf_type=col_type)
 
     return target_cols
+
+
+def _list_serializer(
+    serializer: Callable[[pl.Series], pl.Series], return_dtype: Any
+) -> Callable[[pl.Series], pl.Series]:
+    """Helper function to convert a serializer to accept lists of GenomeKit objects.
+
+    Args:
+    serializer: A serializer function for a series of GenomeKit objects
+    return_dtype: The return data type for the serialized series
+
+    Returns:
+    A serializer function for a series of lists of GenomeKit objects.
+    """
+    pl = require_polars()
+
+    def _serialize_list(s: pl.Series) -> pl.Series:
+        return pl.Series(
+            name=s.name,
+            values=[
+                serializer(pl.Series(values=l)).to_list() if l is not None else None
+                for l in s
+            ],
+            dtype=return_dtype,
+        )
+
+    return _serialize_list
 
 
 # TODO: add union of pd.DataFrame
@@ -86,7 +125,8 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
 
-    target_cols = detect_gk_cols(df)
+    # mapping from column name to ColumnInfo dataclass
+    target_cols = _detect_gk_cols(df)
 
     if not target_cols:
         warnings.warn(
@@ -97,27 +137,44 @@ def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
 
     registry = get_registry()
 
-    df = df.with_columns(
-        pl.col(col)
-        .map_batches(
-            _map_batches_safe(registry[CURRENT_VERSION][target_cols[col]].serializer),
-            return_dtype=registry[CURRENT_VERSION][target_cols[col]].struct,
+    def _build_serialization_expr(col: str) -> pl.Expr:
+        col_info = target_cols[col]  # ColumnInfo dataclass
+        gkdf_type = col_info.gkdf_type
+        if col_info.cell_type == CellType.LIST:
+            return_dtype = pl.List(inner=registry[CURRENT_VERSION][gkdf_type].struct)
+            serializer = _list_serializer(
+                registry[CURRENT_VERSION][gkdf_type].serializer,
+                return_dtype=return_dtype,
+            )
+        else:
+            return_dtype = registry[CURRENT_VERSION][gkdf_type].struct
+            serializer = registry[CURRENT_VERSION][gkdf_type].serializer
+
+        return (
+            pl.col(col)
+            .map_batches(
+                _map_batches_safe(serializer),
+                return_dtype=return_dtype,
+            )
+            .alias(col)
         )
-        .alias(col)
-        for col in target_cols
-    )
+
+    df = df.with_columns(_build_serialization_expr(col) for col in target_cols)
+
+    # convert ColumnInfo dataclass to a serializable format
+    target_col_metadata = {col: target_cols[col].to_dict() for col in target_cols}
 
     metadata = {
         "gkdf_version": CURRENT_VERSION.value,
         "gk_version": gk.__version__,
-        "target_cols": json.dumps(target_cols),
+        "target_cols": json.dumps(target_col_metadata),
     }
 
     df.sink_parquet(path, metadata=metadata)
 
 
 def _init_gk_annotations(
-    lf: pl.LazyFrame, target_cols: dict[str, GkDfType]
+    lf: pl.LazyFrame, target_cols: dict[str, dict]
 ) -> list[gk.Genome]:
     """Initialize GenomeKit annotations for all unique genomes in the LazyFrame.
 
@@ -125,26 +182,51 @@ def _init_gk_annotations(
 
     Args:
         lf: The LazyFrame containing the serialized GenomeKit objects.
-        target_cols: A dictionary mapping column names to their corresponding GenomeKit types.
+        target_cols: A dictionary mapping column names to their corresponding ColumnInfo.
     """
     pl = require_polars()
 
     annotations = []
 
-    genomes_exprs = [pl.col(c).struct.field("genome_str") for c in target_cols.keys()]
-    genomes = (
-        lf.select(
-            pl.concat_list(genomes_exprs)
-            .explode()
-            .drop_nulls()
-            .unique()
-            .alias("genome_str")
-        )
-        .collect()["genome_str"]
-        .to_list()
-    )
+    # extract genome_str field from every column
+    genomes_exprs = []
+    genomes_list_exprs = []
+    for c in target_cols.keys():
+        if target_cols[c]["cell_type"] == CellType.SCALAR:
+            genomes_exprs.append(pl.col(c).struct.field("genome_str"))
+        else:
+            genomes_list_exprs.append(pl.col(c).explode().struct.field("genome_str"))
 
-    # warms annotations for all unique genomes in the file
+    # expressions to extract genome_str must be run separately since exploded lists
+    # may have more rows than the original dataframe
+    plans = []
+
+    if genomes_exprs:
+        plans.append(
+            lf.select(
+                pl.concat_list(genomes_exprs)
+                .explode()
+                .drop_nulls()
+                .unique()
+                .alias("genome_str")
+            )
+        )
+
+    if genomes_list_exprs:
+        plans.append(
+            lf.select(
+                pl.concat_list(genomes_list_exprs)
+                .explode()
+                .drop_nulls()
+                .unique()
+                .alias("genome_str")
+            )
+        )
+
+    genomes = pl.concat(plans).unique().collect()["genome_str"].to_list()
+
+    # warms annotations for all unique annotation genomes in the file.
+    # all annotations available for serialization are contained in dganno file
     for genome_str in genomes:
         genome = gk.Genome(genome_str)
         if genome.config == genome.reference_genome:
@@ -172,28 +254,65 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
     )
 
 
+def _list_deserializer(
+    deserializer: Callable[[pl.Series], pl.Series],
+) -> Callable[[pl.Series], pl.Series]:
+    """Helper function to convert a deserializer to accept lists of serialized GenomeKit objects.
+
+    Args:
+    deserializer: A deserializer function for a series of serialized GenomeKit objects
+
+    Returns:
+    A deserializer function for a series of lists of serialized GenomeKit objects.
+    """
+    pl = require_polars()
+
+    def _deserialize_list(s: pl.Series) -> pl.Series:
+        return pl.Series(
+            name=s.name,
+            values=[
+                deserializer(pl.Series(values=l)).to_list() if l is not None else None
+                for l in s
+            ],
+            dtype=pl.Object,
+        )
+
+    return _deserialize_list
+
+
 def _deserialize_gk_cols(
-    lf: pl.LazyFrame, target_cols: dict[str, GkDfType]
+    lf: pl.LazyFrame, target_cols: dict[str, dict]
 ) -> pl.LazyFrame:
     """Deserialize columns containing GenomeKit objects.
 
     Args:
         lf: The LazyFrame containing the serialized GenomeKit objects.
-        target_cols: A dictionary mapping column names to their corresponding GkDf types.
+        target_cols: A dictionary mapping column names to their corresponding ColumnInfo.
     """
     pl = require_polars()
     registry = get_registry()
 
-    # with_columns_seq provides a 2x speedup here over with_columns
-    return lf.with_columns_seq(
-        pl.col(col)
-        .map_batches(
-            _map_batches_safe(registry[CURRENT_VERSION][target_cols[col]].deserializer),
-            return_dtype=pl.Object,
+    def _build_deserialization_expr(col: str) -> pl.Expr:
+        col_info = target_cols[col]  # dict representation of ColumnInfo
+        gkdf_type = col_info["gkdf_type"]
+        if col_info["cell_type"] == CellType.LIST:
+            deserializer = _list_deserializer(
+                registry[CURRENT_VERSION][gkdf_type].deserializer
+            )
+        else:
+            deserializer = registry[CURRENT_VERSION][gkdf_type].deserializer
+
+        return (
+            pl.col(col)
+            .map_batches(
+                _map_batches_safe(deserializer),
+                return_dtype=pl.Object,
+            )
+            .alias(col)
         )
-        .alias(col)
-        for col in target_cols
-    )
+
+    # with_columns_seq provides a 2x speedup here over with_columns
+    return lf.with_columns_seq(_build_deserialization_expr(col) for col in target_cols)
 
 
 def from_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:

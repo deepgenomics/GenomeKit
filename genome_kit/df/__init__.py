@@ -1,3 +1,3 @@
-from .serialization import from_parquet, to_parquet
+from .serialization import read_parquet, write_parquet
 
-__all__ = ["from_parquet", "to_parquet"]
+__all__ = ["read_parquet", "write_parquet"]

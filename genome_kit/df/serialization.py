@@ -111,68 +111,6 @@ def _list_serializer(
     return _serialize_list
 
 
-# TODO: add union of pd.DataFrame
-def to_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
-    """Serialize a DataFrame with GenomeKit objects to a Parquet file.
-
-    Args:
-        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
-        path: The file path to write the Parquet file to.
-    """
-    pl = require_polars()
-
-    path = Path(path)
-    if isinstance(df, pl.DataFrame):
-        df = df.lazy()
-
-    # mapping from column name to ColumnInfo dataclass
-    target_cols = _detect_gk_cols(df)
-
-    if not target_cols:
-        warnings.warn(
-            "No GenomeKit columns detected for serialization, writing DataFrame as is."
-        )
-        df.sink_parquet(path)
-        return
-
-    registry = get_registry()
-
-    def _build_serialization_expr(col: str) -> pl.Expr:
-        col_info = target_cols[col]  # ColumnInfo dataclass
-        gkdf_type = col_info.gkdf_type
-        if col_info.cell_type == CellType.LIST:
-            return_dtype = pl.List(inner=registry[CURRENT_VERSION][gkdf_type].struct)
-            serializer = _list_serializer(
-                registry[CURRENT_VERSION][gkdf_type].serializer,
-                return_dtype=return_dtype,
-            )
-        else:
-            return_dtype = registry[CURRENT_VERSION][gkdf_type].struct
-            serializer = registry[CURRENT_VERSION][gkdf_type].serializer
-
-        return (
-            pl.col(col)
-            .map_batches(
-                _map_batches_safe(serializer),
-                return_dtype=return_dtype,
-            )
-            .alias(col)
-        )
-
-    df = df.with_columns(_build_serialization_expr(col) for col in target_cols)
-
-    # convert ColumnInfo dataclass to a serializable format
-    target_col_metadata = {col: target_cols[col].to_dict() for col in target_cols}
-
-    metadata = {
-        "gkdf_version": CURRENT_VERSION.value,
-        "gk_version": gk.__version__,
-        "target_cols": json.dumps(target_col_metadata),
-    }
-
-    df.sink_parquet(path, metadata=metadata)
-
-
 def _init_gk_annotations(
     lf: pl.LazyFrame, target_cols: dict[str, dict]
 ) -> list[gk.Genome]:
@@ -315,7 +253,69 @@ def _deserialize_gk_cols(
     return lf.with_columns_seq(_build_deserialization_expr(col) for col in target_cols)
 
 
-def from_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
+# TODO: add union of pd.DataFrame
+def write_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
+    """Serialize a DataFrame with GenomeKit objects to a Parquet file.
+
+    Args:
+        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
+        path: The file path to write the Parquet file to.
+    """
+    pl = require_polars()
+
+    path = Path(path)
+    if isinstance(df, pl.DataFrame):
+        df = df.lazy()
+
+    # mapping from column name to ColumnInfo dataclass
+    target_cols = _detect_gk_cols(df)
+
+    if not target_cols:
+        warnings.warn(
+            "No GenomeKit columns detected for serialization, writing DataFrame as is."
+        )
+        df.sink_parquet(path)
+        return
+
+    registry = get_registry()
+
+    def _build_serialization_expr(col: str) -> pl.Expr:
+        col_info = target_cols[col]  # ColumnInfo dataclass
+        gkdf_type = col_info.gkdf_type
+        if col_info.cell_type == CellType.LIST:
+            return_dtype = pl.List(inner=registry[CURRENT_VERSION][gkdf_type].struct)
+            serializer = _list_serializer(
+                registry[CURRENT_VERSION][gkdf_type].serializer,
+                return_dtype=return_dtype,
+            )
+        else:
+            return_dtype = registry[CURRENT_VERSION][gkdf_type].struct
+            serializer = registry[CURRENT_VERSION][gkdf_type].serializer
+
+        return (
+            pl.col(col)
+            .map_batches(
+                _map_batches_safe(serializer),
+                return_dtype=return_dtype,
+            )
+            .alias(col)
+        )
+
+    df = df.with_columns(_build_serialization_expr(col) for col in target_cols)
+
+    # convert ColumnInfo dataclass to a serializable format
+    target_col_metadata = {col: target_cols[col].to_dict() for col in target_cols}
+
+    metadata = {
+        "gkdf_version": CURRENT_VERSION.value,
+        "gk_version": gk.__version__,
+        "target_cols": json.dumps(target_col_metadata),
+    }
+
+    df.sink_parquet(path, metadata=metadata)
+
+
+def read_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
     """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
 
     Args:

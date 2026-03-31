@@ -49,7 +49,7 @@ from .variant import Variant, VariantTable
 from .variant_genome import VariantGenome
 from .vcf_table import VCFTable, VCFVariant
 from . import serialize
-from .df import to_parquet, from_parquet
+from .df import write_parquet, read_parquet
 
 #########################################################################
 
@@ -94,6 +94,7 @@ __all__ = [
     "JunctionTable",
     "ReadAlignments",
     "ReadDistributions",
+    "read_parquet",
     "Transcript",
     "TranscriptTable",
     "Utr",
@@ -103,6 +104,7 @@ __all__ = [
     "VariantTable",
     "VCFTable",
     "VCFVariant",
+    "write_parquet",
 ]
 
 #########################################################################

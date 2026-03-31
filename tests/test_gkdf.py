@@ -173,6 +173,20 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_gk_with_null(self):
+        g = Genome("gencode.v41")
+        transcripts = list(g.transcripts)[:10]
+        transcripts[:3] = [None] * 3
+        df = pl.DataFrame(
+            {"transcripts": [transcripts]}, schema={"transcripts": pl.Object}
+        )
+
+        path = self.tmp_dir_path / "list_of_transcripts_with_null.parquet"
+        write_parquet(df, path)
+        re_df = read_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_multiple_types(self):
         g = Genome("gencode.v41")
 

@@ -64,7 +64,7 @@ def _detect_gk_cols(
 
     for col in lf_cols:
         # remove nulls for type inference, list/scalar cols depend on first non-null value
-        vals = head.get_column(col).drop_nulls()
+        vals = head.get_column(col).drop_nulls()  # removes scalar nulls
         first = vals[0]
 
         if type(first) == list:
@@ -74,7 +74,7 @@ def _detect_gk_cols(
                 f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
             )
             # cannot use Polars list expressions since lists of GenomeKit objects are stored as pl.Object
-            col_types = {type(item) for v in vals for item in v}
+            col_types = {type(item) for v in vals for item in v if item is not None}
 
         else:
             cell_type = CellType.SCALAR

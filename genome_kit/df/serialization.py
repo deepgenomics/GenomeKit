@@ -38,7 +38,9 @@ def _map_batches_safe(fn: Callable):
     return wrapper
 
 
-def _detect_gk_cols(lf: pl.LazyFrame) -> dict[str, ColumnInfo]:
+def _detect_gk_cols(
+    lf: pl.LazyFrame, infer_schema_length: int = 100
+) -> dict[str, ColumnInfo]:
     """Detect columns in the LazyFrame that contains GenomeKit objects.
 
     Args:
@@ -49,31 +51,43 @@ def _detect_gk_cols(lf: pl.LazyFrame) -> dict[str, ColumnInfo]:
         A dictionary mapping column names to the ColumnInfo dataclass containing the
         GkDfType and CellType for the column.
     """
+    pl = require_polars()
 
     lf_cols = lf.collect_schema().names()
 
     target_cols = {}
 
-    # polars Struct inferred from first row, same behaviour as Polars
-    # see https://docs.pola.rs/user-guide/expressions/structs/#inferring-the-data-type-struct-from-dictionaries
-    # materialize the first row to check data types, need the exact type not pl.Object
-    first_row = lf.head(1).collect()[0]
+    # datatype inference done on first n=infer_schema_length rows. Follows inference
+    # logic from Polars DataFrames when rows are provided.
+    # see https://github.com/pola-rs/polars/blob/1cd236c60c01572c5ec6fdd252d8b20218d7b440/py-polars/src/polars/dataframe/frame.py#L248-L251
+    head = lf.head(infer_schema_length).collect()
 
     for col in lf_cols:
-        item = first_row[col][0]
-        if type(item) == list:
+        # remove nulls for type inference, list/scalar cols depend on first non-null value
+        vals = head.get_column(col).drop_nulls()
+        first = vals[0]
+
+        if type(first) == list:
             cell_type = CellType.LIST
-            if item:
-                # infer type based on the first item in the list
-                item = item[0]
-            else:
-                # empty list, assume not a list of GenomeKit objects
-                continue
+            # ensure all values are lists within a col
+            assert all(type(v) == list for v in vals), (
+                f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+            )
+            # cannot use Polars list expressions since lists of GenomeKit objects are stored as pl.Object
+            col_types = {type(item) for v in vals for item in v}
+
         else:
             cell_type = CellType.SCALAR
+            # ensure all values are not lists within a col
+            assert all(type(v) != list for v in vals), (
+                f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+            )
+            col_types = set(vals.map_elements(type, return_dtype=pl.Object))
 
-        # item from first row of the column
-        col_type = GK_TO_STRUCT.get(type(item), None)
+        assert len(col_types) == 1, (
+            f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+        )
+        col_type = GK_TO_STRUCT.get(col_types.pop(), None)
 
         if col_type is None:
             # column is not a genomekit type, so no serialization needed
@@ -254,12 +268,15 @@ def _deserialize_gk_cols(
 
 
 # TODO: add union of pd.DataFrame
-def write_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
+def write_parquet(
+    df: pl.DataFrame | pl.LazyFrame, path: str | Path, infer_schema_length: int = 100
+) -> None:
     """Serialize a DataFrame with GenomeKit objects to a Parquet file.
 
     Args:
         df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
+        infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.
     """
     pl = require_polars()
 
@@ -268,7 +285,7 @@ def write_parquet(df: pl.DataFrame | pl.LazyFrame, path: str | Path) -> None:
         df = df.lazy()
 
     # mapping from column name to ColumnInfo dataclass
-    target_cols = _detect_gk_cols(df)
+    target_cols = _detect_gk_cols(df, infer_schema_length=infer_schema_length)
 
     if not target_cols:
         warnings.warn(

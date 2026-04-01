@@ -438,7 +438,7 @@ class DisjointIntervalSequence:
             f"name={self._interval_metadata.name!r}, "
             f"{self.chromosome}:{self.coord_transcript_strand}, "
             f"len={self.length}, "
-            f"coord_intervals={self._coordinate_intervals})"
+            f"coord_intervals={self._coordinate_intervals}, "
             f"start={self._start}, "
             f"end={self._end}, "
             f"end5={self.end5_index}, "

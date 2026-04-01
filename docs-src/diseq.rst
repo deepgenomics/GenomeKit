@@ -41,25 +41,25 @@ now, and just use some diagrams to illustrate the concepts.
 Say we have a transcript on the + strand represented by the diagram below:
 ::
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
-    DNA Sequence:          A   T   G   C   C   G   C   A   T   G   C   C   G   C
-                          |<------->| |<------->| |<--->| |<----------->| |<--->|
-                             Exon1      Intron1    Exon2      Intron2      Exon3
+    DNA Sequence:       |  A   T   G   C   C   G   C   A   T   G   C   C   G   C  |
+                        | |<------->| |<------->| |<--->| |<----------->| |<--->| |
+                        5'   Exon1      Intron1    Exon2      Intron2      Exon3  3'
 
 If we were to take only the exons, we would have the following disjoint intervals:
 ::
     Genomic Coordinates:  153 154 155 159 160 165 166 167
-    DNA Sequence:          A   T   G   C   A   G   C
-                          |<------->| |<--->| |<--->|
-                             Exon1     Exon2   Exon3
+    DNA Sequence:       |  A   T   G   C   A   G   C  |
+                        | |<------->| |<--->| |<--->| |
+                        5'   Exon1     Exon2   Exon3  3'
 
 Let's say we want to create an interval on this series of disjoint exon intervals,
 spanning from the start of Exon1 to the end of Exon3. We can start by converting our
 list of exons into a DIS coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          A   T   G   C   A   G   C
-                           |<----->|   |<->|   |<->|
-                             Exon1     Exon2   Exon3
+    DNA Sequence:       |  A   T   G   C   A   G   C  |
+                        | |<------->| |<--->| |<--->| |
+                        5'   Exon1     Exon2   Exon3  3'
 
 Now let's place the interval on the DIS coordinate space
 ::
@@ -83,28 +83,28 @@ do more. We can instead define an interval within the DIS on the strand opposite
 of the coordinate space. Let's start with the DIS coordinate space from above
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          A   T   G   C   A   G   C
-                           |<----->|   |<->|   |<->|
-                             Exon1     Exon2   Exon3
+    DNA Sequence:       |  A   T   G   C   A   G   C  |
+                        |  |<----->|   |<->|   |<->|  |
+                        5'   Exon1     Exon2   Exon3  3'
 
 Now let's add the negative (opposite) strand to the diagram
 ::
-                                Positive Strand
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      A   T   G   C   A   G   C
+                        5'      Positive strand          3'
+    DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
+    DNA Sequence (+):   |  A   T   G   C   A   G   C     |
     -----------------------------------------------------
-    DNA Sequence (-):      T   A   C   G   T   C   G
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-                                Negative Strand
+    DNA Sequence (-):   |  T   A   C   G   T   C   G     |
+    DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
+                        3'      Negative Strand          5'
 
 Importantly, we see the DIS coordinates are the same on both strands. This simplifies
 things when you want to get the complement of a given interval, as you can use the same
 indices and just flip the strand. To illustrate this, let's now define the same interval
 as before (spanning the entire coordinate space) but on the negative strand
 ::
-                                Positive Strand
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      A   T   G   C   A   G   C
+                        5'        Positive Strand        3'
+    DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
+    DNA Sequence (+):   |  A   T   G   C   A   G   C     |
     -----------------------------------------------------
     DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -128,27 +128,25 @@ take a look at an example:
 Say we have the following transcript on the negative strand represented by the diagram
 below:
 ::
-    Reminder: On the - strand, the 3' end is on the left and the 5' end is on the right!
-
-                             Exon3      Intron2    Exon2      Intron1      Exon1
-                          |<------->| |<------->| |<--->| |<----------->| |<--->|
-    DNA Sequence (-):      G   T   C   A   G   T   C   A   G   T   C   A   G   T
+                        3'  Exon3      Intron2    Exon2      Intron1      Exon1   5'
+                        | |<------->| |<------->| |<--->| |<----------->| |<--->| |
+    DNA Sequence (-):   |  G   T   C   A   G   T   C   A   G   T   C   A   G   T  |
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
                                             Negative Strand
 Taking just the exons:
 ::
-                             Exon3     Exon2   Exon1
-                          |<------->| |<--->| |<--->|
-    DNA Sequence (-):      G   T   C   C   A   G   T
+                        3'   Exon3     Exon2   Exon1  5'
+                        | |<------->| |<--->| |<--->| |
+    DNA Sequence (-):   |  G   T   C   C   A   G   T  |
     Genomic Coordinates:  153 154 155 159 160 165 166 167
                                     Negative Strand
 
 Now let's create a DIS from these exons:
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          T   G   A   C   C   T   G
-                           |<->|   |<->|   |<----->|
-                           Exon1   Exon2     Exon3
+    DNA Sequence:       |  T   G   A   C   C   T   G  |
+                        |  |<->|   |<->|   |<----->|  |
+                        5' Exon1   Exon2     Exon3    3'
 
 Notice that the sequence flips relative to the direction of the indices. What has
 happened is that the DIS coordinate space is defined in the 5'→3' direction of the

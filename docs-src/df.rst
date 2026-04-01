@@ -7,19 +7,19 @@ The :py:mod:`genome_kit.df` subpackage contains utilities for working with Polar
 
 .. important::
 
-    ``genome_kit.df`` depends on optional ``polars`` dependencies, which are not installed by default. This can be installed with the ``[df]`` extra:
+    ``genome_kit.df`` depends on optional ``polars`` dependencies, which are not installed by default. These can be installed with the ``[df]`` extra:
     
     .. code-block:: bash
 
-        mamba install "genomekit[df]"
+        pip install "genomekit[df]"
 
-    The ``[df]`` extra is cd  included in the default installation.
+    The ``[df]`` extra is not included in the default ``genomekit`` installation.
 
     If you are running an x86 version of Python on an Apple Silicon Mac (e.g. M1 chip), the ``polars-runtime-compat`` package is also required. Install this with the ``[df-mac]`` extra:
     
     .. code-block:: bash
 
-        mamba install "genomekit[df-mac]"
+        pip install "genomekit[df-mac]"
 
 
 
@@ -40,10 +40,10 @@ The serialization and deserialization entry points are :py:func:`~genome_kit.df.
         }
     )
 
-    gk.read_parquet(df, "genes.parquet")
+    gk.write_parquet(df, "genes.parquet")
     ...
     ...
-    restored_df = gk.write_parquet("genes.parquet")
+    restored_df = gk.read_parquet("genes.parquet")
 
 
 .. note::

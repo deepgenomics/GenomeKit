@@ -8,7 +8,7 @@ from genome_kit._optional import require_polars
 if TYPE_CHECKING:  # import polars for type checking
     import polars as pl
 
-# minimal shim for python <3.11 compatability
+# minimal shim for python <3.11 compatibility
 try:
     from enum import StrEnum
 except ImportError:
@@ -39,7 +39,7 @@ class CellType(StrEnum):
 class ColumnInfo:
     """Dataclass to store metadata about a single column in a dataframe.
 
-    Assumes that all cells in a column have the saame type. If the cell contains a list,
+    Assumes that all cells in a column have the same type. If the cell contains a list,
     assumes all items in the list are of the same type.
     """
 

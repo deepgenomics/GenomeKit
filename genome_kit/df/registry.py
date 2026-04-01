@@ -327,6 +327,7 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                 else None
                 for struct in s
             ],
+            dtype=pl.Object,
         )
 
     REGISTRY: dict[GkDfVersion, dict[GkDfType, GKTypeEntry]] = {

@@ -48,7 +48,8 @@ def _detect_gk_cols(
 
     Args:
         lf: The LazyFrame to inspect.
-        columns: Optional list of column names to check. If None, all columns will be checked.
+        infer_schema_length: The number of rows to use for schema inference when
+            detecting GenomeKit columns.
 
     Returns:
         A dictionary mapping column names to the ColumnInfo dataclass containing the
@@ -68,28 +69,40 @@ def _detect_gk_cols(
     for col in lf_cols:
         # remove nulls for type inference, list/scalar cols depend on first non-null value
         vals = head.get_column(col).drop_nulls()  # removes scalar nulls
-        first = vals[0]
 
+        # column only contains null values in the first infer_schema_length rows
+        if len(vals) == 0:
+            warnings.warn(
+                f"Column {col} contains only null values in the first {infer_schema_length} rows, "
+                "unable to infer type for serialization. Please ensure this column "
+                "contains non-null values for accurate serialization."
+            )
+            continue
+
+        first = vals[0]
         if type(first) == list:
             cell_type = CellType.LIST
             # ensure all values are lists within a col
-            assert all(type(v) == list for v in vals), (
-                f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
-            )
+            if not all(type(v) == list for v in vals):
+                raise ValueError(
+                    f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+                )
             # cannot use Polars list expressions since lists of GenomeKit objects are stored as pl.Object
             col_types = {type(item) for v in vals for item in v if item is not None}
 
         else:
             cell_type = CellType.SCALAR
             # ensure all values are not lists within a col
-            assert all(type(v) != list for v in vals), (
-                f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
-            )
+            if not all(type(v) != list for v in vals):
+                raise ValueError(
+                    f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+                )
             col_types = set(vals.map_elements(type, return_dtype=pl.Object))
 
-        assert len(col_types) == 1, (
-            f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
-        )
+        if len(col_types) != 1:
+            raise ValueError(
+                f"Column {col} contains mixed data types. Please ensure all cells are the same type before serialization."
+            )
         col_type = GK_TO_STRUCT.get(col_types.pop(), None)
 
         if col_type is None:
@@ -133,15 +146,16 @@ def _init_gk_annotations(
 ) -> list[gk.Genome]:
     """Initialize GenomeKit annotations for all unique genomes in the LazyFrame.
 
-    Prevents race conditions when opening dganno files during polars operations. 
-    Objects are returned in a list to keep weak references alive. 
+    Prevents race conditions when opening dganno files during polars operations.
+    Objects are returned in a list to keep weak references alive.
 
     Args:
         lf: The LazyFrame containing the serialized GenomeKit objects.
-        target_cols: A dictionary mapping column names to their corresponding ColumnInfo.
+        target_cols: A dictionary mapping column names to their column information.
+            target_cols is a dict from the ColumnInfo dataclass.
 
     Returns:
-        A list of initialized Genome objects for the unique genomes in the LazyFrame.
+        A list of initialized gene tables for the unique genomes in the LazyFrame.
     """
     pl = require_polars()
 
@@ -198,23 +212,25 @@ def _init_gk_annotations(
 
 def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
     """Validate the parquet metadata for a gkdf parquet file.
-    
+
     Args:
         metadata: The parquet metadata to validate.
     """
 
     try:
         version = GkDfVersion(metadata.get("gkdf_version"))
-        assert version in GkDfVersion, (
-            f"Unrecognized gkdf version in Parquet metadata, expected one of {[v.value for v in GkDfVersion]}"
-        )
+        if version not in GkDfVersion:
+            raise ValueError(
+                f"Unrecognized gkdf version in Parquet metadata, expected one of {[v.value for v in GkDfVersion]}"
+            )
     except ValueError:
         raise ValueError(
             "Invalid or missing gkdf_version in Parquet metadata, unable to deserialize GenomeKit objects. "
         )
-    assert metadata.get("target_cols") is not None, (
-        "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
-    )
+    if metadata.get("target_cols") is None:
+        raise ValueError(
+            "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
+        )
 
 
 def _list_deserializer(

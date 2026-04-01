@@ -6,7 +6,7 @@ from importlib.metadata import PackageNotFoundError, version
 def require_polars():
     """Import Polars if available, otherwise provide helpful error messages.
 
-    Also checks for compability on MacOS with Apple Silicon, which may require
+    Also checks for compatibility on MacOS with Apple Silicon, which may require
     an additional package if running Python under Rosetta translation.
     """
     try:
@@ -50,7 +50,7 @@ def check_under_rosetta():
             text=True,
             check=True,
         )
-        # output will be 0 if running commnad directly from the terminal, and 1 if
+        # output will be 0 if running command directly from the terminal, and 1 if
         # running through Python under Rosetta translation
         return result.stdout.strip() == "1"
     except subprocess.CalledProcessError:

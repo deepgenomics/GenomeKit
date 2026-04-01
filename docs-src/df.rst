@@ -13,12 +13,19 @@ The :py:mod:`genome_kit.df` subpackage contains utilities for working with Polar
 
         mamba install "genomekit[df]"
 
-    The ``[df]`` extra is not included in the default installation.
+    The ``[df]`` extra is cd  included in the default installation.
+
+    If you are running an x86 version of Python on an Apple Silicon Mac (e.g. M1 chip), the ``polars-runtime-compat`` package is also required. Install this with the ``[df-mac]`` extra:
+    
+    .. code-block:: bash
+
+        mamba install "genomekit[df-mac]"
+
 
 
 Quickstart
 -----------
-The serialization and deserialization entry points are :py:func:`~genome_kit.df.to_parquet` and :py:func:`~genome_kit.df.from_parquet`:
+The serialization and deserialization entry points are :py:func:`~genome_kit.df.read_parquet` and :py:func:`~genome_kit.df.write_parquet`:
 
 .. code-block:: python
 
@@ -33,15 +40,15 @@ The serialization and deserialization entry points are :py:func:`~genome_kit.df.
         }
     )
 
-    gk.to_parquet(df, "genes.parquet")
+    gk.read_parquet(df, "genes.parquet")
     ...
     ...
-    restored_df = gk.from_parquet("genes.parquet")
+    restored_df = gk.write_parquet("genes.parquet")
 
 
 .. note::
     
-    The written parquet files can be read by any software that supports the parquet format, but the GenomeKit objects will only be restored when read with :py:func:`~genome_kit.df.from_parquet`.
+    The written parquet files can be read by any software that supports the parquet format, but the GenomeKit objects will only be restored when read with :py:func:`genome_kit.df.read_parquet`.
     
 
 Supported GenomeKit Objects

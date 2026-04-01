@@ -204,13 +204,10 @@ class DisjointIntervalSequence:
         """Construct a DIS from a sequence of Intervals
         (or :py:class:`~genome_kit.Exon`/:py:class:`~genome_kit.Cds`/:py:class:`~genome_kit.Utr` objects).
 
-        If elements have an ``.interval`` attribute (e.g. Exon, Cds, Utr),
-        the plain Interval is extracted automatically.
-
         Parameters
         ----------
         intervals : Sequence[:py:class:`~genome_kit.Interval`]
-            Sequence of Interval or annotation objects with ``.interval``.
+            Sequence of Interval or annotation objects.
         coord_name : :py:class:`str` or None
             Optional name for the coordinate space.
         interval_name : :py:class:`str` or None
@@ -220,7 +217,6 @@ class DisjointIntervalSequence:
         -------
         :py:class:`DisjointIntervalSequence`
         """
-        # Extract .interval if items are Exon/Cds/Utr
         coord_intervals = [
             iv.interval if hasattr(iv, "interval") else iv for iv in intervals
         ]

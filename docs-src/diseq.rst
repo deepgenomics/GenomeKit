@@ -41,14 +41,14 @@ now, and just use some diagrams to illustrate the concepts.
 Say we have a transcript on the + strand represented by the diagram below:
 ::
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
-    DNA Sequence:          A   T   G   C   A   T   G   C   A   T   G   C   A   T
+    DNA Sequence:          A   T   G   C   C   G   C   A   T   G   C   C   G   C
                           |<------->| |<------->| |<--->| |<----------->| |<--->|
                              Exon1      Intron1    Exon2      Intron2      Exon3
 
 If we were to take only the exons, we would have the following disjoint intervals:
 ::
     Genomic Coordinates:  153 154 155 159 160 165 166 167
-    DNA Sequence:          A   T   G   G   C   A   T
+    DNA Sequence:          A   T   G   C   A   G   C
                           |<------->| |<--->| |<--->|
                              Exon1     Exon2   Exon3
 
@@ -57,14 +57,14 @@ spanning from the start of Exon1 to the end of Exon3. We can start by converting
 list of exons into a DIS coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          A   T   G   G   C   A   T
+    DNA Sequence:          A   T   G   C   A   G   C
                            |<----->|   |<->|   |<->|
                              Exon1     Exon2   Exon3
 
 Now let's place the interval on the DIS coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          A   T   G   G   C   A   T
+    DNA Sequence:          A   T   G   C   A   G   C
                            |<--------------------->|
                           end5      Interval      end3
     Start Index:     0
@@ -83,7 +83,7 @@ do more. We can instead define an interval within the DIS on the strand opposite
 of the coordinate space. Let's start with the DIS coordinate space from above
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence:          A   T   G   G   C   A   T
+    DNA Sequence:          A   T   G   C   A   G   C
                            |<----->|   |<->|   |<->|
                              Exon1     Exon2   Exon3
 
@@ -91,9 +91,9 @@ Now let's add the negative (opposite) strand to the diagram
 ::
                                 Plus Strand
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      A   T   G   G   C   A   T
+    DNA Sequence (+):      A   T   G   C   A   G   C
     -----------------------------------------------------
-    DNA Sequence (-):      T   A   C   C   G   T   A
+    DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                 Minus Strand
 
@@ -104,9 +104,9 @@ as before (spanning the entire coordinate space) but on the negative strand
 ::
                                 Plus Strand
     DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      A   T   G   G   C   A   T
+    DNA Sequence (+):      A   T   G   C   A   G   C
     -----------------------------------------------------
-    DNA Sequence (-):      T   A   C   C   G   T   A
+    DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                 Minus Strand
                            |<--------------------->|

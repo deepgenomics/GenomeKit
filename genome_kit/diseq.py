@@ -354,12 +354,12 @@ class DisjointIntervalSequence:
 
     @property
     def start(self) -> int:
-        """Start index of the interval in the coordinate space. Not necessarily the 5' end."""
+        """Start index of the interval in the coordinate space."""
         return self._start
 
     @property
     def end(self) -> int:
-        """End index of the interval in the coordinate space. Not necessarily the 3' end."""
+        """End index of the interval in the coordinate space."""
         return self._end
 
     def _at_index(

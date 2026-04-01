@@ -104,7 +104,7 @@ class DisjointIntervalSequence:
             Optional name for the interval.
         on_coordinate_strand : :py:class:`bool`
             Whether the interval is on the same strand as the coordinate
-            intervals.
+            intervals. Defaults to True.
         start : :py:class:`int` or None
             start index of the interval in the coordinate space. Defaults to 0
         end : :py:class:`int` or None

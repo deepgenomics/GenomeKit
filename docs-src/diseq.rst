@@ -223,8 +223,8 @@ You can also construct a DIS from any sequence of
     >>> exon_intervals = [e.interval for e in transcript.exons]
     >>> dis = DisjointIntervalSequence.from_intervals(exon_intervals, coord_name="my_coord")
 
-The intervals must all share the same chromosome, strand, and reference
-genome. They are automatically sorted 5'→3' and checked for overlaps.
+The intervals must all share the same chromosome, strand, reference
+genome, and must not overlap. They are automatically sorted 5'→3'.
 
 Coordinate Space
 ================

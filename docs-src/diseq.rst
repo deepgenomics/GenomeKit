@@ -207,12 +207,11 @@ You can also specify a region to use CDS or UTR intervals::
     >>> dis_utr5 = DisjointIntervalSequence.from_transcript(transcript, region="utr5")
     >>> dis_utr3 = DisjointIntervalSequence.from_transcript(transcript, region="utr3")
 
-The ``coord_id`` and ``interval_id`` default to ``transcript.id`` but can
+The ``coord_name`` and ``interval_name`` default to ``transcript.id`` but can
 be overridden::
 
     >>> dis = DisjointIntervalSequence.from_transcript(
-    ...     transcript, coord_id="my_coord", interval_id="my_interval")
-
+    ...     transcript, coord_name="my_coord", interval_name="my_interval")
 From Intervals
 ~~~~~~~~~~~~~~
 
@@ -222,7 +221,7 @@ You can also construct a DIS from any sequence of
 
     >>> from genome_kit import Interval
     >>> exon_intervals = [e.interval for e in transcript.exons]
-    >>> dis = DisjointIntervalSequence.from_intervals(exon_intervals, coord_id="my_coord")
+    >>> dis = DisjointIntervalSequence.from_intervals(exon_intervals, coord_name="my_coord")
 
 The intervals must all share the same chromosome, strand, and reference
 genome. They are automatically sorted 5'→3' and checked for overlaps.
@@ -246,7 +245,7 @@ Metadata about the coordinate space is available through properties::
     '+'
     >>> dis.reference_genome
     'hg38'
-    >>> dis.coord_id
+    >>> dis.coord_name
     'ENST00000...'
 
 Interval Start and End

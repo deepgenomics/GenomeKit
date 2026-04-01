@@ -126,18 +126,18 @@ class TestFromIntervals(unittest.TestCase):
 
     def test_happy_path(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
-        dis = DisjointIntervalSequence.from_intervals(ivs, coord_id="mycoord")
-        self.assertEqual(dis.coord_id, "mycoord")
+        dis = DisjointIntervalSequence.from_intervals(ivs, coord_name="mycoord")
+        self.assertEqual(dis.coord_name, "mycoord")
         self.assertEqual(dis.coordinate_length, 200)
         self.assertEqual(dis.coordinate_intervals, tuple(ivs))
 
     def test_coord_and_interval_id_independent(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence.from_intervals(
-            ivs, coord_id="c1", interval_id="i1"
+            ivs, coord_name="c1", interval_name="i1"
         )
-        self.assertEqual(dis.coord_id, "c1")
-        self.assertEqual(dis.id, "i1")
+        self.assertEqual(dis.coord_name, "c1")
+        self.assertEqual(dis.name, "i1")
 
     def test_single_interval(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -179,8 +179,8 @@ class TestFromIntervals(unittest.TestCase):
     def test_metadata_defaults_to_none(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence.from_intervals(ivs)
-        self.assertEqual(dis.coord_id, None)
-        self.assertEqual(dis.id, None)
+        self.assertEqual(dis.coord_name, None)
+        self.assertEqual(dis.name, None)
         self.assertEqual(dis.reference_genome, REFG)
         self.assertEqual(dis.chromosome, "chr1")
         self.assertEqual(dis.coord_transcript_strand, "+")
@@ -214,8 +214,8 @@ class TestFromTranscript(unittest.TestCase):
 
     def test_metadata_defaults_to_transcript_id(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript)
-        self.assertEqual(dis.coord_id, self.transcript.id)
-        self.assertEqual(dis.id, self.transcript.id)
+        self.assertEqual(dis.coord_name, self.transcript.id)
+        self.assertEqual(dis.name, self.transcript.id)
         self.assertEqual(dis.reference_genome, self.transcript.reference_genome)
         self.assertEqual(dis.chromosome, self.transcript.chromosome)
         self.assertEqual(dis.coord_transcript_strand, self.transcript.strand)
@@ -226,19 +226,19 @@ class TestFromTranscript(unittest.TestCase):
 
     def test_custom_id_overrides(self):
         dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, coord_id="custom_coord", interval_id="custom_iv"
+            self.transcript, coord_name="custom_coord", interval_name="custom_iv"
         )
-        self.assertEqual(dis.coord_id, "custom_coord")
-        self.assertEqual(dis.id, "custom_iv")
+        self.assertEqual(dis.coord_name, "custom_coord")
+        self.assertEqual(dis.name, "custom_iv")
 
 
 class TestProperties(unittest.TestCase):
 
     def test_metadata_getters_positive(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, coord_id="c", interval_id="i")
-        self.assertEqual(dis.coord_id, "c")
-        self.assertEqual(dis.id, "i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        self.assertEqual(dis.coord_name, "c")
+        self.assertEqual(dis.name, "i")
         self.assertEqual(dis.reference_genome, REFG)
         self.assertEqual(dis.chromosome, "chr1")
         self.assertEqual(dis.coord_transcript_strand, "+")
@@ -315,7 +315,7 @@ class TestEndProperties(unittest.TestCase):
 
     def test_end5_default(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
-        dis = DisjointIntervalSequence(ivs, coord_id="c", interval_id="i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
         # On coordinate strand: end5_index == start (0), end3_index == end (200)
         self.assertEqual(dis.end5_index, 0)
         self.assertEqual(dis.end3_index, 200)
@@ -323,10 +323,10 @@ class TestEndProperties(unittest.TestCase):
         self.assertEqual(len(e5), 0)
         self.assertEqual(e5.start, 0)
         self.assertEqual(e5.end, 0)
-        self.assertEqual(e5.coord_id, "c")
-        self.assertEqual(e5.id, None)
+        self.assertEqual(e5.coord_name, "c")
+        self.assertEqual(e5.name, None)
         expected = DisjointIntervalSequence(
-            ivs, coord_id="c", interval_id=None, on_coordinate_strand=True, start=0, end=0
+            ivs, coord_name="c", interval_name=None, on_coordinate_strand=True, start=0, end=0
         )
         self.assertEqual(e5, expected)
 
@@ -442,11 +442,11 @@ class TestDunderMethods(unittest.TestCase):
 
     def test_repr(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
-        dis = DisjointIntervalSequence(ivs, coord_id="ENST0001", interval_id="IV1")
+        dis = DisjointIntervalSequence(ivs, coord_name="ENST0001", interval_name="IV1")
         r = repr(dis)
         self.assertIn("DisjointIntervalSequence(", r)
-        self.assertIn("coord_id='ENST0001'", r)
-        self.assertIn("id='IV1'", r)
+        self.assertIn("coord_name='ENST0001'", r)
+        self.assertIn("name='IV1'", r)
         self.assertIn("chr1:+", r)
         self.assertIn("len=200", r)
         self.assertIn('coord_intervals=(Interval("chr1", "+", 100, 200, "hg19"), Interval("chr1", "+", 300, 400, "hg19"))', r)
@@ -457,20 +457,20 @@ class TestDunderMethods(unittest.TestCase):
 
     def test_eq_same(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        a = DisjointIntervalSequence(ivs, coord_id="x", interval_id="i")
-        b = DisjointIntervalSequence(ivs, coord_id="x", interval_id="i")
+        a = DisjointIntervalSequence(ivs, coord_name="x", interval_name="i")
+        b = DisjointIntervalSequence(ivs, coord_name="x", interval_name="i")
         self.assertEqual(a, b)
 
     def test_eq_different_coord_id(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        a = DisjointIntervalSequence(ivs, coord_id="x")
-        b = DisjointIntervalSequence(ivs, coord_id="y")
+        a = DisjointIntervalSequence(ivs, coord_name="x")
+        b = DisjointIntervalSequence(ivs, coord_name="y")
         self.assertNotEqual(a, b)
 
     def test_eq_different_interval_id(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        a = DisjointIntervalSequence(ivs, interval_id="x")
-        b = DisjointIntervalSequence(ivs, interval_id="y")
+        a = DisjointIntervalSequence(ivs, interval_name="x")
+        b = DisjointIntervalSequence(ivs, interval_name="y")
         self.assertNotEqual(a, b)
 
     def test_eq_different_on_coordinate_strand(self):

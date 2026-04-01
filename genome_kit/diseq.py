@@ -25,7 +25,7 @@ class IndexDirection(enum.Enum):
 
 @dataclass(frozen=True)
 class _CoordinateMetadata:
-    id: str | None
+    name: str | None
     reference_genome: str
     chromosome: str
     transcript_strand: Literal["+", "-"]
@@ -33,7 +33,7 @@ class _CoordinateMetadata:
 
 @dataclass(frozen=True)
 class _IntervalMetadata:
-    id: str | None
+    name: str | None
     on_coordinate_strand: bool
 
 
@@ -81,8 +81,8 @@ class DisjointIntervalSequence:
         self,
         coordinate_intervals: Sequence[Interval],
         *,
-        coord_id: str | None = None,
-        interval_id: str | None = None,
+        coord_name: str | None = None,
+        interval_name: str | None = None,
         on_coordinate_strand: bool = True,
         start: int | None = None,
         end: int | None = None,
@@ -97,10 +97,10 @@ class DisjointIntervalSequence:
         coordinate_intervals : Sequence[:py:class:`~genome_kit.Interval`]
             Non-empty sequence of non-overlapping Intervals on the same
             chromosome, strand, and reference genome.
-        coord_id : :py:class:`str` or None
-            Optional identifier for the coordinate space.
-        interval_id : :py:class:`str` or None
-            Optional identifier for the interval.
+        coord_name : :py:class:`str` or None
+            Optional name for the coordinate space.
+        interval_name : :py:class:`str` or None
+            Optional name for the interval.
         on_coordinate_strand : :py:class:`bool`
             Whether the interval is on the same strand as the coordinate
             intervals.
@@ -167,13 +167,13 @@ class DisjointIntervalSequence:
         self._coordinate_intervals: tuple[Interval, ...] = tuple(sorted_intervals)
 
         self._coord_metadata = _CoordinateMetadata(
-            id=coord_id,
+            name=coord_name,
             reference_genome=iv0.reference_genome,
             chromosome=iv0.chromosome,
             transcript_strand=iv0.strand,
         )
         self._interval_metadata = _IntervalMetadata(
-            id=interval_id,
+            name=interval_name,
             on_coordinate_strand=on_coordinate_strand,
         )
 
@@ -197,8 +197,8 @@ class DisjointIntervalSequence:
         cls,
         intervals: Sequence[Interval],
         *,
-        coord_id: str | None = None,
-        interval_id: str | None = None,
+        coord_name: str | None = None,
+        interval_name: str | None = None,
     ) -> "DisjointIntervalSequence":
         """Construct a DIS from a sequence of Intervals
         (or :py:class:`~genome_kit.Exon`/:py:class:`~genome_kit.Cds`/:py:class:`~genome_kit.Utr` objects).
@@ -210,10 +210,10 @@ class DisjointIntervalSequence:
         ----------
         intervals : Sequence[:py:class:`~genome_kit.Interval`]
             Sequence of Interval or annotation objects with ``.interval``.
-        coord_id : :py:class:`str` or None
-            Optional identifier for the coordinate space.
-        interval_id : :py:class:`str` or None
-            Optional identifier for the interval.
+        coord_name : :py:class:`str` or None
+            Optional name for the coordinate space.
+        interval_name : :py:class:`str` or None
+            Optional name for the interval.
 
         Returns
         -------
@@ -226,7 +226,7 @@ class DisjointIntervalSequence:
                 coord_intervals.append(iv.interval)
             else:
                 coord_intervals.append(iv)
-        return cls(coord_intervals, coord_id=coord_id, interval_id=interval_id)
+        return cls(coord_intervals, coord_name=coord_name, interval_name=interval_name)
 
     @classmethod
     def from_transcript(
@@ -234,8 +234,8 @@ class DisjointIntervalSequence:
         transcript: Transcript,
         *,
         region: Literal["exons", "cds", "utr5", "utr3"] = "exons",
-        coord_id: str | None = None,
-        interval_id: str | None = None,
+        coord_name: str | None = None,
+        interval_name: str | None = None,
     ) -> "DisjointIntervalSequence":
         """Construct a DIS from a transcript's exons, CDS, or UTR regions.
 
@@ -246,10 +246,10 @@ class DisjointIntervalSequence:
         region : :py:class:`str`
             Which region to extract — ``"exons"``, ``"cds"``,
             ``"utr5"``, or ``"utr3"``.
-        coord_id : :py:class:`str` or None
-            Optional coordinate ID. Defaults to ``transcript.id``.
-        interval_id : :py:class:`str` or None
-            Optional interval ID. Defaults to ``transcript.id``.
+        coord_name : :py:class:`str` or None
+            Optional name for the coordinate space. Defaults to ``transcript.id``.
+        interval_name : :py:class:`str` or None
+            Optional name for the interval. Defaults to ``transcript.id``.
 
         Returns
         -------
@@ -272,17 +272,17 @@ class DisjointIntervalSequence:
             case _:
                 raise ValueError(f"Invalid region: {region!r}")
         coord_intervals = [element.interval for element in region_elements]
-        if coord_id is None:
-            coord_id = transcript.id
-        if interval_id is None:
-            interval_id = transcript.id
+        if coord_name is None:
+            coord_name = transcript.id
+        if interval_name is None:
+            interval_name = transcript.id
 
-        return cls(coord_intervals, coord_id=coord_id, interval_id=interval_id)
+        return cls(coord_intervals, coord_name=coord_name, interval_name=interval_name)
 
     @property
-    def coord_id(self) -> str | None:
-        """Identifier for the coordinate space, or None."""
-        return self._coord_metadata.id
+    def coord_name(self) -> str | None:
+        """Name of the coordinate space, or None."""
+        return self._coord_metadata.name
 
     @property
     def reference_genome(self) -> str:
@@ -300,9 +300,9 @@ class DisjointIntervalSequence:
         return self._coord_metadata.transcript_strand
 
     @property
-    def id(self) -> str | None:
-        """Identifier for the interval, or None."""
-        return self._interval_metadata.id
+    def name(self) -> str | None:
+        """Name of the interval, or None."""
+        return self._interval_metadata.name
 
     @property
     def on_coordinate_strand(self) -> bool:
@@ -367,7 +367,7 @@ class DisjointIntervalSequence:
         """Return a 0-length DIS at the given index position."""
         return DisjointIntervalSequence(
             self._coordinate_intervals,
-            coord_id=self._coord_metadata.id,
+            coord_name=self._coord_metadata.name,
             on_coordinate_strand=on_coordinate_strand,
             start=idx,
             end=idx,
@@ -434,8 +434,8 @@ class DisjointIntervalSequence:
         """Return a human-readable representation."""
         return (
             f"DisjointIntervalSequence("
-            f"coord_id={self._coord_metadata.id!r}, "
-            f"id={self._interval_metadata.id!r}, "
+            f"coord_name={self._coord_metadata.name!r}, "
+            f"name={self._interval_metadata.name!r}, "
             f"{self.chromosome}:{self.coord_transcript_strand}, "
             f"len={self.length}, "
             f"coord_intervals={self._coordinate_intervals})"

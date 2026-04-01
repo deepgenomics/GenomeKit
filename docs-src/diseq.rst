@@ -241,7 +241,7 @@ Metadata about the coordinate space is available through properties::
 
     >>> dis.chromosome
     'chr1'
-    >>> dis.coord_transcript_strand
+    >>> dis.coord_strand
     '+'
     >>> dis.reference_genome
     'hg38'

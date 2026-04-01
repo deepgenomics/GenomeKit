@@ -296,7 +296,7 @@ class DisjointIntervalSequence:
         return self._coord_metadata.chromosome
 
     @property
-    def coord_transcript_strand(self) -> Literal["+", "-"]:
+    def coord_strand(self) -> Literal["+", "-"]:
         """Strand of the coordinate intervals (the transcript strand)."""
         return self._coord_metadata.transcript_strand
 
@@ -311,12 +311,12 @@ class DisjointIntervalSequence:
         return self._interval_metadata.on_coordinate_strand
 
     @property
-    def transcript_strand(self) -> Literal["+", "-"]:
+    def strand(self) -> Literal["+", "-"]:
         """Effective strand of the interval, accounting for on_coordinate_strand."""
         if self.on_coordinate_strand:
-            return self.coord_transcript_strand
+            return self.coord_strand
         # Interval is on opposite strand
-        if self.coord_transcript_strand == "+":
+        if self.coord_strand == "+":
             return "-"
         return "+"
 
@@ -325,7 +325,7 @@ class DisjointIntervalSequence:
         """5' index of the coordinate space."""
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
             return 0
-        if self.coord_transcript_strand == "+":
+        if self.coord_strand == "+":
             return 0
         return self.coordinate_length
 
@@ -334,7 +334,7 @@ class DisjointIntervalSequence:
         """3' index of the coordinate space."""
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
             return self.coordinate_length
-        if self.coord_transcript_strand == "+":
+        if self.coord_strand == "+":
             return self.coordinate_length
         return 0
 
@@ -426,7 +426,7 @@ class DisjointIntervalSequence:
         if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
             return -1 if on_coordinate_strand else 1
         # POSITIVE_STRAND_LEFT_TO_RIGHT: effective strand determines direction
-        return -1 if self.transcript_strand == "+" else 1
+        return -1 if self.strand == "+" else 1
 
     def __len__(self) -> int:
         """Return the length of the interval."""
@@ -438,7 +438,7 @@ class DisjointIntervalSequence:
             f"DisjointIntervalSequence("
             f"coord_name={self._coord_metadata.name!r}, "
             f"name={self._interval_metadata.name!r}, "
-            f"{self.chromosome}:{self.coord_transcript_strand}, "
+            f"{self.chromosome}:{self.coord_strand}, "
             f"len={self.length}, "
             f"coord_intervals={self._coordinate_intervals}, "
             f"start={self._start}, "

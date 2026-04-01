@@ -183,7 +183,7 @@ class TestFromIntervals(unittest.TestCase):
         self.assertEqual(dis.name, None)
         self.assertEqual(dis.reference_genome, REFG)
         self.assertEqual(dis.chromosome, "chr1")
-        self.assertEqual(dis.coord_transcript_strand, "+")
+        self.assertEqual(dis.coord_strand, "+")
 
 
 class TestFromTranscript(unittest.TestCase):
@@ -218,7 +218,7 @@ class TestFromTranscript(unittest.TestCase):
         self.assertEqual(dis.name, self.transcript.id)
         self.assertEqual(dis.reference_genome, self.transcript.reference_genome)
         self.assertEqual(dis.chromosome, self.transcript.chromosome)
-        self.assertEqual(dis.coord_transcript_strand, self.transcript.strand)
+        self.assertEqual(dis.coord_strand, self.transcript.strand)
 
     def test_invalid_region_raises(self):
         with self.assertRaises(ValueError):
@@ -241,7 +241,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(dis.name, "i")
         self.assertEqual(dis.reference_genome, REFG)
         self.assertEqual(dis.chromosome, "chr1")
-        self.assertEqual(dis.coord_transcript_strand, "+")
+        self.assertEqual(dis.coord_strand, "+")
         self.assertTrue(dis.on_coordinate_strand)
 
     def test_on_coordinate_strand_false(self):
@@ -252,37 +252,37 @@ class TestProperties(unittest.TestCase):
     def test_coord_transcript_strand_positive(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis.coord_transcript_strand, "+")
+        self.assertEqual(dis.coord_strand, "+")
 
     def test_coord_transcript_strand_negative(self):
         ivs = _make_intervals([("chr1", "-", 100, 200)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis.coord_transcript_strand, "-")
+        self.assertEqual(dis.coord_strand, "-")
 
     def test_coord_transcript_strand_unaffected_by_on_coordinate_strand(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertEqual(dis.coord_transcript_strand, "+")
+        self.assertEqual(dis.coord_strand, "+")
 
     def test_transcript_strand_on_coordinate_strand_positive(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertEqual(dis.transcript_strand, "+")
+        self.assertEqual(dis.strand, "+")
 
     def test_transcript_strand_on_coordinate_strand_negative(self):
         ivs = _make_intervals([("chr1", "-", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertEqual(dis.transcript_strand, "-")
+        self.assertEqual(dis.strand, "-")
 
     def test_transcript_strand_off_coordinate_strand_positive(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertEqual(dis.transcript_strand, "-")
+        self.assertEqual(dis.strand, "-")
 
     def test_transcript_strand_off_coordinate_strand_negative(self):
         ivs = _make_intervals([("chr1", "-", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertEqual(dis.transcript_strand, "+")
+        self.assertEqual(dis.strand, "+")
 
     def test_start_and_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])

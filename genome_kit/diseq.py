@@ -1,3 +1,4 @@
+from copy import deepcopy
 import enum
 from dataclasses import dataclass
 from typing import Sequence, Literal
@@ -400,7 +401,8 @@ class DisjointIntervalSequence:
     @property
     def coordinate_intervals(self) -> tuple[Interval, ...]:
         """The underlying genomic intervals of the coordinate-space, sorted 5'->3'."""
-        return self._coordinate_intervals
+        # Deepcopy to preserve imutability of this DIS
+        return deepcopy(self._coordinate_intervals)
 
     @property
     def coordinate_length(self) -> int:

@@ -221,12 +221,9 @@ class DisjointIntervalSequence:
         :py:class:`DisjointIntervalSequence`
         """
         # Extract .interval if items are Exon/Cds/Utr
-        coord_intervals = []
-        for iv in intervals:
-            if type(iv) is not Interval and hasattr(iv, "interval"):
-                coord_intervals.append(iv.interval)
-            else:
-                coord_intervals.append(iv)
+        coord_intervals = [
+            iv.interval if hasattr(iv, "interval") else iv for iv in intervals
+        ]
         return cls(coord_intervals, coord_name=coord_name, interval_name=interval_name)
 
     @classmethod

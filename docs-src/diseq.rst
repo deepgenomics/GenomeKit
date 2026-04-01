@@ -27,7 +27,7 @@ a flattened coordinate system over a sequence of disjoint genomic intervals.
 For example, the exons of a transcript form a disjoint set of genomic intervals that,
 when concatenated, represent the spliced RNA sequence.
 
-A DIS has two layers:
+A DIS has two aspects:
 
 - A **coordinate space**: the underlying genomic
   :py:class:`~genome_kit.Interval` objects (e.g. exons) that define the
@@ -35,7 +35,7 @@ A DIS has two layers:
 - An **interval**: a sub-range within that coordinate space, defined by
   a start and end index, where start <= end.
 
-To explain how the coordinate space and interval layers interact, let's ignore code for
+To explain how the coordinate space and interval interact, let's ignore code for
 now, and just use some diagrams to illustrate the concepts.
 
 Say we have a transcript on the + strand represented by the diagram below:

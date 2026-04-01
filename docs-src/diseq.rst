@@ -89,26 +89,26 @@ of the coordinate space. Let's start with the DIS coordinate space from above
 
 Now let's add the negative (opposite) strand to the diagram
 ::
-                                Plus Strand
+                                Positive Strand
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (+):      A   T   G   C   A   G   C
     -----------------------------------------------------
     DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                Minus Strand
+                                Negative Strand
 
 Importantly, we see the DIS coordinates are the same on both strands. This simplifies
 things when you want to get the complement of a given interval, as you can use the same
 indices and just flip the strand. To illustrate this, let's now define the same interval
 as before (spanning the entire coordinate space) but on the negative strand
 ::
-                                Plus Strand
+                                Positive Strand
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (+):      A   T   G   C   A   G   C
     -----------------------------------------------------
     DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                Minus Strand
+                                Negative Strand
                            |<--------------------->|
                           end3      Interval      end5
     Start Index:     0
@@ -134,14 +134,14 @@ below:
                           |<------->| |<------->| |<--->| |<----------->| |<--->|
     DNA Sequence (-):      G   T   C   A   G   T   C   A   G   T   C   A   G   T
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
-                                            Minus Strand
+                                            Negative Strand
 Taking just the exons:
 ::
                              Exon3     Exon2   Exon1
                           |<------->| |<--->| |<--->|
     DNA Sequence (-):      G   T   C   C   A   G   T
     Genomic Coordinates:  153 154 155 159 160 165 166 167
-                                    Minus Strand
+                                    Negative Strand
 
 Now let's create a DIS from these exons:
 ::

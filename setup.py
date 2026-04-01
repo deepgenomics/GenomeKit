@@ -404,7 +404,9 @@ if __name__ == "__main__":
             "typing-extensions",
         ],
         extras_require={
-                "df": ["polars"]
+                "df": ["polars"],
+                "df-mac": ["polars", "polars-runtime-compat"],
+
         },
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),

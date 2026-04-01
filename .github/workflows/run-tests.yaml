@@ -54,6 +54,13 @@ jobs:
             runs-on: "macos-26-intel"
           - platform: "linux-64"
             runs-on: "ubuntu-latest"
+          # single test for running intel build on arm64 macos runner with rosetta
+          - python-version: "3.10"
+            pyver-short: "310"
+            platform: "osx-64" # intel build
+            runs-on: "macos-latest" # defaults to arm64 runner with M1 chip
+            extras: "df"
+            rosetta: true
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
@@ -103,6 +110,7 @@ jobs:
         shell: bash -l -e {0}
         env:
           GK_EXTRAS: ${{ matrix.extras }}
+          ROSETTA: ${{ matrix.rosetta }}
         run: |
           set -x
           micromamba activate test
@@ -116,6 +124,9 @@ jobs:
           # run command with optional extra deps
           if [ "$GK_EXTRAS" = "df" ]; then
             extra_deps+=("polars=1.39.3")
+          fi
+          if [ "$ROSETTA" = "true" ]; then
+            extra_deps+=("polars-runtime-compat=1.39.3")
           fi
           conda mambabuild --croot /tmp/conda-bld -t "${files[@]}" --extra-deps "${extra_deps[@]}"
           conda clean -it

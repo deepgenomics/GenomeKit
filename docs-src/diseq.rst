@@ -80,7 +80,11 @@ a start index of 0 and an end index of 7.
 
 The above example illustrates the basics of how a DIS works. However, it is possible to
 do more. We can instead define an interval within the DIS on the strand opposite that 
-of the coordinate space. Let's start with the DIS coordinate space from above
+of the coordinate space. You may want to do this in order to get the complement of a
+sequence/interval, or when working a sequence that is meant to bind to some other
+sequence.
+
+Let's start with the DIS coordinate space from above
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  A   T   G   C   A   G   C  |

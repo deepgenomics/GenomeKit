@@ -18,7 +18,7 @@ from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfVersion
 from .registry import GK_TO_STRUCT, get_registry
 
 
-def _map_batches_safe(fn: Callable):
+def _map_batches_safe(fn: Callable) -> Callable:
     """Helper function to wrap a UDF and run safely with polars map_batches.
 
     Polars has a bug in map_batches that incorrectly forwards the return_dtype argument
@@ -26,6 +26,9 @@ def _map_batches_safe(fn: Callable):
 
     Args:
         fn: The user defined function to wrap.
+
+    Returns:
+        A wrapped version of the UDF that can be safely used with map_batches.
     """
     sig = signature(fn)
 
@@ -104,11 +107,11 @@ def _list_serializer(
     """Helper function to convert a serializer to accept lists of GenomeKit objects.
 
     Args:
-    serializer: A serializer function for a series of GenomeKit objects
-    return_dtype: The return data type for the serialized series
+        serializer: A serializer function for a series of GenomeKit objects
+        return_dtype: The return data type for the serialized series
 
     Returns:
-    A serializer function for a series of lists of GenomeKit objects.
+        A serializer function for a series of lists of GenomeKit objects.
     """
     pl = require_polars()
 
@@ -130,11 +133,15 @@ def _init_gk_annotations(
 ) -> list[gk.Genome]:
     """Initialize GenomeKit annotations for all unique genomes in the LazyFrame.
 
-    Prevents race conditions when opening dganno files during polars operations.
+    Prevents race conditions when opening dganno files during polars operations. 
+    Objects are returned in a list to keep weak references alive. 
 
     Args:
         lf: The LazyFrame containing the serialized GenomeKit objects.
         target_cols: A dictionary mapping column names to their corresponding ColumnInfo.
+
+    Returns:
+        A list of initialized Genome objects for the unique genomes in the LazyFrame.
     """
     pl = require_polars()
 
@@ -190,7 +197,11 @@ def _init_gk_annotations(
 
 
 def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
-    """Validate the parquet metadata for a gkdf parquet file."""
+    """Validate the parquet metadata for a gkdf parquet file.
+    
+    Args:
+        metadata: The parquet metadata to validate.
+    """
 
     try:
         version = GkDfVersion(metadata.get("gkdf_version"))
@@ -212,10 +223,10 @@ def _list_deserializer(
     """Helper function to convert a deserializer to accept lists of serialized GenomeKit objects.
 
     Args:
-    deserializer: A deserializer function for a series of serialized GenomeKit objects
+        deserializer: A deserializer function for a series of serialized GenomeKit objects
 
     Returns:
-    A deserializer function for a series of lists of serialized GenomeKit objects.
+        A deserializer function for a series of lists of serialized GenomeKit objects.
     """
     pl = require_polars()
 
@@ -240,6 +251,9 @@ def _deserialize_gk_cols(
     Args:
         lf: The LazyFrame containing the serialized GenomeKit objects.
         target_cols: A dictionary mapping column names to their corresponding ColumnInfo.
+
+    Returns:
+        A LazyFrame with deserialized GenomeKit objects in the target columns.
     """
     pl = require_polars()
     registry = get_registry()

@@ -476,3 +476,187 @@ The ``as_positive_strand()`` and ``as_negative_strand()`` methods return
 
     Strand methods only affect the interval layer. The coordinate
     intervals always remain unchanged.
+
+Shifting and Expanding
+======================
+
+Both ``shift`` and ``expand`` return a **new** DIS with modified interval
+indices. The coordinate space is always unchanged.
+
+shift
+~~~~~
+
+``shift(amount)`` moves the interval downstream by ``amount`` bases.
+A negative value shifts upstream. The interval length is preserved.
+
+On the coordinate strand, downstream means increasing indices::
+
+    Before shift(2):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                               |<--------->|
+                              end5        end3
+
+    After shift(2):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                                   |<--------->|
+                                  end5        end3
+
+On the opposite strand, "downstream" is the reverse direction in index
+space, so ``shift(2)`` moves the interval toward *lower* indices::
+
+    Before shift(2) (on_coordinate_strand=False):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                               |<--------->|
+                              end3        end5
+
+    After shift(2):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                           |<--------->|
+                          end3        end5
+
+In code::
+
+    >>> dis.start, dis.end
+    (30, 150)
+    >>> shifted = dis.shift(10)
+    >>> shifted.start, shifted.end
+    (40, 160)
+    >>> shifted.coordinate_intervals == dis.coordinate_intervals
+    True
+
+    >>> # Negative values shift upstream
+    >>> dis.shift(-10).start, dis.shift(-10).end
+    (20, 140)
+
+    >>> # On the opposite strand, downstream reverses in index space
+    >>> opp = dis.as_opposite_strand()
+    >>> shifted_opp = opp.shift(10)
+    >>> shifted_opp.start, shifted_opp.end
+    (20, 140)
+
+.. note::
+
+    ``shift`` can move the interval beyond the coordinate space bounds
+    (``start < 0`` or ``end > coordinate_length``).
+
+expand
+~~~~~~
+
+``expand(upstream, dnstream)`` grows (or shrinks) the interval toward
+its 5' and 3' ends. When ``dnstream`` is omitted the expansion is
+symmetric::
+
+    Before expand(1):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                               |<--------->|
+                              end5        end3
+
+    After expand(1):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                           |<----------------->|
+                          end5                end3
+
+Negative values contract the interval::
+
+    Before expand(-1, -1):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                           |<----------------->|
+                          end5                end3
+
+    After expand(-1, -1):
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                               |<--------->|
+                              end5        end3
+
+In code::
+
+    >>> dis.start, dis.end
+    (30, 150)
+
+    >>> # Symmetric expansion
+    >>> dis.expand(5).start, dis.expand(5).end
+    (25, 155)
+
+    >>> # Asymmetric expansion
+    >>> dis.expand(5, 10).start, dis.expand(5, 10).end
+    (25, 160)
+
+    >>> # Upstream-only expansion
+    >>> dis.expand(5, 0).start, dis.expand(5, 0).end
+    (25, 150)
+
+    >>> # Contraction with negative values
+    >>> dis.expand(-10, -20).start, dis.expand(-10, -20).end
+    (40, 130)
+
+.. note::
+
+    Contracting to exactly zero length is valid, but contracting past
+    zero raises ``ValueError``.
+
+Positional Comparisons
+======================
+
+``upstream_of`` and ``dnstream_of`` compare two DIS intervals that share
+the same coordinate space and the same ``on_coordinate_strand``. Both
+methods require strict separation — any overlap returns ``False``.
+
+upstream_of
+~~~~~~~~~~~
+
+``upstream_of(other)`` returns ``True`` if ``self`` is strictly 5' of
+``other`` with no overlap. Adjacent intervals (where ``self.end`` equals
+``other.start``) count as upstream::
+
+    DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
+                           |<->|               |<->|
+                             a                   b
+    a.upstream_of(b) is True    (no overlap)
+
+    DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
+                           |<----->|
+                              a    |<----->|
+                                      b
+    a.upstream_of(b) is True    (adjacent: a.end == b.start)
+
+    DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
+                           |<--------->|
+                              a    |<----->|
+                                      b
+    a.upstream_of(b) is False   (overlap)
+
+In code::
+
+    >>> a = DisjointIntervalSequence(coord_ivs, start=10, end=30)
+    >>> b = DisjointIntervalSequence(coord_ivs, start=50, end=80)
+    >>> a.upstream_of(b)
+    True
+    >>> b.upstream_of(a)
+    False
+
+    >>> # Adjacent intervals count as upstream
+    >>> a2 = DisjointIntervalSequence(coord_ivs, start=10, end=50)
+    >>> a2.upstream_of(b)
+    True
+
+.. note::
+
+    Both intervals must share the same ``coordinate_intervals`` and the
+    same ``on_coordinate_strand``, otherwise ``ValueError`` is raised.
+    Two zero-length intervals at the same position are neither upstream
+    nor downstream of each other.
+
+dnstream_of
+~~~~~~~~~~~
+
+``dnstream_of(other)`` is the mirror of ``upstream_of``: it returns
+``True`` if ``self`` is strictly 3' of ``other`` with no overlap.
+Adjacent intervals count as downstream. The same requirements on shared
+coordinate space and strand apply::
+
+    >>> a = DisjointIntervalSequence(coord_ivs, start=50, end=80)
+    >>> b = DisjointIntervalSequence(coord_ivs, start=10, end=30)
+    >>> a.dnstream_of(b)
+    True
+    >>> b.dnstream_of(a)
+    False

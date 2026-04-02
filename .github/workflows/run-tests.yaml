@@ -41,6 +41,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12']
         platform: ["linux-64", "osx-arm64", "osx-64"]
         extras: ["none", "df"]
+        rosetta: [false]
         include: # specify additional fields for all configs
           - python-version: "3.10"
             pyver-short: "310"

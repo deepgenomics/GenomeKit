@@ -216,7 +216,7 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
     Args:
         metadata: The parquet metadata to validate.
     """
-
+    # gkdf version
     try:
         version = GkDfVersion(metadata.get("gkdf_version"))
         if version not in GkDfVersion:
@@ -227,9 +227,23 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
         raise ValueError(
             "Invalid or missing gkdf_version in Parquet metadata, unable to deserialize GenomeKit objects. "
         )
+    
+    # target cols
     if metadata.get("target_cols") is None:
         raise ValueError(
             "Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects."
+        )
+    
+    # gk version
+    gk_version = metadata.get("gk_version")
+    if gk_version is None:
+        raise ValueError(
+            "Missing gk_version in Parquet metadata."
+        )
+    elif gk_version != gk.__version__:
+        warnings.warn(
+            f"Parquet file was written with GenomeKit version {gk_version}, but current version is {gk.__version__}. "
+            "Deserializing GenomeKit objects may not be consistent across versions."
         )
 
 

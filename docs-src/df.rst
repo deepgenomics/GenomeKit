@@ -15,12 +15,7 @@ The :py:mod:`genome_kit.df` subpackage contains utilities for working with Polar
 
     The ``[df]`` extra is not included in the default ``genomekit`` installation.
 
-    If you are running an x86 version of Python on an Apple Silicon Mac (e.g. M1 chip), the ``polars-runtime-compat`` package is also required. Install this with the ``[df-mac]`` extra:
-    
-    .. code-block:: bash
-
-        pip install "genomekit[df-mac]"
-
+    If you are running an x86 version of Python on an Apple Silicon Mac (e.g. M1 chip), this will also install the  ``polars-runtime-compat`` package, which is required to run Polars on Apple Silicon due to AVX features compatibility issues.
 
 
 Quickstart

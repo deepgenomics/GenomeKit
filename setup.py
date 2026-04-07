@@ -404,9 +404,12 @@ if __name__ == "__main__":
             "typing-extensions",
         ],
         extras_require={
-                "df": ["polars"],
-                "df-mac": ["polars", "polars-runtime-compat"],
-
+            # install polars-runtime-compat if running on x86_64 Python on macOS
+            # required to run polars due to AVX features compatibility issues
+            "df": [ 
+                "polars",
+                "polars-runtime-compat; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+            ]
         },
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),

@@ -305,6 +305,9 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             ser_dict["genome_str"] = genome.config
             values.append(ser_dict)
 
+        # pl.Series constructor doesn't strictly enforce nested struct types errors with 
+        # "utr_type" field may silently become nulls instead of enums.
+        # TODO: check polars implementation, related issue #18841
         return pl.Series(
             name=s.name,
             values=values,

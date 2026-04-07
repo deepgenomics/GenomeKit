@@ -131,11 +131,13 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         ]
     )
 
+    UtrType = pl.Enum(["5prime", "3prime"])
+
     UtrStruct = pl.Struct(
         [
             pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
-            pl.Field("utr_type", pl.Utf8),  # "5prime" or "3prime"
+            pl.Field("utr_type", UtrType),
             pl.Field("utr_table_index", pl.Int64),
             pl.Field("genome_str", pl.Utf8),  # annotation genome
         ]

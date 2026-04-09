@@ -7,16 +7,30 @@ Disjoint Interval Sequences
 Motivation
 ==========
 
-When working with transcripts, the situation may arise where we want to ignore the
-introns (or other features) of the transcript. If you were to represent the transcript
-with those parts removed, you would be left with a disjoint series of :py:class:`~genome_kit.Interval`
-objects that are difficult to work with directly (for example, creating an interval on
-this disjoint space, or querying the position of a specific sequence within a
-CDS, relative to the spliced RNA sequence).
+When working with transcripts, it is often necessary to operate on the exonic
+sequence with introns (or other intervening regions) removed. The remaining exons
+form a disjoint set of genomic :py:class:`~genome_kit.Interval` objects.
+Operations such as indexing into the spliced sequence or defining sub-ranges
+across exon boundaries require a coordinate system that accounts for the gaps
+between these intervals.
 
-For this reason, the :py:class:`~genome_kit.diseq.DisjointIntervalSequence` class was
-introduced. :py:class:`~genome_kit.diseq.DisjointIntervalSequence` (DIS) simplifies
-working with intervals that exist on a disjoint coordinate space.
+The :py:class:`~genome_kit.diseq.DisjointIntervalSequence` (DIS) class provides
+this coordinate system. While it builds on :py:class:`~genome_kit.Interval`, a DIS
+is conceptually distinct in several ways:
+
+- **Spliced coordinate space.** Positions in a DIS are offsets into the
+  concatenated exonic (or other) sequence, not genomic coordinates.
+- **5'→3' index direction.** DIS indices always increase from 5' to 3' with
+  respect to the transcript. Index 0 corresponds to the transcript's 5' end
+  regardless of genomic strand. This contrasts with
+  :py:class:`~genome_kit.Interval`, where ``start < end`` always holds in
+  genomic coordinates, so on the ``-`` strand ``start`` is the 3' end.
+- **Same-strand / opposite-strand semantics.** Because a DIS models spliced
+  RNA rather than raw DNA, the concept of ``+``/``-`` strand is replaced by
+  ``on_coordinate_strand`` (same strand as the transcript) versus opposite
+  strand. The underlying genomic strand is accessible via ``coord_strand``,
+  but intervals within the DIS are described relative to the coordinate
+  space rather than in absolute genomic terms.
 
 
 Overview
@@ -35,33 +49,40 @@ A DIS has two aspects:
 - An **interval**: a sub-range within that coordinate space, defined by
   a start and end index, where start <= end.
 
-To explain how the coordinate space and interval interact, let's ignore code for
-now, and just use some diagrams to illustrate the concepts.
+The following examples illustrate how the coordinate space and interval interact,
+using both diagrams and code.
 
-Say we have a transcript on the + strand represented by the diagram below:
+Consider a transcript on the + strand with the following genomic layout:
 ::
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
     DNA Sequence:       |  A   T   G   C   C   G   C   A   T   G   C   C   G   C  |
                         | |<------->| |<------->| |<--->| |<----------->| |<--->| |
                         5'   Exon1      Intron1    Exon2      Intron2      Exon3  3'
 
-If we were to take only the exons, we would have the following disjoint intervals:
+Extracting only the exons yields the following disjoint intervals:
 ::
     Genomic Coordinates:  153 154 155 159 160 165 166 167
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         | |<------->| |<--->| |<--->| |
                         5'   Exon1     Exon2   Exon3  3'
 
-Let's say we want to create an interval on this series of disjoint exon intervals,
-spanning from the start of Exon1 to the end of Exon3. We can start by converting our
-list of exons into a DIS coordinate space
+These exon intervals can be represented as :py:class:`~genome_kit.Interval` objects::
+
+    >>> from genome_kit import Interval
+    >>> from genome_kit.diseq import DisjointIntervalSequence
+    >>> exon1 = Interval("chr1", "+", 153, 156, "hg38")
+    >>> exon2 = Interval("chr1", "+", 159, 161, "hg38")
+    >>> exon3 = Interval("chr1", "+", 165, 167, "hg38")
+
+To define an interval spanning the full exonic sequence (from the start of Exon1 to
+the end of Exon3), the exon intervals are first converted into a DIS coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         | |<------->| |<--->| |<--->| |
                         5'   Exon1     Exon2   Exon3  3'
 
-Now let's place the interval on the DIS coordinate space
+The default interval spans the entire coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          A   T   G   C   A   G   C
@@ -70,28 +91,35 @@ Now let's place the interval on the DIS coordinate space
     Start Index:     0
     End Index:       7
 
-We see that the interval spans the full length of the coordinate space, and is defined by
-a start index of 0 and an end index of 7.
+The interval spans the full length of the coordinate space, with a start index of 0
+and an end index of 7::
+
+    >>> dis = DisjointIntervalSequence.from_intervals(
+    ...     [exon1, exon2, exon3], coord_name="tx_example"
+    ... )
+    >>> dis.start
+    0
+    >>> dis.end
+    7
+    >>> dis.on_coordinate_strand
+    True
 
 .. note::
-    Why 7 and not 6? The disjoint interval follows the convention of
+    The disjoint interval follows the convention of
     :py:class:`~genome_kit.Interval` where intervals are half-open
     (the end index is exclusive).
 
-The above example illustrates the basics of how a DIS works. However, it is possible to
-do more. We can instead define an interval within the DIS on the strand opposite that 
-of the coordinate space. You may want to do this in order to get the complement of a
-sequence/interval, or when working a sequence that is meant to bind to some other
-sequence.
+A DIS can also represent an interval on the strand opposite the coordinate space.
+This is useful for modeling the complementary sequence or a binding partner.
 
-Let's start with the DIS coordinate space from above
+Starting from the coordinate space defined above
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         |  |<----->|   |<->|   |<->|  |
                         5'   Exon1     Exon2   Exon3  3'
 
-Now let's add the negative (opposite) strand to the diagram
+The opposite strand shares the same DIS coordinate indices
 ::
                         5'      Positive strand          3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
@@ -101,36 +129,46 @@ Now let's add the negative (opposite) strand to the diagram
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
                         3'      Negative Strand          5'
 
-Importantly, we see the DIS coordinates are the same on both strands. This simplifies
-things when you want to get the complement of a given interval, as you can use the same
-indices and just flip the strand. To illustrate this, let's now define the same interval
-as before (spanning the entire coordinate space) but on the negative strand
+The DIS coordinate indices are identical on both strands. To obtain the complement
+of a given interval, the same start and end indices apply; only the
+``on_coordinate_strand`` flag changes. The following shows the full-length interval
+on the opposite strand
 ::
-                        5'        Positive Strand        3'
+                        5'      Coordinate Strand        3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
     DNA Sequence (+):   |  A   T   G   C   A   G   C     |
     -----------------------------------------------------
     DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                Negative Strand
+                                  Opposite Strand
                            |<--------------------->|
                           end3      Interval      end5
     Start Index:     0
     End Index:       7
     On Coordinate Strand: False
 
-You will notice "On Coordinate Strand: False" has been added to the diagram. Since we
-aren't able to determine which strand the interval is on just from the indices, this
-variable is used to let us know the strandedness of the interval.
+The ``on_coordinate_strand`` flag distinguishes same-strand from opposite-strand
+intervals, since the start and end indices alone do not encode strand information::
 
-Thus far we have only defined a DIS from intervals on the + strand. When defining
-a DIS from intervals on the negative strand, much remains the same. However, there is
-one important difference from a regular Interval: On a DIS created from negative-strand
-intervals, the indices still increase in the 5'→3' direction of the transcript. Let's
-take a look at an example:
+    >>> dis_opp = DisjointIntervalSequence(
+    ...     [exon1, exon2, exon3],
+    ...     coord_name="tx_example",
+    ...     on_coordinate_strand=False,
+    ... )
+    >>> dis_opp.on_coordinate_strand
+    False
+    >>> dis_opp.end5_index
+    7
+    >>> dis_opp.end3_index
+    0
 
-Say we have the following transcript on the negative strand represented by the diagram
-below:
+The preceding examples used + strand coordinate intervals. When the coordinate intervals
+lie on the - strand, the DIS behaves identically in most respects, with one key
+difference from :py:class:`~genome_kit.Interval`: on a DIS created from
+negative-strand intervals, indices still increase in the 5'→3' direction of the
+transcript.
+
+Consider a transcript on the negative strand:
 ::
                         3'  Exon3      Intron2    Exon2      Intron1      Exon1   5'
                         | |<------->| |<------->| |<--->| |<----------->| |<--->| |
@@ -145,20 +183,31 @@ Taking just the exons:
     Genomic Coordinates:  153 154 155 159 160 165 166 167
                                     Negative Strand
 
-Now let's create a DIS from these exons:
+Converting these exons into a DIS coordinate space:
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  T   G   A   C   C   T   G  |
                         |  |<->|   |<->|   |<----->|  |
                         5' Exon1   Exon2     Exon3    3'
 
-Notice that the sequence flips relative to the direction of the indices. What has
-happened is that the DIS coordinate space is defined in the 5'→3' direction of the
-transcript, regardless of genomic strand. In a DIS, 0 always corresponds to the
-DIS coordinate's 5' end, and the largest index corresponds to the DIS coordinate's 3'
-end.
+The sequence appears reversed relative to genomic coordinates because the DIS
+coordinate space is oriented 5'→3' with respect to the transcript, regardless of
+genomic strand. Index 0 always corresponds to the transcript's 5' end, and the
+largest index to the 3' end::
 
-Let's now define an interval on this DIS
+    >>> neg_exon1 = Interval("chr1", "-", 165, 167, "hg38")
+    >>> neg_exon2 = Interval("chr1", "-", 159, 161, "hg38")
+    >>> neg_exon3 = Interval("chr1", "-", 153, 156, "hg38")
+    >>> dis_neg = DisjointIntervalSequence.from_intervals(
+    ...     [neg_exon1, neg_exon2, neg_exon3],
+    ...     coord_name="tx_neg_example",
+    ... )
+    >>> dis_neg.coord_strand
+    '-'
+    >>> dis_neg.coordinate_length
+    7
+
+A full-length interval on the coordinate strand
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          T   G   A   C   C   T   G
@@ -168,12 +217,18 @@ Let's now define an interval on this DIS
     End Index:       7
     On Coordinate Strand: True
 
-We see that despite creating the DIS from the negative strand, the full-length interval
-on the coordinate strand still looks the same as in the + strand example. When working
-with DIS objects, you only need to think of things in terms of "same strand" or
-"opposite strand".
+Despite creating the DIS from the negative strand, the full-length interval on the
+coordinate strand is identical to the + strand example. When working with DIS
+objects, strand is expressed only as "same strand" or "opposite strand"::
 
-To complete the example, let's define an interval on this DIS that is on the opposite strand of the coordinate space
+    >>> dis_neg.start
+    0
+    >>> dis_neg.end
+    7
+    >>> dis_neg.on_coordinate_strand
+    True
+
+The same coordinate space with an opposite-strand interval
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (-):      T   G   A   C   C   T   G
@@ -186,8 +241,19 @@ To complete the example, let's define an interval on this DIS that is on the opp
     End Index:       7
     On Coordinate Strand: False
 
-Now that you understand how a DIS works conceptually, you can read on to see how to
-manipulate them in code.
+::
+
+    >>> dis_neg_opp = DisjointIntervalSequence(
+    ...     [neg_exon1, neg_exon2, neg_exon3],
+    ...     coord_name="tx_neg_example",
+    ...     on_coordinate_strand=False,
+    ... )
+    >>> dis_neg_opp.on_coordinate_strand
+    False
+    >>> dis_neg_opp.end5_index
+    7
+    >>> dis_neg_opp.end3_index
+    0
 
 Construction
 ============
@@ -276,8 +342,11 @@ End5 and End3
 
 The ``end5_index`` and ``end3_index`` properties give the 5' and 3' positions
 of the interval. These are derived from ``start`` and ``end`` based on the
-interval's strand::
-    On coordinate strand (on_coordinate_strand=True):
+interval's strand.
+
+When ``on_coordinate_strand`` is ``True``, ``end5_index`` equals ``start`` and
+``end3_index`` equals ``end``::
+
     Start Index:     1
     End Index:       6
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -288,14 +357,17 @@ interval's strand::
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
 
+::
+
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
     >>> dis.end5_index   # same as start when on coordinate strand
     1
     >>> dis.end3_index   # same as end when on coordinate strand
     6
 
+When ``on_coordinate_strand`` is ``False``, the mapping reverses:
+``end5_index`` equals ``end`` and ``end3_index`` equals ``start``::
 
-    Off coordinate strand (on_coordinate_strand=False):
     Start Index:     3
     End Index:       7
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -305,6 +377,8 @@ interval's strand::
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                        |<--------->|
                                   Opposite Strand
+
+::
 
     >>> opp = dis.as_opposite_strand()
     >>> opp.end5_index   # same as end when off coordinate strand

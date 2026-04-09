@@ -1,11 +1,12 @@
 import unittest
-from genome_kit import Interval, Genome
+from genome_kit import Interval
+from tests import MiniGenome
 from genome_kit.diseq import DisjointIntervalSequence
 
-REFG = "hg19"
+REFG = "hg19.mini"
 
 
-def _make_intervals(specs, refg=REFG):
+def _make_intervals(specs, refg = REFG):
     """Helper: specs is list of (chrom, strand, start, end)."""
     return [
         Interval(chrom, strand, start, end, refg) for chrom, strand, start, end in specs
@@ -39,8 +40,8 @@ class TestInit(unittest.TestCase):
 
     def test_mixed_reference_genomes_raises(self):
         ivs = [
-            Interval("chr1", "+", 100, 200, "hg19"),
-            Interval("chr1", "+", 300, 400, "hg38"),
+            Interval("chr2", "+", 100, 200, "hg38.p12.mini"),
+            Interval("chr2", "+", 300, 400, "hg38.p13.mini"),
         ]
         with self.assertRaises(ValueError):
             DisjointIntervalSequence(ivs)
@@ -121,8 +122,8 @@ class TestInit(unittest.TestCase):
 class TestFromIntervals(unittest.TestCase):
 
     def setUp(self):
-        self.genome = Genome("gencode.v41")
-        self.transcript = self.genome.transcripts[2002]
+        self.genome = MiniGenome("gencode.v41")
+        self.transcript = self.genome.transcripts["ENST00000233331.12"]
 
     def test_happy_path(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
@@ -189,8 +190,8 @@ class TestFromIntervals(unittest.TestCase):
 class TestFromTranscript(unittest.TestCase):
 
     def setUp(self):
-        self.genome = Genome("gencode.v41")
-        self.transcript = self.genome.transcripts[2002]
+        self.genome = MiniGenome("gencode.v41")
+        self.transcript = self.genome.transcripts["ENST00000233331.12"]
 
     def test_exons_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="exons")
@@ -449,7 +450,7 @@ class TestDunderMethods(unittest.TestCase):
         self.assertIn("name='IV1'", r)
         self.assertIn("chr1:+", r)
         self.assertIn("len=200", r)
-        self.assertIn('coord_intervals=(Interval("chr1", "+", 100, 200, "hg19"), Interval("chr1", "+", 300, 400, "hg19"))', r)
+        self.assertIn('coord_intervals=(Interval("chr1", "+", 100, 200, "hg19.mini"), Interval("chr1", "+", 300, 400, "hg19.mini"))', r)
         self.assertIn("start=0", r)
         self.assertIn("end=200", r)
         self.assertIn("end5=0", r)
@@ -485,8 +486,8 @@ class TestDunderMethods(unittest.TestCase):
         self.assertNotEqual(a, b)
 
     def test_eq_different_refg(self):
-        a = DisjointIntervalSequence([Interval("chr1", "+", 100, 200, "hg19")])
-        b = DisjointIntervalSequence([Interval("chr1", "+", 100, 200, "hg38")])
+        a = DisjointIntervalSequence([Interval("chr2", "+", 100, 200, "hg38.p12.mini")])
+        b = DisjointIntervalSequence([Interval("chr2", "+", 100, 200, "hg38.p13.mini")])
         self.assertNotEqual(a, b)
 
     def test_eq_different_strand(self):

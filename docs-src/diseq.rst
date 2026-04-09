@@ -220,8 +220,7 @@ From Intervals
 ~~~~~~~~~~~~~~
 
 You can also construct a DIS from any sequence of
-:py:class:`~genome_kit.Interval` objects (or annotation objects like
-:py:class:`~genome_kit.Exon` that have an ``.interval`` attribute)::
+:py:class:`~genome_kit.Interval` objects::
 
     >>> from genome_kit import Interval
     >>> exon_intervals = [e.interval for e in transcript.exons]

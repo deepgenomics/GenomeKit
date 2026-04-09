@@ -444,11 +444,6 @@ class DisjointIntervalSequence:
         """Equality based on coordinate intervals, metadata, and index values."""
         if not isinstance(other, DisjointIntervalSequence):
             return NotImplemented
-        try:
-            # If refg mismatch, ValueError is raised
-            self._coordinate_intervals == other._coordinate_intervals
-        except ValueError:
-            return False
         return (
             self._coord_metadata == other._coord_metadata
             and self._interval_metadata == other._interval_metadata

@@ -164,28 +164,13 @@ intervals, since the start and end indices alone do not encode strand informatio
 
 .. note::
     The preceding examples used + strand coordinate intervals. When the coordinate intervals
-    lie on the - strand, the DIS behaves identically in most respects, with one key
-    difference from :py:class:`~genome_kit.Interval`: on a DIS created from
-    negative-strand intervals, indices still increase in the 5'→3' direction of the
-    transcript.
+    lie on the **negative** strand, the DIS behaves differently from :py:class:`~genome_kit.Interval`:
+    in one key aspect. Indices still increase in the 5'→3' direction of the transcript.::
 
-    For a genomic :py:class:`~genome_kit.Interval` on the ``-`` strand, ``start``
-    corresponds to the 3' end and ``end`` to the 5' end (since ``start < end`` in
-    genomic coordinates regardless of strand)::
-
-        >>> iv = Interval("chr1", "-", 100, 200, genome.refg)
-        >>> iv.end5   # 5' end is at the higher genomic coordinate
-        Interval("chr1", "-", 200, 200, ...)
-        >>> iv.end3   # 3' end is at the lower genomic coordinate
-        Interval("chr1", "-", 100, 100, ...)
-
-    In a DIS built from the same interval, index 0 is always the 5' end::
-
+        >>> iv = Interval("chr1", "-", 0, 100, genome.refg)
+        >>> assert iv.end5.start > iv.end3.start
         >>> dis = DisjointIntervalSequence.from_intervals([iv])
-        >>> dis.end5_index   # 5' end is at index 0
-        0
-        >>> dis.end3_index   # 3' end is at the max index
-        100
+        >>> assert dis.end5.start < dis.end3.start
 
 Consider a transcript on the negative strand:
 ::

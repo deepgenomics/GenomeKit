@@ -405,7 +405,7 @@ available as properties::
 Strand Methods
 ==============
 
-A DIS interval can sit on either strand independently of the coordinate
+A DIS interval can sit on either 'virtual' strand independently of the coordinate
 intervals. The ``on_coordinate_strand`` property indicates whether the
 interval is on the same strand as the coordinate intervals::
     On Coordinate Strand: True
@@ -421,8 +421,17 @@ interval is on the same strand as the coordinate intervals::
 
     >>> dis.on_coordinate_strand
     True
+    >>> dis.is_same_strand()
+    True
+    >>> dis.is_opposite_strand()
+    False
     >>> dis.is_positive_strand()
     True
+
+``is_same_strand()`` and ``is_opposite_strand()`` test whether the interval
+is on the coordinate strand or its complement. ``is_positive_strand()``
+tests the effective genomic strand (accounting for both ``coord_strand``
+and ``on_coordinate_strand``).
 
 Three methods change the interval's strand. All preserve ``start``,
 ``end``, and the coordinate intervals.

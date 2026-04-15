@@ -532,6 +532,24 @@ class DisjointIntervalSequence:
             raise ValueError("Cannot compare: intervals are on different strands")
         return self._start >= other.start and self._end <= other.end
 
+    def is_same_strand(self) -> bool:
+        """True if the interval is on the same strand as the coordinate intervals.
+
+        Returns
+        -------
+        :py:class:`bool`
+        """
+        return self.on_coordinate_strand
+
+    def is_opposite_strand(self) -> bool:
+        """True if the interval is on the opposite strand from the coordinate intervals.
+
+        Returns
+        -------
+        :py:class:`bool`
+        """
+        return not self.on_coordinate_strand
+
     def is_positive_strand(self) -> bool:
         """If the interval is on the positive strand.
 

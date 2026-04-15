@@ -430,11 +430,11 @@ interval is on the same strand as the coordinate intervals::
 strand. ``is_positive_strand()`` tests the effective genomic strand
 (accounting for both ``coord_strand`` and ``on_coordinate_strand``).
 
-Three methods change the interval's strand. All preserve ``start``,
-``end``, and the coordinate intervals.
+Five methods change the interval's strand. All preserve ``start``,
+``end``, and the coordinate intervals. These methods return a DIS on the requested
+strand, instead of modifying the existing DIS in-place.
 
-``as_opposite_strand()`` sets ``on_coordinate_strand`` to ``False``,
-returning ``self`` if already on the opposite strand::
+``as_opposite_strand()`` sets ``on_coordinate_strand`` to ``False``::
 
     Before as_opposite_strand() (on_coordinate_strand=True):
     Start Index:     1
@@ -468,16 +468,17 @@ returning ``self`` if already on the opposite strand::
     >>> opposite.start == dis.start   # start/end unchanged
     True
 
-``as_same_strand()`` sets ``on_coordinate_strand`` to ``True``,
-returning ``self`` if already on the coordinate strand::
+``as_same_strand()`` sets ``on_coordinate_strand`` to ``True``::
 
     >>> dis.on_coordinate_strand
-    True
-    >>> dis.as_same_strand() is dis
+    False
+    >>>> dis.is_same_strand()
+    False
+    >>> same_strand_dis = dis.as_same_strand()
+    >>>> same_strand_dis.is_same_strand()
     True
 
-``flip_strand()`` toggles ``on_coordinate_strand`` (always returns a
-new DIS)::
+``flip_strand()`` toggles ``on_coordinate_strand``::
 
     >>> dis.on_coordinate_strand
     True
@@ -487,10 +488,22 @@ new DIS)::
     >>> flipped.flip_strand().on_coordinate_strand
     True
 
-The ``as_positive_strand()`` and ``as_negative_strand()`` methods return
-``self`` if the interval is already on the requested strand::
+The ``as_positive_strand()`` and ``as_negative_strand()`` methods return a DIS with
+the interval on the effective genomic strand::
 
-    >>> dis.as_positive_strand() is dis
+    >>> dis.coord_strand
+    '+'
+    >>> dis.on_coordinate_strand
+    True
+    >>> dis.strand
+    '+'
+    >>> neg_dis = dis.as_negative_strand()
+    >>> neg_dis.strand
+    '-'
+    >>> pos_dis = neg_dis.as_positive_strand()
+    >>> pos_dis.strand
+    '+'
+    >>> pos_dis.coord_strand == dis.coor_strand == '+'
     True
 
 .. note::
@@ -512,25 +525,25 @@ A negative value shifts upstream. The interval length is preserved.
 
 On the coordinate strand, downstream means increasing indices::
 
-    Before shift(2):
+    Before shift(1):
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                |<--------->|
                               end5        end3
 
-    After shift(2):
+    After shift(1):
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                    |<--------->|
                                   end5        end3
 
 On the opposite strand, "downstream" is the reverse direction in index
-space, so ``shift(2)`` moves the interval toward *lower* indices::
+space, so ``shift(1)`` moves the interval toward *lower* indices::
 
-    Before shift(2) (on_coordinate_strand=False):
+    Before shift(1) (on_coordinate_strand=False):
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                |<--------->|
                               end3        end5
 
-    After shift(2):
+    After shift(1):
     DIS Coordinates:       0   1   2   3   4   5   6   7
                            |<--------->|
                           end3        end5
@@ -551,6 +564,8 @@ space, so ``shift(2)`` moves the interval toward *lower* indices::
 
     >>> # On the opposite strand, downstream reverses in index space
     >>> opp = dis.as_opposite_strand()
+    >>> opp.start, opp.end
+    (30, 150)
     >>> shifted_opp = opp.shift(10)
     >>> shifted_opp.start, shifted_opp.end
     (20, 140)

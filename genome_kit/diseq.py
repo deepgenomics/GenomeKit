@@ -490,8 +490,8 @@ class DisjointIntervalSequence:
                 )
         return DisjointIntervalSequence(
             self._coordinate_intervals,
-            coord_id=self._coord_metadata.id,
-            interval_id=self._interval_metadata.id,
+            coord_name=self._coord_metadata.name,
+            interval_name=self._interval_metadata.name,
             on_coordinate_strand=self.on_coordinate_strand,
             start=min(end5, end3),
             end=max(end5, end3),
@@ -581,7 +581,7 @@ class DisjointIntervalSequence:
         -------
         :py:class:`bool`
         """
-        if self.transcript_strand == "+":
+        if self.strand == "+":
             return True
         return False
 
@@ -625,8 +625,8 @@ class DisjointIntervalSequence:
         """
         return DisjointIntervalSequence(
             self._coordinate_intervals,
-            coord_id=self._coord_metadata.id,
-            interval_id=self._interval_metadata.id,
+            coord_name=self._coord_metadata.name,
+            interval_name=self._interval_metadata.name,
             on_coordinate_strand=not self.on_coordinate_strand,
             start=self._start,
             end=self._end,

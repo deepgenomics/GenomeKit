@@ -625,13 +625,13 @@ _COORD_IVS = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
 
 
 def _dis(
-    start=0, end=200, on_coordinate_strand=True, coord_id="c", interval_id="i", ivs=None
+    start=0, end=200, on_coordinate_strand=True, coord_name="c", interval_name="i", ivs=None
 ):
     """Quick DIS factory for tests."""
     return DisjointIntervalSequence(
         ivs or _COORD_IVS,
-        coord_id=coord_id,
-        interval_id=interval_id,
+        coord_name=coord_name,
+        interval_name=interval_name,
         on_coordinate_strand=on_coordinate_strand,
         start=start,
         end=end,
@@ -685,10 +685,10 @@ class TestShift(unittest.TestCase):
         self.assertEqual(shifted.end, 140)
 
     def test_shift_preserves_metadata(self):
-        dis = _dis(start=30, end=150, coord_id="mycoord", interval_id="myiv")
+        dis = _dis(start=30, end=150, coord_name="mycoord", interval_name="myiv")
         shifted = dis.shift(10)
-        self.assertEqual(shifted.coord_id, "mycoord")
-        self.assertEqual(shifted.id, "myiv")
+        self.assertEqual(shifted.coord_name, "mycoord")
+        self.assertEqual(shifted.name, "myiv")
         self.assertTrue(shifted.on_coordinate_strand)
 
     def test_shift_preserves_coordinate_intervals(self):
@@ -768,10 +768,10 @@ class TestExpand(unittest.TestCase):
         self.assertEqual(expanded.start, -20)
 
     def test_expand_preserves_metadata(self):
-        dis = _dis(start=30, end=150, coord_id="c", interval_id="i")
+        dis = _dis(start=30, end=150, coord_name="c", interval_name="i")
         expanded = dis.expand(5)
-        self.assertEqual(expanded.coord_id, "c")
-        self.assertEqual(expanded.id, "i")
+        self.assertEqual(expanded.coord_name, "c")
+        self.assertEqual(expanded.name, "i")
         self.assertTrue(expanded.on_coordinate_strand)
 
     def test_expand_preserves_coordinate_intervals(self):
@@ -830,9 +830,9 @@ class TestUpstreamOf(unittest.TestCase):
         with self.assertRaises(ValueError):
             a.upstream_of(b)
 
-    def test_different_coord_id_allowed(self):
-        a = _dis(start=10, end=30, coord_id="a")
-        b = _dis(start=50, end=80, coord_id="b")
+    def test_different_coord_name_allowed(self):
+        a = _dis(start=10, end=30, coord_name="a")
+        b = _dis(start=50, end=80, coord_name="b")
         self.assertTrue(a.upstream_of(b))
 
     def test_different_on_coord_strand_raises(self):

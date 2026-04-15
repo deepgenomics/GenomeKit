@@ -408,48 +408,6 @@ class DisjointIntervalSequence:
         """Length of the interval on the coordinate space."""
         return self.end - self.start
 
-    def _set_end5(self, end5: int) -> "DisjointIntervalSequence":
-        """Convenience method to update start/end based on a new end5 index."""
-        if end5 == self.end5_index:
-            return self  # No change
-        new_start, new_end = self._start, self._end
-        end5_difference = end5 - self.end5_index
-        is_moved_upstream = end5_difference * self._upstream_index_step() > 0
-        if is_moved_upstream and self._upstream_index_step() == -1:
-            new_start = new_start - abs(end5_difference)
-        elif is_moved_upstream and self._upstream_index_step() == 1:
-            new_end = new_end + abs(end5_difference)
-        elif not is_moved_upstream and self._upstream_index_step() == -1:
-            new_start = new_start + abs(end5_difference)
-        elif not is_moved_upstream and self._upstream_index_step() == 1:
-            new_end = new_end - abs(end5_difference)
-        if new_start > new_end:
-            raise ValueError(
-                f"Invalid end5 update: end5 index {end5} would be downstream of end3 index {self.end3_index}"
-            )
-        return self._from_end_indices(new_start, new_end)
-
-    def _set_end3(self, end3: int) -> "DisjointIntervalSequence":
-        """Convenience method to update start/end based on a new end3 index."""
-        if end3 == self.end3_index:
-            return self  # No change
-        new_start, new_end = self._start, self._end
-        end3_difference = end3 - self.end3_index
-        is_moved_upstream = end3_difference * self._upstream_index_step() > 0
-        if is_moved_upstream and self._upstream_index_step() == -1:
-            new_end = new_end - abs(end3_difference)
-        elif is_moved_upstream and self._upstream_index_step() == 1:
-            new_start = new_start + abs(end3_difference)
-        elif not is_moved_upstream and self._upstream_index_step() == -1:
-            new_end = new_end + abs(end3_difference)
-        elif not is_moved_upstream and self._upstream_index_step() == 1:
-            new_start = new_start - abs(end3_difference)
-        if new_start > new_end:
-            raise ValueError(
-                f"Invalid end3 update: end3 index {end3} would be upstream of end5 index {self.end5_index}"
-            )
-        return self._from_end_indices(new_start, new_end)
-
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
 

@@ -660,24 +660,6 @@ class DisjointIntervalSequence:
             end=self._end,
         )
 
-    def genomic_span(self) -> Interval:
-        """Smallest single Interval spanning all coordinate intervals.
-
-        Returns
-        -------
-        :py:class:`~genome_kit.Interval`
-            An interval from the minimum ``start`` to the maximum ``end``
-            across all coordinate intervals.
-        """
-        ivs = self._coordinate_intervals
-        return Interval(
-            ivs[0].chromosome,
-            ivs[0].strand,
-            min(iv.start for iv in ivs),
-            max(iv.end for iv in ivs),
-            ivs[0].reference_genome,
-        )
-
     def __len__(self) -> int:
         """Return the length of the interval."""
         return self.length

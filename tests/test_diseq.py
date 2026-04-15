@@ -392,31 +392,58 @@ class TestStrandMethods(unittest.TestCase):
         self.assertEqual(result.end, 80)
         self.assertEqual(result, expected)
 
-    def test_as_opposite_strand(self):
+    def test_flip_strand(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        opp = dis.as_opposite_strand()
-        self.assertFalse(opp.is_positive_strand())
-        opp2 = opp.as_opposite_strand()
-        self.assertTrue(opp2.is_positive_strand())
+        flipped = dis.flip_strand()
+        self.assertFalse(flipped.on_coordinate_strand)
+        flipped2 = flipped.flip_strand()
+        self.assertTrue(flipped2.on_coordinate_strand)
 
-    def test_strand_flip_preserves_coordinate_intervals(self):
+    def test_flip_strand_preserves_coordinate_intervals(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        flipped = dis.as_opposite_strand()
+        flipped = dis.flip_strand()
         self.assertEqual(flipped.coordinate_intervals, dis.coordinate_intervals)
 
-    def test_idempotency(self):
-        ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertIs(dis.as_positive_strand().as_positive_strand(), dis)
-
-    def test_as_opposite_strand_preserves_start_end(self):
+    def test_flip_strand_preserves_start_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=10, end=80)
-        opp = dis.as_opposite_strand()
-        self.assertEqual(opp.start, 10)
-        self.assertEqual(opp.end, 80)
+        flipped = dis.flip_strand()
+        self.assertEqual(flipped.start, 10)
+        self.assertEqual(flipped.end, 80)
+
+    def test_flip_strand_preserves_metadata(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        flipped = dis.flip_strand()
+        self.assertEqual(flipped.coord_name, "c")
+        self.assertEqual(flipped.name, "i")
+
+    def test_end5_end3_swap_on_flip_strand(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=10, end=80)
+        # On coordinate strand: end5 at start, end3 at end
+        self.assertEqual(dis.end5_index, 10)
+        self.assertEqual(dis.end3_index, 80)
+        # Flipped: end5 at end, end3 at start
+        flipped = dis.flip_strand()
+        self.assertEqual(flipped.end5_index, 80)
+        self.assertEqual(flipped.end3_index, 10)
+
+    def test_as_opposite_strand_already_opposite(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        result = dis.as_opposite_strand()
+        self.assertIs(result, dis)
+
+    def test_as_opposite_strand_from_same(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True, start=10, end=80)
+        result = dis.as_opposite_strand()
+        self.assertFalse(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
 
     def test_as_opposite_strand_preserves_metadata(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -424,6 +451,28 @@ class TestStrandMethods(unittest.TestCase):
         opp = dis.as_opposite_strand()
         self.assertEqual(opp.coord_name, "c")
         self.assertEqual(opp.name, "i")
+
+    def test_as_same_strand_already_same(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        result = dis.as_same_strand()
+        self.assertIs(result, dis)
+
+    def test_as_same_strand_flips(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=10, end=80)
+        result = dis.as_same_strand()
+        self.assertTrue(result.on_coordinate_strand)
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+
+    def test_idempotency(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis_pos = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertIs(dis_pos.as_positive_strand().as_positive_strand(), dis_pos)
+        self.assertIs(dis_pos.as_same_strand().as_same_strand(), dis_pos)
+        dis_opp = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertIs(dis_opp.as_opposite_strand().as_opposite_strand(), dis_opp)
 
     def test_as_positive_strand_preserves_start_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -438,17 +487,6 @@ class TestStrandMethods(unittest.TestCase):
         result = dis.as_negative_strand()
         self.assertEqual(result.start, 10)
         self.assertEqual(result.end, 80)
-
-    def test_end5_end3_swap_on_opposite_strand(self):
-        ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, start=10, end=80)
-        # On coordinate strand: end5 at start, end3 at end
-        self.assertEqual(dis.end5_index, 10)
-        self.assertEqual(dis.end3_index, 80)
-        # Off coordinate strand: end5 at end, end3 at start
-        opp = dis.as_opposite_strand()
-        self.assertEqual(opp.end5_index, 80)
-        self.assertEqual(opp.end3_index, 10)
 
 
 class TestEndProperties(unittest.TestCase):

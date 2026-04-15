@@ -178,7 +178,7 @@ Consider a transcript on the negative strand:
     DNA Sequence (-):   |  G   T   C   A   G   T   C   A   G   T   C   A   G   T  |
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
                                             Negative Strand
-Taking just the exons:
+Extracting only the exons:
 ::
                         3'   Exon3     Exon2   Exon1  5'
                         | |<------->| |<--->| |<--->| |
@@ -274,7 +274,7 @@ The most common way to create a DIS is from a
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
 
 By default, the coordinate space is built from the transcript's exons.
-You can also specify a region to use CDS or UTR intervals::
+It's also possible to specify a region to use CDS or UTR intervals::
 
     >>> dis_cds = DisjointIntervalSequence.from_transcript(transcript, region="cds")
     >>> dis_utr5 = DisjointIntervalSequence.from_transcript(transcript, region="utr5")
@@ -289,7 +289,7 @@ be overridden::
 From Intervals
 ~~~~~~~~~~~~~~
 
-You can also construct a DIS from any sequence of
+A DIS can be constructed from any sequence of
 :py:class:`~genome_kit.Interval` objects::
 
     >>> from genome_kit import Interval
@@ -383,6 +383,7 @@ When ``on_coordinate_strand`` is ``False``, the mapping reverses:
                                   Opposite Strand
 
 ::
+
     >>> opp = dis.as_opposite_strand()
     >>> opp.end5_index   # same as end when off coordinate strand
     7
@@ -423,22 +424,13 @@ interval is on the same strand as the coordinate intervals::
     >>> dis.is_positive_strand()
     True
 
-``as_opposite_strand()`` creates a new DIS with the interval on the other
-strand. The ``start`` and ``end`` indices are preserved — only
-``on_coordinate_strand`` is flipped::
+Three methods change the interval's strand. All preserve ``start``,
+``end``, and the coordinate intervals.
 
-    Before (on_coordinate_strand=False):
-    Start Index:     1
-    End Index:       6
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      T   A   A   C   C   C   T
-    -----------------------------------------------------
-    DNA Sequence (-):      A   T   T   G   G   G   A
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-                               |<------------->|
-                                  Opposite Strand
+``as_opposite_strand()`` sets ``on_coordinate_strand`` to ``False``,
+returning ``self`` if already on the opposite strand::
 
-    After as_opposite_strand() (on_coordinate_strand=True):
+    Before as_opposite_strand() (on_coordinate_strand=True):
     Start Index:     1
     End Index:       6
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -449,21 +441,44 @@ strand. The ``start`` and ``end`` indices are preserved — only
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
 
-In code::
+    After as_opposite_strand() (on_coordinate_strand=False):
+    Start Index:     1
+    End Index:       6
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+    DNA Sequence (+):      T   A   A   C   C   C   T
+    -----------------------------------------------------
+    DNA Sequence (-):      A   T   T   G   G   G   A
+    DIS Coordinates:       0   1   2   3   4   5   6   7
+                               |<------------->|
+                                  Opposite Strand
+
+::
+
     >>> dis.on_coordinate_strand
-    False
-    >>> dis.is_positive_strand()
-    False
+    True
     >>> opposite = dis.as_opposite_strand()
     >>> opposite.on_coordinate_strand
-    True
-    >>> opposite.is_positive_strand()
-    True
+    False
     >>> opposite.start == dis.start   # start/end unchanged
     True
-    >>> opposite.end == dis.end
+
+``as_same_strand()`` sets ``on_coordinate_strand`` to ``True``,
+returning ``self`` if already on the coordinate strand::
+
+    >>> dis.on_coordinate_strand
     True
-    >>> opposite.coordinate_intervals == dis.coordinate_intervals
+    >>> dis.as_same_strand() is dis
+    True
+
+``flip_strand()`` toggles ``on_coordinate_strand`` (always returns a
+new DIS)::
+
+    >>> dis.on_coordinate_strand
+    True
+    >>> flipped = dis.flip_strand()
+    >>> flipped.on_coordinate_strand
+    False
+    >>> flipped.flip_strand().on_coordinate_strand
     True
 
 The ``as_positive_strand()`` and ``as_negative_strand()`` methods return
@@ -514,7 +529,7 @@ space, so ``shift(2)`` moves the interval toward *lower* indices::
                            |<--------->|
                           end3        end5
 
-In code::
+::
 
     >>> dis.start, dis.end
     (30, 150)
@@ -568,7 +583,7 @@ Negative values contract the interval::
                                |<--------->|
                               end5        end3
 
-In code::
+::
 
     >>> dis.start, dis.end
     (30, 150)
@@ -625,7 +640,7 @@ upstream_of
                                       b
     a.upstream_of(b) is False   (overlap)
 
-In code::
+::
 
     >>> a = DisjointIntervalSequence(coord_ivs, start=10, end=30)
     >>> b = DisjointIntervalSequence(coord_ivs, start=50, end=80)

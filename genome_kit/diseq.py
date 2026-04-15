@@ -597,7 +597,7 @@ class DisjointIntervalSequence:
         """
         if self.is_positive_strand():
             return self
-        return self.as_opposite_strand()
+        return self.flip_strand()
 
     def as_negative_strand(self) -> "DisjointIntervalSequence":
         """Return a DIS with the interval on the negative strand.
@@ -611,10 +611,38 @@ class DisjointIntervalSequence:
         """
         if not self.is_positive_strand():
             return self
-        return self.as_opposite_strand()
+        return self.flip_strand()
 
     def as_opposite_strand(self) -> "DisjointIntervalSequence":
-        """Return a new DIS with the interval on the opposite strand.
+        """Return a DIS with the interval on the opposite strand.
+
+        Returns ``self`` if already on the opposite strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
+        if not self.on_coordinate_strand:
+            return self
+        return self.flip_strand()
+
+    def as_same_strand(self) -> "DisjointIntervalSequence":
+        """Return a DIS with the interval on the coordinate strand.
+
+        Returns ``self`` if already on the coordinate strand. The coordinate
+        intervals are unchanged; only the interval strand is affected.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+        """
+        if self.on_coordinate_strand:
+            return self
+        return self.flip_strand()
+
+    def flip_strand(self) -> "DisjointIntervalSequence":
+        """Return a new DIS with ``on_coordinate_strand`` toggled.
 
         The coordinate intervals are unchanged. The interval's
         ``on_coordinate_strand`` is flipped.

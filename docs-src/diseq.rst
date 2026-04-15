@@ -503,7 +503,7 @@ the interval on the effective genomic strand::
     >>> pos_dis = neg_dis.as_positive_strand()
     >>> pos_dis.strand
     '+'
-    >>> pos_dis.coord_strand == dis.coor_strand == '+'
+    >>> pos_dis.coord_strand == dis.coord_strand == '+'
     True
 
 .. note::

@@ -472,10 +472,10 @@ strand, instead of modifying the existing DIS in-place.
 
     >>> dis.on_coordinate_strand
     False
-    >>>> dis.is_same_strand()
+    >>> dis.is_same_strand()
     False
     >>> same_strand_dis = dis.as_same_strand()
-    >>>> same_strand_dis.is_same_strand()
+    >>> same_strand_dis.is_same_strand()
     True
 
 ``flip_strand()`` toggles ``on_coordinate_strand``::

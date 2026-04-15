@@ -192,6 +192,7 @@ class TestFromTranscript(unittest.TestCase):
     def setUp(self):
         self.genome = MiniGenome("gencode.v41")
         self.transcript = self.genome.transcripts["ENST00000233331.12"]
+        self.neg_transcript = self.genome.transcripts["ENST00000448666.7"]
 
     def test_exons_region(self):
         dis = DisjointIntervalSequence.from_transcript(self.transcript, region="exons")
@@ -231,6 +232,23 @@ class TestFromTranscript(unittest.TestCase):
         )
         self.assertEqual(dis.coord_name, "custom_coord")
         self.assertEqual(dis.name, "custom_iv")
+
+    def test_negative_strand_exons(self):
+        dis = DisjointIntervalSequence.from_transcript(self.neg_transcript, region="exons")
+        expected = tuple(e.interval for e in self.neg_transcript.exons)
+        self.assertEqual(dis.coordinate_intervals, expected)
+        self.assertEqual(dis.coord_strand, "-")
+
+    def test_negative_strand_cds(self):
+        dis = DisjointIntervalSequence.from_transcript(self.neg_transcript, region="cds")
+        expected = tuple(c.interval for c in self.neg_transcript.cdss)
+        self.assertEqual(dis.coordinate_intervals, expected)
+
+    def test_negative_strand_metadata(self):
+        dis = DisjointIntervalSequence.from_transcript(self.neg_transcript)
+        self.assertEqual(dis.coord_name, self.neg_transcript.id)
+        self.assertEqual(dis.coord_strand, "-")
+        self.assertEqual(dis.chromosome, self.neg_transcript.chromosome)
 
 
 class TestProperties(unittest.TestCase):
@@ -400,6 +418,27 @@ class TestStrandMethods(unittest.TestCase):
         self.assertEqual(opp.start, 10)
         self.assertEqual(opp.end, 80)
 
+    def test_as_opposite_strand_preserves_metadata(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        opp = dis.as_opposite_strand()
+        self.assertEqual(opp.coord_name, "c")
+        self.assertEqual(opp.name, "i")
+
+    def test_as_positive_strand_preserves_start_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=10, end=80)
+        result = dis.as_positive_strand()
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+
+    def test_as_negative_strand_preserves_start_end(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True, start=10, end=80)
+        result = dis.as_negative_strand()
+        self.assertEqual(result.start, 10)
+        self.assertEqual(result.end, 80)
+
     def test_end5_end3_swap_on_opposite_strand(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=10, end=80)
@@ -562,13 +601,13 @@ class TestDunderMethods(unittest.TestCase):
         b = DisjointIntervalSequence(ivs, coord_name="x", interval_name="i")
         self.assertEqual(a, b)
 
-    def test_eq_different_coord_id(self):
+    def test_eq_different_coord_name(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         a = DisjointIntervalSequence(ivs, coord_name="x")
         b = DisjointIntervalSequence(ivs, coord_name="y")
         self.assertNotEqual(a, b)
 
-    def test_eq_different_interval_id(self):
+    def test_eq_different_interval_name(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         a = DisjointIntervalSequence(ivs, interval_name="x")
         b = DisjointIntervalSequence(ivs, interval_name="y")
@@ -622,6 +661,7 @@ class TestDunderMethods(unittest.TestCase):
 # Helper for shift/expand/relational tests
 # 2 exons on chr1+: [100,200) and [300,400), coordinate_length=200
 _COORD_IVS = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+_NEG_COORD_IVS = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
 
 
 def _dis(
@@ -632,6 +672,18 @@ def _dis(
         ivs or _COORD_IVS,
         coord_name=coord_name,
         interval_name=interval_name,
+        on_coordinate_strand=on_coordinate_strand,
+        start=start,
+        end=end,
+    )
+
+
+def _neg_dis(start=0, end=200, on_coordinate_strand=True):
+    """Quick DIS factory for negative-strand coordinate interval tests."""
+    return DisjointIntervalSequence(
+        _NEG_COORD_IVS,
+        coord_name="c",
+        interval_name="i",
         on_coordinate_strand=on_coordinate_strand,
         start=start,
         end=end,
@@ -684,6 +736,14 @@ class TestShift(unittest.TestCase):
         self.assertEqual(shifted.start, 20)
         self.assertEqual(shifted.end, 140)
 
+    def test_shift_opposite_strand_negative_shift(self):
+        # on_coordinate_strand=False: upstream_step=+1, downstream=-1
+        # shift 10 upstream → add 10 to both
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        shifted = dis.shift(-10)
+        self.assertEqual(shifted.start, 40)
+        self.assertEqual(shifted.end, 160)
+
     def test_shift_preserves_metadata(self):
         dis = _dis(start=30, end=150, coord_name="mycoord", interval_name="myiv")
         shifted = dis.shift(10)
@@ -691,10 +751,32 @@ class TestShift(unittest.TestCase):
         self.assertEqual(shifted.name, "myiv")
         self.assertTrue(shifted.on_coordinate_strand)
 
+    def test_shift_preserves_metadata_opposite_strand(self):
+        dis = _dis(
+            start=30, end=150, coord_name="mycoord", interval_name="myiv",
+            on_coordinate_strand=False,
+        )
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.coord_name, "mycoord")
+        self.assertEqual(shifted.name, "myiv")
+        self.assertFalse(shifted.on_coordinate_strand)
+
     def test_shift_preserves_coordinate_intervals(self):
         dis = _dis(start=30, end=150)
         shifted = dis.shift(10)
         self.assertEqual(shifted.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_shift_negative_strand_coords(self):
+        dis = _neg_dis(start=30, end=150)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 40)
+        self.assertEqual(shifted.end, 160)
+
+    def test_shift_negative_strand_coords_opposite(self):
+        dis = _neg_dis(start=30, end=150, on_coordinate_strand=False)
+        shifted = dis.shift(10)
+        self.assertEqual(shifted.start, 20)
+        self.assertEqual(shifted.end, 140)
 
 
 class TestExpand(unittest.TestCase):
@@ -755,6 +837,22 @@ class TestExpand(unittest.TestCase):
         self.assertEqual(expanded.start, 25)
         self.assertEqual(expanded.end, 155)
 
+    def test_expand_opposite_strand_upstream_only(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # end5=150, end3=30. expand(5, 0): end5 moves to 155, end3 stays at 30
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        expanded = dis.expand(5, 0)
+        self.assertEqual(expanded.start, 30)
+        self.assertEqual(expanded.end, 155)
+
+    def test_expand_opposite_strand_downstream_only(self):
+        # on_coordinate_strand=False: upstream_step=+1
+        # end5=150, end3=30. expand(0, 5): end5 stays at 150, end3 moves to 25
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        expanded = dis.expand(0, 5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 150)
+
     def test_expand_zero_length_interval(self):
         dis = _dis(start=50, end=50)
         expanded = dis.expand(5)
@@ -774,10 +872,32 @@ class TestExpand(unittest.TestCase):
         self.assertEqual(expanded.name, "i")
         self.assertTrue(expanded.on_coordinate_strand)
 
+    def test_expand_preserves_metadata_opposite_strand(self):
+        dis = _dis(
+            start=30, end=150, coord_name="c", interval_name="i",
+            on_coordinate_strand=False,
+        )
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.coord_name, "c")
+        self.assertEqual(expanded.name, "i")
+        self.assertFalse(expanded.on_coordinate_strand)
+
     def test_expand_preserves_coordinate_intervals(self):
         dis = _dis(start=30, end=150)
         expanded = dis.expand(5)
         self.assertEqual(expanded.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_expand_negative_strand_coords(self):
+        dis = _neg_dis(start=30, end=150)
+        expanded = dis.expand(5, 10)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 160)
+
+    def test_expand_negative_strand_coords_opposite(self):
+        dis = _neg_dis(start=30, end=150, on_coordinate_strand=False)
+        expanded = dis.expand(5)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 155)
 
 
 class TestUpstreamOf(unittest.TestCase):
@@ -846,6 +966,16 @@ class TestUpstreamOf(unittest.TestCase):
         with self.assertRaises(TypeError):
             a.upstream_of("not a DIS")
 
+    def test_upstream_of_negative_strand_coords(self):
+        a = _neg_dis(start=10, end=30)
+        b = _neg_dis(start=50, end=80)
+        self.assertTrue(a.upstream_of(b))
+
+    def test_upstream_of_negative_strand_coords_false(self):
+        a = _neg_dis(start=50, end=80)
+        b = _neg_dis(start=10, end=30)
+        self.assertFalse(a.upstream_of(b))
+
 
 class TestDnstreamOf(unittest.TestCase):
 
@@ -893,6 +1023,16 @@ class TestDnstreamOf(unittest.TestCase):
         with self.assertRaises(ValueError):
             a.dnstream_of(b)
 
+    def test_dnstream_of_negative_strand_coords(self):
+        a = _neg_dis(start=50, end=80)
+        b = _neg_dis(start=10, end=30)
+        self.assertTrue(a.dnstream_of(b))
+
+    def test_dnstream_of_negative_strand_coords_false(self):
+        a = _neg_dis(start=10, end=30)
+        b = _neg_dis(start=50, end=80)
+        self.assertFalse(a.dnstream_of(b))
+
 
 class TestWithin(unittest.TestCase):
 
@@ -923,7 +1063,9 @@ class TestWithin(unittest.TestCase):
     def test_within_zero_length_at_boundary(self):
         a = _dis(start=10, end=10)
         b = _dis(start=10, end=80)
+        c = _dis(start=80, end=80)
         self.assertTrue(a.within(b))
+        self.assertTrue(c.within(b))
 
     def test_within_zero_length_outside(self):
         a = _dis(start=5, end=5)
@@ -952,6 +1094,16 @@ class TestWithin(unittest.TestCase):
         a = _dis(start=30, end=50)
         with self.assertRaises(TypeError):
             a.within("not a DIS")
+
+    def test_within_negative_strand_coords(self):
+        a = _neg_dis(start=30, end=50)
+        b = _neg_dis(start=10, end=80)
+        self.assertTrue(a.within(b))
+
+    def test_within_negative_strand_coords_false(self):
+        a = _neg_dis(start=10, end=80)
+        b = _neg_dis(start=30, end=50)
+        self.assertFalse(a.within(b))
 
 
 if __name__ == "__main__":

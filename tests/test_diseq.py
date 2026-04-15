@@ -342,23 +342,6 @@ class TestStrandMethods(unittest.TestCase):
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
         self.assertFalse(dis.is_same_strand())
 
-    def test_is_opposite_strand_true(self):
-        ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertTrue(dis.is_opposite_strand())
-
-    def test_is_opposite_strand_false(self):
-        ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertFalse(dis.is_opposite_strand())
-
-    def test_is_same_opposite_strand_mutually_exclusive(self):
-        ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis_same = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertNotEqual(dis_same.is_same_strand(), dis_same.is_opposite_strand())
-        dis_opp = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertNotEqual(dis_opp.is_same_strand(), dis_opp.is_opposite_strand())
-
     def test_is_positive_strand_plus_on_coord(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)

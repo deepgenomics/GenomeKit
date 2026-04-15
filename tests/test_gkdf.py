@@ -227,6 +227,29 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df["genes"][0], df["genes"][0])
         self.assertEqual(re_df["genes"][1], df["genes"][1])
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_mismatch_types(self):
+        # test that error is raised when cols have different types
+        g = Genome("gencode.v41")
+        gene = g.genes[0]
+        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+
+        df = pl.DataFrame({"mixed": [gene, interval]}, schema={"mixed": pl.Object})
+        path = self.tmp_dir_path / "mismatch_types.parquet"
+        with self.assertRaises(ValueError):
+            write_parquet(df, path)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_mismatch_list_types(self):
+        # test that error is raised when cols have different types
+        g = Genome("gencode.v41")
+        gene = g.genes[0]
+
+        df = pl.DataFrame({"mixed": [gene, [gene]]}, schema={"mixed": pl.Object})
+        path = self.tmp_dir_path / "mismatch_list_types.parquet"
+        with self.assertRaises(ValueError):
+            write_parquet(df, path)
+
 
 if __name__ == "__main__":
     unittest.main()

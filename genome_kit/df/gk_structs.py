@@ -12,11 +12,15 @@ if TYPE_CHECKING:  # import polars for type checking
 try:
     from enum import StrEnum
 except ImportError:
-    from enum import Enum
+    from enum import Enum, auto
 
     class StrEnum(str, Enum):
         def __str__(self):
             return str(self.value)
+
+        @staticmethod
+        def _generate_next_value_(name, start, count, last_values):
+            return name.lower()
 
 
 class GkDfType(StrEnum):
@@ -66,68 +70,61 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
 
     GenomeStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
-            pl.Field("genome_str", pl.Utf8),  # reference or annotation genome
+            pl.Field("genome_name", pl.Utf8),  # reference or annotation genome
         ]
     )
 
     IntervalStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("chromosome", pl.Utf8),
             pl.Field("strand", pl.Utf8),
             pl.Field("start", pl.Int32),
             pl.Field("end", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # reference genome
+            pl.Field("refg", pl.Utf8),  # reference genome
         ]
     )
 
     TranscriptStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             # index of transcript within annotation genome transcript table
-            # Int32 matches index type in C++ backend (see src/table.g:22)
+            # Int32 matches index type in C++ backend (see src/table.h:22)
             pl.Field("transcript_table_index", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 
     GeneStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("gene_table_index", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 
     ExonStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("exon_table_index", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 
     IntronStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("intron_table_index", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 
     CdsStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("cds_table_index", pl.Int32),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 
@@ -135,11 +132,10 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
 
     UtrStruct = pl.Struct(
         [
-            pl.Field("gkdf_type", pl.Utf8),
             pl.Field("schema_version", pl.Utf8),
             pl.Field("utr_type", UtrType),
             pl.Field("utr_table_index", pl.Int64),
-            pl.Field("genome_str", pl.Utf8),  # annotation genome
+            pl.Field("anno", pl.Utf8),  # annotation genome
         ]
     )
 

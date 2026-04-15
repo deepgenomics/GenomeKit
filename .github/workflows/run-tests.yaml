@@ -41,7 +41,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12']
         platform: ["linux-64", "osx-arm64", "osx-64"]
         extras: ["none", "df"]
-        rosetta: [false]
+        rosetta: ["false"]
         include: # specify additional fields for all configs
           - python-version: "3.10"
             pyver-short: "310"
@@ -61,7 +61,7 @@ jobs:
             platform: "osx-64" # intel build
             runs-on: "macos-latest" # defaults to arm64 runner with M1 chip
             extras: "df"
-            rosetta: true
+            rosetta: "true"
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4

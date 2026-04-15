@@ -1,7 +1,7 @@
 .. _df:
 
-GenomeKit DataFrame Utilities
-=============================
+DataFrame Utilities
+===================
 
 The :py:mod:`genome_kit.df` subpackage contains utilities for working with Polars DataFrames that contain GenomeKit objects. This includes utilities for serializing DataFrames with GenomeKit objects to Parquet and deserializing them back to GenomeKit objects. This is useful when sharing tabular data sets, or when saving intermediate DataFrames to disk during data processing.
 

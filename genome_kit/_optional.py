@@ -50,8 +50,8 @@ def check_under_rosetta():
             text=True,
             check=True,
         )
-        # output will be 0 if running command directly from the terminal, and 1 if
-        # running through Python under Rosetta translation
+        # output will be 0 if running natively on Apple Silicon, and 1 if running under 
+        # Rosetta translation
         return result.stdout.strip() == "1"
     except subprocess.CalledProcessError:
         # sysctl.proc_translated won't exist on non-Apple Silicon machines

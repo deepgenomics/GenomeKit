@@ -696,3 +696,44 @@ coordinate space and strand apply::
     True
     >>> b.dnstream_of(a)
     False
+
+within
+~~~~~~
+
+``within(other)`` returns ``True`` if ``self``'s interval is fully
+contained within ``other``'s interval. Boundary-inclusive: an interval
+is within another if it shares the same start and/or end. An interval
+is always within itself. The same requirements on shared coordinate
+space and strand apply::
+
+    DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
+                                   |<->|
+                                     a
+                           |<------------->|
+                                  b
+    a.within(b) is True
+
+    DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
+                           |<------------->|
+                                  a
+                                   |<->|
+                                     b
+    a.within(b) is False
+
+::
+
+    >>> a = DisjointIntervalSequence(coord_ivs, start=30, end=50)
+    >>> b = DisjointIntervalSequence(coord_ivs, start=10, end=80)
+    >>> a.within(b)
+    True
+    >>> b.within(a)
+    False
+
+    >>> # An interval is within itself
+    >>> a.within(a)
+    True
+
+    >>> # Zero-length intervals are within any enclosing interval
+    >>> z = DisjointIntervalSequence(coord_ivs, start=50, end=50)
+    >>> z.within(a)
+    True

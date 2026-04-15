@@ -501,7 +501,12 @@ class DisjointIntervalSequence:
         """
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
-            raise ValueError("Cannot compare: intervals are on different strands")
+            raise ValueError(
+                f"Cannot compare: self is on "
+                f"{'same' if self.on_coordinate_strand else 'opposite'} "
+                f"strand but other is on "
+                f"{'same' if other.on_coordinate_strand else 'opposite'} strand"
+            )
         if self.length == 0 and other.length == 0 and self.start == other.start:
             return False
         if self._upstream_index_step() == -1:
@@ -515,7 +520,12 @@ class DisjointIntervalSequence:
         """
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
-            raise ValueError("Cannot compare: intervals are on different strands")
+            raise ValueError(
+                f"Cannot compare: self is on "
+                f"{'same' if self.on_coordinate_strand else 'opposite'} "
+                f"strand but other is on "
+                f"{'same' if other.on_coordinate_strand else 'opposite'} strand"
+            )
         if self.length == 0 and other.length == 0 and self.start == other.start:
             return False
         if self._upstream_index_step() == -1:
@@ -529,7 +539,12 @@ class DisjointIntervalSequence:
         """
         self._validate_same_coordinate_space(other)
         if self.on_coordinate_strand != other.on_coordinate_strand:
-            raise ValueError("Cannot compare: intervals are on different strands")
+            raise ValueError(
+                f"Cannot compare: self is on "
+                f"{'same' if self.on_coordinate_strand else 'opposite'} "
+                f"strand but other is on "
+                f"{'same' if other.on_coordinate_strand else 'opposite'} strand"
+            )
         return self._start >= other.start and self._end <= other.end
 
     def is_same_strand(self) -> bool:

@@ -542,7 +542,7 @@ class DisjointIntervalSequence:
         return self.on_coordinate_strand
 
     def is_positive_strand(self) -> bool:
-        """If the interval is on the positive strand.
+        """True if the interval is on the positive strand.
 
         Returns
         -------

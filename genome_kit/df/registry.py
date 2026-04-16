@@ -85,6 +85,7 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             name=s.name,
             values=[
                 {
+                    _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
                     "chromosome": interval.chromosome,
                     "strand": interval.strand,
                     "start": interval.start,

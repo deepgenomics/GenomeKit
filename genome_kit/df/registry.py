@@ -33,7 +33,6 @@ class GKTypeEntry:
     deserializer: Callable[[pl.Series], pl.Series]
 
 
-_GKDF_TYPE_FIELD = "gkdf_type"
 _SCHEMA_VERSION_FIELD = "schema_version"
 
 SUPPORTED_VERSIONS = {v for v in GkDfVersion.__members__.values()}

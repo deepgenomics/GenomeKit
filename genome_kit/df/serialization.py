@@ -197,7 +197,7 @@ def _init_gk_annotations(
     if genomes_list_exprs:
         plans.append(
             lf.select(
-                pl.concat_list(genomes_list_exprs)
+                pl.concat(genomes_list_exprs)
                 .explode()
                 .drop_nulls()
                 .unique()

@@ -22,7 +22,9 @@ except ImportError:
         def _generate_next_value_(name, start, count, last_values):
             return name.lower()
 
-
+# serializable representations of the supported GKDF types, with a one-to-one mapping
+# between GkDfType and GenomeKit object types. Serves as the key for struct and function
+# definitions in registry.py, keeping serialization and deserialization paths symmetric.
 class GkDfType(StrEnum):
     GENOME = auto()
     INTERVAL = auto()

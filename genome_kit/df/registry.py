@@ -13,7 +13,7 @@ from genome_kit._optional import require_polars
 from .gk_structs import GkDfType, GkDfVersion, get_structs
 
 # mapping from GenomeKit object types to the gkdf type strings
-GK_TO_STRUCT: dict[type[gk.GenomeAnnotation], GkDfType] = {
+GK_TO_GKDF_TYPE: dict[type[gk.GenomeAnnotation], GkDfType] = {
     gk.Genome: GkDfType.GENOME,
     gk.Interval: GkDfType.INTERVAL,
     gk.Transcript: GkDfType.TRANSCRIPT,

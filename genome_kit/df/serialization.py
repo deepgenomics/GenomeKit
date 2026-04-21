@@ -16,7 +16,7 @@ import genome_kit as gk
 from genome_kit._optional import require_polars
 
 from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion
-from .registry import GK_TO_STRUCT, get_registry
+from .registry import GK_TO_GKDF_TYPE, get_registry
 
 
 def _map_batches_safe(fn: Callable) -> Callable:
@@ -101,7 +101,7 @@ def _detect_gk_cols(
                 "Please ensure all cells are the same type before serialization."
             )
 
-        col_type = GK_TO_STRUCT.get(col_types.pop(), None)
+        col_type = GK_TO_GKDF_TYPE.get(col_types.pop(), None)
 
         if col_type is None:
             # column is not a genomekit type, so no serialization needed

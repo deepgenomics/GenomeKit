@@ -1,10 +1,12 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from genome_kit import Genome, Interval
 from genome_kit.df import read_parquet, write_parquet
+from genome_kit.df.gk_structs import CURRENT_VERSION
 
 from . import MiniGenome
 
@@ -249,6 +251,43 @@ class TestGkdfRoundTrip(unittest.TestCase):
         path = self.tmp_dir_path / "mismatch_list_types.parquet"
         with self.assertRaises(ValueError):
             write_parquet(df, path)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_no_gkdf_version(self):
+        # test that error raised when no gkdf version is found in metadata
+        df = pl.DataFrame({"genome": ["hg38.p12"]})
+
+        path = self.tmp_dir_path / "no_gkdf_version.parquet"
+        df.write_parquet(path, metadata={"some_other_key": "value"})
+        with self.assertRaises(ValueError):
+            read_parquet(path, lazy=False)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_no_target_cols(self):
+        # test that error raised when no target_cols is found in metadata
+        df = pl.DataFrame({"genome": ["hg38.p12"]})
+
+        path = self.tmp_dir_path / "no_target_cols.parquet"
+        df.write_parquet(path, metadata={"gkdf_version": CURRENT_VERSION})
+        with self.assertRaises(ValueError):
+            read_parquet(path, lazy=False)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_no_gk_version(self):
+        # test that error raised when no gk version is found in metadata
+        df = pl.DataFrame({"genome": ["hg38.p12"]})
+
+        path = self.tmp_dir_path / "no_gk_version.parquet"
+        target_cols = {"genome": {"cell_type": "scalar", "gkdf_type": "genome"}}
+        df.write_parquet(
+            path,
+            metadata={
+                "gkdf_version": CURRENT_VERSION,
+                "target_cols": json.dumps(target_cols),
+            },
+        )
+        with self.assertRaises(ValueError):
+            read_parquet(path, lazy=False)
 
 
 if __name__ == "__main__":

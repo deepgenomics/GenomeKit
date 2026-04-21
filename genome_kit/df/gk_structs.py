@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # import polars for type checking
 
 # minimal shim for python <3.11 compatibility
 try:
-    from enum import StrEnum
+    from enum import StrEnum, auto
 except ImportError:
     from enum import Enum, auto
 
@@ -24,19 +24,19 @@ except ImportError:
 
 
 class GkDfType(StrEnum):
-    GENOME = "genome"
-    INTERVAL = "interval"
-    TRANSCRIPT = "transcript"
-    GENE = "gene"
-    EXON = "exon"
-    INTRON = "intron"
-    CDS = "cds"
-    UTR = "utr"
+    GENOME = auto()
+    INTERVAL = auto()
+    TRANSCRIPT = auto()
+    GENE = auto()
+    EXON = auto()
+    INTRON = auto()
+    CDS = auto()
+    UTR = auto()
 
 
 class CellType(StrEnum):
-    SCALAR = "scalar"
-    LIST = "list"
+    SCALAR = auto()
+    LIST = auto()
 
 
 @dataclass(frozen=True)

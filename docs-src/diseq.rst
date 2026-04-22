@@ -426,90 +426,9 @@ interval is on the same strand as the coordinate intervals::
     >>> dis.is_positive_strand()
     True
 
-``is_same_strand()`` tests whether the interval is on the coordinate
-strand. ``is_positive_strand()`` tests the effective genomic strand
-(accounting for both ``coord_strand`` and ``on_coordinate_strand``).
+Strand methods (`is_same_strand()`, `flip_strand()`, etc.) only affect the
+interval layer, not the coordinate intervals.
 
-Five methods change the interval's strand. All preserve ``start``,
-``end``, and the coordinate intervals. These methods return a DIS on the requested
-strand, instead of modifying the existing DIS in-place.
-
-``as_opposite_strand()`` sets ``on_coordinate_strand`` to ``False``::
-
-    Before as_opposite_strand() (on_coordinate_strand=True):
-    Start Index:     1
-    End Index:       6
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      T   A   A   C   C   C   T
-                               |<------------->|
-    -----------------------------------------------------
-    DNA Sequence (-):      A   T   T   G   G   G   A
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-                                  Opposite Strand
-
-    After as_opposite_strand() (on_coordinate_strand=False):
-    Start Index:     1
-    End Index:       6
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-    DNA Sequence (+):      T   A   A   C   C   C   T
-    -----------------------------------------------------
-    DNA Sequence (-):      A   T   T   G   G   G   A
-    DIS Coordinates:       0   1   2   3   4   5   6   7
-                               |<------------->|
-                                  Opposite Strand
-
-::
-
-    >>> dis.on_coordinate_strand
-    True
-    >>> opposite = dis.as_opposite_strand()
-    >>> opposite.on_coordinate_strand
-    False
-    >>> opposite.start == dis.start   # start/end unchanged
-    True
-
-``as_same_strand()`` sets ``on_coordinate_strand`` to ``True``::
-
-    >>> dis.on_coordinate_strand
-    False
-    >>> dis.is_same_strand()
-    False
-    >>> same_strand_dis = dis.as_same_strand()
-    >>> same_strand_dis.is_same_strand()
-    True
-
-``flip_strand()`` toggles ``on_coordinate_strand``::
-
-    >>> dis.on_coordinate_strand
-    True
-    >>> flipped = dis.flip_strand()
-    >>> flipped.on_coordinate_strand
-    False
-    >>> flipped.flip_strand().on_coordinate_strand
-    True
-
-The ``as_positive_strand()`` and ``as_negative_strand()`` methods return a DIS with
-the interval on the effective genomic strand::
-
-    >>> dis.coord_strand
-    '+'
-    >>> dis.on_coordinate_strand
-    True
-    >>> dis.strand
-    '+'
-    >>> neg_dis = dis.as_negative_strand()
-    >>> neg_dis.strand
-    '-'
-    >>> pos_dis = neg_dis.as_positive_strand()
-    >>> pos_dis.strand
-    '+'
-    >>> pos_dis.coord_strand == dis.coord_strand == '+'
-    True
-
-.. note::
-
-    Strand methods only affect the interval layer. The coordinate
-    intervals always remain unchanged.
 
 Shifting and Expanding
 ======================

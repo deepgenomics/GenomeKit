@@ -408,6 +408,57 @@ class DisjointIntervalSequence:
         """Length of the interval on the coordinate space."""
         return self.end - self.start
 
+    def _lower_coord(self, coord: int) -> int:
+        """Convert a DIS coordinate index to a genomic coordinate.
+
+        Maps a position in the flattened DIS coordinate space back to the
+        corresponding position in genomic coordinates. If ``coord`` falls
+        outside the coordinate space (negative or beyond
+        ``coordinate_length``), the result is extrapolated linearly from the
+        nearest interval boundary and may be negative or exceed the
+        chromosome length.
+
+        Parameters
+        ----------
+        coord : :py:class:`int`
+            Index in the DIS coordinate space.
+
+        Returns
+        -------
+        :py:class:`int`
+            The corresponding genomic coordinate.
+        """
+        ivs = self._coordinate_intervals
+        on_plus = self.coord_strand == "+"
+
+        # Upstream of first interval — extrapolate
+        if coord <= 0:
+            if on_plus:
+                return ivs[0].start - abs(coord)
+            else:
+                return ivs[0].end + abs(coord)
+
+        # Downstream of last interval — extrapolate
+        if coord >= self.coordinate_length:
+            overshoot = coord - self.coordinate_length
+            if on_plus:
+                return ivs[-1].end + overshoot
+            else:
+                return ivs[-1].start - overshoot
+
+        # Walk intervals, consuming coord with a decrementing delta
+        delta = coord
+        interval_index = -1
+        while delta >= 0:
+            interval_index += 1
+            delta -= len(ivs[interval_index])
+
+        iv = ivs[interval_index]
+        if on_plus:
+            return iv.end + delta
+        else:
+            return iv.start - delta
+
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
 
@@ -641,6 +692,68 @@ class DisjointIntervalSequence:
             start=self._start,
             end=self._end,
         )
+
+    def lower(self) -> list[Interval]:
+        """Project the interval back to genomic :py:class:`~genome_kit.Interval` objects.
+
+        Returns the genomic representation of the DIS interval as one or more
+        Intervals, in 5'->3' order. Multiple intervals are returned when the
+        DIS interval spans boundaries between coordinate intervals. All
+        returned Intervals use the effective strand of the DIS interval.
+
+        Indices outside the coordinate space are extrapolated linearly from
+        the nearest boundary, so returned Intervals may extend beyond the
+        chromosome (their start may be negative or their end may exceed the
+        chromosome length).
+
+        Returns
+        -------
+        list[:py:class:`~genome_kit.Interval`]
+        """
+        chrom = self.chromosome
+        strand = self.strand
+        refg = self.reference_genome
+        coord_strand = self.coord_strand
+        on_plus = coord_strand == "+"
+        start, end = self._start, self._end
+
+        if start == end:
+            pos = self._lower_coord(start)
+            return [Interval(chrom, strand, pos, pos, refg)]
+
+        # Mark the DIS interval's start and end points as 0-length genomic Intervals
+        # on the coord strand. On minus strand, shift by 1 so the point sits at the
+        # base's 5' edge (rightmost genomic coord), which makes touching-a-boundary
+        # behave consistently under upstream_of/dnstream_of for both strands.
+        start_pos = self._lower_coord(start)
+        end_pos = self._lower_coord(end)
+        start_iv = Interval(chrom, coord_strand, start_pos, start_pos, refg)
+        end_iv = Interval(chrom, coord_strand, end_pos, end_pos, refg)
+
+        coord_ivs = self._coordinate_intervals
+        last_interval_index = len(coord_ivs) - 1
+
+        first_idx = 0
+        while first_idx < last_interval_index and start_iv.dnstream_of(coord_ivs[first_idx]):
+            first_idx += 1
+        last_idx = last_interval_index
+        while last_idx > 0 and end_iv.upstream_of(coord_ivs[last_idx]):
+            last_idx -= 1
+
+        result: list[Interval] = []
+        for i in range(first_idx, last_idx + 1):
+            iv = coord_ivs[i]
+            is_first = i == first_idx
+            is_last = i == last_idx
+            if on_plus:
+                genomic_start = self._lower_coord(start) if is_first else iv.start
+                genomic_end = self._lower_coord(end) if is_last else iv.end
+            else:
+                genomic_start = self._lower_coord(end) if is_last else iv.start
+                genomic_end = self._lower_coord(start) if is_first else iv.end
+            result.append(Interval(chrom, strand, genomic_start, genomic_end, refg))
+
+        return result
 
     def __len__(self) -> int:
         """Return the length of the interval."""

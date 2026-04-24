@@ -56,6 +56,14 @@ class TestInit(unittest.TestCase):
         with self.assertRaises(ValueError):
             DisjointIntervalSequence(ivs)
 
+    def test_anchored_interval_raises(self):
+        plain = Interval("chr1", "+", 100, 200, REFG)
+        anchored = Interval("chr1", "+", 300, 400, REFG, anchor=350)
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence([plain, anchored])
+        with self.assertRaises(ValueError):
+            DisjointIntervalSequence([anchored])
+
     def test_adjacent_intervals_ok(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
         dis = DisjointIntervalSequence(ivs)

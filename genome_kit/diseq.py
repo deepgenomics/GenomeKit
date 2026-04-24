@@ -128,6 +128,11 @@ class DisjointIntervalSequence:
                 raise TypeError(
                     f"coordinate_intervals[{i}] is {type(iv).__name__}, expected Interval"
                 )
+            if iv.anchor is not None:
+                raise ValueError(
+                    f"coordinate_intervals[{i}] has an anchor set; "
+                    f"anchored Intervals are not supported"
+                )
 
         # Consistent chromosome, strand, reference_genome
         iv0 = coordinate_intervals[0]

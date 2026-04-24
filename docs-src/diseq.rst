@@ -29,7 +29,7 @@ is conceptually distinct in several ways:
   RNA rather than raw DNA, the concept of ``+``/``-`` strand is replaced by
   ``on_coordinate_strand`` (same strand as the transcript) versus opposite
   strand. The underlying genomic strand is accessible via ``coord_strand``,
-  but intervals within the DIS are described relative to the coordinate
+  but segments within the DIS are described relative to the coordinate
   space rather than in absolute genomic terms.
 
 Overview
@@ -45,10 +45,10 @@ A DIS has two aspects:
 - A **coordinate space**: the underlying genomic
   :py:class:`~genome_kit.Interval` objects (e.g. exons) that define the
   flattened index system. These intervals are sorted 5'→3' and must not overlap.
-- An **interval**: a sub-range within that coordinate space, defined by
+- A **segment**: a sub-range within that coordinate space, defined by
   a start and end index, where start <= end.
 
-The following examples illustrate how the coordinate space and interval interact,
+The following examples illustrate how the coordinate space and segment interact,
 using both diagrams and code.
 
 Consider a transcript on the + strand with the following genomic layout:
@@ -73,7 +73,7 @@ These exon intervals can be represented as :py:class:`~genome_kit.Interval` obje
     >>> exon2 = Interval("chr1", "+", 159, 161, "hg38")
     >>> exon3 = Interval("chr1", "+", 165, 167, "hg38")
 
-To define an interval spanning the full exonic sequence (from the start of Exon1 to
+To define a segment spanning the full exonic sequence (from the start of Exon1 to
 the end of Exon3), the exon intervals are first converted into a DIS coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -81,16 +81,16 @@ the end of Exon3), the exon intervals are first converted into a DIS coordinate 
                         | |<------->| |<--->| |<--->| |
                         5'   Exon1     Exon2   Exon3  3'
 
-The default interval spans the entire coordinate space
+The default segment spans the entire coordinate space
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          A   T   G   C   A   G   C
                            |<--------------------->|
-                          end5      Interval      end3
+                          end5       Segment       end3
     Start Index:     0
     End Index:       7
 
-The interval spans the full length of the coordinate space, with a start index of 0
+The segment spans the full length of the coordinate space, with a start index of 0
 and an end index of 7::
 
     >>> dis = DisjointIntervalSequence.from_intervals(
@@ -104,11 +104,11 @@ and an end index of 7::
     True
 
 .. note::
-    The disjoint interval follows the convention of
-    :py:class:`~genome_kit.Interval` where intervals are half-open
+    The DIS segment follows the convention of
+    :py:class:`~genome_kit.Interval` where ranges are half-open
     (the end index is exclusive).
 
-A DIS can also represent an interval on the strand opposite the coordinate space.
+A DIS can also represent a segment on the strand opposite the coordinate space.
 This is useful for modeling the complementary sequence or a binding partner.
 
 Starting from the coordinate space defined above
@@ -129,8 +129,8 @@ The opposite strand shares the same DIS coordinate indices
                         3'      Negative Strand          5'
 
 The DIS coordinate indices are identical on both strands. To obtain the complement
-of a given interval, the same start and end indices apply; only the
-``on_coordinate_strand`` flag changes. The following shows the full-length interval
+of a given segment, the same start and end indices apply; only the
+``on_coordinate_strand`` flag changes. The following shows the full-length segment
 on the opposite strand
 ::
                         5'      Coordinate Strand        3'
@@ -141,13 +141,13 @@ on the opposite strand
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
                            |<--------------------->|
-                          end3      Interval      end5
+                          end3       Segment       end5
     Start Index:     0
     End Index:       7
     On Coordinate Strand: False
 
 The ``on_coordinate_strand`` flag distinguishes same-strand from opposite-strand
-intervals, since the start and end indices alone do not encode strand information::
+segments, since the start and end indices alone do not encode strand information::
 
     >>> dis_opp = DisjointIntervalSequence(
     ...     [exon1, exon2, exon3],
@@ -210,17 +210,17 @@ largest index to the 3' end::
     >>> dis_neg.coordinate_length
     7
 
-A full-length interval on the coordinate strand
+A full-length segment on the coordinate strand
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          T   G   A   C   C   T   G
                            |<--------------------->|
-                          end5      Interval      end3
+                          end5       Segment       end3
     Start Index:     0
     End Index:       7
     On Coordinate Strand: True
 
-Despite creating the DIS from the negative strand, the full-length interval on the
+Despite creating the DIS from the negative strand, the full-length segment on the
 coordinate strand is identical to the + strand example. When working with DIS
 objects, strand is expressed only as "same strand" or "opposite strand"::
 
@@ -231,7 +231,7 @@ objects, strand is expressed only as "same strand" or "opposite strand"::
     >>> dis_neg.on_coordinate_strand
     True
 
-The same coordinate space with an opposite-strand interval
+The same coordinate space with an opposite-strand segment
 ::
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (-):      T   G   A   C   C   T   G
@@ -239,7 +239,7 @@ The same coordinate space with an opposite-strand interval
     DNA Sequence (+):      A   C   T   G   G   A   C
     DIS Coordinates:       0   1   2   3   4   5   6   7
                            |<--------------------->|
-                          end3      Interval      end5
+                          end3       Segment       end5
     Start Index:     0
     End Index:       7
     On Coordinate Strand: False
@@ -321,10 +321,10 @@ Metadata about the coordinate space is available through properties::
     >>> dis.coord_name
     'ENST00000...'
 
-Interval Start and End
-======================
+Segment Start and End
+=====================
 
-The interval within the coordinate space is defined by ``start`` and ``end``
+The segment within the coordinate space is defined by ``start`` and ``end``
 indices, following the same half-open convention as :py:class:`~genome_kit.Interval`
 (``start <= end`` always)::
 
@@ -337,7 +337,7 @@ indices, following the same half-open convention as :py:class:`~genome_kit.Inter
     >>> len(dis)
     250
 
-By default, the interval spans the full coordinate space (``start=0``,
+By default, the segment spans the full coordinate space (``start=0``,
 ``end=coordinate_length``). Indices can extend beyond ``[0, coordinate_length]``, but
 the DNA sequence returned by ``genome.dna()`` will be N-padded.
 
@@ -345,8 +345,8 @@ End5 and End3
 ~~~~~~~~~~~~~
 
 The ``end5_index`` and ``end3_index`` properties give the 5' and 3' positions
-of the interval. These are derived from ``start`` and ``end`` based on the
-interval's strand.
+of the segment. These are derived from ``start`` and ``end`` based on the
+segment's strand.
 
 When ``on_coordinate_strand`` is ``True``, ``end5_index`` equals ``start`` and
 ``end3_index`` equals ``end``::
@@ -393,11 +393,11 @@ When ``on_coordinate_strand`` is ``False``, the mapping reverses:
 Boundary Properties
 ~~~~~~~~~~~~~~~~~~~
 
-Zero-length DIS objects at the interval and coordinate boundaries are
+Zero-length DIS objects at the segment and coordinate boundaries are
 available as properties::
 
-    >>> dis.end5        # 0-length DIS at the interval's 5' boundary
-    >>> dis.end3        # 0-length DIS at the interval's 3' boundary
+    >>> dis.end5        # 0-length DIS at the segment's 5' boundary
+    >>> dis.end3        # 0-length DIS at the segment's 3' boundary
     >>> dis.coord_end5  # 0-length DIS at the coordinate space's 5' boundary
     >>> dis.coord_end3  # 0-length DIS at the coordinate space's 3' boundary
 
@@ -405,9 +405,9 @@ available as properties::
 Strand Methods
 ==============
 
-A DIS interval can sit on either 'virtual' strand independently of the coordinate
+A DIS segment can sit on either 'virtual' strand independently of the coordinate
 intervals. The ``on_coordinate_strand`` property indicates whether the
-interval is on the same strand as the coordinate intervals::
+segment is on the same strand as the coordinate intervals::
     On Coordinate Strand: True
     Start Index:     1
     End Index:       6
@@ -427,20 +427,20 @@ interval is on the same strand as the coordinate intervals::
     True
 
 Strand methods (`is_same_strand()`, `flip_strand()`, etc.) only affect the
-interval layer, not the coordinate intervals.
+segment layer, not the coordinate intervals.
 
 
 Shifting and Expanding
 ======================
 
-Both ``shift`` and ``expand`` return a **new** DIS with modified interval
+Both ``shift`` and ``expand`` return a **new** DIS with modified segment
 indices. The coordinate space is always unchanged.
 
 shift
 ~~~~~
 
-``shift(amount)`` moves the interval downstream by ``amount`` bases.
-A negative value shifts upstream. The interval length is preserved.
+``shift(amount)`` moves the segment downstream by ``amount`` bases.
+A negative value shifts upstream. The segment length is preserved.
 
 On the coordinate strand, downstream means increasing indices::
 
@@ -455,7 +455,7 @@ On the coordinate strand, downstream means increasing indices::
                                   end5        end3
 
 On the opposite strand, "downstream" is the reverse direction in index
-space, so ``shift(1)`` moves the interval toward *lower* indices::
+space, so ``shift(1)`` moves the segment toward *lower* indices::
 
     Before shift(1) (on_coordinate_strand=False):
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -491,13 +491,13 @@ space, so ``shift(1)`` moves the interval toward *lower* indices::
 
 .. note::
 
-    ``shift`` can move the interval beyond the coordinate space bounds
+    ``shift`` can move the segment beyond the coordinate space bounds
     (``start < 0`` or ``end > coordinate_length``).
 
 expand
 ~~~~~~
 
-``expand(upstream, dnstream)`` grows (or shrinks) the interval toward
+``expand(upstream, dnstream)`` grows (or shrinks) the segment toward
 its 5' and 3' ends. When ``dnstream`` is omitted the expansion is
 symmetric::
 
@@ -511,7 +511,7 @@ symmetric::
                            |<----------------->|
                           end5                end3
 
-Negative values contract the interval::
+Negative values contract the segment::
 
     Before expand(-1, -1):
     DIS Coordinates:       0   1   2   3   4   5   6   7
@@ -552,7 +552,7 @@ Negative values contract the interval::
 Positional Comparisons
 ======================
 
-``upstream_of`` and ``dnstream_of`` compare two DIS intervals that share
+``upstream_of`` and ``dnstream_of`` compare two DIS segments that share
 the same coordinate space and the same ``on_coordinate_strand``. Both
 methods require strict separation — any overlap returns ``False``.
 
@@ -560,7 +560,7 @@ upstream_of
 ~~~~~~~~~~~
 
 ``upstream_of(other)`` returns ``True`` if ``self`` is strictly 5' of
-``other`` with no overlap. Adjacent intervals (where ``self.end`` equals
+``other`` with no overlap. Adjacent segments (where ``self.end`` equals
 ``other.start``) count as upstream::
 
     DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
@@ -589,16 +589,16 @@ upstream_of
     >>> b.upstream_of(a)
     False
 
-    >>> # Adjacent intervals count as upstream
+    >>> # Adjacent segments count as upstream
     >>> a2 = DisjointIntervalSequence(coord_ivs, start=10, end=50)
     >>> a2.upstream_of(b)
     True
 
 .. note::
 
-    Both intervals must share the same ``coordinate_intervals`` and the
+    Both DIS objects must share the same ``coordinate_intervals`` and the
     same ``on_coordinate_strand``, otherwise ``ValueError`` is raised.
-    Two zero-length intervals at the same position are neither upstream
+    Two zero-length segments at the same position are neither upstream
     nor downstream of each other.
 
 dnstream_of
@@ -606,7 +606,7 @@ dnstream_of
 
 ``dnstream_of(other)`` is the mirror of ``upstream_of``: it returns
 ``True`` if ``self`` is strictly 3' of ``other`` with no overlap.
-Adjacent intervals count as downstream. The same requirements on shared
+Adjacent segments count as downstream. The same requirements on shared
 coordinate space and strand apply::
 
     >>> a = DisjointIntervalSequence(coord_ivs, start=50, end=80)
@@ -619,9 +619,9 @@ coordinate space and strand apply::
 within
 ~~~~~~
 
-``within(other)`` returns ``True`` if ``self``'s interval is fully
-contained within ``other``'s interval. Boundary-inclusive: an interval
-is within another if it shares the same start and/or end. An interval
+``within(other)`` returns ``True`` if ``self``'s segment is fully
+contained within ``other``'s segment. Boundary-inclusive: a segment
+is within another if it shares the same start and/or end. A segment
 is always within itself. The same requirements on shared coordinate
 space and strand apply::
 
@@ -648,11 +648,11 @@ space and strand apply::
     >>> b.within(a)
     False
 
-    >>> # An interval is within itself
+    >>> # A segment is within itself
     >>> a.within(a)
     True
 
-    >>> # Zero-length intervals are within any enclosing interval
+    >>> # Zero-length segments are within any enclosing segment
     >>> z = DisjointIntervalSequence(coord_ivs, start=50, end=50)
     >>> z.within(a)
     True

@@ -143,7 +143,7 @@ class TestFromIntervals(unittest.TestCase):
     def test_coord_and_interval_id_independent(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence.from_intervals(
-            ivs, coord_name="c1", interval_name="i1"
+            ivs, coord_name="c1", segment_name="i1"
         )
         self.assertEqual(dis.coord_name, "c1")
         self.assertEqual(dis.name, "i1")
@@ -236,7 +236,7 @@ class TestFromTranscript(unittest.TestCase):
 
     def test_custom_id_overrides(self):
         dis = DisjointIntervalSequence.from_transcript(
-            self.transcript, coord_name="custom_coord", interval_name="custom_iv"
+            self.transcript, coord_name="custom_coord", segment_name="custom_iv"
         )
         self.assertEqual(dis.coord_name, "custom_coord")
         self.assertEqual(dis.name, "custom_iv")
@@ -263,7 +263,7 @@ class TestProperties(unittest.TestCase):
 
     def test_metadata_getters_positive(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
         self.assertEqual(dis.coord_name, "c")
         self.assertEqual(dis.name, "i")
         self.assertEqual(dis.reference_genome, REFG)
@@ -433,7 +433,7 @@ class TestStrandMethods(unittest.TestCase):
 
     def test_flip_strand_preserves_metadata(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
         flipped = dis.flip_strand()
         self.assertEqual(flipped.coord_name, "c")
         self.assertEqual(flipped.name, "i")
@@ -465,7 +465,7 @@ class TestStrandMethods(unittest.TestCase):
 
     def test_as_opposite_strand_preserves_metadata(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
         opp = dis.as_opposite_strand()
         self.assertEqual(opp.coord_name, "c")
         self.assertEqual(opp.name, "i")
@@ -511,7 +511,7 @@ class TestEndProperties(unittest.TestCase):
 
     def test_end5_default(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
-        dis = DisjointIntervalSequence(ivs, coord_name="c", interval_name="i")
+        dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
         # On coordinate strand: end5_index == start (0), end3_index == end (200)
         self.assertEqual(dis.end5_index, 0)
         self.assertEqual(dis.end3_index, 200)
@@ -522,7 +522,7 @@ class TestEndProperties(unittest.TestCase):
         self.assertEqual(e5.coord_name, "c")
         self.assertEqual(e5.name, None)
         expected = DisjointIntervalSequence(
-            ivs, coord_name="c", interval_name=None, on_coordinate_strand=True, start=0, end=0
+            ivs, coord_name="c", segment_name=None, on_coordinate_strand=True, start=0, end=0
         )
         self.assertEqual(e5, expected)
 
@@ -638,7 +638,7 @@ class TestDunderMethods(unittest.TestCase):
 
     def test_repr(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
-        dis = DisjointIntervalSequence(ivs, coord_name="ENST0001", interval_name="IV1")
+        dis = DisjointIntervalSequence(ivs, coord_name="ENST0001", segment_name="IV1")
         r = repr(dis)
         self.assertIn("DisjointIntervalSequence(", r)
         self.assertIn("coord_name='ENST0001'", r)
@@ -653,8 +653,8 @@ class TestDunderMethods(unittest.TestCase):
 
     def test_eq_same(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        a = DisjointIntervalSequence(ivs, coord_name="x", interval_name="i")
-        b = DisjointIntervalSequence(ivs, coord_name="x", interval_name="i")
+        a = DisjointIntervalSequence(ivs, coord_name="x", segment_name="i")
+        b = DisjointIntervalSequence(ivs, coord_name="x", segment_name="i")
         self.assertEqual(a, b)
 
     def test_eq_different_coord_name(self):
@@ -663,10 +663,10 @@ class TestDunderMethods(unittest.TestCase):
         b = DisjointIntervalSequence(ivs, coord_name="y")
         self.assertNotEqual(a, b)
 
-    def test_eq_different_interval_name(self):
+    def test_eq_different_segment_name(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        a = DisjointIntervalSequence(ivs, interval_name="x")
-        b = DisjointIntervalSequence(ivs, interval_name="y")
+        a = DisjointIntervalSequence(ivs, segment_name="x")
+        b = DisjointIntervalSequence(ivs, segment_name="y")
         self.assertNotEqual(a, b)
 
     def test_eq_different_on_coordinate_strand(self):
@@ -721,13 +721,13 @@ _NEG_COORD_IVS = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 40
 
 
 def _dis(
-    start=0, end=200, on_coordinate_strand=True, coord_name="c", interval_name="i", ivs=None
+    start=0, end=200, on_coordinate_strand=True, coord_name="c", segment_name="i", ivs=None
 ):
     """Quick DIS factory for tests."""
     return DisjointIntervalSequence(
         ivs or _COORD_IVS,
         coord_name=coord_name,
-        interval_name=interval_name,
+        segment_name=segment_name,
         on_coordinate_strand=on_coordinate_strand,
         start=start,
         end=end,
@@ -739,7 +739,7 @@ def _neg_dis(start=0, end=200, on_coordinate_strand=True):
     return DisjointIntervalSequence(
         _NEG_COORD_IVS,
         coord_name="c",
-        interval_name="i",
+        segment_name="i",
         on_coordinate_strand=on_coordinate_strand,
         start=start,
         end=end,
@@ -801,7 +801,7 @@ class TestShift(unittest.TestCase):
         self.assertEqual(shifted.end, 160)
 
     def test_shift_preserves_metadata(self):
-        dis = _dis(start=30, end=150, coord_name="mycoord", interval_name="myiv")
+        dis = _dis(start=30, end=150, coord_name="mycoord", segment_name="myiv")
         shifted = dis.shift(10)
         self.assertEqual(shifted.coord_name, "mycoord")
         self.assertEqual(shifted.name, "myiv")
@@ -809,7 +809,7 @@ class TestShift(unittest.TestCase):
 
     def test_shift_preserves_metadata_opposite_strand(self):
         dis = _dis(
-            start=30, end=150, coord_name="mycoord", interval_name="myiv",
+            start=30, end=150, coord_name="mycoord", segment_name="myiv",
             on_coordinate_strand=False,
         )
         shifted = dis.shift(10)
@@ -922,7 +922,7 @@ class TestExpand(unittest.TestCase):
         self.assertEqual(expanded.start, -20)
 
     def test_expand_preserves_metadata(self):
-        dis = _dis(start=30, end=150, coord_name="c", interval_name="i")
+        dis = _dis(start=30, end=150, coord_name="c", segment_name="i")
         expanded = dis.expand(5)
         self.assertEqual(expanded.coord_name, "c")
         self.assertEqual(expanded.name, "i")
@@ -930,7 +930,7 @@ class TestExpand(unittest.TestCase):
 
     def test_expand_preserves_metadata_opposite_strand(self):
         dis = _dis(
-            start=30, end=150, coord_name="c", interval_name="i",
+            start=30, end=150, coord_name="c", segment_name="i",
             on_coordinate_strand=False,
         )
         expanded = dis.expand(5)

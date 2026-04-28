@@ -22,6 +22,7 @@ GK_TO_GKDF_TYPE: dict[type[gk.GenomeAnnotation], GkDfType] = {
     gk.Intron: GkDfType.INTRON,
     gk.Cds: GkDfType.CDS,
     gk.Utr: GkDfType.UTR,
+    gk.Variant: GkDfType.VARIANT,
 }
 
 
@@ -320,6 +321,46 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
             dtype=pl.Object,
         )
 
+    def _serialize_variant(s: pl.Series) -> pl.Series:
+        """Serialize a Series of GenomeKit Variant objects."""
+        return pl.Series(
+            name=s.name,
+            values=[
+                {
+                    _SCHEMA_VERSION_FIELD: GkDfVersion.V1.value,
+                    "chromosome": variant.chromosome,
+                    "start": variant.start,
+                    "ref": variant.ref,
+                    "alt": variant.alt,
+                    # variants related to reference genome only
+                    "refg": variant.reference_genome,
+                }
+                if variant is not None
+                else None
+                for variant in s
+            ],
+            dtype=gkdf_structs[GkDfType.VARIANT],
+        )
+
+    def _deserialize_variant(s: pl.Series) -> pl.Series:
+        """Deserialize a Series of VariantStruct back into GenomeKit Variant objects."""
+        return pl.Series(
+            name=s.name,
+            values=[
+                gk.Variant(
+                    chromosome=struct["chromosome"],
+                    start=struct["start"],
+                    ref=struct["ref"],
+                    alt=struct["alt"],
+                    reference_genome=struct["refg"],
+                )
+                if struct is not None
+                else None
+                for struct in s
+            ],
+            dtype=pl.Object,
+        )
+
     REGISTRY: dict[GkDfVersion, dict[GkDfType, GKTypeEntry]] = {
         GkDfVersion.V1: {
             GkDfType.GENOME: GKTypeEntry(
@@ -361,6 +402,11 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                 struct=gkdf_structs[GkDfType.UTR],
                 serializer=_serialize_utr,
                 deserializer=_deserialize_utr,
+            ),
+            GkDfType.VARIANT: GKTypeEntry(
+                struct=gkdf_structs[GkDfType.VARIANT],
+                serializer=_serialize_variant,
+                deserializer=_deserialize_variant,
             ),
         }
     }

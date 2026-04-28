@@ -70,6 +70,7 @@ Contents:
     :maxdepth: 2
 
     quickstart
+    diseq
     anchors
     api
     genomes

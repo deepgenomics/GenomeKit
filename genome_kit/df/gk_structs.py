@@ -34,7 +34,10 @@ class GkDfType(StrEnum):
     INTRON = auto()
     CDS = auto()
     UTR = auto()
+<<<<<<< HEAD
     VARIANT = auto()
+=======
+>>>>>>> main
 
 
 class CellType(StrEnum):

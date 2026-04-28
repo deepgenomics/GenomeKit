@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
+<<<<<<< HEAD
 from genome_kit import Genome, Interval, Variant
+=======
+from genome_kit import Genome, Interval
+>>>>>>> main
 from genome_kit.df import read_parquet, write_parquet
 from genome_kit.df.gk_structs import CURRENT_VERSION
 
@@ -139,6 +143,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+<<<<<<< HEAD
     def test_variant(self):
         genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
         for genome_str in genomes:
@@ -152,6 +157,8 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+=======
+>>>>>>> main
     def test_list_of_intervals(self):
         intervals = [
             Interval("chr1", "+", 2000, 3000, "hg19"),

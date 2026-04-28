@@ -22,6 +22,7 @@ except ImportError:
         def _generate_next_value_(name, start, count, last_values):
             return name.lower()
 
+
 # serializable representations of the supported GKDF types, with a one-to-one mapping
 # between GkDfType and GenomeKit object types. Serves as the key for struct and function
 # definitions in registry.py, keeping serialization and deserialization paths symmetric.
@@ -34,6 +35,7 @@ class GkDfType(StrEnum):
     INTRON = auto()
     CDS = auto()
     UTR = auto()
+    VARIANT = auto()
 
 
 class CellType(StrEnum):
@@ -141,6 +143,17 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         ]
     )
 
+    VariantStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("chromosome", pl.Utf8),
+            pl.Field("start", pl.Int32),
+            pl.Field("ref", pl.Utf8),
+            pl.Field("alt", pl.Utf8),
+            pl.Field("refg", pl.Utf8),  # reference genome
+        ]
+    )
+
     return {
         GkDfType.GENOME: GenomeStruct,
         GkDfType.INTERVAL: IntervalStruct,
@@ -150,4 +163,5 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         GkDfType.INTRON: IntronStruct,
         GkDfType.CDS: CdsStruct,
         GkDfType.UTR: UtrStruct,
+        GkDfType.VARIANT: VariantStruct,
     }

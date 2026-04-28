@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Add gene_biotype attribute to NCBI RefSeq GFF3 files that lack it (e.g. v107).
+Add gene_biotype attribute to older NCBI RefSeq GFF3 files that lack it (e.g. v107).
 
 The biotype is inferred from:
   - pseudo=true on gene lines -> "pseudogene"

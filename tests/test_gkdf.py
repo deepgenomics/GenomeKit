@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from genome_kit import Genome, Interval
+from genome_kit import Genome, Interval, Variant
 from genome_kit.df import read_parquet, write_parquet
 from genome_kit.df.gk_structs import CURRENT_VERSION
 
@@ -139,6 +139,19 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_variant(self):
+        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        for genome_str in genomes:
+            g = Genome(genome_str)
+            variant = Variant("chr1", 10000005, "G", "T", g)
+            df = pl.DataFrame({"variant": [variant]})
+
+            path = self.tmp_dir_path / f"{genome_str}_variant.parquet"
+            write_parquet(df, path)
+            re_df = read_parquet(path, lazy=False)
+            self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_list_of_intervals(self):
         intervals = [
             Interval("chr1", "+", 2000, 3000, "hg19"),
@@ -170,6 +183,19 @@ class TestGkdfRoundTrip(unittest.TestCase):
         )
 
         path = self.tmp_dir_path / "list_of_transcripts.parquet"
+        write_parquet(df, path)
+        re_df = read_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_variants(self):
+        g = Genome("gencode.v41")
+        variants = [Variant("chr1", 10000005, "G", "T", g) for _ in range(10)]
+        df = pl.DataFrame(
+            {"variants": [variants]}, schema={"variants": pl.Object}
+        )
+
+        path = self.tmp_dir_path / "list_of_variants.parquet"
         write_parquet(df, path)
         re_df = read_parquet(path, lazy=False)
         self.assertEqual(re_df.item(), df.item())

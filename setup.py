@@ -403,10 +403,18 @@ if __name__ == "__main__":
             "importlib-metadata",
             "typing-extensions",
         ],
+        extras_require={
+            # install polars-runtime-compat if running on x86_64 Python on macOS
+            # required to run polars due to AVX features compatibility issues
+            "df": [ 
+                "polars",
+                "polars-runtime-compat; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+            ]
+        },
         license="Apache License 2.0",
         license_files=(COPYRIGHT_FILE, LICENSE_FILE,),
         name="genomekit",
-        packages=find_packages(include=["genome_kit"]),
+        packages=find_packages(include=["genome_kit", "genome_kit.*"]),
         project_urls={
             "Documentation": "https://deepgenomics.github.io/GenomeKit"
         },

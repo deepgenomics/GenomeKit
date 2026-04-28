@@ -74,6 +74,7 @@ Contents:
     anchors
     api
     genomes
+    df
     develop
     data_org
 

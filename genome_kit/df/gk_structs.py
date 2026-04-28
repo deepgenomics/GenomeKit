@@ -1,0 +1,153 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from genome_kit._optional import require_polars
+
+if TYPE_CHECKING:  # import polars for type checking
+    import polars as pl
+
+# minimal shim for python <3.11 compatibility
+try:
+    from enum import StrEnum, auto
+except ImportError:
+    from enum import Enum, auto
+
+    class StrEnum(str, Enum):
+        def __str__(self):
+            return str(self.value)
+
+        @staticmethod
+        def _generate_next_value_(name, start, count, last_values):
+            return name.lower()
+
+# serializable representations of the supported GKDF types, with a one-to-one mapping
+# between GkDfType and GenomeKit object types. Serves as the key for struct and function
+# definitions in registry.py, keeping serialization and deserialization paths symmetric.
+class GkDfType(StrEnum):
+    GENOME = auto()
+    INTERVAL = auto()
+    TRANSCRIPT = auto()
+    GENE = auto()
+    EXON = auto()
+    INTRON = auto()
+    CDS = auto()
+    UTR = auto()
+
+
+class CellType(StrEnum):
+    SCALAR = auto()
+    LIST = auto()
+
+
+@dataclass(frozen=True)
+class ColumnInfo:
+    """Dataclass to store metadata about a single column in a dataframe.
+
+    Assumes that all cells in a column have the same type. If the cell contains a list,
+    assumes all items in the list are of the same type.
+    """
+
+    cell_type: CellType
+    gkdf_type: GkDfType
+
+    def to_dict(self) -> dict:
+        return {
+            "cell_type": self.cell_type.value,
+            "gkdf_type": self.gkdf_type.value,
+        }
+
+
+class GkDfVersion(StrEnum):
+    V1 = "1.0"
+
+
+CURRENT_VERSION = GkDfVersion.V1
+
+
+def get_structs() -> dict[GkDfType, pl.Struct]:
+    """Return a mapping of GkDfType to their corresponding Polars Struct definitions."""
+    pl = require_polars()
+
+    GenomeStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("genome_name", pl.Utf8),  # reference or annotation genome
+        ]
+    )
+
+    IntervalStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("chromosome", pl.Utf8),
+            pl.Field("strand", pl.Utf8),
+            pl.Field("start", pl.Int32),
+            pl.Field("end", pl.Int32),
+            pl.Field("refg", pl.Utf8),  # reference genome
+        ]
+    )
+
+    TranscriptStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            # index of transcript within annotation genome transcript table
+            # Int32 matches index type in C++ backend (see src/table.h:22)
+            pl.Field("transcript_table_index", pl.Int32),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    GeneStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("gene_table_index", pl.Int32),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    ExonStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("exon_table_index", pl.Int32),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    IntronStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("intron_table_index", pl.Int32),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    CdsStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("cds_table_index", pl.Int32),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    UtrType = pl.Enum(["5prime", "3prime"])
+
+    UtrStruct = pl.Struct(
+        [
+            pl.Field("schema_version", pl.Utf8),
+            pl.Field("utr_type", UtrType),
+            pl.Field("utr_table_index", pl.Int64),
+            pl.Field("anno", pl.Utf8),  # annotation genome
+        ]
+    )
+
+    return {
+        GkDfType.GENOME: GenomeStruct,
+        GkDfType.INTERVAL: IntervalStruct,
+        GkDfType.TRANSCRIPT: TranscriptStruct,
+        GkDfType.GENE: GeneStruct,
+        GkDfType.EXON: ExonStruct,
+        GkDfType.INTRON: IntronStruct,
+        GkDfType.CDS: CdsStruct,
+        GkDfType.UTR: UtrStruct,
+    }

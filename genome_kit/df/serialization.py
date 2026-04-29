@@ -161,7 +161,7 @@ def _init_gk_annotations(
         gkdf_type = col_info["gkdf_type"]
         if gkdf_type == GkDfType.GENOME:
             return "genome_name"
-        elif gkdf_type == GkDfType.INTERVAL:
+        elif gkdf_type in (GkDfType.INTERVAL, GkDfType.VARIANT):
             return "refg"
         else:
             return "anno"

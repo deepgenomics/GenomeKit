@@ -4,11 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from genome_kit import Genome, Interval
+from genome_kit import Genome, Interval, Variant
 from genome_kit.df import read_parquet, write_parquet
 from genome_kit.df.gk_structs import CURRENT_VERSION
-
-from . import MiniGenome
 
 HAS_POLARS = importlib.util.find_spec("polars") is not None
 if HAS_POLARS:
@@ -22,13 +20,13 @@ class TestGkdfRoundTrip(unittest.TestCase):
         cls.addClassCleanup(cls.tmp_dir.cleanup)
         cls.tmp_dir_path = Path(cls.tmp_dir.name)
 
-    @unittest.skip("MiniGenome and Genome type mismatch")
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_genome(self):
         # plain reference genome as well as gencode and refseq annotations
-        genomes = ["hg38.p12", "gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["hg38.p12.mini", "gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
 
         for genome_str in genomes:
-            g = MiniGenome(genome_str)
+            g = Genome(genome_str)
             df = pl.DataFrame({"genome": [g]})
 
             path = self.tmp_dir_path / f"{genome_str}.parquet"
@@ -39,7 +37,9 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_interval(self):
-        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+        interval = Interval(
+            "chr5", "+", 2000, 3000, "hg19.mini", anchor="5p", anchor_offset=100
+        )
         df = pl.DataFrame({"interval": [interval]})
 
         path = self.tmp_dir_path / "interval.parquet"
@@ -49,7 +49,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_transcript(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             transcript = g.genes[0].transcripts[0]
@@ -62,7 +62,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_gene(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             gene = g.genes[0]
@@ -75,7 +75,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_exon(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             exon = g.exons[0]
@@ -88,7 +88,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_intron(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             intron = g.introns[0]
@@ -101,7 +101,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_cds(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             cds = g.cdss[0]
@@ -110,11 +110,12 @@ class TestGkdfRoundTrip(unittest.TestCase):
             path = self.tmp_dir_path / f"{genome_str}_cds.parquet"
             write_parquet(df, path)
             re_df = read_parquet(path, lazy=False)
+
             self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr3(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             utr3 = g.utr3s[0]
@@ -127,7 +128,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_utr5(self):
-        genomes = ["gencode.v41", "ucsc_refseq.2017-06-25"]
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
         for genome_str in genomes:
             g = Genome(genome_str)
             utr5 = g.utr5s[0]
@@ -139,10 +140,24 @@ class TestGkdfRoundTrip(unittest.TestCase):
             self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_variant(self):
+        genomes = ["gencode.v41.mini", "ucsc_refseq.2017-06-25.mini"]
+        for genome_str in genomes:
+            g = Genome(genome_str)
+            # mini gencode.v41 only has chr2
+            variant = Variant("chr2", 10000005, "G", "T", g)
+            df = pl.DataFrame({"variant": [variant]})
+
+            path = self.tmp_dir_path / f"{genome_str}_variant.parquet"
+            write_parquet(df, path)
+            re_df = read_parquet(path, lazy=False)
+            self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_list_of_intervals(self):
         intervals = [
-            Interval("chr1", "+", 2000, 3000, "hg19"),
-            Interval("chr4", "-", 5000, 6000, "hg19"),
+            Interval("chr1", "+", 2000, 3000, "hg19.mini"),
+            Interval("chr4", "-", 5000, 6000, "hg19.mini"),
         ]
         df = pl.DataFrame({"intervals": [intervals]}, schema={"intervals": pl.Object})
 
@@ -153,7 +168,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_list_of_genomes(self):
-        genomes = [Genome("hg38.p12"), Genome("gencode.v41")]
+        genomes = [Genome("hg38.p12.mini"), Genome("gencode.v41.mini")]
         df = pl.DataFrame({"genomes": [genomes]}, schema={"genomes": pl.Object})
 
         path = self.tmp_dir_path / "list_of_genomes.parquet"
@@ -163,7 +178,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_list_of_transcripts(self):
-        g = Genome("gencode.v41")
+        g = Genome("gencode.v41.mini")
         transcripts = list(g.transcripts)[:10]
         df = pl.DataFrame(
             {"transcripts": [transcripts]}, schema={"transcripts": pl.Object}
@@ -175,8 +190,19 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df.item(), df.item())
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_list_of_variants(self):
+        g = Genome("gencode.v41.mini")
+        variants = [Variant("chr2", 10000005, "G", "T", g) for _ in range(10)]
+        df = pl.DataFrame({"variants": [variants]}, schema={"variants": pl.Object})
+
+        path = self.tmp_dir_path / "list_of_variants.parquet"
+        write_parquet(df, path)
+        re_df = read_parquet(path, lazy=False)
+        self.assertEqual(re_df.item(), df.item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_list_of_gk_with_null(self):
-        g = Genome("gencode.v41")
+        g = Genome("gencode.v41.mini")
         transcripts = list(g.transcripts)[:10]
         transcripts[:3] = [None] * 3
         df = pl.DataFrame(
@@ -190,9 +216,9 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_multiple_types(self):
-        g = Genome("gencode.v41")
+        g = Genome("gencode.v41.mini")
 
-        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
         transcript = g.genes[0].transcripts[0]
         gene = g.genes[0]
         exon = g.exons[0]
@@ -217,8 +243,8 @@ class TestGkdfRoundTrip(unittest.TestCase):
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_multiple_genomes(self):
         # test dataframe with multiple reference genomes in a single column
-        g1 = Genome("gencode.v41")
-        g2 = Genome("ucsc_refseq.2017-06-25")
+        g1 = Genome("gencode.v41.mini")
+        g2 = Genome("ucsc_refseq.2017-06-25.mini")
 
         genes = [g1.genes[0], g2.genes[0]]
         df = pl.DataFrame({"genes": genes}, schema={"genes": pl.Object})
@@ -232,9 +258,9 @@ class TestGkdfRoundTrip(unittest.TestCase):
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_mismatch_types(self):
         # test that error is raised when cols have different types
-        g = Genome("gencode.v41")
+        g = Genome("gencode.v41.mini")
         gene = g.genes[0]
-        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
 
         df = pl.DataFrame({"mixed": [gene, interval]}, schema={"mixed": pl.Object})
         path = self.tmp_dir_path / "mismatch_types.parquet"
@@ -244,7 +270,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_mismatch_list_types(self):
         # test that error is raised when cols have different types
-        g = Genome("gencode.v41")
+        g = Genome("gencode.v41.mini")
         gene = g.genes[0]
 
         df = pl.DataFrame({"mixed": [gene, [gene]]}, schema={"mixed": pl.Object})
@@ -275,7 +301,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_no_gk_version(self):
         # test that error raised when no gk version is found in metadata
-        df = pl.DataFrame({"genome": ["hg38.p12"]})
+        df = pl.DataFrame({"genome": ["hg38.p12.mini"]})
 
         path = self.tmp_dir_path / "no_gk_version.parquet"
         target_cols = {"genome": {"cell_type": "scalar", "gkdf_type": "genome"}}

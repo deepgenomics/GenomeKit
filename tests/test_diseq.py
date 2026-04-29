@@ -1155,100 +1155,131 @@ class TestWithin(unittest.TestCase):
 
 
 class TestLowerToCoordinate(unittest.TestCase):
-    """Tests for lower_to_coordinate: DIS index → genomic coordinate."""
+    """Tests for _lower_coord: DIS index → list of flanking genomic coordinate(s)."""
 
     def test_plus_strand_within_first_interval(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400), ("chr1", "+", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(0), 100)
-        self.assertEqual(dis._lower_coord(50), 150)
-        self.assertEqual(dis._lower_coord(99), 199)
+        self.assertEqual(dis._lower_coord(0), [100])
+        self.assertEqual(dis._lower_coord(50), [150])
+        self.assertEqual(dis._lower_coord(99), [199])
 
     def test_plus_strand_within_second_interval(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400), ("chr1", "+", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(100), 300)
-        self.assertEqual(dis._lower_coord(150), 350)
-        self.assertEqual(dis._lower_coord(199), 399)
+        self.assertEqual(dis._lower_coord(150), [350])
+        self.assertEqual(dis._lower_coord(199), [399])
 
     def test_plus_strand_within_third_interval(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400), ("chr1", "+", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(200), 500)
-        self.assertEqual(dis._lower_coord(250), 550)
-        self.assertEqual(dis._lower_coord(299), 599)
-        self.assertEqual(dis._lower_coord(300), 600)
+        self.assertEqual(dis._lower_coord(250), [550])
+        self.assertEqual(dis._lower_coord(299), [599])
+        self.assertEqual(dis._lower_coord(300), [600])  # outer 3' edge, length-1
 
     def test_plus_strand_beyond_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(200), 400)
-        self.assertEqual(dis._lower_coord(210), 410)
+        self.assertEqual(dis._lower_coord(210), [410])
+        self.assertEqual(dis._lower_coord(250), [450])
 
     def test_plus_strand_before_start(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(-1), 99)
-        self.assertEqual(dis._lower_coord(-10), 90)
+        self.assertEqual(dis._lower_coord(-1), [99])
+        self.assertEqual(dis._lower_coord(-10), [90])
 
     def test_minus_strand_within_first_interval(self):
         # Sorted 5'->3': [500,600) then [300,400) then [100,200)
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400), ("chr1", "-", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(0), 600)
-        self.assertEqual(dis._lower_coord(50), 550)
-        self.assertEqual(dis._lower_coord(99), 501)
+        self.assertEqual(dis._lower_coord(0), [600])
+        self.assertEqual(dis._lower_coord(50), [550])
+        self.assertEqual(dis._lower_coord(99), [501])
 
     def test_minus_strand_within_second_interval(self):
         # Sorted 5'->3': [500,600) then [300,400) then [100,200)
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400), ("chr1", "-", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(100), 400)
-        self.assertEqual(dis._lower_coord(150), 350)
-        self.assertEqual(dis._lower_coord(199), 301)
+        self.assertEqual(dis._lower_coord(150), [350])
+        self.assertEqual(dis._lower_coord(199), [301])
 
     def test_minus_strand_within_third_interval(self):
         # Sorted 5'->3': [500,600) then [300,400) then [100,200)
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400), ("chr1", "-", 500, 600)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(200), 200)
-        self.assertEqual(dis._lower_coord(250), 150)
-        self.assertEqual(dis._lower_coord(299), 101)
-        self.assertEqual(dis._lower_coord(300), 100)
+        self.assertEqual(dis._lower_coord(250), [150])
+        self.assertEqual(dis._lower_coord(299), [101])
+        self.assertEqual(dis._lower_coord(300), [100])  # outer 3' edge, length-1
 
     def test_minus_strand_beyond_end(self):
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(200), 100)
-        self.assertEqual(dis._lower_coord(210), 90)
+        self.assertEqual(dis._lower_coord(210), [90])
+        self.assertEqual(dis._lower_coord(250), [50])
 
     def test_minus_strand_before_start(self):
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(-1), 401)
-        self.assertEqual(dis._lower_coord(-10), 410)
+        self.assertEqual(dis._lower_coord(-1), [401])
+        self.assertEqual(dis._lower_coord(-10), [410])
 
     def test_negative_genomic_coord(self):
         # Interval starts at genomic 5; going 6 positions upstream yields -1
         ivs = _make_intervals([("chr1", "+", 5, 15)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(-6), -1)
-        self.assertEqual(dis._lower_coord(-10), -5)
+        self.assertEqual(dis._lower_coord(-6), [-1])
+        self.assertEqual(dis._lower_coord(-10), [-5])
 
     def test_single_interval(self):
         ivs = _make_intervals([("chr1", "+", 50, 150)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(0), 50)
-        self.assertEqual(dis._lower_coord(99), 149)
-        self.assertEqual(dis._lower_coord(100), 150)
-        self.assertEqual(dis._lower_coord(-1), 49)
+        self.assertEqual(dis._lower_coord(0), [50])
+        self.assertEqual(dis._lower_coord(99), [149])
+        self.assertEqual(dis._lower_coord(100), [150])
+        self.assertEqual(dis._lower_coord(-1), [49])
+        self.assertEqual(dis._lower_coord(101), [151])
 
-    def test_boundary_between_intervals(self):
-        # Index at exact boundary between first and second interval
-        ivs = _make_intervals([("chr1", "+", 100, 110), ("chr1", "+", 200, 210)])
+    def test_boundary_plus_with_gap(self):
+        ivs = _make_intervals([("chr1", "+", 100, 110), ("chr1", "+", 120, 130)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(9), 109)   # last of first
-        self.assertEqual(dis._lower_coord(10), 200)   # first of second
+        self.assertEqual(dis._lower_coord(9), [109])   # last of first
+        self.assertEqual(dis._lower_coord(10), [110, 120])  # boundary: [upstream.end, downstream.start]
+        self.assertEqual(dis._lower_coord(11), [121])  # first interior index of second
+
+    def test_boundary_plus_touching(self):
+        # Adjacent intervals with no genomic gap: both boundary values coincide
+        ivs = _make_intervals([("chr1", "+", 100, 110), ("chr1", "+", 110, 120)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis._lower_coord(10), [110, 110])
+
+    def test_boundary_minus_with_gap(self):
+        # Minus strand sorted 5'->3' = [(120,130), (100,110)]. Boundary at coord=10.
+        ivs = _make_intervals([("chr1", "-", 100, 110), ("chr1", "-", 120, 130)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis._lower_coord(10), [120, 110])  # 5'->3' order: [upstream.start, downstream.end]
+
+    def test_boundary_minus_touching(self):
+        # Minus strand adjacent intervals with no genomic gap: both boundary values coincide.
+        # Sorted 5'->3': [(110,120), (100,110)]. Boundary at coord=10.
+        ivs = _make_intervals([("chr1", "-", 100, 110), ("chr1", "-", 110, 120)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis._lower_coord(10), [110, 110])
+
+    def test_boundary_plus_three_intervals(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400), ("chr1", "+", 500, 600)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis._lower_coord(100), [200, 300])
+        self.assertEqual(dis._lower_coord(200), [400, 500])
+
+    def test_boundary_minus_three_intervals(self):
+        # Same inputs, minus strand. Sorted 5'->3' internally: [(500,600),(300,400),(100,200)].
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400), ("chr1", "-", 500, 600)])
+        dis = DisjointIntervalSequence(ivs)
+        # coord=100: between ivs[0]=(500,600) and ivs[1]=(300,400). iv_L=(300,400), iv_R=(500,600).
+        self.assertEqual(dis._lower_coord(100), [500, 400])
+        # coord=200: between ivs[1]=(300,400) and ivs[2]=(100,200). iv_L=(100,200), iv_R=(300,400).
+        self.assertEqual(dis._lower_coord(200), [300, 200])
 
 
 class TestLower(unittest.TestCase):
@@ -1299,7 +1330,6 @@ class TestLower(unittest.TestCase):
     def test_plus_at_coord_interval_boundary(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=100)
-        breakpoint()
         self.assertEqual(dis.lower(), [Interval("chr1", "+", 100, 200, REFG)])
         dis2 = DisjointIntervalSequence(ivs, start=100, end=200)
         self.assertEqual(dis2.lower(), [Interval("chr1", "+", 300, 400, REFG)])
@@ -1340,11 +1370,39 @@ class TestLower(unittest.TestCase):
     def test_plus_zero_length(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=50, end=50)
-        result = dis.lower()
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].start, 150)
-        self.assertEqual(result[0].end, 150)
-        self.assertEqual(result[0].strand, "+")
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 150, 150, REFG)])
+
+    def test_plus_zero_length_at_interval_boundary(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 300, 300, REFG)])
+
+    def test_plus_zero_length_at_touching_interval_boundary(self):
+        # Adjacent intervals with no genomic gap: boundary collapses to a single position.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 200, 200, REFG)])
+
+    def test_plus_start_at_touching_boundary(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=150)
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 200, 250, REFG)])
+
+    def test_plus_end_at_touching_boundary(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 150, 200, REFG)])
+
+    def test_plus_spans_touching_boundary(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=150)
+        self.assertEqual(
+            dis.lower(),
+            [
+                Interval("chr1", "+", 150, 200, REFG),
+                Interval("chr1", "+", 200, 250, REFG),
+            ],
+        )
 
     # ---- Minus strand ----
 
@@ -1435,10 +1493,45 @@ class TestLower(unittest.TestCase):
     def test_minus_zero_length(self):
         ivs = _make_intervals([("chr1", "-", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=50, end=50)
-        result = dis.lower()
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].strand, "-")
-        self.assertEqual(result[0].start, result[0].end)
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 150, 150, REFG)])
+
+    def test_minus_zero_length_at_interval_boundary(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 300, 300, REFG)])
+
+    def test_minus_zero_length_at_touching_interval_boundary(self):
+        # Adjacent intervals with no genomic gap on minus: boundary collapses to a single position.
+        # Sorted 5'->3': [(200,300),(100,200)]. Boundary at coord=100.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 200, 200, REFG)])
+
+    def test_minus_start_at_touching_boundary(self):
+        # Sorted 5'->3': [(200,300),(100,200)]. DIS [100, 150) on minus.
+        # coord 100 is the boundary; coord 150 is interior to (100,200) at genomic 150.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=100, end=150)
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 150, 200, REFG)])
+
+    def test_minus_end_at_touching_boundary(self):
+        # Sorted 5'->3': [(200,300),(100,200)]. DIS [50, 100) on minus.
+        # coord 50 interior to (200,300) at genomic 250; coord 100 is the boundary.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=100)
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 200, 250, REFG)])
+
+    def test_minus_spans_touching_boundary(self):
+        # Sorted 5'->3': [(200,300),(100,200)]. DIS [50, 150) on minus crosses the boundary.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
+        dis = DisjointIntervalSequence(ivs, start=50, end=150)
+        self.assertEqual(
+            dis.lower(),
+            [
+                Interval("chr1", "-", 200, 250, REFG),
+                Interval("chr1", "-", 150, 200, REFG),
+            ],
+        )
 
     # ---- on_coordinate_strand=False ----
 
@@ -1446,19 +1539,13 @@ class TestLower(unittest.TestCase):
         # Coord strand "+", effective strand "-".
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=20, end=60)
-        result = dis.lower()
-        self.assertEqual(len(result), 1)
-        # Geometry follows coord strand (plus), but returned strand is effective (minus).
-        self.assertEqual(result[0], Interval("chr1", "-", 120, 160, REFG))
+        self.assertEqual(dis.lower(), [Interval("chr1", "-", 120, 160, REFG)])
 
     def test_off_coord_strand_minus_coord(self):
         # Coord strand "-", effective strand "+".
         ivs = _make_intervals([("chr1", "-", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=20, end=60)
-        result = dis.lower()
-        self.assertEqual(len(result), 1)
-        # Geometry follows coord strand (minus), returned strand is effective (plus).
-        self.assertEqual(result[0], Interval("chr1", "+", 140, 180, REFG))
+        self.assertEqual(dis.lower(), [Interval("chr1", "+", 140, 180, REFG)])
 
 
 if __name__ == "__main__":

@@ -39,7 +39,9 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_interval(self):
-        interval = Interval("chr5", "+", 2000, 3000, "hg19")
+        interval = Interval(
+            "chr5", "+", 2000, 3000, "hg19", anchor="5p", anchor_offset=100
+        )
         df = pl.DataFrame({"interval": [interval]})
 
         path = self.tmp_dir_path / "interval.parquet"
@@ -191,9 +193,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
     def test_list_of_variants(self):
         g = Genome("gencode.v41")
         variants = [Variant("chr1", 10000005, "G", "T", g) for _ in range(10)]
-        df = pl.DataFrame(
-            {"variants": [variants]}, schema={"variants": pl.Object}
-        )
+        df = pl.DataFrame({"variants": [variants]}, schema={"variants": pl.Object})
 
         path = self.tmp_dir_path / "list_of_variants.parquet"
         write_parquet(df, path)

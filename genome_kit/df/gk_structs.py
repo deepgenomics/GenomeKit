@@ -87,6 +87,8 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
             pl.Field("start", pl.Int32),
             pl.Field("end", pl.Int32),
             pl.Field("refg", pl.Utf8),  # reference genome
+            pl.Field("anchor", pl.Int32),
+            pl.Field("anchor_offset", pl.Int32),
         ]
     )
 

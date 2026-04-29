@@ -93,6 +93,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     "end": interval.end,
                     # intervals related to reference genome only
                     "refg": interval.reference_genome,
+                    "anchor": interval.anchor,
+                    "anchor_offset": interval.anchor_offset,
                 }
                 if interval is not None
                 else None
@@ -112,6 +114,8 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
                     start=struct["start"],
                     end=struct["end"],
                     reference_genome=struct["refg"],
+                    anchor=struct["anchor"],
+                    anchor_offset=struct["anchor_offset"],
                 )
                 if struct is not None
                 else None

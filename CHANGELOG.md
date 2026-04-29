@@ -1,5 +1,20 @@
 # Changelog
 
+## [7.4.0](https://github.com/deepgenomics/GenomeKit/compare/v7.3.0...v7.4.0) (2026-04-29)
+
+
+### Features
+
+* add DisjointIntervalSequence API ([#210](https://github.com/deepgenomics/GenomeKit/issues/210)) ([0a4de6a](https://github.com/deepgenomics/GenomeKit/commit/0a4de6a1d6c4ce2b7675bc517dbb495a31dfc15c))
+* add expand, shift, up/dnstream_of, within, strand methods to DisjointIntervalSequence ([#212](https://github.com/deepgenomics/GenomeKit/issues/212)) ([cd22aeb](https://github.com/deepgenomics/GenomeKit/commit/cd22aebdd5639bf67c416cb2fbc6166499cfa5a3))
+* add gkdf variant serialization ([#216](https://github.com/deepgenomics/GenomeKit/issues/216)) ([a64559d](https://github.com/deepgenomics/GenomeKit/commit/a64559d6ec5918aaf43a74714c0d803e9baa45fb))
+* genomekit dataframe serialization ([#204](https://github.com/deepgenomics/GenomeKit/issues/204)) ([6045f2a](https://github.com/deepgenomics/GenomeKit/commit/6045f2a691de5d4bc56086d920fa0a70fad7894a))
+
+
+### Bug Fixes
+
+* empty key added to gene/tx table ([#206](https://github.com/deepgenomics/GenomeKit/issues/206)) ([d1c0216](https://github.com/deepgenomics/GenomeKit/commit/d1c0216c4b6d854d0c817698e5caf31a97148251)), closes [#205](https://github.com/deepgenomics/GenomeKit/issues/205)
+
 ## [7.3.0](https://github.com/deepgenomics/GenomeKit/compare/v7.2.3...v7.3.0) (2026-03-24)
 
 

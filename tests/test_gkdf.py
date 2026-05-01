@@ -9,8 +9,11 @@ from genome_kit.df import read_parquet, write_parquet
 from genome_kit.df.gk_structs import CURRENT_VERSION
 
 HAS_POLARS = importlib.util.find_spec("polars") is not None
+HAS_PANDAS = importlib.util.find_spec("pandas") is not None
 if HAS_POLARS:
     import polars as pl
+if HAS_PANDAS:
+    import pandas as pd
 
 
 class TestGkdfRoundTrip(unittest.TestCase):
@@ -240,6 +243,51 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df["gene"].item(), df["gene"].item())
         self.assertEqual(re_df["exon"].item(), df["exon"].item())
 
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
+    @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
+    def test_multiple_types_pandas(self):
+        g = Genome("gencode.v41.mini")
+
+        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
+        transcript = g.genes[0].transcripts[0]
+        gene = g.genes[0]
+        exon = g.exons[0]
+
+        df = pd.DataFrame(
+            {
+                "interval": [interval],
+                "transcript": [transcript],
+                "gene": [gene],
+                "exon": [exon],
+            }
+        )
+
+        path = self.tmp_dir_path / "multiple_types.parquet"
+        write_parquet(df, path)
+        re_df = read_parquet(path, lazy=False, to_pandas=True)
+        self.assertTrue(isinstance(re_df, pd.DataFrame))
+        self.assertEqual(re_df["interval"].item(), df["interval"].item())
+        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
+        self.assertEqual(re_df["gene"].item(), df["gene"].item())
+        self.assertEqual(re_df["exon"].item(), df["exon"].item())
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
+    @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
+    def test_multiple_genomes_pandas(self):
+        # test dataframe with multiple reference genomes in a single column
+        g1 = Genome("gencode.v41.mini")
+        g2 = Genome("ucsc_refseq.2017-06-25.mini")
+
+        genes = [g1.genes[0], g2.genes[0]]
+        df = pd.DataFrame({"genes": genes})
+
+        path = self.tmp_dir_path / "multiple_genomes.parquet"
+        write_parquet(df, path)
+        re_df = read_parquet(path, lazy=False, to_pandas=True)
+        self.assertTrue(isinstance(re_df, pd.DataFrame))
+        self.assertEqual(re_df["genes"][0], df["genes"][0])
+        self.assertEqual(re_df["genes"][1], df["genes"][1])
+
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_multiple_genomes(self):
         # test dataframe with multiple reference genomes in a single column
@@ -314,6 +362,19 @@ class TestGkdfRoundTrip(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             read_parquet(path, lazy=False)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    @unittest.skipUnless(not HAS_PANDAS, "Testing for no pandas installation")
+    def test_no_pandas(self):
+        # test that error raised when requesting pandas output withuot pandas installed
+        g = Genome("gencode.v41.mini")
+        gene = g.genes[0]
+        df = pl.DataFrame({"gene": [gene]})
+
+        path = self.tmp_dir_path / "no_pandas.parquet"
+        write_parquet(df, path)
+        with self.assertRaises(ImportError):
+            read_parquet(path, lazy=False, to_pandas=True)
 
 
 if __name__ == "__main__":

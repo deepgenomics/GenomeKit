@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.4.1](https://github.com/deepgenomics/GenomeKit/compare/v7.4.0...v7.4.1) (2026-05-01)
+
+
+### Miscellaneous Chores
+
+* fix publish-docs github action ([#219](https://github.com/deepgenomics/GenomeKit/issues/219)) ([70a1c8a](https://github.com/deepgenomics/GenomeKit/commit/70a1c8a220ef8c20d7b697a190ab66afc08e62a0)), closes [#218](https://github.com/deepgenomics/GenomeKit/issues/218)
+
 ## [7.4.0](https://github.com/deepgenomics/GenomeKit/compare/v7.3.0...v7.4.0) (2026-04-29)
 
 

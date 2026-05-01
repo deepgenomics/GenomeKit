@@ -346,7 +346,6 @@ def _convert_pandas_to_polars(df: pd.DataFrame) -> pl.LazyFrame:
     return lf
 
 
-# TODO: add union of pd.DataFrame
 def write_parquet(
     df: pl.DataFrame | pl.LazyFrame | pd.DataFrame,
     path: str | Path,

@@ -136,7 +136,7 @@ jobs:
             extra_deps+=("polars=1.39.3")
           fi
           if [ "$PANDAS" = "true" ]; then
-            extra_deps+=("pandas=3.0.2")
+            extra_deps+=("pandas=2.3.3")
           fi
           if [ "$ROSETTA" = "true" ]; then
             extra_deps+=("polars-runtime-compat=1.39.3")

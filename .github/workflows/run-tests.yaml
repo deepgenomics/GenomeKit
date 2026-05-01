@@ -41,6 +41,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12']
         platform: ["linux-64", "osx-arm64", "osx-64"]
         extras: ["none", "df"]
+        pandas: ["true"]
         rosetta: ["false"]
         include: # specify additional fields for all configs
           - python-version: "3.10"
@@ -62,6 +63,13 @@ jobs:
             runs-on: "macos-latest" # defaults to arm64 runner with M1 chip
             extras: "df"
             rosetta: "true"
+          # single test for running gkdf tests without pandas installed
+          - python-version: "3.12"
+            pyver-short: "312"
+            platform: "linux-64"
+            runs-on: "ubuntu-latest"
+            extras: "df"
+            pandas: "false"
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
@@ -111,6 +119,7 @@ jobs:
         shell: bash -l -e {0}
         env:
           GK_EXTRAS: ${{ matrix.extras }}
+          PANDAS: ${{ matrix.pandas }}
           ROSETTA: ${{ matrix.rosetta }}
         run: |
           set -x
@@ -125,6 +134,9 @@ jobs:
           # run command with optional extra deps
           if [ "$GK_EXTRAS" = "df" ]; then
             extra_deps+=("polars=1.39.3")
+          fi
+          if [ "$PANDAS" = "true" ]; then
+            extra_deps+=("pandas=3.0.2")
           fi
           if [ "$ROSETTA" = "true" ]; then
             extra_deps+=("polars-runtime-compat=1.39.3")

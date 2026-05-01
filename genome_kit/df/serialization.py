@@ -351,10 +351,10 @@ def write_parquet(
     path: str | Path,
     infer_schema_length: int = 100,
 ) -> None:
-    """Serialize a DataFrame with GenomeKit objects to a Parquet file.
+    """Serialize a DataFrame or LazyFrame with GenomeKit objects to a Parquet file.
 
     Args:
-        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
+        df: A Polars DataFrame or LazyFrame or pandas DataFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
         infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.
     """
@@ -424,15 +424,16 @@ def write_parquet(
 def read_parquet(
     path: str | Path, lazy: bool = False, to_pandas: bool = False
 ) -> pl.DataFrame | pl.LazyFrame | pd.DataFrame:
-    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
+    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame or pandas DataFrame.
 
     Args:
         path: The file path to read the Parquet file from.
         lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
-        to_pandas: If True, convert the result to a pandas DataFrame.
+        to_pandas: If True, convert the result to a pandas DataFrame. When True, this 
+            will override the ``lazy`` argument.
 
     Returns:
-        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects, or a pandas DataFrame if `to_pandas` is True.
+        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects, or a pandas DataFrame if ``to_pandas`` is True.
     """
     pl = require_polars()
     pd = import_pandas()

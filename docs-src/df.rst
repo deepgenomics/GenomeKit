@@ -58,6 +58,7 @@ The currently supported GenomeKit objects for serialization are:
 - :py:class:`genome_kit.Intron`
 - :py:class:`genome_kit.CDS`
 - :py:class:`genome_kit.UTR`
+- :py:class:`genome_kit.Variant`
 
 Public API
 ----------------

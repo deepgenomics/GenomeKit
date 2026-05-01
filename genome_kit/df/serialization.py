@@ -364,7 +364,10 @@ def write_parquet(
     # convert input to a polars LazyFrame for processing.
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
-    elif not isinstance(df, pl.LazyFrame):
+    elif isinstance(df, pl.LazyFrame):
+        # no conversion needed from polars LazyFrame
+        pass
+    else:
         # try to convert from pandas
         pd = import_pandas()
         if pd is None:
@@ -372,11 +375,13 @@ def write_parquet(
                 "Pandas is required to write from a pandas DataFrame. "
                 "Please install pandas into your environment to use this functionality."
             )
+        else:
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError(
+                    f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
+                )
+            
         df = _convert_pandas_to_polars(df)
-    else:
-        raise ValueError(
-            f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
-        )
 
     # mapping from column name to ColumnInfo dataclass
     target_cols = _detect_gk_cols(df, infer_schema_length=infer_schema_length)

@@ -334,7 +334,7 @@ def _convert_pandas_to_polars(df: pd.DataFrame) -> pl.LazyFrame:
     # pandas allows duplicate column names
     if any(len(df[col].shape) > 1 for col in df.columns):
         raise ValueError(
-            "Input DataFrame contains duplicated column names."
+            "Input DataFrame contains duplicated column names. "
             "Unique column names are required for serialization."
         )
 
@@ -359,16 +359,21 @@ def write_parquet(
         infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.
     """
     pl = require_polars()
-    pd = import_pandas()
 
     path = Path(path)
     # convert input to a polars LazyFrame for processing.
-    if pd is not None and isinstance(df, pd.DataFrame):
-        df = _convert_pandas_to_polars(df)
-
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
     elif not isinstance(df, pl.LazyFrame):
+        # try to convert from pandas
+        pd = import_pandas()
+        if pd is None:
+            raise ImportError(
+                "Pandas is required to write from a pandas DataFrame. "
+                "Please install pandas into your environment to use this functionality."
+            )
+        df = _convert_pandas_to_polars(df)
+    else:
         raise ValueError(
             f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
         )
@@ -455,7 +460,7 @@ def read_parquet(
     if to_pandas:
         if pd is None:
             raise ImportError(
-                "Pandas is required to convert to a pandas DataFrame."
+                "Pandas is required to convert to a pandas DataFrame. "
                 "Please install pandas into your environment to use this functionality."
             )
         return pd.DataFrame(lf.collect().to_dict(as_series=False))

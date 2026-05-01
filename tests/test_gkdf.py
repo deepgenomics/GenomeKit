@@ -364,6 +364,17 @@ class TestGkdfRoundTrip(unittest.TestCase):
             read_parquet(path, lazy=False)
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
+    @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
+    def test_from_pandas_dupe_col_names(self):
+        # test that error raised when pandas dataframe with duplicate column names is passed in
+        df = pd.DataFrame({"genome": ["hg38.p12.mini"]})
+        df.insert(1, "genome", ["gencode.v41.mini"], allow_duplicates=True)
+
+        path = self.tmp_dir_path / "dupe_col_names.parquet"
+        with self.assertRaises(ValueError):
+            write_parquet(df, path)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     @unittest.skipUnless(not HAS_PANDAS, "Testing for no pandas installation")
     def test_no_pandas(self):
         # test that error raised when requesting pandas output without pandas installed

@@ -4,11 +4,6 @@ on:
   push:
     # only build and publish docs on release-please tags
     tags: ["v*"]
-    paths:
-      - "docs/**"
-      - "genome_kit/**"
-      - ".github/workflows/publish-docs.yaml"
-      - ".github/actions/**"
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

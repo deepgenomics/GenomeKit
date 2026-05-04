@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.4.2](https://github.com/deepgenomics/GenomeKit/compare/v7.4.1...v7.4.2) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* fix CI for release-please tag triggers ([#221](https://github.com/deepgenomics/GenomeKit/issues/221)) ([e18fb5a](https://github.com/deepgenomics/GenomeKit/commit/e18fb5a8c65899159b7b4a54aee610b3e225fc84))
+
 ## [7.4.1](https://github.com/deepgenomics/GenomeKit/compare/v7.4.0...v7.4.1) (2026-05-01)
 
 

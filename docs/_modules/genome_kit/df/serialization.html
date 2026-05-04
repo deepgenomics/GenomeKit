@@ -1,0 +1,526 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.df.serialization &mdash; GenomeKit 7.4.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=60419f39"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../diseq.html">Disjoint Interval Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../df.html">DataFrame Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../develop.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../data_org.html">Remote Data Organization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.df.serialization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.df.serialization</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">inspect</span><span class="w"> </span><span class="kn">import</span> <span class="n">signature</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">genome_kit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gk</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit._optional</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_polars</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.gk_structs</span><span class="w"> </span><span class="kn">import</span> <span class="n">CURRENT_VERSION</span><span class="p">,</span> <span class="n">CellType</span><span class="p">,</span> <span class="n">ColumnInfo</span><span class="p">,</span> <span class="n">GkDfType</span><span class="p">,</span> <span class="n">GkDfVersion</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">GK_TO_GKDF_TYPE</span><span class="p">,</span> <span class="n">get_registry</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_batches_safe</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to wrap a UDF and run safely with polars map_batches.</span>
+
+<span class="sd">    Polars has a bug in map_batches that incorrectly forwards the return_dtype argument</span>
+<span class="sd">    to the UDF. See https://github.com/pola-rs/polars/issues/24840.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fn: The user defined function to wrap.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A wrapped version of the UDF that can be safely used with map_batches.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">signature</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">accepted</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="n">filtered_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">accepted</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">filtered_kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_detect_gk_cols</span><span class="p">(</span>
+    <span class="n">lf</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">,</span> <span class="n">infer_schema_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ColumnInfo</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect columns in the LazyFrame that contains GenomeKit objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lf: The LazyFrame to inspect.</span>
+<span class="sd">        infer_schema_length: The number of rows to use for schema inference when</span>
+<span class="sd">            detecting GenomeKit columns.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary mapping column names to the ColumnInfo dataclass containing the</span>
+<span class="sd">        GkDfType and CellType for the column.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="n">lf_cols</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">collect_schema</span><span class="p">()</span><span class="o">.</span><span class="n">names</span><span class="p">()</span>
+
+    <span class="n">target_cols</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># datatype inference done on first n=infer_schema_length rows. Follows inference</span>
+    <span class="c1"># logic from Polars DataFrames when rows are provided.</span>
+    <span class="c1"># see https://github.com/pola-rs/polars/blob/1cd236c60c01572c5ec6fdd252d8b20218d7b440/py-polars/src/polars/dataframe/frame.py#L248-L251</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">lf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">infer_schema_length</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">lf_cols</span><span class="p">:</span>
+        <span class="c1"># remove nulls for type inference, list/scalar cols depend on first non-null value</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">()</span>  <span class="c1"># removes scalar nulls</span>
+
+        <span class="c1"># column only contains null values in the first infer_schema_length rows</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Column </span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2"> contains only null values in the first </span><span class="si">{</span><span class="n">infer_schema_length</span><span class="si">}</span><span class="s2"> rows, &quot;</span>
+                <span class="s2">&quot;unable to infer type for serialization. Please ensure this column &quot;</span>
+                <span class="s2">&quot;contains non-null values for accurate serialization.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">first</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">head_types</span> <span class="o">=</span> <span class="p">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">head_types</span> <span class="o">!=</span> <span class="p">{</span><span class="nb">list</span><span class="p">}:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Column </span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2"> contains mixed data types: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">head_types</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;Please ensure all cells are the same type before serialization.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">CellType</span><span class="o">.</span><span class="n">LIST</span>
+            <span class="n">col_types</span> <span class="o">=</span> <span class="p">{</span><span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vals</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cell_type</span> <span class="o">=</span> <span class="n">CellType</span><span class="o">.</span><span class="n">SCALAR</span>
+            <span class="n">col_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">map_elements</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">return_dtype</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">Object</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_types</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Column </span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2"> contains mixed data types: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">col_types</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Please ensure all cells are the same type before serialization.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">col_type</span> <span class="o">=</span> <span class="n">GK_TO_GKDF_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col_types</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">col_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># column is not a genomekit type, so no serialization needed</span>
+            <span class="k">continue</span>
+
+        <span class="n">target_cols</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">ColumnInfo</span><span class="p">(</span><span class="n">cell_type</span><span class="o">=</span><span class="n">cell_type</span><span class="p">,</span> <span class="n">gkdf_type</span><span class="o">=</span><span class="n">col_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">target_cols</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_list_serializer</span><span class="p">(</span>
+    <span class="n">serializer</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">return_dtype</span><span class="p">:</span> <span class="n">Any</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to convert a serializer to accept lists of GenomeKit objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        serializer: A serializer function for a series of GenomeKit objects</span>
+<span class="sd">        return_dtype: The return data type for the serialized series</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A serializer function for a series of lists of GenomeKit objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_serialize_list</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">serializer</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">l</span><span class="p">))</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">s</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">return_dtype</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_serialize_list</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_gk_annotations</span><span class="p">(</span>
+    <span class="n">lf</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">,</span> <span class="n">target_cols</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">gk</span><span class="o">.</span><span class="n">Genome</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize GenomeKit annotations for all unique genomes in the LazyFrame.</span>
+
+<span class="sd">    Prevents race conditions when opening dganno files during polars operations.</span>
+<span class="sd">    Objects are returned in a list to keep weak references alive.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lf: The LazyFrame containing the serialized GenomeKit objects.</span>
+<span class="sd">        target_cols: A dictionary mapping column names to their column information.</span>
+<span class="sd">            Each value is a dictionary representation of the ColumnInfo dataclass.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of initialized gene tables for the unique genomes in the LazyFrame.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">genome_str_field</span><span class="p">(</span><span class="n">col_info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">gkdf_type</span> <span class="o">=</span> <span class="n">col_info</span><span class="p">[</span><span class="s2">&quot;gkdf_type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gkdf_type</span> <span class="o">==</span> <span class="n">GkDfType</span><span class="o">.</span><span class="n">GENOME</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;genome_name&quot;</span>
+        <span class="k">elif</span> <span class="n">gkdf_type</span> <span class="ow">in</span> <span class="p">(</span><span class="n">GkDfType</span><span class="o">.</span><span class="n">INTERVAL</span><span class="p">,</span> <span class="n">GkDfType</span><span class="o">.</span><span class="n">VARIANT</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;refg&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;anno&quot;</span>
+
+    <span class="n">anno_strong_refs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># extract genome_str field from every column</span>
+    <span class="n">genomes_exprs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">genomes_list_exprs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">target_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">genome_field</span> <span class="o">=</span> <span class="n">genome_str_field</span><span class="p">(</span><span class="n">target_cols</span><span class="p">[</span><span class="n">c</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">target_cols</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s2">&quot;cell_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">CellType</span><span class="o">.</span><span class="n">SCALAR</span><span class="p">:</span>
+            <span class="n">genomes_exprs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">struct</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">genome_field</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">genomes_list_exprs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">explode</span><span class="p">()</span><span class="o">.</span><span class="n">struct</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">genome_field</span><span class="p">))</span>
+
+    <span class="c1"># expressions to extract genome_str must be run separately since exploded lists</span>
+    <span class="c1"># may have more rows than the original dataframe</span>
+    <span class="n">plans</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">genomes_exprs</span><span class="p">:</span>
+        <span class="n">plans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">lf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+                <span class="n">pl</span><span class="o">.</span><span class="n">concat_list</span><span class="p">(</span><span class="n">genomes_exprs</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">explode</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">drop_nulls</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;genome_str&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">genomes_list_exprs</span><span class="p">:</span>
+        <span class="n">plans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">lf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+                <span class="n">pl</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">genomes_list_exprs</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">explode</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">drop_nulls</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+                <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;genome_str&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">genomes</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">plans</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">()[</span><span class="s2">&quot;genome_str&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+
+    <span class="c1"># warms annotations for all unique annotation genomes in the file.</span>
+    <span class="c1"># all annotations available for serialization are contained in dganno file</span>
+    <span class="k">for</span> <span class="n">genome_str</span> <span class="ow">in</span> <span class="n">genomes</span><span class="p">:</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="n">gk</span><span class="o">.</span><span class="n">Genome</span><span class="p">(</span><span class="n">genome_str</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">anno_strong_refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genome</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># reference genomes don&#39;t have annotations</span>
+            <span class="k">continue</span>
+
+    <span class="k">return</span> <span class="n">anno_strong_refs</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_gkdf_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate the parquet metadata for a gkdf parquet file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        metadata: The parquet metadata to validate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># gkdf version</span>
+    <span class="n">metadata_version</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gkdf_version&quot;</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">GkDfVersion</span><span class="p">(</span><span class="n">metadata_version</span><span class="p">)</span> <span class="k">if</span> <span class="n">metadata_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">!=</span> <span class="n">CURRENT_VERSION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid or missing gkdf_version in Parquet metadata, unable to deserialize GenomeKit objects. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected GkDfVersion </span><span class="si">{</span><span class="n">CURRENT_VERSION</span><span class="si">}</span><span class="s2">, but found </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># target cols</span>
+    <span class="k">if</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_cols&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Missing target_cols in Parquet metadata, unable to deserialize GenomeKit objects.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># gk version</span>
+    <span class="n">gk_version</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gk_version&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gk_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing gk_version in Parquet metadata.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">gk_version</span> <span class="o">!=</span> <span class="n">gk</span><span class="o">.</span><span class="n">__version__</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Parquet file was written with GenomeKit version </span><span class="si">{</span><span class="n">gk_version</span><span class="si">}</span><span class="s2">, but current version is </span><span class="si">{</span><span class="n">gk</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Deserializing GenomeKit objects may not be consistent across versions.&quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_list_deserializer</span><span class="p">(</span>
+    <span class="n">deserializer</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function to convert a deserializer to accept lists of serialized GenomeKit objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        deserializer: A deserializer function for a series of serialized GenomeKit objects</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A deserializer function for a series of lists of serialized GenomeKit objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deserialize_list</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">deserializer</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">l</span><span class="p">))</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span> <span class="k">if</span> <span class="n">l</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">s</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">Object</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_deserialize_list</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_deserialize_gk_cols</span><span class="p">(</span>
+    <span class="n">lf</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">,</span> <span class="n">target_cols</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialize columns containing GenomeKit objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lf: The LazyFrame containing the serialized GenomeKit objects.</span>
+<span class="sd">        target_cols: A dictionary mapping column names to their column information.</span>
+<span class="sd">            Each value is a dictionary representation of the ColumnInfo dataclass.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A LazyFrame with deserialized GenomeKit objects in the target columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_deserialization_expr</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+        <span class="n">col_info</span> <span class="o">=</span> <span class="n">target_cols</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>  <span class="c1"># dict representation of ColumnInfo</span>
+        <span class="n">gkdf_type</span> <span class="o">=</span> <span class="n">col_info</span><span class="p">[</span><span class="s2">&quot;gkdf_type&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">col_info</span><span class="p">[</span><span class="s2">&quot;cell_type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">CellType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+            <span class="n">deserializer</span> <span class="o">=</span> <span class="n">_list_deserializer</span><span class="p">(</span>
+                <span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">deserializer</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">deserializer</span> <span class="o">=</span> <span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">deserializer</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">map_batches</span><span class="p">(</span>
+                <span class="n">_map_batches_safe</span><span class="p">(</span><span class="n">deserializer</span><span class="p">),</span>
+                <span class="n">return_dtype</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">Object</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># with_columns_seq provides a 2x speedup here over with_columns</span>
+    <span class="k">return</span> <span class="n">lf</span><span class="o">.</span><span class="n">with_columns_seq</span><span class="p">(</span><span class="n">_build_deserialization_expr</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">target_cols</span><span class="p">)</span>
+
+
+<span class="c1"># TODO: add union of pd.DataFrame</span>
+<div class="viewcode-block" id="write_parquet">
+<a class="viewcode-back" href="../../../df.html#genome_kit.df.write_parquet">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_parquet</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">infer_schema_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Serialize a DataFrame with GenomeKit objects to a Parquet file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.</span>
+<span class="sd">        path: The file path to write the Parquet file to.</span>
+<span class="sd">        infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">lazy</span><span class="p">()</span>
+
+    <span class="c1"># mapping from column name to ColumnInfo dataclass</span>
+    <span class="n">target_cols</span> <span class="o">=</span> <span class="n">_detect_gk_cols</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">infer_schema_length</span><span class="o">=</span><span class="n">infer_schema_length</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_cols</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;No GenomeKit columns detected for serialization, writing DataFrame as is.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">sink_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">registry</span> <span class="o">=</span> <span class="n">get_registry</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_serialization_expr</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">Expr</span><span class="p">:</span>
+        <span class="n">col_info</span> <span class="o">=</span> <span class="n">target_cols</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>  <span class="c1"># ColumnInfo dataclass</span>
+        <span class="n">gkdf_type</span> <span class="o">=</span> <span class="n">col_info</span><span class="o">.</span><span class="n">gkdf_type</span>
+        <span class="k">if</span> <span class="n">col_info</span><span class="o">.</span><span class="n">cell_type</span> <span class="o">==</span> <span class="n">CellType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+            <span class="n">return_dtype</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">List</span><span class="p">(</span><span class="n">inner</span><span class="o">=</span><span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">struct</span><span class="p">)</span>
+            <span class="n">serializer</span> <span class="o">=</span> <span class="n">_list_serializer</span><span class="p">(</span>
+                <span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">serializer</span><span class="p">,</span>
+                <span class="n">return_dtype</span><span class="o">=</span><span class="n">return_dtype</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">return_dtype</span> <span class="o">=</span> <span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">struct</span>
+            <span class="n">serializer</span> <span class="o">=</span> <span class="n">registry</span><span class="p">[</span><span class="n">CURRENT_VERSION</span><span class="p">][</span><span class="n">gkdf_type</span><span class="p">]</span><span class="o">.</span><span class="n">serializer</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">map_batches</span><span class="p">(</span>
+                <span class="n">_map_batches_safe</span><span class="p">(</span><span class="n">serializer</span><span class="p">),</span>
+                <span class="n">return_dtype</span><span class="o">=</span><span class="n">return_dtype</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">_build_serialization_expr</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">target_cols</span><span class="p">)</span>
+
+    <span class="c1"># convert ColumnInfo dataclass to a serializable format</span>
+    <span class="n">target_col_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="n">target_cols</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">target_cols</span><span class="p">}</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;gkdf_version&quot;</span><span class="p">:</span> <span class="n">CURRENT_VERSION</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="s2">&quot;gk_version&quot;</span><span class="p">:</span> <span class="n">gk</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+        <span class="s2">&quot;target_cols&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">target_col_metadata</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">df</span><span class="o">.</span><span class="n">sink_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="read_parquet">
+<a class="viewcode-back" href="../../../df.html#genome_kit.df.read_parquet">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">lazy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">LazyFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: The file path to read the Parquet file from.</span>
+<span class="sd">        lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">require_polars</span><span class="p">()</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_parquet_metadata</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">_validate_gkdf_metadata</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="n">target_cols</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_cols&quot;</span><span class="p">))</span>
+
+    <span class="n">lf</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">scan_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># collect unique genome strings in the file and initialize, prevents race conditions</span>
+    <span class="c1"># on opening dganno files.</span>
+    <span class="c1"># genomes returned in dummy variable to keep weak reference alive for deserialization</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="n">_init_gk_annotations</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">target_cols</span><span class="p">)</span>
+
+    <span class="n">lf</span> <span class="o">=</span> <span class="n">_deserialize_gk_cols</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">target_cols</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lf</span> <span class="k">if</span> <span class="n">lazy</span> <span class="k">else</span> <span class="n">lf</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

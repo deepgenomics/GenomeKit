@@ -1,0 +1,782 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disjoint Interval Sequences &mdash; GenomeKit 7.4.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=60419f39"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Anchors" href="anchors.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Disjoint Interval Sequences</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#construction">Construction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#from-a-transcript">From a Transcript</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#from-intervals">From Intervals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinate-space">Coordinate Space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#segment-start-and-end">Segment Start and End</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#end5-and-end3">End5 and End3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#boundary-properties">Boundary Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#strand-methods">Strand Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shifting-and-expanding">Shifting and Expanding</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shift">shift</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#expand">expand</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#positional-comparisons">Positional Comparisons</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#upstream-of">upstream_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dnstream-of">dnstream_of</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#within">within</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="df.html">DataFrame Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_org.html">Remote Data Organization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Disjoint Interval Sequences</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/diseq.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="disjoint-interval-sequences">
+<span id="diseq"></span><h1>Disjoint Interval Sequences<a class="headerlink" href="#disjoint-interval-sequences" title="Link to this heading"></a></h1>
+<section id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading"></a></h2>
+<p>When working with transcripts, it is often necessary to operate on the exonic
+sequence with introns (or other intervening regions) removed. The remaining exons
+form a disjoint set of genomic <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> objects.
+Operations such as indexing into the spliced sequence or defining sub-ranges
+across exon boundaries require a coordinate system that accounts for the gaps
+between these intervals.</p>
+<p>The <a class="reference internal" href="api.html#genome_kit.diseq.DisjointIntervalSequence" title="genome_kit.diseq.DisjointIntervalSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">DisjointIntervalSequence</span></code></a> (DIS) class provides
+this coordinate system. While it builds on <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>, a DIS
+is conceptually distinct in several ways:</p>
+<ul class="simple">
+<li><p><strong>Spliced coordinate space.</strong> Positions in a DIS are offsets into the
+concatenated exonic (or other) sequence, not genomic coordinates.</p></li>
+<li><p><strong>5’→3’ index direction.</strong> DIS indices always increase from 5’ to 3’ with
+respect to the transcript. Index 0 corresponds to the transcript’s 5’ end
+regardless of genomic strand. This contrasts with
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>, where <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">&lt;</span> <span class="pre">end</span></code> always holds in
+genomic coordinates, so on the <code class="docutils literal notranslate"><span class="pre">-</span></code> strand <code class="docutils literal notranslate"><span class="pre">start</span></code> is the 3’ end.</p></li>
+<li><p><strong>Same-strand / opposite-strand semantics.</strong> Because a DIS models spliced
+RNA rather than raw DNA, the concept of <code class="docutils literal notranslate"><span class="pre">+</span></code>/<code class="docutils literal notranslate"><span class="pre">-</span></code> strand is replaced by
+<code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> (same strand as the transcript) versus opposite
+strand. The underlying genomic strand is accessible via <code class="docutils literal notranslate"><span class="pre">coord_strand</span></code>,
+but segments within the DIS are described relative to the coordinate
+space rather than in absolute genomic terms.</p></li>
+</ul>
+</section>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>A <a class="reference internal" href="api.html#genome_kit.diseq.DisjointIntervalSequence" title="genome_kit.diseq.DisjointIntervalSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">DisjointIntervalSequence</span></code></a> (DIS) represents
+a flattened coordinate system over a sequence of disjoint genomic intervals.
+For example, the exons of a transcript form a disjoint set of genomic intervals that,
+when concatenated, represent the spliced RNA sequence.</p>
+<p>A DIS has two aspects:</p>
+<ul class="simple">
+<li><p>A <strong>coordinate space</strong>: the underlying genomic
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> objects (e.g. exons) that define the
+flattened index system. These intervals are sorted 5’→3’ and must not overlap.</p></li>
+<li><p>A <strong>segment</strong>: a sub-range within that coordinate space, defined by
+a start and end index, where start &lt;= end.</p></li>
+</ul>
+<p>The following examples illustrate how the coordinate space and segment interact,
+using both diagrams and code.</p>
+<p>Consider a transcript on the + strand with the following genomic layout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Genomic</span> <span class="n">Coordinates</span><span class="p">:</span>  <span class="mi">153</span> <span class="mi">154</span> <span class="mi">155</span> <span class="mi">156</span> <span class="mi">157</span> <span class="mi">158</span> <span class="mi">159</span> <span class="mi">160</span> <span class="mi">161</span> <span class="mi">162</span> <span class="mi">163</span> <span class="mi">164</span> <span class="mi">165</span> <span class="mi">166</span> <span class="mi">167</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>       <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">G</span>   <span class="n">C</span>  <span class="o">|</span>
+                    <span class="o">|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|&lt;-----------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|</span>
+                    <span class="mi">5</span><span class="s1">&#39;   Exon1      Intron1    Exon2      Intron2      Exon3  3&#39;</span>
+</pre></div>
+</div>
+<p>Extracting only the exons yields the following disjoint intervals:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Genomic</span> <span class="n">Coordinates</span><span class="p">:</span>  <span class="mi">153</span> <span class="mi">154</span> <span class="mi">155</span> <span class="mi">159</span> <span class="mi">160</span> <span class="mi">165</span> <span class="mi">166</span> <span class="mi">167</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>       <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>  <span class="o">|</span>
+                    <span class="o">|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|</span>
+                    <span class="mi">5</span><span class="s1">&#39;   Exon1     Exon2   Exon3  3&#39;</span>
+</pre></div>
+</div>
+<p>These exon intervals can be represented as <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> objects:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Interval</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit.diseq</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisjointIntervalSequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon1</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">153</span><span class="p">,</span> <span class="mi">156</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon2</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">159</span><span class="p">,</span> <span class="mi">161</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon3</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;+&quot;</span><span class="p">,</span> <span class="mi">165</span><span class="p">,</span> <span class="mi">167</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To define a segment spanning the full exonic sequence (from the start of Exon1 to
+the end of Exon3), the exon intervals are first converted into a DIS coordinate space</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>       <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>  <span class="o">|</span>
+                    <span class="o">|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|</span>
+                    <span class="mi">5</span><span class="s1">&#39;   Exon1     Exon2   Exon3  3&#39;</span>
+</pre></div>
+</div>
+<p>The default segment spans the entire coordinate space</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>
+                       <span class="o">|&lt;---------------------&gt;|</span>
+                      <span class="n">end5</span>       <span class="n">Segment</span>       <span class="n">end3</span>
+<span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">0</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">7</span>
+</pre></div>
+</div>
+<p>The segment spans the full length of the coordinate space, with a start index of 0
+and an end index of 7:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">exon1</span><span class="p">,</span> <span class="n">exon2</span><span class="p">,</span> <span class="n">exon3</span><span class="p">],</span> <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;tx_example&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">start</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The DIS segment follows the convention of
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> where ranges are half-open
+(the end index is exclusive).</p>
+</div>
+<p>A DIS can also represent a segment on the strand opposite the coordinate space.
+This is useful for modeling the complementary sequence or a binding partner.</p>
+<p>Starting from the coordinate space defined above</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>       <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>  <span class="o">|</span>
+                    <span class="o">|</span>  <span class="o">|&lt;-----&gt;|</span>   <span class="o">|&lt;-&gt;|</span>   <span class="o">|&lt;-&gt;|</span>  <span class="o">|</span>
+                    <span class="mi">5</span><span class="s1">&#39;   Exon1     Exon2   Exon3  3&#39;</span>
+</pre></div>
+</div>
+<p>The opposite strand shares the same DIS coordinate indices</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                    <span class="mi">5</span><span class="s1">&#39;      Positive strand          3&#39;</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>    <span class="o">|</span>  <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span> <span class="o">|</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">+</span><span class="p">):</span>   <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>     <span class="o">|</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>   <span class="o">|</span>  <span class="n">T</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">G</span>     <span class="o">|</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>    <span class="o">|</span>  <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span> <span class="o">|</span>
+                    <span class="mi">3</span><span class="s1">&#39;      Negative Strand          5&#39;</span>
+</pre></div>
+</div>
+<p>The DIS coordinate indices are identical on both strands. To obtain the complement
+of a given segment, the same start and end indices apply; only the
+<code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> flag changes. The following shows the full-length segment
+on the opposite strand</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                    <span class="mi">5</span><span class="s1">&#39;      Coordinate Strand        3&#39;</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>    <span class="o">|</span>  <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span> <span class="o">|</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">+</span><span class="p">):</span>   <span class="o">|</span>  <span class="n">A</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">C</span>     <span class="o">|</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>      <span class="n">T</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">G</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                              <span class="n">Opposite</span> <span class="n">Strand</span>
+                       <span class="o">|&lt;---------------------&gt;|</span>
+                      <span class="n">end3</span>       <span class="n">Segment</span>       <span class="n">end5</span>
+<span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">0</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">7</span>
+<span class="n">On</span> <span class="n">Coordinate</span> <span class="n">Strand</span><span class="p">:</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> flag distinguishes same-strand from opposite-strand
+segments, since the start and end indices alone do not encode strand information:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis_opp</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">exon1</span><span class="p">,</span> <span class="n">exon2</span><span class="p">,</span> <span class="n">exon3</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;tx_example&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_opp</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_opp</span><span class="o">.</span><span class="n">end5_index</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_opp</span><span class="o">.</span><span class="n">end3_index</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The preceding examples used + strand coordinate intervals. When the coordinate intervals
+lie on the <strong>negative</strong> strand, the DIS behaves differently from <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>:
+in one key aspect. Indices still increase in the 5’→3’ direction of the transcript.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">genome</span><span class="o">.</span><span class="n">refg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">iv</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="n">iv</span><span class="o">.</span><span class="n">end3</span><span class="o">.</span><span class="n">start</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">([</span><span class="n">iv</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">dis</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">dis</span><span class="o">.</span><span class="n">end3</span><span class="o">.</span><span class="n">start</span>
+</pre></div>
+</div>
+</div>
+<p>Consider a transcript on the negative strand:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                    <span class="mi">3</span><span class="s1">&#39;  Exon3      Intron2    Exon2      Intron1      Exon1   5&#39;</span>
+                    <span class="o">|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|&lt;-----------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>   <span class="o">|</span>  <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">T</span>  <span class="o">|</span>
+<span class="n">Genomic</span> <span class="n">Coordinates</span><span class="p">:</span>  <span class="mi">153</span> <span class="mi">154</span> <span class="mi">155</span> <span class="mi">156</span> <span class="mi">157</span> <span class="mi">158</span> <span class="mi">159</span> <span class="mi">160</span> <span class="mi">161</span> <span class="mi">162</span> <span class="mi">163</span> <span class="mi">164</span> <span class="mi">165</span> <span class="mi">166</span> <span class="mi">167</span>
+                                        <span class="n">Negative</span> <span class="n">Strand</span>
+</pre></div>
+</div>
+<p>Extracting only the exons:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                    <span class="mi">3</span><span class="s1">&#39;   Exon3     Exon2   Exon1  5&#39;</span>
+                    <span class="o">|</span> <span class="o">|&lt;-------&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|&lt;---&gt;|</span> <span class="o">|</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>   <span class="o">|</span>  <span class="n">G</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">T</span>  <span class="o">|</span>
+<span class="n">Genomic</span> <span class="n">Coordinates</span><span class="p">:</span>  <span class="mi">153</span> <span class="mi">154</span> <span class="mi">155</span> <span class="mi">159</span> <span class="mi">160</span> <span class="mi">165</span> <span class="mi">166</span> <span class="mi">167</span>
+                                <span class="n">Negative</span> <span class="n">Strand</span>
+</pre></div>
+</div>
+<p>Converting these exons into a DIS coordinate space:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>       <span class="o">|</span>  <span class="n">T</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>  <span class="o">|</span>
+                    <span class="o">|</span>  <span class="o">|&lt;-&gt;|</span>   <span class="o">|&lt;-&gt;|</span>   <span class="o">|&lt;-----&gt;|</span>  <span class="o">|</span>
+                    <span class="mi">5</span><span class="s1">&#39; Exon1   Exon2     Exon3    3&#39;</span>
+</pre></div>
+</div>
+<p>The sequence appears reversed relative to genomic coordinates because the DIS
+coordinate space is oriented 5’→3’ with respect to the transcript, regardless of
+genomic strand. Index 0 always corresponds to the transcript’s 5’ end, and the
+largest index to the 3’ end:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">neg_exon1</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">165</span><span class="p">,</span> <span class="mi">167</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neg_exon2</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">159</span><span class="p">,</span> <span class="mi">161</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">neg_exon3</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="s2">&quot;chr1&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">153</span><span class="p">,</span> <span class="mi">156</span><span class="p">,</span> <span class="s2">&quot;hg38&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">neg_exon1</span><span class="p">,</span> <span class="n">neg_exon2</span><span class="p">,</span> <span class="n">neg_exon3</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;tx_neg_example&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span><span class="o">.</span><span class="n">coord_strand</span>
+<span class="go">&#39;-&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span><span class="o">.</span><span class="n">coordinate_length</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+<p>A full-length segment on the coordinate strand</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">T</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>
+                       <span class="o">|&lt;---------------------&gt;|</span>
+                      <span class="n">end5</span>       <span class="n">Segment</span>       <span class="n">end3</span>
+<span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">0</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">7</span>
+<span class="n">On</span> <span class="n">Coordinate</span> <span class="n">Strand</span><span class="p">:</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>Despite creating the DIS from the negative strand, the full-length segment on the
+coordinate strand is identical to the + strand example. When working with DIS
+objects, strand is expressed only as “same strand” or “opposite strand”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span><span class="o">.</span><span class="n">start</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span><span class="o">.</span><span class="n">end</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The same coordinate space with an opposite-strand segment</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>      <span class="n">T</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">+</span><span class="p">):</span>      <span class="n">A</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                       <span class="o">|&lt;---------------------&gt;|</span>
+                      <span class="n">end3</span>       <span class="n">Segment</span>       <span class="n">end5</span>
+<span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">0</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">7</span>
+<span class="n">On</span> <span class="n">Coordinate</span> <span class="n">Strand</span><span class="p">:</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg_opp</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">neg_exon1</span><span class="p">,</span> <span class="n">neg_exon2</span><span class="p">,</span> <span class="n">neg_exon3</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;tx_neg_example&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg_opp</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg_opp</span><span class="o">.</span><span class="n">end5_index</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_neg_opp</span><span class="o">.</span><span class="n">end3_index</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</section>
+<section id="construction">
+<h2>Construction<a class="headerlink" href="#construction" title="Link to this heading"></a></h2>
+<section id="from-a-transcript">
+<h3>From a Transcript<a class="headerlink" href="#from-a-transcript" title="Link to this heading"></a></h3>
+<p>The most common way to create a DIS is from a
+<a class="reference internal" href="api.html#genome_kit.Transcript" title="genome_kit.Transcript"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transcript</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Genome</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit.diseq</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisjointIntervalSequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="s2">&quot;gencode.v29&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transcript</span> <span class="o">=</span> <span class="n">genome</span><span class="o">.</span><span class="n">transcripts</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span><span class="n">transcript</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default, the coordinate space is built from the transcript’s exons.
+It’s also possible to specify a region to use CDS or UTR intervals:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis_cds</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">&quot;cds&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_utr5</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">&quot;utr5&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis_utr3</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span><span class="n">transcript</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">&quot;utr3&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">coord_name</span></code> and <code class="docutils literal notranslate"><span class="pre">interval_name</span></code> default to <code class="docutils literal notranslate"><span class="pre">transcript.id</span></code> but can
+be overridden:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">transcript</span><span class="p">,</span> <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;my_coord&quot;</span><span class="p">,</span> <span class="n">interval_name</span><span class="o">=</span><span class="s2">&quot;my_interval&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="from-intervals">
+<h3>From Intervals<a class="headerlink" href="#from-intervals" title="Link to this heading"></a></h3>
+<p>A DIS can be constructed from any sequence of
+<a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a> objects:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">genome_kit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Interval</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exon_intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">interval</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">transcript</span><span class="o">.</span><span class="n">exons</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">(</span><span class="n">exon_intervals</span><span class="p">,</span> <span class="n">coord_name</span><span class="o">=</span><span class="s2">&quot;my_coord&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The intervals must all share the same chromosome, strand, reference
+genome, and must not overlap. They are automatically sorted 5’→3’.</p>
+</section>
+</section>
+<section id="coordinate-space">
+<h2>Coordinate Space<a class="headerlink" href="#coordinate-space" title="Link to this heading"></a></h2>
+<p>The coordinate space is defined by the underlying genomic intervals, which
+are accessible as a tuple:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coordinate_intervals</span>
+<span class="go">(Interval(&quot;chr1&quot;, &quot;+&quot;, 100, 200, &quot;hg38&quot;), Interval(&quot;chr1&quot;, &quot;+&quot;, 300, 450, &quot;hg38&quot;))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coordinate_length</span>
+<span class="go">250</span>
+</pre></div>
+</div>
+<p>Metadata about the coordinate space is available through properties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">chromosome</span>
+<span class="go">&#39;chr1&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coord_strand</span>
+<span class="go">&#39;+&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">reference_genome</span>
+<span class="go">&#39;hg38&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coord_name</span>
+<span class="go">&#39;ENST00000...&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="segment-start-and-end">
+<h2>Segment Start and End<a class="headerlink" href="#segment-start-and-end" title="Link to this heading"></a></h2>
+<p>The segment within the coordinate space is defined by <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code>
+indices, following the same half-open convention as <a class="reference internal" href="api.html#genome_kit.Interval" title="genome_kit.Interval"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interval</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">&lt;=</span> <span class="pre">end</span></code> always):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">start</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end</span>
+<span class="go">250</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">length</span>
+<span class="go">250</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">dis</span><span class="p">)</span>
+<span class="go">250</span>
+</pre></div>
+</div>
+<p>By default, the segment spans the full coordinate space (<code class="docutils literal notranslate"><span class="pre">start=0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">end=coordinate_length</span></code>). Indices can extend beyond <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">coordinate_length]</span></code>, but
+the DNA sequence returned by <code class="docutils literal notranslate"><span class="pre">genome.dna()</span></code> will be N-padded.</p>
+<section id="end5-and-end3">
+<h3>End5 and End3<a class="headerlink" href="#end5-and-end3" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">end5_index</span></code> and <code class="docutils literal notranslate"><span class="pre">end3_index</span></code> properties give the 5’ and 3’ positions
+of the segment. These are derived from <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> based on the
+segment’s strand.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">end5_index</span></code> equals <code class="docutils literal notranslate"><span class="pre">start</span></code> and
+<code class="docutils literal notranslate"><span class="pre">end3_index</span></code> equals <code class="docutils literal notranslate"><span class="pre">end</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">1</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">6</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">T</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>
+                           <span class="o">|&lt;-------------&gt;|</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">A</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                              <span class="n">Opposite</span> <span class="n">Strand</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_transcript</span><span class="p">(</span><span class="n">transcript</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end5_index</span>   <span class="c1"># same as start when on coordinate strand</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end3_index</span>   <span class="c1"># same as end when on coordinate strand</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, the mapping reverses:
+<code class="docutils literal notranslate"><span class="pre">end5_index</span></code> equals <code class="docutils literal notranslate"><span class="pre">end</span></code> and <code class="docutils literal notranslate"><span class="pre">end3_index</span></code> equals <code class="docutils literal notranslate"><span class="pre">start</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">3</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">7</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">T</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span><span class="p">:</span>          <span class="n">A</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                                   <span class="o">|&lt;---------&gt;|</span>
+                              <span class="n">Opposite</span> <span class="n">Strand</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">opp</span> <span class="o">=</span> <span class="n">dis</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opp</span><span class="o">.</span><span class="n">end5_index</span>   <span class="c1"># same as end when off coordinate strand</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opp</span><span class="o">.</span><span class="n">end3_index</span>   <span class="c1"># same as start when off coordinate strand</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</section>
+<section id="boundary-properties">
+<h3>Boundary Properties<a class="headerlink" href="#boundary-properties" title="Link to this heading"></a></h3>
+<p>Zero-length DIS objects at the segment and coordinate boundaries are
+available as properties:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end5</span>        <span class="c1"># 0-length DIS at the segment&#39;s 5&#39; boundary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">end3</span>        <span class="c1"># 0-length DIS at the segment&#39;s 3&#39; boundary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coord_end5</span>  <span class="c1"># 0-length DIS at the coordinate space&#39;s 5&#39; boundary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">coord_end3</span>  <span class="c1"># 0-length DIS at the coordinate space&#39;s 3&#39; boundary</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="strand-methods">
+<h2>Strand Methods<a class="headerlink" href="#strand-methods" title="Link to this heading"></a></h2>
+<p>A DIS segment can sit on either ‘virtual’ strand independently of the coordinate
+intervals. The <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code> property indicates whether the
+segment is on the same strand as the coordinate intervals:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">On</span> <span class="n">Coordinate</span> <span class="n">Strand</span><span class="p">:</span> <span class="kc">True</span>
+<span class="n">Start</span> <span class="n">Index</span><span class="p">:</span>     <span class="mi">1</span>
+<span class="n">End</span> <span class="n">Index</span><span class="p">:</span>       <span class="mi">6</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">+</span><span class="p">):</span>      <span class="n">A</span>   <span class="n">T</span>   <span class="n">C</span>   <span class="n">C</span>   <span class="n">G</span>   <span class="n">A</span>   <span class="n">C</span>
+                           <span class="o">|&lt;-------------&gt;|</span>
+<span class="o">-----------------------------------------------------</span>
+<span class="n">DNA</span> <span class="n">Sequence</span> <span class="p">(</span><span class="o">-</span><span class="p">):</span>      <span class="n">T</span>   <span class="n">A</span>   <span class="n">G</span>   <span class="n">G</span>   <span class="n">C</span>   <span class="n">T</span>   <span class="n">G</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                              <span class="n">Opposite</span> <span class="n">Strand</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">dis</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+<span class="kc">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">dis</span><span class="o">.</span><span class="n">is_same_strand</span><span class="p">()</span>
+<span class="kc">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">dis</span><span class="o">.</span><span class="n">is_positive_strand</span><span class="p">()</span>
+<span class="kc">True</span>
+</pre></div>
+</div>
+<p>Strand methods (<cite>is_same_strand()</cite>, <cite>flip_strand()</cite>, etc.) only affect the
+segment layer, not the coordinate intervals.</p>
+</section>
+<section id="shifting-and-expanding">
+<h2>Shifting and Expanding<a class="headerlink" href="#shifting-and-expanding" title="Link to this heading"></a></h2>
+<p>Both <code class="docutils literal notranslate"><span class="pre">shift</span></code> and <code class="docutils literal notranslate"><span class="pre">expand</span></code> return a <strong>new</strong> DIS with modified segment
+indices. The coordinate space is always unchanged.</p>
+<section id="shift">
+<h3>shift<a class="headerlink" href="#shift" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">shift(amount)</span></code> moves the segment downstream by <code class="docutils literal notranslate"><span class="pre">amount</span></code> bases.
+A negative value shifts upstream. The segment length is preserved.</p>
+<p>On the coordinate strand, downstream means increasing indices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Before</span> <span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                           <span class="o">|&lt;---------&gt;|</span>
+                          <span class="n">end5</span>        <span class="n">end3</span>
+
+<span class="n">After</span> <span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                               <span class="o">|&lt;---------&gt;|</span>
+                              <span class="n">end5</span>        <span class="n">end3</span>
+</pre></div>
+</div>
+<p>On the opposite strand, “downstream” is the reverse direction in index
+space, so <code class="docutils literal notranslate"><span class="pre">shift(1)</span></code> moves the segment toward <em>lower</em> indices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Before</span> <span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="n">on_coordinate_strand</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                           <span class="o">|&lt;---------&gt;|</span>
+                          <span class="n">end3</span>        <span class="n">end5</span>
+
+<span class="n">After</span> <span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                       <span class="o">|&lt;---------&gt;|</span>
+                      <span class="n">end3</span>        <span class="n">end5</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(30, 150)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifted</span> <span class="o">=</span> <span class="n">dis</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifted</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">shifted</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(40, 160)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifted</span><span class="o">.</span><span class="n">coordinate_intervals</span> <span class="o">==</span> <span class="n">dis</span><span class="o">.</span><span class="n">coordinate_intervals</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Negative values shift upstream</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(20, 140)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># On the opposite strand, downstream reverses in index space</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opp</span> <span class="o">=</span> <span class="n">dis</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">opp</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">opp</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(30, 150)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifted_opp</span> <span class="o">=</span> <span class="n">opp</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifted_opp</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">shifted_opp</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(20, 140)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">shift</span></code> can move the segment beyond the coordinate space bounds
+(<code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">&lt;</span> <span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">&gt;</span> <span class="pre">coordinate_length</span></code>).</p>
+</div>
+</section>
+<section id="expand">
+<h3>expand<a class="headerlink" href="#expand" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">expand(upstream,</span> <span class="pre">dnstream)</span></code> grows (or shrinks) the segment toward
+its 5’ and 3’ ends. When <code class="docutils literal notranslate"><span class="pre">dnstream</span></code> is omitted the expansion is
+symmetric:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Before</span> <span class="n">expand</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                           <span class="o">|&lt;---------&gt;|</span>
+                          <span class="n">end5</span>        <span class="n">end3</span>
+
+<span class="n">After</span> <span class="n">expand</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                       <span class="o">|&lt;-----------------&gt;|</span>
+                      <span class="n">end5</span>                <span class="n">end3</span>
+</pre></div>
+</div>
+<p>Negative values contract the segment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Before</span> <span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                       <span class="o">|&lt;-----------------&gt;|</span>
+                      <span class="n">end5</span>                <span class="n">end3</span>
+
+<span class="n">After</span> <span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>
+                           <span class="o">|&lt;---------&gt;|</span>
+                          <span class="n">end5</span>        <span class="n">end3</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(30, 150)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Symmetric expansion</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(25, 155)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Asymmetric expansion</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(25, 160)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Upstream-only expansion</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(25, 150)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Contraction with negative values</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">dis</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">(40, 130)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Contracting to exactly zero length is valid, but contracting past
+zero raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p>
+</div>
+</section>
+</section>
+<section id="positional-comparisons">
+<h2>Positional Comparisons<a class="headerlink" href="#positional-comparisons" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">upstream_of</span></code> and <code class="docutils literal notranslate"><span class="pre">dnstream_of</span></code> compare two DIS segments that share
+the same coordinate space and the same <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code>. Both
+methods require strict separation — any overlap returns <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<section id="upstream-of">
+<h3>upstream_of<a class="headerlink" href="#upstream-of" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">upstream_of(other)</span></code> returns <code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">self</span></code> is strictly 5’ of
+<code class="docutils literal notranslate"><span class="pre">other</span></code> with no overlap. Adjacent segments (where <code class="docutils literal notranslate"><span class="pre">self.end</span></code> equals
+<code class="docutils literal notranslate"><span class="pre">other.start</span></code>) count as upstream:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>   <span class="mi">9</span>
+                       <span class="o">|&lt;-&gt;|</span>               <span class="o">|&lt;-&gt;|</span>
+                         <span class="n">a</span>                   <span class="n">b</span>
+<span class="n">a</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>    <span class="p">(</span><span class="n">no</span> <span class="n">overlap</span><span class="p">)</span>
+
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>   <span class="mi">9</span>
+                       <span class="o">|&lt;-----&gt;|</span>
+                          <span class="n">a</span>    <span class="o">|&lt;-----&gt;|</span>
+                                  <span class="n">b</span>
+<span class="n">a</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>    <span class="p">(</span><span class="n">adjacent</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">end</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>   <span class="mi">9</span>
+                       <span class="o">|&lt;---------&gt;|</span>
+                          <span class="n">a</span>    <span class="o">|&lt;-----&gt;|</span>
+                                  <span class="n">b</span>
+<span class="n">a</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span>   <span class="p">(</span><span class="n">overlap</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Adjacent segments count as upstream</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a2</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a2</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Both DIS objects must share the same <code class="docutils literal notranslate"><span class="pre">coordinate_intervals</span></code> and the
+same <code class="docutils literal notranslate"><span class="pre">on_coordinate_strand</span></code>, otherwise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.
+Two zero-length segments at the same position are neither upstream
+nor downstream of each other.</p>
+</div>
+</section>
+<section id="dnstream-of">
+<h3>dnstream_of<a class="headerlink" href="#dnstream-of" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dnstream_of(other)</span></code> is the mirror of <code class="docutils literal notranslate"><span class="pre">upstream_of</span></code>: it returns
+<code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">self</span></code> is strictly 3’ of <code class="docutils literal notranslate"><span class="pre">other</span></code> with no overlap.
+Adjacent segments count as downstream. The same requirements on shared
+coordinate space and strand apply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">dnstream_of</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dnstream_of</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</section>
+<section id="within">
+<h3>within<a class="headerlink" href="#within" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">within(other)</span></code> returns <code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">self</span></code>’s segment is fully
+contained within <code class="docutils literal notranslate"><span class="pre">other</span></code>’s segment. Boundary-inclusive: a segment
+is within another if it shares the same start and/or end. A segment
+is always within itself. The same requirements on shared coordinate
+space and strand apply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>   <span class="mi">9</span>
+                               <span class="o">|&lt;-&gt;|</span>
+                                 <span class="n">a</span>
+                       <span class="o">|&lt;-------------&gt;|</span>
+                              <span class="n">b</span>
+<span class="n">a</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+
+<span class="n">DIS</span> <span class="n">Coordinates</span><span class="p">:</span>       <span class="mi">0</span>   <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>   <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>   <span class="mi">9</span>
+                       <span class="o">|&lt;-------------&gt;|</span>
+                              <span class="n">a</span>
+                               <span class="o">|&lt;-&gt;|</span>
+                                 <span class="n">b</span>
+<span class="n">a</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">False</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># A segment is within itself</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Zero-length segments are within any enclosing segment</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="anchors.html" class="btn btn-neutral float-right" title="Anchors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

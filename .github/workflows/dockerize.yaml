@@ -73,7 +73,7 @@ jobs:
           tag="${VERSION}-py310"
           url="https://hub.docker.com/v2/repositories/${DOCKER_REPO}/tags/${tag}"
           echo "Checking if ${DOCKER_REPO}:${tag} exists on Docker Hub..."
-          status=$(curl -fsS -o /dev/null -w "%{http_code}" "${url}")
+          status=$(curl -sS -o /dev/null -w "%{http_code}" "${url}")
           case "$status" in
             200)
               echo "Error: ${DOCKER_REPO}:${tag} already exists on Docker Hub. Aborting publish."

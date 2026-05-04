@@ -828,7 +828,7 @@ class DisjointIntervalSequence:
                 if pos < iv.start:
                     return cumulative
                 cumulative += len(iv)
-            return cumulative
+            assert False, "Position not found in any interval"
         # minus
         if pos > ivs[0].end:
             return ivs[0].end - pos
@@ -841,17 +841,16 @@ class DisjointIntervalSequence:
             if pos > iv.end:
                 return cumulative
             cumulative += len(iv)
-        return cumulative
+        assert False, "Position not found in any interval"
 
     def lift_interval(
         self, other: Interval
     ) -> "DisjointIntervalSequence | None":
-        """Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS.
+        """Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS's segment.
 
-        The interval's genomic span is mapped into DIS coordinate-space
-        indices. The returned DIS represents that span as a segment in this
-        coordinate space, with ``on_coordinate_strand`` set based on whether
-        ``other``'s strand matches the coordinate-space strand.
+        The interval's genomic span is mapped into DIS coordinate-space indices
+        and intersected with this DIS's segment. The returned DIS represents
+        that intersection as a segment in this coordinate space.
 
         Returns
         -------
@@ -873,6 +872,11 @@ class DisjointIntervalSequence:
                 f"Interval reference_genome {other.reference_genome!r} does not "
                 f"match DIS reference_genome {self.reference_genome!r}"
             )
+        if other.strand != self.strand:
+            raise ValueError(
+                f"Interval strand {other.strand!r} does not match DIS "
+                f"effective strand {self.strand!r}"
+            )
 
         if self.coord_strand == "+":
             seg_start = self._lift_position(other.start)
@@ -882,16 +886,18 @@ class DisjointIntervalSequence:
             seg_start = self._lift_position(other.end)
             seg_end = self._lift_position(other.start)
 
-        # Strict half-open overlap with self's segment
-        if max(seg_start, self._start) >= min(seg_end, self._end):
+        # Clip to self's segment via half-open intersection.
+        intersected_start = max(seg_start, self._start)
+        intersected_end = min(seg_end, self._end)
+        if intersected_start >= intersected_end:
             return None
 
         return DisjointIntervalSequence(
             self._coordinate_intervals,
             coord_name=self._coord_metadata.name,
             on_coordinate_strand=(other.strand == self.coord_strand),
-            start=seg_start,
-            end=seg_end,
+            start=intersected_start,
+            end=intersected_end,
         )
 
     def intersect(
@@ -922,17 +928,17 @@ class DisjointIntervalSequence:
                 f"{'same' if other.on_coordinate_strand else 'opposite'} strand"
             )
 
-        ovr_start = max(self._start, other._start)
-        ovr_end = min(self._end, other._end)
-        if ovr_start >= ovr_end:
+        intersected_start = max(self._start, other._start)
+        intersected_end = min(self._end, other._end)
+        if intersected_start >= intersected_end:
             return None
 
         return DisjointIntervalSequence(
             self._coordinate_intervals,
             coord_name=self._coord_metadata.name,
             on_coordinate_strand=self.on_coordinate_strand,
-            start=ovr_start,
-            end=ovr_end,
+            start=intersected_start,
+            end=intersected_end,
         )
 
     def dna(self, allow_outside_coord: bool = True) -> str:

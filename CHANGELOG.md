@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.4.4](https://github.com/deepgenomics/GenomeKit/compare/v7.4.3...v7.4.4) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* macos-13 github actions builder no longer available ([#225](https://github.com/deepgenomics/GenomeKit/issues/225)) ([a8db54b](https://github.com/deepgenomics/GenomeKit/commit/a8db54b630e9b6d51a119288b1e7770350545207))
+
 ## [7.4.3](https://github.com/deepgenomics/GenomeKit/compare/v7.4.2...v7.4.3) (2026-05-04)
 
 

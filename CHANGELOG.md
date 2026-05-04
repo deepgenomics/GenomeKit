@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.4.3](https://github.com/deepgenomics/GenomeKit/compare/v7.4.2...v7.4.3) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* fix error on build-wheels ([#223](https://github.com/deepgenomics/GenomeKit/issues/223)) ([ea06da2](https://github.com/deepgenomics/GenomeKit/commit/ea06da2ba7737dff9bf88ad15f2e5df135073d79))
+
 ## [7.4.2](https://github.com/deepgenomics/GenomeKit/compare/v7.4.1...v7.4.2) (2026-05-04)
 
 

@@ -549,6 +549,56 @@ Negative values contract the interval::
     Contracting to exactly zero length is valid, but contracting past
     zero raises ``ValueError``.
 
+expand_coord
+~~~~~~~~~~~~
+
+``expand`` and ``expand_coord`` both grow the segment, but they do so at
+different layers. ``expand`` stretches the segment *within* the existing
+coordinate space; the coord intervals are unchanged.
+``expand_coord`` instead extends the coordinate
+space itself by lengthening the outermost coord intervals, and grows the
+segment by the same amount so it tracks the new edges.
+
+This distinction matters when you want flanking genomic context to become
+part of the indexed coordinate space rather than just a virtual extension,
+such as when getting the DNA of the DIS segment (off-coordinate bases are
+N-padded).
+
+For example, when modeling a transcript plus its surrounding promoter and
+poly-A regions, ``expand_coord(50)`` adds 50 genomic bases to each end
+of the coordinate space, and those bases are now real, indexable, DNA-
+backed positions rather than N-padding::
+
+    >>> dis.coord_strand
+    '+'
+    >>> dis.coordinate_intervals
+    (Interval("chr1", "+", 1000, 1100, "hg38"),
+     Interval("chr1", "+", 1200, 1300, "hg38"),
+     Interval("chr1", "+", 1500, 1600, "hg38"))
+    >>> dis.coordinate_length
+    300
+    >>> dis.start, dis.end
+    (0, 300)
+
+    >>> expanded = dis.expand_coord(50)
+    >>> expanded.coordinate_intervals
+    (Interval("chr1", "+", 950, 1100, "hg38"),
+     Interval("chr1", "+", 1200, 1300, "hg38"),
+     Interval("chr1", "+", 1500, 1650, "hg38"))
+    >>> expanded.coordinate_length
+    400
+    >>> expanded.start, expanded.end
+    (0, 400)
+
+Only the outer 5' edge of the first coord interval and the outer 3' edge
+of the last coord interval are extended; gaps between coord intervals are
+preserved. On the negative strand, ``upstream`` and ``dnstream`` still
+refer to the transcript's 5' and 3' ends, so the underlying genomic
+adjustments mirror those on the plus strand.
+
+Unlike ``expand``, ``expand_coord`` does not accept negative values —
+shrinking the coordinate space is not supported.
+
 Positional Comparisons
 ======================
 
@@ -656,3 +706,113 @@ space and strand apply::
     >>> z = DisjointIntervalSequence(coord_ivs, start=50, end=50)
     >>> z.within(a)
     True
+
+Mapping Between Genomic and DIS Coordinates
+===========================================
+
+A DIS lives in two coordinate systems at once: the genomic coordinates of
+its underlying intervals, and the spliced DIS index space. ``lower`` and
+``lift_interval`` are the two directions of travel between them.
+
+``lower`` projects the segment back to genomic space. ``lift_interval``
+projects a genomic interval into the DIS's index space and clips it
+against the segment. They are conceptual inverses, but each has to deal
+with a structural mismatch — gaps in genomic space have no representation
+in DIS space, and contiguous DIS indices may correspond to two
+non-adjacent genomic regions — so neither is a clean bijection.
+
+lower
+~~~~~
+
+Because a segment can straddle one or more boundaries between coord
+intervals, ``lower`` returns a *list* of genomic
+:py:class:`~genome_kit.Interval` objects rather than a single one. The
+list is in 5'→3' order with respect to the segment, regardless of the
+underlying coord strand or whether the segment is on the coord strand.
+
+A segment that fits inside a single coord interval lowers to a one-element
+list. A segment that crosses N coord-interval boundaries lowers to N+1
+intervals — the gaps between coord intervals are skipped::
+
+    >>> dis = DisjointIntervalSequence(
+    ...     [Interval("chr1", "+", 100, 200, "hg38"),
+    ...      Interval("chr1", "+", 300, 400, "hg38")],
+    ...     start=50, end=150,
+    ... )
+    >>> dis.lower()
+    [Interval("chr1", "+", 150, 200, "hg38"),
+     Interval("chr1", "+", 300, 350, "hg38")]
+
+When the segment extends past the coord space (``start < 0`` or
+``end > coordinate_length``), the out-of-bounds portion is **linearly
+extrapolated** from the nearest outer edge of the coord intervals. The
+returned intervals can therefore have negative starts or ends past the
+chromosome length — there is no clipping to chromosome boundaries.
+
+A segment on the opposite strand lowers to genomic intervals on the
+opposite strand, listed in *segment* 5'→3' order (which is the reverse of
+coord 5'→3' order).
+
+lift_interval
+~~~~~~~~~~~~~
+
+``lift_interval`` is the inverse: it takes a genomic
+:py:class:`~genome_kit.Interval` and returns a new DIS whose segment is
+the intersection of that interval with this DIS's segment, expressed
+in the DIS coordinate space. The input must share the same chromosome, reference
+genome, and effective strand as the DIS.
+
+The lift is well-defined even when the input straddles gaps between coord
+intervals: positions inside a gap collapse to the boundary index of the
+adjacent coord interval, and positions outside the coord space extrapolate
+linearly. The result is then clipped against the DIS's segment, so a
+genomic interval that overlaps coord space but falls entirely outside the
+segment returns ``None``::
+
+    >>> dis = DisjointIntervalSequence(
+    ...     [Interval("chr1", "+", 100, 200, "hg38"),
+    ...      Interval("chr1", "+", 300, 400, "hg38")],
+    ...     start=0, end=200,
+    ... )
+    >>> lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, "hg38"))
+    >>> lifted.start, lifted.end
+    (120, 160)
+
+    >>> # Falls in a coord-interval gap with no overlap of any coord interval
+    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38")) is None
+    True
+
+Extracting DNA
+==============
+
+``dna`` returns the spliced DNA sequence corresponding to the segment as
+a single string in 5'→3' order. Internally, the segment is decomposed
+via ``lower`` into one or more genomic intervals, each is read from the
+reference, and the pieces are concatenated. This returns the spliced sequence
+of the transcript: the gaps between coord intervals are dropped so that introns
+(or other intervening regions) never appear in the output.
+
+The returned string already accounts for strand: if the segment is on the
+opposite strand, the segment's bases are returned, and the bases are
+ordered 5'→3' along the segment, not along the genome::
+
+    >>> dis = DisjointIntervalSequence.from_transcript(transcript)
+    >>> dis.dna()
+    'ATGGCC...'        # full spliced sequence, 5'→3'
+
+    >>> opp = dis.as_opposite_strand()
+    >>> opp.dna()       # reverse complement, 5'→3' along the opposite strand
+
+When the segment extends past the coord space — e.g. after ``shift`` or
+``expand`` pushed the indices outside ``[0, coordinate_length)`` — those
+out-of-coord positions are returned as ``N`` by default. This is in
+contrast to ``expand_coord``, which extends the coord space itself so
+that new positions are backed by real reference DNA. Set
+``allow_outside_coord=False`` to opt out of N-padding and raise an error instead.
+
+For convenience, :py:meth:`Genome.dna <genome_kit.Genome.dna>` accepts a
+DIS directly and dispatches to ``DisjointIntervalSequence.dna``, so
+either of the following is equivalent::
+
+    >>> dis.dna()
+    >>> genome.dna(dis)

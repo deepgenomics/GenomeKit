@@ -603,6 +603,19 @@ class Transcript(_cxx.Tran, Interval):
         mock_unreachable()
         return [Utr()]
 
+    @property
+    def length(self) -> int:
+        """The total length of this transcript, summing all exon lengths (includes UTRs)."""
+        return sum(len(exon) for exon in self.exons)
+
+    @property
+    def length_cds(self) -> int:
+        """The CDS-only length of this transcript, summing all CDS element lengths.
+
+        Returns 0 for non-coding transcripts.
+        """
+        return sum(len(cds) for cds in self.cdss)
+
     def __getstate__(self) -> bytes:
         genome = self.annotation_genome
         return pickle.dumps([genome, genome.transcripts.index_of(self)])

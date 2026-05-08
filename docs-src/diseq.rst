@@ -51,15 +51,15 @@ A DIS has two aspects:
 The following examples illustrate how the coordinate space and segment interact,
 using both diagrams and code.
 
-Consider a transcript on the + strand with the following genomic layout:
-::
+Consider a transcript on the + strand with the following genomic layout::
+
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
     DNA Sequence:       |  A   T   G   C   C   G   C   A   T   G   C   C   G   C  |
                         | |<------->| |<------->| |<--->| |<----------->| |<--->| |
                         5'   Exon1      Intron1    Exon2      Intron2      Exon3  3'
 
-Extracting only the exons yields the following disjoint intervals:
-::
+Extracting only the exons yields the following disjoint intervals::
+
     Genomic Coordinates:  153 154 155 159 160 165 166 167
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         | |<------->| |<--->| |<--->| |
@@ -74,15 +74,15 @@ These exon intervals can be represented as :py:class:`~genome_kit.Interval` obje
     >>> exon3 = Interval("chr1", "+", 165, 167, "hg38")
 
 To define a segment spanning the full exonic sequence (from the start of Exon1 to
-the end of Exon3), the exon intervals are first converted into a DIS coordinate space
-::
+the end of Exon3), the exon intervals are first converted into a DIS coordinate space::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         | |<------->| |<--->| |<--->| |
                         5'   Exon1     Exon2   Exon3  3'
 
-The default segment spans the entire coordinate space
-::
+The default segment spans the entire coordinate space::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          A   T   G   C   A   G   C
                            |<--------------------->|
@@ -111,15 +111,15 @@ and an end index of 7::
 A DIS can also represent a segment on the strand opposite the coordinate space.
 This is useful for modeling the complementary sequence or a binding partner.
 
-Starting from the coordinate space defined above
-::
+Starting from the coordinate space defined above::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  A   T   G   C   A   G   C  |
                         |  |<----->|   |<->|   |<->|  |
                         5'   Exon1     Exon2   Exon3  3'
 
-The opposite strand shares the same DIS coordinate indices
-::
+The opposite strand shares the same DIS coordinate indices::
+
                         5'      Positive strand          3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
     DNA Sequence (+):   |  A   T   G   C   A   G   C     |
@@ -131,8 +131,8 @@ The opposite strand shares the same DIS coordinate indices
 The DIS coordinate indices are identical on both strands. To obtain the complement
 of a given segment, the same start and end indices apply; only the
 ``on_coordinate_strand`` flag changes. The following shows the full-length segment
-on the opposite strand
-::
+on the opposite strand::
+
                         5'      Coordinate Strand        3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
     DNA Sequence (+):   |  A   T   G   C   A   G   C     |
@@ -171,23 +171,24 @@ segments, since the start and end indices alone do not encode strand information
         >>> dis = DisjointIntervalSequence.from_intervals([iv])
         >>> assert dis.end5.start < dis.end3.start
 
-Consider a transcript on the negative strand:
-::
+Consider a transcript on the negative strand::
+
                         3'  Exon3      Intron2    Exon2      Intron1      Exon1   5'
                         | |<------->| |<------->| |<--->| |<----------->| |<--->| |
     DNA Sequence (-):   |  G   T   C   A   G   T   C   A   G   T   C   A   G   T  |
     Genomic Coordinates:  153 154 155 156 157 158 159 160 161 162 163 164 165 166 167
                                             Negative Strand
-Extracting only the exons:
-::
+
+Extracting only the exons::
+
                         3'   Exon3     Exon2   Exon1  5'
                         | |<------->| |<--->| |<--->| |
     DNA Sequence (-):   |  G   T   C   C   A   G   T  |
     Genomic Coordinates:  153 154 155 159 160 165 166 167
                                     Negative Strand
 
-Converting these exons into a DIS coordinate space:
-::
+Converting these exons into a DIS coordinate space::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:       |  T   G   A   C   C   T   G  |
                         |  |<->|   |<->|   |<----->|  |
@@ -210,8 +211,8 @@ largest index to the 3' end::
     >>> dis_neg.coordinate_length
     7
 
-A full-length segment on the coordinate strand
-::
+A full-length segment on the coordinate strand::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence:          T   G   A   C   C   T   G
                            |<--------------------->|
@@ -231,8 +232,8 @@ objects, strand is expressed only as "same strand" or "opposite strand"::
     >>> dis_neg.on_coordinate_strand
     True
 
-The same coordinate space with an opposite-strand segment
-::
+The same coordinate space with an opposite-strand segment::
+
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (-):      T   G   A   C   C   T   G
     -----------------------------------------------------
@@ -408,6 +409,7 @@ Strand Methods
 A DIS segment can sit on either 'virtual' strand independently of the coordinate
 intervals. The ``on_coordinate_strand`` property indicates whether the
 segment is on the same strand as the coordinate intervals::
+
     On Coordinate Strand: True
     Start Index:     1
     End Index:       6
@@ -418,6 +420,8 @@ segment is on the same strand as the coordinate intervals::
     DNA Sequence (-):      T   A   G   G   C   T   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
+
+::
 
     >>> dis.on_coordinate_strand
     True

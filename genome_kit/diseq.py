@@ -374,11 +374,12 @@ class DisjointIntervalSequence:
         Extrapolation is linear from the nearest interval boundary and may
         yield negative values or values exceeding the chromosome length.
 
-        Returns a 2-element list ``[iv_upstream.end, iv_downstream.start]`` sorted
+        Returns a 2-element list ``[iv_upstream_coord, iv_downstream_coord]`` sorted
         5' -> 3' when ``coord`` falls exactly on an internal boundary between two
-        adjacent coord intervals — where ``iv_upstream`` is the upstream-most interval
-        and ``iv_downstream`` is the downstream-most interval (regardless of
-        strand). Touching intervals produce two equal values.
+        adjacent coord intervals — where ``iv_upstream_coord`` is the upstream-most
+        coordinate boundary, and ``iv_downstream_coord`` is the downstream-most
+        coordinate boundary (regardless of strand). Touching intervals produce
+        two equal values.
 
         Parameters
         ----------
@@ -865,7 +866,7 @@ class DisjointIntervalSequence:
         Raises
         ------
         ValueError
-            If ``other`` is not on the same chromosome and reference genome.
+            If ``other`` is not on the same chromosome, reference genome, and strand.
         """
         if other.chromosome != self.chromosome:
             raise ValueError(

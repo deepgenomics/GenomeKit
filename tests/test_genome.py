@@ -200,6 +200,25 @@ class TestGenome(unittest.TestCase):
         self.assertEqual(variant.reference_genome, genome.reference_genome)
         self.assertEqual(variant, Variant.from_string(variant_string, genome))
 
+    def test_dna_with_interval(self):
+        genome = MiniGenome("hg19")
+        interval = Interval("chr1", "+", 100, 130, genome.refg)
+        seq = genome.dna(interval)
+        self.assertIsInstance(seq, str)
+        self.assertEqual(len(seq), 30)
+
+    def test_dna_with_dis(self):
+        from genome_kit.diseq import DisjointIntervalSequence
+
+        genome = MiniGenome("hg19")
+        ivs = [
+            Interval("chr1", "+", 100, 200, genome.refg),
+            Interval("chr1", "+", 300, 400, genome.refg),
+        ]
+        dis = DisjointIntervalSequence(ivs, start=20, end=120)
+        self.assertEqual(genome.dna(dis), dis.dna())
+        self.assertEqual(len(genome.dna(dis)), dis.length)
+
     def test_variant_dna(self):
         genome = MiniGenome("hg19")
 

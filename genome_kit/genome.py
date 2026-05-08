@@ -131,8 +131,8 @@ class Genome(_cxx.Genome):
         """
         return Variant.from_string(variant_string, self)
 
-    @mock
-    def dna(self, interval, allow_outside_chromosome=True):  # pragma: no cover
+    @property
+    def dna(self):
         """Extract DNA from a reference genome.
 
         If `interval` is on the negative strand, the reverse complement sequence is returned.
@@ -140,8 +140,10 @@ class Genome(_cxx.Genome):
 
         Parameters
         ----------
-        interval : :py:class:`~genome_kit.Interval`
-            The query interval.
+        interval : :py:class:`~genome_kit.Interval` | :py:class:`~genome_kit.DisjointIntervalSequence`
+            The query interval. If a :py:class:`~genome_kit.DisjointIntervalSequence` is passed,
+            its :py:meth:`~genome_kit.DisjointIntervalSequence.dna` method is called with no
+            arguments and ``allow_outside_chromosome`` is ignored.
         allow_outside_chromosome : :py:class:`bool`
             If False, does not allow the interval to be outside the range of the chromosome.
             Attempting to pass an interval outside the chromosome range will raise an :py:exc:`IndexError`.
@@ -152,7 +154,15 @@ class Genome(_cxx.Genome):
         :py:class:`str`
             The DNA sequence.
         """
-        return mock_result(str)
+        from .diseq import DisjointIntervalSequence
+        cxx_dna = _cxx.Genome.dna.__get__(self, type(self))
+
+        def _dna(interval, allow_outside_chromosome=True):
+            if isinstance(interval, DisjointIntervalSequence):
+                return interval.dna()
+            return cxx_dna(interval, allow_outside_chromosome)
+
+        return _dna
 
     def variant_dna(self, interval, variants, allow_outside_chromosome=True):
         """Extract DNA from a genome with specific variants applied to it.

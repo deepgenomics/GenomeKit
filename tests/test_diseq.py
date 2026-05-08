@@ -1079,7 +1079,7 @@ class TestExpandCoord(unittest.TestCase):
         )
 
     def test_expand_coord_preserves_metadata(self):
-        dis = _dis(start=30, end=150, coord_name="c", interval_name="i")
+        dis = _dis(start=30, end=150, coord_name="c", segment_name="i")
         expanded = dis.expand_coord(5, 10)
         self.assertEqual(expanded.coord_name, "c")
         self.assertEqual(expanded.name, "i")
@@ -1087,7 +1087,7 @@ class TestExpandCoord(unittest.TestCase):
 
     def test_expand_coord_preserves_metadata_opposite_strand(self):
         dis = _dis(
-            start=30, end=150, coord_name="c", interval_name="i",
+            start=30, end=150, coord_name="c", segment_name="i",
             on_coordinate_strand=False,
         )
         expanded = dis.expand_coord(5, 10)
@@ -1927,10 +1927,10 @@ class TestLiftInterval(unittest.TestCase):
         with self.assertRaises(ValueError):
             dis.lift_interval(Interval("chr2", "+", 120, 160, REFG))
 
-    def test_coord_name_preserved_interval_name_not(self):
+    def test_coord_name_preserved_segment_name_not(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(
-            ivs, start=0, end=200, coord_name="cs", interval_name="src",
+            ivs, start=0, end=200, coord_name="cs", segment_name="src",
         )
         lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, REFG))
         self.assertIsNotNone(lifted)
@@ -2060,9 +2060,9 @@ class TestIntersect(unittest.TestCase):
         with self.assertRaises(ValueError):
             a.intersect(b)
 
-    def test_interval_name_not_preserved(self):
-        a = _dis(start=20, end=80, interval_name="a")
-        b = _dis(start=50, end=120, interval_name="b")
+    def test_segment_name_not_preserved(self):
+        a = _dis(start=20, end=80, segment_name="a")
+        b = _dis(start=50, end=120, segment_name="b")
         result = a.intersect(b)
         self.assertIsNotNone(result)
         self.assertIsNone(result.name)

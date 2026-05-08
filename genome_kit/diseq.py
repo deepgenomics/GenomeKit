@@ -561,7 +561,7 @@ class DisjointIntervalSequence:
         return DisjointIntervalSequence(
             coord_ivs,
             coord_name=self._coord_metadata.name,
-            interval_name=self._interval_metadata.name,
+            segment_name=self._segment_metadata.name,
             on_coordinate_strand=self.on_coordinate_strand,
             start=self._start,
             end=self._end + upstream + dnstream,

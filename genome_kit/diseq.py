@@ -279,16 +279,6 @@ class DisjointIntervalSequence:
         return "+"
 
     @property
-    def coordinate_end5_index(self) -> int:
-        """5' index of the coordinate space."""
-        return 0
-
-    @property
-    def coordinate_end3_index(self) -> int:
-        """3' index of the coordinate space."""
-        return self.coordinate_length
-
-    @property
     def end5_index(self) -> int:
         """5' index of the segment."""
         if self._upstream_index_step() == -1:
@@ -341,12 +331,12 @@ class DisjointIntervalSequence:
     @property
     def coord_end5(self) -> "DisjointIntervalSequence":
         """0-length DIS at the coordinate space's 5' end."""
-        return self._at_index(self.coordinate_end5_index, on_coordinate_strand=True)
+        return self._at_index(0, on_coordinate_strand=True)
 
     @property
     def coord_end3(self) -> "DisjointIntervalSequence":
         """0-length DIS at the coordinate space's 3' end."""
-        return self._at_index(self.coordinate_end3_index, on_coordinate_strand=True)
+        return self._at_index(self.coordinate_length, on_coordinate_strand=True)
 
     @property
     def coordinate_intervals(self) -> tuple[Interval, ...]:

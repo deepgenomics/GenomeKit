@@ -755,7 +755,12 @@ chromosome length — there is no clipping to chromosome boundaries.
 
 A segment on the opposite strand lowers to genomic intervals on the
 opposite strand, listed in *segment* 5'→3' order (which is the reverse of
-coord 5'→3' order).
+coord 5'→3' order)::
+
+    >>> dis_opp = dis.as_opposite_strand()
+    >>> dis_opp.lower()
+    [Interval("chr1", "-", 300, 350, "hg38"),
+     Interval("chr1", "-", 150, 200, "hg38")]
 
 lift_interval
 ~~~~~~~~~~~~~
@@ -802,10 +807,11 @@ ordered 5'→3' along the segment, not along the genome::
 
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
     >>> dis.dna()
-    'ATGGCC...'        # full spliced sequence, 5'→3'
+    'ACGTGGTTTCA'        # full spliced sequence, 5'→3'
 
     >>> opp = dis.as_opposite_strand()
     >>> opp.dna()       # reverse complement, 5'→3' along the opposite strand
+    'TGAAACCACGT'
 
 When the segment extends past the coord space — e.g. after ``shift`` or
 ``expand`` pushed the indices outside ``[0, coordinate_length)`` — those

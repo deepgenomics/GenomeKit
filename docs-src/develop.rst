@@ -31,10 +31,9 @@ Build the package in development mode::
 
     pip install -e .
 
-This builds the C++ extension and copies it into
-your source tree (``genome_kit/_cxx.so``).
-It also ensures that ``import genome_kit`` works from any directory
-by linking your source tree from python's ``site-packages``.
+This builds the C++ extension with CMake through scikit-build-core and installs
+an editable wheel. Python files are loaded from your source tree, while the
+compiled extension is loaded from the editable build output.
 
 .. note:: Windows Prerequisites
 
@@ -63,7 +62,8 @@ In the CMake settings, set the following environment variables::
 Making changes
 --------------
 
-If the C/C++ code changed, you must re-run the ``develop`` command::
+If the C/C++ code or build configuration changed, you must re-run the editable
+install command::
 
     pip install -e .
 

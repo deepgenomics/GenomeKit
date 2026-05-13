@@ -21,7 +21,7 @@ runs:
           curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         fi
 
-        export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
+        export GK_VERSION=$(grep -E "^version = " pyproject.toml | head -1 | awk -F'"' '{print $2}')
 
         export OS_TYPE=$(uname)
         if [[ "$OS_TYPE" == "Darwin" ]]; then
@@ -37,6 +37,60 @@ runs:
         $SED_CMD "/skip: true /d" conda-recipe/meta.yaml
         # set the version to the local release-please version (for docs and docker publish)
         $SED_CMD "s/{% set version = \"[^\"]*\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+
+        python3 - <<'PY'
+        from pathlib import Path
+
+        meta = Path("conda-recipe/meta.yaml")
+        text = meta.read_text()
+        pip_install = "{{ PYTHON }} -m pip install --no-deps --ignore-installed ."
+        pip_install_no_isolation = "{{ PYTHON }} -m pip install --no-deps --ignore-installed --no-build-isolation ."
+        if pip_install in text:
+            text = text.replace(pip_install, pip_install_no_isolation)
+        elif pip_install_no_isolation not in text:
+            raise SystemExit("Unable to find GenomeKit pip install command in conda-recipe/meta.yaml")
+
+        def add_requirement(text, section, requirement):
+            lines = text.splitlines()
+            section_start = None
+            section_end = None
+
+            in_requirements = False
+            for i, line in enumerate(lines):
+                if line == "requirements:":
+                    in_requirements = True
+                    continue
+                if not in_requirements:
+                    continue
+                if line and not line.startswith(" "):
+                    break
+                if line == f"  {section}:":
+                    section_start = i
+                    for j in range(i + 1, len(lines)):
+                        next_line = lines[j]
+                        if next_line.startswith("  ") and not next_line.startswith("    "):
+                            section_end = j
+                            break
+                        if next_line and not next_line.startswith(" "):
+                            section_end = j
+                            break
+                    else:
+                        section_end = len(lines)
+                    break
+
+            if section_start is None or section_end is None:
+                raise SystemExit(f"Unable to find requirements.{section} in conda-recipe/meta.yaml")
+            if any(line.strip() == f"- {requirement}" for line in lines[section_start + 1:section_end]):
+                return text
+
+            lines.insert(section_end, f"    - {requirement}")
+            return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+
+        text = add_requirement(text, "build", "cmake")
+        text = add_requirement(text, "build", "ninja")
+        text = add_requirement(text, "host", "scikit-build-core")
+        meta.write_text(text)
+        PY
 
         head -10 conda-recipe/meta.yaml
         set +x

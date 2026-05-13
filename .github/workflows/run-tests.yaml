@@ -7,8 +7,8 @@ on:
     - ".github/workflows/**"
     - "conda-recipe/**"
     - "genome_kit/**"
-    - "setup.py"
-    - "setup/**"
+    - "CMakeLists.txt"
+    - "pyproject.toml"
     - "src/**"
     - "tests/**"
 
@@ -84,7 +84,7 @@ jobs:
         id: restore_gk_pkg
         uses: actions/cache/restore@v4
         with:
-          key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+          key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'CMakeLists.txt', 'pyproject.toml', 'src/**', 'genome_kit/**', 'tests/**') }}
           path: |
             ~/conda-bld
           fail-on-cache-miss: true

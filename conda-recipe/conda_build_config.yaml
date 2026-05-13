@@ -12,5 +12,8 @@ python:
 - '3.12'
 - '3.13'
 
+# Override the default conda-forge numpy pin (which may resolve to 1.26.*
+# depending on the conda-forge-pinning version installed in the build env).
+# numpy 1.26 has no Python 3.13 builds, so we pin to 2.x explicitly.
 numpy:
 - '2'

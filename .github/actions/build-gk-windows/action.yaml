@@ -1,0 +1,75 @@
+name: 'build gk (Windows)'
+description: 'Build GenomeKit conda package on Windows and save it under ~/conda-bld'
+runs:
+  using: "composite"
+  steps:
+    - name: get meta.yaml from conda-forge
+      uses: ./.github/actions/curl-meta-yaml-windows
+
+    - name: try to restore the mamba env
+      id: restore_mamba_cache
+      uses: actions/cache/restore@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
+        path: |
+          ~/micromamba
+          ~/.condarc
+
+    - name: try to restore the gk package tarballs
+      id: restore_gk_pkg
+      uses: actions/cache/restore@v4
+      with:
+        key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+        path: |
+          ~/conda-bld
+
+      # skip remaining steps (except configure-conda) on cache hit
+
+    - name: install mamba
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      uses: ./.github/actions/install-mamba-windows
+      with:
+        installer-url: https://micro.mamba.pm/api/micromamba/win-64/1.5.8
+
+    - name: create build env
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        set -euxo pipefail
+        if [ ! -d "$MAMBA_ROOT_PREFIX/envs/build" ]; then
+          micromamba create -yqn build -c conda-forge boa==0.17.0 mamba==1.5.8 conda=24.5
+        fi
+
+    - if: ${{ steps.restore_mamba_cache.outputs.cache-hit != 'true' }}
+      uses: ./.github/actions/configure-conda-windows
+      with:
+        env: build
+
+    - if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      name: build conda package
+      shell: bash
+      run: |
+        set -euxo pipefail
+        mkdir -p ~/conda-bld
+        micromamba run -n build conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+        micromamba run -n build conda build --croot ~/conda-bld purge
+        micromamba run -n build conda clean -it
+
+    - name: cache mamba env
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      id: save_mamba_cache
+      uses: actions/cache/save@v4
+      with:
+        key: mamba-env-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**') }}
+        path: |
+          ~/micromamba
+          ~/.condarc
+
+    - name: cache gk package tarballs
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      id: save_gk_pkg
+      uses: actions/cache/save@v4
+      with:
+        key: gk-tarballs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/run-tests.yaml', '.github/actions/**', 'conda-recipe/**', 'src/**', 'genome_kit/**', 'setup.py', 'setup/**', 'tests/**') }}
+        path: |
+          ~/conda-bld

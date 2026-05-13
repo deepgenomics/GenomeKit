@@ -1,7 +1,63 @@
 [build-system]
 requires = [
-    "setuptools>=61",
-    "wheel",
+    "scikit-build-core>=0.12",
     "numpy==2"
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "genomekit"
+version = "7.4.4"
+description = "GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations."
+readme = "README.md"
+requires-python = ">=3.9, <4"
+license = "Apache-2.0"
+license-files = [
+    "COPYRIGHT.txt",
+    "LICENSE",
+]
+authors = [
+    { name = "Deep Genomics", email = "info@deepgenomics.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "appdirs",
+    "numpy",
+    "google-cloud-storage",
+    "boto3",
+    "tqdm",
+    "importlib-metadata",
+    "typing-extensions",
+]
+
+[project.optional-dependencies]
+df = [
+    "polars",
+    "polars-runtime-compat; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+]
+
+[project.urls]
+Documentation = "https://deepgenomics.github.io/GenomeKit"
+Repository = "https://github.com/deepgenomics/GenomeKit"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.build-type = "Release"
+cmake.version = ">=3.21"
+wheel.packages = ["genome_kit"]
+sdist.include = [
+    "CMakeLists.txt",
+    "COPYRIGHT.txt",
+    "LICENSE",
+    "README.md",
+    "genome_kit/**",
+    "src/*.cpp",
+    "src/*.h",
+    "tests/**",
+]

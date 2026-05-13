@@ -21,7 +21,7 @@ runs:
           curl -s -L -o conda-recipe/meta.yaml https://raw.githubusercontent.com/conda-forge/genomekit-feedstock/main/recipe/meta.yaml
         fi
 
-        export GK_VERSION=$(grep "version = " setup.py | awk -F'"' '{print $2}')
+        export GK_VERSION=$(grep -E "^version = " pyproject.toml | head -1 | awk -F'"' '{print $2}')
 
         export OS_TYPE=$(uname)
         if [[ "$OS_TYPE" == "Darwin" ]]; then
@@ -37,6 +37,27 @@ runs:
         $SED_CMD "/skip: true /d" conda-recipe/meta.yaml
         # set the version to the local release-please version (for docs and docker publish)
         $SED_CMD "s/{% set version = \"[^\"]*\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
+
+        python - <<'PY'
+        from pathlib import Path
+
+        meta = Path("conda-recipe/meta.yaml")
+        text = meta.read_text()
+        text = text.replace(
+            "{{ PYTHON }} -m pip install --no-deps --ignore-installed .",
+            "{{ PYTHON }} -m pip install --no-deps --ignore-installed --no-build-isolation .",
+        )
+        if "scikit-build-core" not in text:
+            text = text.replace(
+                "  build:\n    - {{ compiler('cxx') }}",
+                "  build:\n    - {{ compiler('cxx') }}\n    - cmake\n    - ninja",
+            )
+            text = text.replace(
+                "    - setuptools\n  run:",
+                "    - setuptools\n    - scikit-build-core\n  run:",
+            )
+        meta.write_text(text)
+        PY
 
         head -10 conda-recipe/meta.yaml
         set +x

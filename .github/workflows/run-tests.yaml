@@ -38,7 +38,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
         platform: ["linux-64", "osx-arm64", "osx-64"]
         extras: ["none", "df"]
         rosetta: ["false"]
@@ -49,6 +49,8 @@ jobs:
             pyver-short: "311"
           - python-version: "3.12"
             pyver-short: "312"
+          - python-version: "3.13"
+            pyver-short: "313"
           - platform: "osx-arm64"
             runs-on: "macos-latest"
           - platform: "osx-64"

@@ -99,7 +99,7 @@ if(DEFINED ENV{IN_CLION})
             OUTPUT_VARIABLE PYTHON_VERSION
     )
 
-    # Don't really need this lib (handled by setup.py), but required for CLion's search etc.
+    # Don't really need this lib for packaging, but required for CLion's search etc.
     # NOTE: Set env vars IN_CLION=1;CONDA_PREFIX=$HOME/conda/envs/genomekit_dev in CLion CMake preferences.
     # include numpy, Python.h
     include_directories(

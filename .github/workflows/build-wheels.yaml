@@ -24,6 +24,7 @@ jobs:
         id: restore_linux_wheels
         uses: actions/cache/restore@v4
         with:
+          # setup.py/setup/ were removed; wheel build config now lives in pyproject.toml and CMakeLists.txt.
           key: linux-wheels-${{ matrix.arch }}-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'CMakeLists.txt', 'pyproject.toml', 'src/**', 'genome_kit/**') }}
           path: wheelhouse/*.whl
 

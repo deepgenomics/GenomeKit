@@ -38,7 +38,7 @@ runs:
         # set the version to the local release-please version (for docs and docker publish)
         $SED_CMD "s/{% set version = \"[^\"]*\" %}/{% set version = \"${GK_VERSION}\" %}/" conda-recipe/meta.yaml
 
-        python - <<'PY'
+        python3 - <<'PY'
         from pathlib import Path
 
         meta = Path("conda-recipe/meta.yaml")

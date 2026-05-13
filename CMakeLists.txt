@@ -70,13 +70,19 @@ else()
         endif()
         if(DEFINED ENV{CONDA_BUILD_SYSROOT})
             set(GENOMEKIT_MACOS_SYSROOT "$ENV{CONDA_BUILD_SYSROOT}")
+        elseif(CMAKE_OSX_SYSROOT)
+            set(GENOMEKIT_MACOS_SYSROOT "${CMAKE_OSX_SYSROOT}")
         else()
-            set(GENOMEKIT_MACOS_SYSROOT "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
+            execute_process(
+                COMMAND xcrun --sdk macosx --show-sdk-path
+                OUTPUT_VARIABLE GENOMEKIT_MACOS_SYSROOT
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
         endif()
         target_compile_definitions(_cxx PRIVATE _LIBCPP_DISABLE_AVAILABILITY)
         target_compile_options(_cxx PRIVATE
             "-mmacosx-version-min=${GENOMEKIT_MACOSX_DEPLOYMENT_TARGET}"
-            "-isysroot${GENOMEKIT_MACOS_SYSROOT}"
             -stdlib=libc++
             -Wshorten-64-to-32
             -Wsign-compare
@@ -86,8 +92,11 @@ else()
         )
         target_link_options(_cxx PRIVATE
             "-mmacosx-version-min=${GENOMEKIT_MACOSX_DEPLOYMENT_TARGET}"
-            "-isysroot${GENOMEKIT_MACOS_SYSROOT}"
         )
+        if(GENOMEKIT_MACOS_SYSROOT)
+            target_compile_options(_cxx PRIVATE "-isysroot${GENOMEKIT_MACOS_SYSROOT}")
+            target_link_options(_cxx PRIVATE "-isysroot${GENOMEKIT_MACOS_SYSROOT}")
+        endif()
     endif()
 endif()
 

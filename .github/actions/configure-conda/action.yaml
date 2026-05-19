@@ -9,7 +9,7 @@ runs:
   steps:
     - shell: bash
       run: |
-        set -euo pipefail
+        set -eo pipefail
         # Determine condarc location and how to run conda commands
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           CONDARC="$USERPROFILE/.condarc"

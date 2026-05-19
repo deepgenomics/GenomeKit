@@ -40,7 +40,7 @@ runs:
       if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        set -eu
+        set -e
         if [[ "$RUNNER_OS" != "Windows" ]]; then
           source ${HOME}/.bash_profile 2>/dev/null || true
         fi
@@ -93,7 +93,7 @@ runs:
       name: build conda package
       shell: bash
       run: |
-        set -eu
+        set -e
         if [[ "$RUNNER_OS" != "Windows" ]]; then
           source ${HOME}/.bash_profile 2>/dev/null || true
         fi

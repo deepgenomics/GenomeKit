@@ -16,9 +16,14 @@ runs:
           if [ ! -e "$MAMBA_EXE" ]; then
             echo "Downloading ${{ inputs.installer-url }}"
             ARCHIVE="$RUNNER_TEMP/micromamba.tar.bz2"
+            EXTRACT_DIR="$RUNNER_TEMP/micromamba-extract"
             curl --retry 5 -Lfs -o "$ARCHIVE" "${{ inputs.installer-url }}"
-            mkdir -p "$MAMBA_DIR"
-            tar -xvjf "$ARCHIVE" -C "$MAMBA_DIR" --strip-components=2 Library/bin/micromamba.exe
+            mkdir -p "$EXTRACT_DIR" "$MAMBA_DIR"
+            # Git Bash tar can't handle Windows drive-letter paths (the colon
+            # is interpreted as a remote host separator), so use 7z instead.
+            7z x "$ARCHIVE" -o"$EXTRACT_DIR" -y > /dev/null
+            7z x "$EXTRACT_DIR"/*.tar -o"$EXTRACT_DIR" -y > /dev/null
+            cp "$EXTRACT_DIR/Library/bin/micromamba.exe" "$MAMBA_EXE"
             [ -e "$MAMBA_EXE" ] || { echo "micromamba.exe not found after extraction"; exit 1; }
             echo "micromamba installed at $MAMBA_EXE"
           fi

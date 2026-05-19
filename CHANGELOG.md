@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.4.5](https://github.com/deepgenomics/GenomeKit/compare/v7.4.4...v7.4.5) (2026-05-19)
+
+
+### Miscellaneous Chores
+
+* support py313 ([#233](https://github.com/deepgenomics/GenomeKit/issues/233)) ([7c49e9c](https://github.com/deepgenomics/GenomeKit/commit/7c49e9c7cf9004a1b4d0bd4a99625a4132ab5e82)), closes [#102](https://github.com/deepgenomics/GenomeKit/issues/102)
+
 ## [7.4.4](https://github.com/deepgenomics/GenomeKit/compare/v7.4.3...v7.4.4) (2026-05-04)
 
 

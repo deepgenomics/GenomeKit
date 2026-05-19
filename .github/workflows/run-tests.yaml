@@ -40,7 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/build-gk-windows
+      - uses: ./.github/actions/build-gk
+        with:
+          platform: win-64
 
   test:
     needs: build
@@ -164,7 +166,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: get meta.yaml from conda-forge for cache key calculation
-        uses: ./.github/actions/curl-meta-yaml-windows
+        uses: ./.github/actions/curl-meta-yaml
 
       - name: restore mamba env
         id: restore_mamba_cache
@@ -174,6 +176,7 @@ jobs:
           path: |
             ~/micromamba
             ~/.condarc
+            ~/bin/micromamba
           fail-on-cache-miss: true
 
       - name: restore the gk package tarballs
@@ -186,7 +189,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: install mamba
-        uses: ./.github/actions/install-mamba-windows
+        uses: ./.github/actions/install-mamba
         with:
           installer-url: https://micro.mamba.pm/api/micromamba/win-64/1.5.7
 

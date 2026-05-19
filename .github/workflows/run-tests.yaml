@@ -149,7 +149,7 @@ jobs:
     runs-on: windows-2022
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
         extras: ["none", "df"]
         include:
           - python-version: "3.10"
@@ -158,6 +158,8 @@ jobs:
             pyver-short: "311"
           - python-version: "3.12"
             pyver-short: "312"
+          - python-version: "3.13"
+            pyver-short: "313"
     steps:
       - uses: actions/checkout@v4
 

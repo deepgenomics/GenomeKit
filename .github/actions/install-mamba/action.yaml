@@ -9,14 +9,16 @@ runs:
   steps:
     - shell: bash
       run: |
-        set -euxo pipefail
+        set -eux
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           MAMBA_DIR="$USERPROFILE/micromamba"
           MAMBA_EXE="$MAMBA_DIR/micromamba.exe"
           if [ ! -e "$MAMBA_EXE" ]; then
             echo "Downloading ${{ inputs.installer-url }}"
+            ARCHIVE="$RUNNER_TEMP/micromamba.tar.bz2"
+            curl --retry 5 -Lfs -o "$ARCHIVE" "${{ inputs.installer-url }}"
             mkdir -p "$MAMBA_DIR"
-            curl --retry 5 -Lfs "${{ inputs.installer-url }}" | tar -xvj -C "$MAMBA_DIR" --strip-components=2 Library/bin/micromamba.exe
+            tar -xvjf "$ARCHIVE" -C "$MAMBA_DIR" --strip-components=2 Library/bin/micromamba.exe
             [ -e "$MAMBA_EXE" ] || { echo "micromamba.exe not found after extraction"; exit 1; }
             echo "micromamba installed at $MAMBA_EXE"
           fi

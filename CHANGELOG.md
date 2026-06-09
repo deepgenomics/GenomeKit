@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.5.0](https://github.com/deepgenomics/GenomeKit/compare/v7.4.5...v7.5.0) (2026-06-09)
+
+
+### Features
+
+* expose chrom aliases ([#237](https://github.com/deepgenomics/GenomeKit/issues/237)) ([8e4d1c1](https://github.com/deepgenomics/GenomeKit/commit/8e4d1c1aa929f16a946a1da727c6e718a3778ab4))
+
 ## [7.4.5](https://github.com/deepgenomics/GenomeKit/compare/v7.4.4...v7.4.5) (2026-05-19)
 
 

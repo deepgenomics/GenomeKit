@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import os
 from functools import partial
+from typing import Optional, Union
 from weakref import WeakValueDictionary
 
 from . import _cxx
+from . import gk_data
 from . import genome_annotation as _ga
 from . import interval as _interval
 from ._apply_variants import apply_variants, check_variants_list
@@ -93,6 +95,8 @@ class Genome(_cxx.Genome):
 
     def __init__(self, config):  # pragma: no cover
         self._chromosome_sizes = None
+        self._chromosome_aliases = None
+        self._chromosome_alias_schemes = None
         self._appris_indices = None
         self._appris_transcripts = None
         self._appris_transcripts_by_gene = None
@@ -411,6 +415,47 @@ class Genome(_cxx.Genome):
             error_message = "No such chromosome: %s. \nSupported values: %s" % (chromosome, self._chrom_sizes().keys())
             raise ValueError(error_message)
 
+    def chrom_aliases(self, scheme: Optional[str]=None) -> Union[dict[str, str], dict[str, dict[str, str]]]:
+        """Chromosome name aliases for this genome, as published in its ``chromAlias.txt`` file.
+
+        This is useful for assemblies whose canonical chromosome names (returned by
+        :py:attr:`chromosomes`) are not the standard ``chr1``, ``chr2``, ... names.
+        For example, to find the canonical name for the standard chromosome ``chr1`` on ``macFas6``::
+
+            >>> genome.chrom_aliases("ucsc")["chr1"]
+            'CM021939.1'
+
+        If `scheme` is given, returns a dict mapping each name in that scheme to the
+        genome's canonical chromosome name.
+        If `scheme` is omitted, returns a dict mapping each canonical chromosome name to a
+        dict of ``{scheme: alias}`` for every scheme in the file.
+
+        Parameters
+        ----------
+        scheme : A naming scheme, as named in the header of the ``chromAlias.txt`` file
+            (e.g. ``"ucsc"``, ``"ensembl"``, ``"genbank"``, ``"refseq"``,
+            ``"assembly"``, ``"ncbi"``). Matched case-insensitively. If omitted, the
+            full alias table is returned.
+
+        Raises
+        ------
+        :py:class:`ValueError`
+            If `scheme` is not one of the schemes named in the file's header.
+        :py:class:`~genome_kit.data_manager.GKDataFileNotFoundError`
+            If no ``chromAlias.txt`` file is available for this genome.
+        """
+        table = self._chrom_aliases()
+        if scheme is None:
+            return table
+
+        scheme = scheme.lower()
+        if scheme not in self._chromosome_alias_schemes:
+            raise ValueError(f"No such alias scheme: {scheme}. \nSupported values: {self._chromosome_alias_schemes}")
+
+        return {aliases[scheme]: canonical
+                for canonical, aliases in table.items()
+                if aliases.get(scheme)}
+
     @mock
     @property
     def config(self):
@@ -452,8 +497,6 @@ class Genome(_cxx.Genome):
         return self._chromosome_sizes
 
     def _chrom_sizes_filename(self):
-        from . import gk_data
-
         # If this Genome object has a custom data_dir resource, we must respect it.
         datafile_path = os.path.join(self.data_dir, f"{self.refg}.chrom.sizes")
 
@@ -461,11 +504,36 @@ class Genome(_cxx.Genome):
         # on the local file system, pulling from store if necessary.
         return gk_data.resolve_datafile_path(datafile_path)
 
+    def _chrom_aliases(self):
+        if self._chromosome_aliases is not None:
+            return self._chromosome_aliases
+
+        schemes = []
+        table = {}
+        with open(gk_data.get_file(f"{self.refg}.chromAlias.txt")) as file:
+            for line in file:
+                line = line.rstrip("\n")
+                if not line:
+                    continue
+                if line.startswith("#"):
+                    # header format: "# ucsc assembly genbank refseq".
+                    schemes = [s.strip().lower() for s in line.lstrip("#").strip().split("\t")]
+                    continue
+
+                fields = line.split("\t")
+                canonical = fields[0]
+                table[canonical] = {schemes[i]: value
+                                    for i, value in enumerate(fields)
+                                    if i < len(schemes) and schemes[i]}
+
+        self._chromosome_aliases = table
+        self._chromosome_alias_schemes = schemes
+        return self._chromosome_aliases
+
     def _load_appris(self):
         """Download and unpickle the APPRIS data file corresponding to this genome's annotations."""
         import pickle
 
-        from . import gk_data
         from ._gk_data_config import get_appris_filename
 
         # Figure out which annotation version we should match with APPRIS
@@ -583,7 +651,6 @@ class Genome(_cxx.Genome):
         """Download and unpickle the MANE data file corresponding to this genome's annotations."""
         import pickle
 
-        from . import gk_data
         from ._gk_data_config import get_mane_filename
 
         datafile_name = get_mane_filename(self.config)

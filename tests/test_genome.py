@@ -5,6 +5,7 @@ import gc
 import unittest
 
 from genome_kit import Genome, Interval, ManeNotAvailableError, Variant
+from genome_kit.data_manager import GKDataFileNotFoundError
 
 from . import MiniGenome
 
@@ -178,6 +179,54 @@ class TestGenome(unittest.TestCase):
 
             for value in genome._chrom_sizes().values():
                 self.assertIsInstance(value, int)
+
+    def test_chrom_aliases(self):
+        genome = MiniGenome("hg19")
+
+        # Full table: keyed by canonical chromosome name, each value a {scheme: alias} dict.
+        table = genome.chrom_aliases()
+        self.assertIsInstance(table, dict)
+        self.assertIn("chr1", table)
+        self.assertEqual(table["chr1"], {
+            "ucsc": "chr1",
+            "assembly": "1",
+            "genbank": "CM000663.1",
+            "refseq": "NC_000001.10",
+        })
+
+        # Scheme lookup: maps a scheme's names to the genome's canonical names.
+        self.assertEqual(genome.chrom_aliases("genbank")["CM000663.1"], "chr1")
+        self.assertEqual(genome.chrom_aliases("refseq")["NC_000001.10"], "chr1")
+
+        # The scheme matching the canonical names is an identity mapping.
+        self.assertEqual(genome.chrom_aliases("ucsc")["chr1"], "chr1")
+
+        # Scheme names are matched case-insensitively.
+        self.assertEqual(genome.chrom_aliases("GenBank")["CM000663.1"], "chr1")
+
+        # Unknown schemes raise.
+        with self.assertRaises(ValueError):
+            genome.chrom_aliases("nonexistent")
+
+    def test_chrom_aliases_noncanonical_standard_names(self):
+        # emulate assemblies like macFas6 that use e.g. GenBank accessions as their canonical
+        # chromosome names; the standard "chr1" name lives in the "ucsc" scheme.
+        genome = MiniGenome("hg19")
+        genome._chromosome_alias_schemes = ["genbank", "assembly", "ensembl", "ncbi", "ucsc"]
+        genome._chromosome_aliases = {
+            "CM021939.1": {"genbank": "CM021939.1", "assembly": "1", "ensembl": "1", "ncbi": "1", "ucsc": "chr1"},
+            "CM021959.1": {"genbank": "CM021959.1", "assembly": "X", "ensembl": "X", "ncbi": "X", "ucsc": "chrX"},
+        }
+
+        ucsc = genome.chrom_aliases("ucsc")
+        self.assertEqual(ucsc["chr1"], "CM021939.1")
+        self.assertEqual(ucsc["chrX"], "CM021959.1")
+
+    def test_chrom_aliases_missing_file(self):
+        # test_genome has no chromAlias.txt file.
+        genome = MiniGenome("test_genome")
+        with self.assertRaises(GKDataFileNotFoundError):
+            genome.chrom_aliases()
 
     def test_interval(self):
         for refg in TEST_REFGS:

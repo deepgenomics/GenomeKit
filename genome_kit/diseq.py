@@ -130,7 +130,24 @@ class DisjointIntervalSequence:
                     f"Intervals must not overlap: [{cur_iv.start}, {cur_iv.end}) and [{next_iv.start}, {next_iv.end})"
                 )
 
-        self._coordinate_intervals: tuple[Interval, ...] = tuple(sorted_intervals)
+        # Merge adjacent/touching intervals (e.g. [10, 20) and [20, 30) -> [10, 30)).
+        # Touching is detected on genomic coordinates (cur_iv.end == next_iv.start),
+        # which holds regardless of strand since start < end for every Interval.
+        merged_intervals: list[Interval] = [sorted_intervals[0]]
+        for next_iv in sorted_intervals[1:]:
+            last_iv = merged_intervals[-1]
+            if last_iv.end == next_iv.start or next_iv.end == last_iv.start:
+                merged_intervals[-1] = Interval(
+                    iv0.chromosome,
+                    iv0.strand,
+                    min(last_iv.start, next_iv.start),
+                    max(last_iv.end, next_iv.end),
+                    iv0.reference_genome,
+                )
+            else:
+                merged_intervals.append(next_iv)
+
+        self._coordinate_intervals: tuple[Interval, ...] = tuple(merged_intervals)
 
         self._coord_metadata = _CoordinateMetadata(
             name=coord_name,
@@ -534,16 +551,24 @@ class DisjointIntervalSequence:
         refg = iv0.reference_genome
         if self.coord_strand == "+":
             if len(coord_ivs) == 1:
-                coord_ivs = [Interval(chrom, "+", iv0.start - upstream, iv0.end + dnstream, refg)]
+                coord_ivs = [
+                    Interval(chrom, "+", iv0.start - upstream, iv0.end + dnstream, refg)
+                ]
             else:
                 coord_ivs[0] = Interval(chrom, "+", iv0.start - upstream, iv0.end, refg)
-                coord_ivs[-1] = Interval(chrom, "+", ivn.start, ivn.end + dnstream, refg)
+                coord_ivs[-1] = Interval(
+                    chrom, "+", ivn.start, ivn.end + dnstream, refg
+                )
         else:
             if len(coord_ivs) == 1:
-                coord_ivs = [Interval(chrom, "-", iv0.start - dnstream, iv0.end + upstream, refg)]
+                coord_ivs = [
+                    Interval(chrom, "-", iv0.start - dnstream, iv0.end + upstream, refg)
+                ]
             else:
                 coord_ivs[0] = Interval(chrom, "-", iv0.start, iv0.end + upstream, refg)
-                coord_ivs[-1] = Interval(chrom, "-", ivn.start - dnstream, ivn.end, refg)
+                coord_ivs[-1] = Interval(
+                    chrom, "-", ivn.start - dnstream, ivn.end, refg
+                )
 
         # The interval's lower index stays at self._start in the new coord space due
         # to re-indexing of the coord space implicitly 'expanding' start upstream.
@@ -756,7 +781,9 @@ class DisjointIntervalSequence:
         last_interval_index = len(coord_ivs) - 1
 
         first_idx = 0
-        while first_idx < last_interval_index and start_iv.dnstream_of(coord_ivs[first_idx]):
+        while first_idx < last_interval_index and start_iv.dnstream_of(
+            coord_ivs[first_idx]
+        ):
             first_idx += 1
         last_idx = last_interval_index
         while last_idx > 0 and end_iv.upstream_of(coord_ivs[last_idx]):
@@ -839,9 +866,7 @@ class DisjointIntervalSequence:
             cumulative += len(iv)
         assert False, "Position not found in any interval"
 
-    def lift_interval(
-        self, other: Interval
-    ) -> "DisjointIntervalSequence | None":
+    def lift_interval(self, other: Interval) -> "DisjointIntervalSequence | None":
         """Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS's segment.
 
         The interval's genomic span is mapped into DIS coordinate-space indices

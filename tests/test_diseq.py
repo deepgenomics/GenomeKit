@@ -64,10 +64,66 @@ class TestInit(unittest.TestCase):
         with self.assertRaises(ValueError):
             DisjointIntervalSequence([anchored])
 
-    def test_adjacent_intervals_ok(self):
+    def test_adjacent_intervals_merged(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
         dis = DisjointIntervalSequence(ivs)
         self.assertEqual(dis.coordinate_length, 200)
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 300)])),
+        )
+
+    def test_adjacent_intervals_merged_negative_strand(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(dis.coordinate_length, 200)
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "-", 100, 300)])),
+        )
+
+    def test_adjacent_intervals_merged_out_of_order(self):
+        ivs = _make_intervals([("chr1", "+", 200, 300), ("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 300)])),
+        )
+
+    def test_chain_of_adjacent_intervals_merged(self):
+        ivs = _make_intervals(
+            [
+                ("chr1", "+", 100, 200),
+                ("chr1", "+", 200, 300),
+                ("chr1", "+", 300, 400),
+            ]
+        )
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 400)])),
+        )
+        self.assertEqual(dis.coordinate_length, 300)
+
+    def test_mixed_adjacent_and_gapped_intervals(self):
+        # 100-200 and 200-300 touch and merge; 400-500 stays separate.
+        ivs = _make_intervals(
+            [
+                ("chr1", "+", 100, 200),
+                ("chr1", "+", 200, 300),
+                ("chr1", "+", 400, 500),
+            ]
+        )
+        dis = DisjointIntervalSequence(ivs)
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 300), ("chr1", "+", 400, 500)])),
+        )
+        self.assertEqual(dis.coordinate_length, 300)
+
+    def test_non_adjacent_intervals_not_merged(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs)
         self.assertEqual(dis.coordinate_intervals, tuple(ivs))
 
     def test_sorts_out_of_order_positive(self):
@@ -159,7 +215,10 @@ class TestFromIntervals(unittest.TestCase):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
         dis = DisjointIntervalSequence.from_intervals(ivs)
         self.assertEqual(dis.coordinate_length, 200)
-        self.assertEqual(dis.coordinate_intervals, tuple(ivs))
+        self.assertEqual(
+            dis.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 300)])),
+        )
 
     def test_extracts_interval_from_exon(self):
         exons = list(self.transcript.exons)
@@ -1469,10 +1528,12 @@ class TestLowerToCoordinate(unittest.TestCase):
         self.assertEqual(dis._lower_coord(11), [121])  # first interior index of second
 
     def test_boundary_plus_touching(self):
-        # Adjacent intervals with no genomic gap: both boundary values coincide
+        # Adjacent intervals with no genomic gap are merged into one interval, so
+        # there is no internal boundary: coord 10 is interior and maps to [110].
         ivs = _make_intervals([("chr1", "+", 100, 110), ("chr1", "+", 110, 120)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(10), [110, 110])
+        self.assertEqual(dis.coordinate_intervals, tuple(_make_intervals([("chr1", "+", 100, 120)])))
+        self.assertEqual(dis._lower_coord(10), [110])
 
     def test_boundary_minus_with_gap(self):
         # Minus strand sorted 5'->3' = [(120,130), (100,110)]. Boundary at coord=10.
@@ -1481,11 +1542,12 @@ class TestLowerToCoordinate(unittest.TestCase):
         self.assertEqual(dis._lower_coord(10), [120, 110])  # 5'->3' order: [upstream.start, downstream.end]
 
     def test_boundary_minus_touching(self):
-        # Minus strand adjacent intervals with no genomic gap: both boundary values coincide.
-        # Sorted 5'->3': [(110,120), (100,110)]. Boundary at coord=10.
+        # Minus strand adjacent intervals with no genomic gap are merged into one
+        # interval, so there is no internal boundary: coord 10 is interior -> [110].
         ivs = _make_intervals([("chr1", "-", 100, 110), ("chr1", "-", 110, 120)])
         dis = DisjointIntervalSequence(ivs)
-        self.assertEqual(dis._lower_coord(10), [110, 110])
+        self.assertEqual(dis.coordinate_intervals, tuple(_make_intervals([("chr1", "-", 100, 120)])))
+        self.assertEqual(dis._lower_coord(10), [110])
 
     def test_boundary_plus_three_intervals(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400), ("chr1", "+", 500, 600)])
@@ -1615,14 +1677,13 @@ class TestLower(unittest.TestCase):
         self.assertEqual(dis.lower(), [Interval("chr1", "+", 150, 200, REFG)])
 
     def test_plus_spans_touching_boundary(self):
+        # Touching intervals are merged into [100, 300), so the segment lowers to a
+        # single contiguous Interval rather than two pieces.
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 200, 300)])
         dis = DisjointIntervalSequence(ivs, start=50, end=150)
         self.assertEqual(
             dis.lower(),
-            [
-                Interval("chr1", "+", 150, 200, REFG),
-                Interval("chr1", "+", 200, 250, REFG),
-            ],
+            [Interval("chr1", "+", 150, 250, REFG)],
         )
 
     # ---- Minus strand ----
@@ -1743,15 +1804,13 @@ class TestLower(unittest.TestCase):
         self.assertEqual(dis.lower(), [Interval("chr1", "-", 200, 250, REFG)])
 
     def test_minus_spans_touching_boundary(self):
-        # Sorted 5'->3': [(200,300),(100,200)]. DIS [50, 150) on minus crosses the boundary.
+        # Touching minus-strand intervals are merged into [100, 300), so the segment
+        # lowers to a single contiguous Interval rather than two pieces.
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 200, 300)])
         dis = DisjointIntervalSequence(ivs, start=50, end=150)
         self.assertEqual(
             dis.lower(),
-            [
-                Interval("chr1", "-", 200, 250, REFG),
-                Interval("chr1", "-", 150, 200, REFG),
-            ],
+            [Interval("chr1", "-", 150, 250, REFG)],
         )
 
     # ---- on_coordinate_strand=False ----

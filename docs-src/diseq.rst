@@ -45,6 +45,8 @@ A DIS has two aspects:
 - A **coordinate space**: the underlying genomic
   :py:class:`~genome_kit.Interval` objects (e.g. exons) that define the
   flattened index system. These intervals are sorted 5'→3' and must not overlap.
+  Adjacent (touching) intervals are merged into a single interval — for example,
+  ``[100, 200)`` and ``[200, 300)`` become ``[100, 300)``.
 - A **segment**: a sub-range within that coordinate space, defined by
   a start and end index, where start <= end.
 
@@ -298,7 +300,9 @@ A DIS can be constructed from any sequence of
     >>> dis = DisjointIntervalSequence.from_intervals(exon_intervals, coord_name="my_coord")
 
 The intervals must all share the same chromosome, strand, reference
-genome, and must not overlap. They are automatically sorted 5'→3'.
+genome, and must not overlap. They are automatically sorted 5'→3', and
+adjacent (touching) intervals are merged into a single interval — for
+example, ``[100, 200)`` and ``[200, 300)`` become ``[100, 300)``.
 
 Coordinate Space
 ================

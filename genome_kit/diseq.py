@@ -763,6 +763,11 @@ class DisjointIntervalSequence:
         chromosome (their start may be negative or their end may exceed the
         chromosome length).
 
+        When lowering a 0-length interval on an internal boundary, the returned
+        value corresponds to either an upstream, or downstream interval boundary
+        (more specifically, whichever value is an Interval.start,
+        since Interval.end is exclusive).
+
         Returns
         -------
         list[:py:class:`~genome_kit.Interval`]

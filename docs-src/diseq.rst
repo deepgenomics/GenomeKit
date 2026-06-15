@@ -856,7 +856,7 @@ of the transcript: the gaps between coord intervals are dropped so that introns
 
 The returned string already accounts for strand: if the segment is on the
 opposite strand, the segment's bases are returned, and the bases are
-ordered 5'→3' along the segment, not along the genome
+ordered 5'→3'
 
 .. code-block:: python
 

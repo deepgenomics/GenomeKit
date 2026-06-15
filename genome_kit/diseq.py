@@ -581,28 +581,13 @@ class DisjointIntervalSequence:
 
         coord_ivs = list(self._coordinate_intervals)
         iv0, ivn = coord_ivs[0], coord_ivs[-1]
-        chrom = iv0.chromosome
-        refg = iv0.reference_genome
-        if self.coord_strand == "+":
-            if len(coord_ivs) == 1:
-                coord_ivs = [
-                    Interval(chrom, "+", iv0.start - upstream, iv0.end + dnstream, refg)
-                ]
-            else:
-                coord_ivs[0] = Interval(chrom, "+", iv0.start - upstream, iv0.end, refg)
-                coord_ivs[-1] = Interval(
-                    chrom, "+", ivn.start, ivn.end + dnstream, refg
-                )
+        if len(coord_ivs) == 1:
+            coord_ivs = [
+                iv0.expand(upstream, dnstream)  # iv0 is ivn
+            ]
         else:
-            if len(coord_ivs) == 1:
-                coord_ivs = [
-                    Interval(chrom, "-", iv0.start - dnstream, iv0.end + upstream, refg)
-                ]
-            else:
-                coord_ivs[0] = Interval(chrom, "-", iv0.start, iv0.end + upstream, refg)
-                coord_ivs[-1] = Interval(
-                    chrom, "-", ivn.start - dnstream, ivn.end, refg
-                )
+            coord_ivs[0] = iv0.expand(upstream, 0)
+            coord_ivs[-1] = ivn.expand(0, dnstream)
 
         # The interval's lower index stays at self._start in the new coord space due
         # to re-indexing of the coord space implicitly 'expanding' start upstream.

@@ -462,21 +462,23 @@ segment is on the same strand as the coordinate intervals::
     >>> dis.is_positive_strand()
     True
 
-Strand methods (`is_same_strand()`, `flip_strand()`, etc.) only affect the
+Strand methods (:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.is_same_strand`,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.flip_strand`, etc.) only affect the
 segment layer, not the coordinate intervals.
 
 
 Shifting and Expanding
 ======================
 
-Both ``shift`` and ``expand`` return a **new** DIS with modified segment
-indices. The coordinate space is always unchanged.
+Both :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` return a **new** DIS with
+modified segment indices. The coordinate space is always unchanged.
 
 shift
 ~~~~~
 
-``shift(amount)`` moves the segment downstream by ``amount`` bases.
-A negative value shifts upstream. The segment length is preserved.
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` moves the segment downstream
+by ``amount`` bases. A negative value shifts upstream. The segment length is preserved.
 
 On the coordinate strand, downstream means increasing indices::
 
@@ -527,14 +529,14 @@ space, so ``shift(1)`` moves the segment toward *lower* indices::
 
 .. note::
 
-    ``shift`` can move the segment beyond the coordinate space bounds
-    (``start < 0`` or ``end > coordinate_length``).
+    :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` can move the segment beyond
+    the coordinate space bounds (``start < 0`` or ``end > coordinate_length``).
 
 expand
 ~~~~~~
 
-``expand(upstream, dnstream)`` grows (or shrinks) the segment toward
-its 5' and 3' ends. When ``dnstream`` is omitted the expansion is
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` grows (or shrinks) the segment
+toward its 5' and 3' ends. When ``dnstream`` is omitted the expansion is
 symmetric::
 
     Before expand(1):
@@ -588,11 +590,13 @@ Negative values contract the segment::
 expand_coord
 ~~~~~~~~~~~~
 
-``expand`` and ``expand_coord`` both grow the segment, but they do so at
-different layers. ``expand`` stretches the segment *within* the existing
-coordinate space; the coord intervals are unchanged.
-``expand_coord`` instead extends the coordinate
-space itself by lengthening the outermost coord intervals, and grows the
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` both grow the segment,
+but they do so at different layers.
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` stretches the segment *within*
+the existing coordinate space; the coord intervals are unchanged.
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` instead extends the
+coordinate space itself by lengthening the outermost coord intervals, and grows the
 segment by the same amount so it tracks the new edges.
 
 This distinction matters when you want flanking genomic context to become
@@ -634,22 +638,24 @@ preserved. On the negative strand, ``upstream`` and ``dnstream`` still
 refer to the transcript's 5' and 3' ends, so the underlying genomic
 adjustments mirror those on the plus strand.
 
-Unlike ``expand``, ``expand_coord`` does not accept negative values —
-shrinking the coordinate space is not supported.
+Unlike :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand`,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` does not accept negative
+values — shrinking the coordinate space is not supported.
 
 Positional Comparisons
 ======================
 
-``upstream_of`` and ``dnstream_of`` compare two DIS segments that share
-the same coordinate space and the same ``on_coordinate_strand``. Both
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.upstream_of` and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.dnstream_of` compare two DIS segments
+that share the same coordinate space and the same ``on_coordinate_strand``. Both
 methods require strict separation — any overlap returns ``False``.
 
 upstream_of
 ~~~~~~~~~~~
 
-``upstream_of(other)`` returns ``True`` if ``self`` is strictly 5' of
-``other`` with no overlap. Adjacent segments (where ``self.end`` equals
-``other.start``) count as upstream::
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.upstream_of` returns ``True`` if
+``self`` is strictly 5' of ``other`` with no overlap. Adjacent segments (where
+``self.end`` equals ``other.start``) count as upstream::
 
     DIS Coordinates:       0   1   2   3   4   5   6   7   8   9
                            |<->|               |<->|
@@ -692,7 +698,8 @@ upstream_of
 dnstream_of
 ~~~~~~~~~~~
 
-``dnstream_of(other)`` is the mirror of ``upstream_of``: it returns
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.dnstream_of` is the mirror of
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.upstream_of`: it returns
 ``True`` if ``self`` is strictly 3' of ``other`` with no overlap.
 Adjacent segments count as downstream. The same requirements on shared
 coordinate space and strand apply
@@ -709,8 +716,8 @@ coordinate space and strand apply
 within
 ~~~~~~
 
-``within(other)`` returns ``True`` if ``self``'s segment is fully
-contained within ``other``'s segment. Boundary-inclusive: a segment
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.within` returns ``True`` if ``self``'s
+segment is fully contained within ``other``'s segment. Boundary-inclusive: a segment
 is within another if it shares the same start and/or end. A segment
 is always within itself. The same requirements on shared coordinate
 space and strand apply::
@@ -751,10 +758,13 @@ Mapping Between Genomic and DIS Coordinates
 ===========================================
 
 A DIS lives in two coordinate systems at once: the genomic coordinates of
-its underlying intervals, and the spliced DIS index space. ``lower`` and
-``lift_interval`` are the two directions of travel between them.
+its underlying intervals, and the spliced DIS index space.
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval` are the two directions of
+travel between them.
 
-``lower`` projects the segment back to genomic space. ``lift_interval``
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` projects the segment back to
+genomic space. :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval`
 projects a genomic interval into the DIS's index space and clips it
 against the segment. They are conceptual inverses, but each has to deal
 with a structural mismatch — gaps in genomic space have no representation
@@ -765,7 +775,7 @@ lower
 ~~~~~
 
 Because a segment can straddle one or more boundaries between coord
-intervals, ``lower`` returns a *list* of genomic
+intervals, :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` returns a *list* of genomic
 :py:class:`~genome_kit.Interval` objects rather than a single one. The
 list is in 5'→3' order with respect to the segment, regardless of the
 underlying coord strand or whether the segment is on the coord strand.
@@ -805,8 +815,8 @@ coord 5'→3' order)
 lift_interval
 ~~~~~~~~~~~~~
 
-``lift_interval`` is the inverse: it takes a genomic
-:py:class:`~genome_kit.Interval` and returns a new DIS whose segment is
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval` is the inverse: it takes
+a genomic :py:class:`~genome_kit.Interval` and returns a new DIS whose segment is
 the intersection of that interval with this DIS's segment, expressed
 in the DIS coordinate space. The input must share the same chromosome, reference
 genome, and effective strand as the DIS.
@@ -836,9 +846,10 @@ segment returns ``None``
 Extracting DNA
 ==============
 
-``dna`` returns the spliced DNA sequence corresponding to the segment as
-a single string in 5'→3' order. Internally, the segment is decomposed
-via ``lower`` into one or more genomic intervals, each is read from the
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.dna` returns the spliced DNA sequence
+corresponding to the segment as a single string in 5'→3' order. Internally, the
+segment is decomposed via :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` into
+one or more genomic intervals, each is read from the
 reference, and the pieces are concatenated. This returns the spliced sequence
 of the transcript: the gaps between coord intervals are dropped so that introns
 (or other intervening regions) never appear in the output.
@@ -857,15 +868,18 @@ ordered 5'→3' along the segment, not along the genome
     >>> opp.dna()       # reverse complement, 5'→3' along the opposite strand
     'TGAAACCACGT'
 
-When the segment extends past the coord space — e.g. after ``shift`` or
-``expand`` pushed the indices outside ``[0, coordinate_length)`` — those
+When the segment extends past the coord space — e.g. after
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` or
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` pushed the indices outside
+``[0, coordinate_length)`` — those
 out-of-coord positions are returned as ``N`` by default. This is in
-contrast to ``expand_coord``, which extends the coord space itself so
+contrast to :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord`, which
+extends the coord space itself so
 that new positions are backed by real reference DNA. Set
 ``allow_outside_coord=False`` to opt out of N-padding and raise an error instead.
 
 For convenience, :py:meth:`Genome.dna <genome_kit.Genome.dna>` accepts a
-DIS directly and dispatches to ``DisjointIntervalSequence.dna``, so
+DIS directly and dispatches to :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.dna`, so
 either of the following is equivalent
 
 .. code-block:: python

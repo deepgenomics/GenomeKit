@@ -54,20 +54,20 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        coordinate_intervals : Sequence[:py:class:`~genome_kit.Interval`]
+        coordinate_intervals
             Non-empty sequence of non-overlapping Intervals on the same
             chromosome, strand, and reference genome.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment.
-        on_coordinate_strand : :py:class:`bool`
+        on_coordinate_strand
             Whether the segment is on the same strand as the coordinate
             intervals. Defaults to True. Can be used to represent a sequence that binds
             to the transcript if set to False.
-        start : :py:class:`int` or None
+        start
             start index of the segment in the coordinate space. Defaults to 0
-        end : :py:class:`int` or None
+        end
             end index of the segment in the coordinate space. Defaults to the length
             of the coordinate space.
 
@@ -188,11 +188,11 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        intervals : Sequence[:py:class:`~genome_kit.Interval`]
+        intervals
             Sequence of Interval or annotation objects.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment.
 
         Returns
@@ -217,14 +217,14 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        transcript : :py:class:`~genome_kit.Transcript`
+        transcript
             The source Transcript object.
-        region : :py:class:`str`
+        region
             Which region to extract — ``"exons"``, ``"cds"``,
             ``"utr5"``, or ``"utr3"``.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space. Defaults to ``transcript.id``.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment. Defaults to ``transcript.id``.
 
         Returns
@@ -390,7 +390,7 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        coord : :py:class:`int`
+        coord
             Index in the DIS coordinate space.
 
         Returns
@@ -441,7 +441,7 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        on_coordinate_strand : :py:class:`bool` or None
+        on_coordinate_strand
             Override for which strand to compute the step for. Defaults to
             this segment's ``on_coordinate_strand``.
 
@@ -492,7 +492,7 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        amount : :py:class:`int`
+        amount
             Bases to shift the segment downstream. Negative values shift upstream.
 
         Returns
@@ -515,9 +515,9 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        upstream : :py:class:`int`
+        upstream
             Bases to expand (or contract if negative) toward the 5' end.
-        dnstream : :py:class:`int` or None
+        dnstream
             Bases to expand (or contract if negative) toward the 3' end.
             Defaults to upstream (symmetric).
 
@@ -556,9 +556,9 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        upstream : :py:class:`int`
+        upstream
             Bases to add at the coordinate space's 5' end.
-        dnstream : :py:class:`int` or None
+        dnstream
             Bases to add at the coordinate space's 3' end.
             Defaults to upstream (symmetric).
 
@@ -1007,7 +1007,7 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        allow_outside_coord : :py:class:`bool`
+        allow_outside_coord
             When True (default), pad out-of-coord regions with ``N``. When
             False, raise if the segment extends past the coord intervals.
 

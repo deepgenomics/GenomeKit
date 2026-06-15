@@ -67,7 +67,9 @@ Extracting only the exons yields the following disjoint intervals::
                         | |<------->| |<--->| |<--->| |
                         5'   Exon1     Exon2   Exon3  3'
 
-These exon intervals can be represented as :py:class:`~genome_kit.Interval` objects::
+These exon intervals can be represented as :py:class:`~genome_kit.Interval` objects
+
+.. code-block:: python
 
     >>> from genome_kit import Interval
     >>> from genome_kit.diseq import DisjointIntervalSequence
@@ -93,7 +95,9 @@ The default segment spans the entire coordinate space::
     End Index:       7
 
 The segment spans the full length of the coordinate space, with a start index of 0
-and an end index of 7::
+and an end index of 7
+
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence.from_intervals(
     ...     [exon1, exon2, exon3], coord_name="tx_example"
@@ -149,7 +153,9 @@ on the opposite strand::
     On Coordinate Strand: False
 
 The ``on_coordinate_strand`` flag distinguishes same-strand from opposite-strand
-segments, since the start and end indices alone do not encode strand information::
+segments, since the start and end indices alone do not encode strand information
+
+.. code-block:: python
 
     >>> dis_opp = DisjointIntervalSequence(
     ...     [exon1, exon2, exon3],
@@ -166,7 +172,9 @@ segments, since the start and end indices alone do not encode strand information
 .. note::
     The preceding examples used + strand coordinate intervals. When the coordinate intervals
     lie on the **negative** strand, the DIS behaves differently from :py:class:`~genome_kit.Interval`:
-    in one key aspect. Indices still increase in the 5'→3' direction of the transcript.::
+    in one key aspect. Indices still increase in the 5'→3' direction of the transcript.
+
+    .. code-block:: python
 
         >>> iv = Interval("chr1", "-", 0, 100, genome.refg)
         >>> assert iv.end5.start > iv.end3.start
@@ -199,7 +207,9 @@ Converting these exons into a DIS coordinate space::
 The sequence appears reversed relative to genomic coordinates because the DIS
 coordinate space is oriented 5'→3' with respect to the transcript, regardless of
 genomic strand. Index 0 always corresponds to the transcript's 5' end, and the
-largest index to the 3' end::
+largest index to the 3' end
+
+.. code-block:: python
 
     >>> neg_exon1 = Interval("chr1", "-", 165, 167, "hg38")
     >>> neg_exon2 = Interval("chr1", "-", 159, 161, "hg38")
@@ -225,7 +235,9 @@ A full-length segment on the coordinate strand::
 
 Despite creating the DIS from the negative strand, the full-length segment on the
 coordinate strand is identical to the + strand example. When working with DIS
-objects, strand is expressed only as "same strand" or "opposite strand"::
+objects, strand is expressed only as "same strand" or "opposite strand"
+
+.. code-block:: python
 
     >>> dis_neg.start
     0
@@ -247,7 +259,7 @@ The same coordinate space with an opposite-strand segment::
     End Index:       7
     On Coordinate Strand: False
 
-::
+.. code-block:: python
 
     >>> dis_neg_opp = DisjointIntervalSequence(
     ...     [neg_exon1, neg_exon2, neg_exon3],
@@ -268,7 +280,9 @@ From a Transcript
 ~~~~~~~~~~~~~~~~~
 
 The most common way to create a DIS is from a
-:py:class:`~genome_kit.Transcript`::
+:py:class:`~genome_kit.Transcript`
+
+.. code-block:: python
 
     >>> from genome_kit import Genome
     >>> from genome_kit.diseq import DisjointIntervalSequence
@@ -277,14 +291,18 @@ The most common way to create a DIS is from a
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
 
 By default, the coordinate space is built from the transcript's exons.
-It's also possible to specify a region to use CDS or UTR intervals::
+It's also possible to specify a region to use CDS or UTR intervals
+
+.. code-block:: python
 
     >>> dis_cds = DisjointIntervalSequence.from_transcript(transcript, region="cds")
     >>> dis_utr5 = DisjointIntervalSequence.from_transcript(transcript, region="utr5")
     >>> dis_utr3 = DisjointIntervalSequence.from_transcript(transcript, region="utr3")
 
 The ``coord_name`` and ``interval_name`` default to ``transcript.id`` but can
-be overridden::
+be overridden
+
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence.from_transcript(
     ...     transcript, coord_name="my_coord", interval_name="my_interval")
@@ -293,7 +311,9 @@ From Intervals
 ~~~~~~~~~~~~~~
 
 A DIS can be constructed from any sequence of
-:py:class:`~genome_kit.Interval` objects::
+:py:class:`~genome_kit.Interval` objects
+
+.. code-block:: python
 
     >>> from genome_kit import Interval
     >>> exon_intervals = [e.interval for e in transcript.exons]
@@ -308,14 +328,18 @@ Coordinate Space
 ================
 
 The coordinate space is defined by the underlying genomic intervals, which
-are accessible as a tuple::
+are accessible as a tuple
+
+.. code-block:: python
 
     >>> dis.coordinate_intervals
     (Interval("chr1", "+", 100, 200, "hg38"), Interval("chr1", "+", 300, 450, "hg38"))
     >>> dis.coordinate_length
     250
 
-Metadata about the coordinate space is available through properties::
+Metadata about the coordinate space is available through properties
+
+.. code-block:: python
 
     >>> dis.chromosome
     'chr1'
@@ -331,7 +355,9 @@ Segment Start and End
 
 The segment within the coordinate space is defined by ``start`` and ``end``
 indices, following the same half-open convention as :py:class:`~genome_kit.Interval`
-(``start <= end`` always)::
+(``start <= end`` always)
+
+.. code-block:: python
 
     >>> dis.start
     0
@@ -366,7 +392,7 @@ When ``on_coordinate_strand`` is ``True``, ``end5_index`` equals ``start`` and
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
 
-::
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
     >>> dis.end5_index   # same as start when on coordinate strand
@@ -387,7 +413,7 @@ When ``on_coordinate_strand`` is ``False``, the mapping reverses:
                                        |<--------->|
                                   Opposite Strand
 
-::
+.. code-block:: python
 
     >>> opp = dis.as_opposite_strand()
     >>> opp.end5_index   # same as end when off coordinate strand
@@ -399,7 +425,9 @@ Boundary Properties
 ~~~~~~~~~~~~~~~~~~~
 
 Zero-length DIS objects at the segment and coordinate boundaries are
-available as properties::
+available as properties
+
+.. code-block:: python
 
     >>> dis.end5        # 0-length DIS at the segment's 5' boundary
     >>> dis.end3        # 0-length DIS at the segment's 3' boundary
@@ -425,7 +453,7 @@ segment is on the same strand as the coordinate intervals::
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                   Opposite Strand
 
-::
+.. code-block:: python
 
     >>> dis.on_coordinate_strand
     True
@@ -475,7 +503,7 @@ space, so ``shift(1)`` moves the segment toward *lower* indices::
                            |<--------->|
                           end3        end5
 
-::
+.. code-block:: python
 
     >>> dis.start, dis.end
     (30, 150)
@@ -531,7 +559,7 @@ Negative values contract the segment::
                                |<--------->|
                               end5        end3
 
-::
+.. code-block:: python
 
     >>> dis.start, dis.end
     (30, 150)
@@ -575,7 +603,9 @@ N-padded).
 For example, when modeling a transcript plus its surrounding promoter and
 poly-A regions, ``expand_coord(50)`` adds 50 genomic bases to each end
 of the coordinate space, and those bases are now real, indexable, DNA-
-backed positions rather than N-padding::
+backed positions rather than N-padding
+
+.. code-block:: python
 
     >>> dis.coord_strand
     '+'
@@ -638,7 +668,7 @@ upstream_of
                                       b
     a.upstream_of(b) is False   (overlap)
 
-::
+.. code-block:: python
 
     >>> a = DisjointIntervalSequence(coord_ivs, start=10, end=30)
     >>> b = DisjointIntervalSequence(coord_ivs, start=50, end=80)
@@ -665,7 +695,9 @@ dnstream_of
 ``dnstream_of(other)`` is the mirror of ``upstream_of``: it returns
 ``True`` if ``self`` is strictly 3' of ``other`` with no overlap.
 Adjacent segments count as downstream. The same requirements on shared
-coordinate space and strand apply::
+coordinate space and strand apply
+
+.. code-block:: python
 
     >>> a = DisjointIntervalSequence(coord_ivs, start=50, end=80)
     >>> b = DisjointIntervalSequence(coord_ivs, start=10, end=30)
@@ -740,7 +772,9 @@ underlying coord strand or whether the segment is on the coord strand.
 
 A segment that fits inside a single coord interval lowers to a one-element
 list. A segment that crosses N coord-interval boundaries lowers to N+1
-intervals — the gaps between coord intervals are skipped::
+intervals — the gaps between coord intervals are skipped
+
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence(
     ...     [Interval("chr1", "+", 100, 200, "hg38"),
@@ -759,7 +793,9 @@ chromosome length — there is no clipping to chromosome boundaries.
 
 A segment on the opposite strand lowers to genomic intervals on the
 opposite strand, listed in *segment* 5'→3' order (which is the reverse of
-coord 5'→3' order)::
+coord 5'→3' order)
+
+.. code-block:: python
 
     >>> dis_opp = dis.as_opposite_strand()
     >>> dis_opp.lower()
@@ -780,7 +816,9 @@ intervals: positions inside a gap collapse to the boundary index of the
 adjacent coord interval, and positions outside the coord space extrapolate
 linearly. The result is then clipped against the DIS's segment, so a
 genomic interval that overlaps coord space but falls entirely outside the
-segment returns ``None``::
+segment returns ``None``
+
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence(
     ...     [Interval("chr1", "+", 100, 200, "hg38"),
@@ -807,7 +845,9 @@ of the transcript: the gaps between coord intervals are dropped so that introns
 
 The returned string already accounts for strand: if the segment is on the
 opposite strand, the segment's bases are returned, and the bases are
-ordered 5'→3' along the segment, not along the genome::
+ordered 5'→3' along the segment, not along the genome
+
+.. code-block:: python
 
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
     >>> dis.dna()
@@ -826,7 +866,9 @@ that new positions are backed by real reference DNA. Set
 
 For convenience, :py:meth:`Genome.dna <genome_kit.Genome.dna>` accepts a
 DIS directly and dispatches to ``DisjointIntervalSequence.dna``, so
-either of the following is equivalent::
+either of the following is equivalent
+
+.. code-block:: python
 
     >>> dis.dna()
     >>> genome.dna(dis)

@@ -439,9 +439,15 @@ class DisjointIntervalSequence:
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
 
-        Args:
-            on_coordinate_strand: Override for which strand to compute the step for.
-                Defaults to this segment's on_coordinate_strand.
+        Parameters
+        ----------
+        on_coordinate_strand : :py:class:`bool` or None
+            Override for which strand to compute the step for. Defaults to
+            this segment's ``on_coordinate_strand``.
+
+        Returns
+        -------
+        :py:class:`int`
         """
         if on_coordinate_strand is None:
             on_coordinate_strand = self.on_coordinate_strand
@@ -482,8 +488,16 @@ class DisjointIntervalSequence:
 
     def shift(self, amount: int) -> "DisjointIntervalSequence":
         """Shift the segment downstream by amount (negative shifts upstream).
-
         The coordinate space is unchanged. Only the segment indices move.
+
+        Parameters
+        ----------
+        amount : :py:class:`int`
+            Bases to shift the segment downstream. Negative values shift upstream.
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
         """
         downstream_step = -self._upstream_index_step()
         delta = amount * downstream_step
@@ -497,13 +511,24 @@ class DisjointIntervalSequence:
     ) -> "DisjointIntervalSequence":
         """Expand the segment upstream and/or downstream.
 
-        Negative values contract the segment. Raises ValueError if contraction
-        would result in end5 being downstream of end3.
+        Negative values contract the segment.
 
-        Args:
-            upstream: Bases to expand (or contract if negative) toward the 5' end.
-            dnstream: Bases to expand (or contract if negative) toward the 3' end.
-                Defaults to upstream (symmetric).
+        Parameters
+        ----------
+        upstream : :py:class:`int`
+            Bases to expand (or contract if negative) toward the 5' end.
+        dnstream : :py:class:`int` or None
+            Bases to expand (or contract if negative) toward the 3' end.
+            Defaults to upstream (symmetric).
+
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+
+        Raises
+        ------
+        ValueError
+            If contraction would result in end5 being downstream of end3.
         """
         if dnstream is None:
             dnstream = upstream
@@ -529,13 +554,22 @@ class DisjointIntervalSequence:
         ``dnstream`` bases. The segment is expanded an equal amount in the
         upstream/downstream direction as the coordinate intervals.
 
-        Args:
-            upstream: Bases to add at the coordinate space's 5' end.
-            dnstream: Bases to add at the coordinate space's 3' end.
-                Defaults to upstream (symmetric).
+        Parameters
+        ----------
+        upstream : :py:class:`int`
+            Bases to add at the coordinate space's 5' end.
+        dnstream : :py:class:`int` or None
+            Bases to add at the coordinate space's 3' end.
+            Defaults to upstream (symmetric).
 
-        Raises:
-            ValueError: If either argument is negative.
+        Returns
+        -------
+        :py:class:`DisjointIntervalSequence`
+
+        Raises
+        ------
+        ValueError
+            If either argument is negative.
         """
         if dnstream is None:
             dnstream = upstream
@@ -971,14 +1005,21 @@ class DisjointIntervalSequence:
         Returns an empty string for a 0-length segment. DNA is returned in
         5' -> 3' order.
 
-        Args:
-            allow_outside_coord: When True (default), pad out-of-coord regions
-                with ``N``. When False, raise if the segment extends past the
-                coord intervals.
+        Parameters
+        ----------
+        allow_outside_coord : :py:class:`bool`
+            When True (default), pad out-of-coord regions with ``N``. When
+            False, raise if the segment extends past the coord intervals.
 
         Returns
         -------
         :py:class:`str`
+
+        Raises
+        ------
+        ValueError
+            If the segment extends past the coord intervals and
+            ``allow_outside_coord`` is False.
         """
         if self._start == self._end:
             return ""

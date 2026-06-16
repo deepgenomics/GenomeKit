@@ -897,6 +897,11 @@ class DisjointIntervalSequence:
         and intersected with this DIS's segment. The returned DIS represents
         that intersection as a segment in this coordinate space.
 
+        ``other`` may lie on either strand. The returned DIS's
+        ``on_coordinate_strand`` reflects whether ``other`` is on the
+        coordinate strand, so an interval on the strand opposite this DIS's
+        segment lifts to an opposite-strand segment.
+
         Returns
         -------
         :py:class:`DisjointIntervalSequence` or None
@@ -905,7 +910,7 @@ class DisjointIntervalSequence:
         Raises
         ------
         ValueError
-            If ``other`` is not on the same chromosome, reference genome, and strand.
+            If ``other`` is not on the same chromosome and reference genome.
         """
         if other.chromosome != self.chromosome:
             raise ValueError(
@@ -916,11 +921,6 @@ class DisjointIntervalSequence:
             raise ValueError(
                 f"Interval reference_genome {other.reference_genome!r} does not "
                 f"match DIS reference_genome {self.reference_genome!r}"
-            )
-        if other.strand != self.strand:
-            raise ValueError(
-                f"Interval strand {other.strand!r} does not match DIS "
-                f"effective strand {self.strand!r}"
             )
 
         if self.coord_strand == "+":

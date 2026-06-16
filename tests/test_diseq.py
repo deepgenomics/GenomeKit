@@ -1974,11 +1974,41 @@ class TestLiftInterval(unittest.TestCase):
         self.assertEqual(lifted.end, 80)
         self.assertFalse(lifted.on_coordinate_strand)
 
-    def test_lift_opposite_strand_interval_error(self):
+    def test_lift_opposite_strand_interval(self):
+        # Coord/segment on "+", lifting a "-" strand interval is allowed and
+        # yields an opposite-strand segment.
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=0, end=100)
-        with self.assertRaises(ValueError):
-            dis.lift_interval(Interval("chr1", "-", 120, 160, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "-", 120, 160, REFG))
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 20)
+        self.assertEqual(lifted.end, 60)
+        self.assertFalse(lifted.on_coordinate_strand)
+
+    def test_lift_opposite_strand_interval_minus_coord(self):
+        # Coord/segment on "-", lifting a "+" strand interval yields an
+        # opposite-strand segment. Minus coord 5'->3' = [(300,400),(100,200)],
+        # so genomic 130 -> DIS 170, 170 -> DIS 130.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        lifted = dis.lift_interval(Interval("chr1", "+", 130, 170, REFG))
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 130)
+        self.assertEqual(lifted.end, 170)
+        self.assertFalse(lifted.on_coordinate_strand)
+
+    def test_lift_opposite_strand_onto_off_strand_segment(self):
+        # Segment is itself off the coordinate strand; lifting a coord-strand
+        # interval yields a same-(coordinate)-strand segment.
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(
+            ivs, start=0, end=100, on_coordinate_strand=False,
+        )
+        lifted = dis.lift_interval(Interval("chr1", "+", 120, 160, REFG))
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 20)
+        self.assertEqual(lifted.end, 60)
+        self.assertTrue(lifted.on_coordinate_strand)
 
     def test_chromosome_mismatch_raises(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -2067,7 +2097,7 @@ class TestLiftInterval(unittest.TestCase):
     def test_lift_idempotency(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=20, end=180)
-        lowered = dis.lower()
+        lowered = dis.lower()  # noqa: F841
 
         iv = Interval("chr1", "+", 320, 360, REFG)
         lifted_once = dis.lift_interval(iv)

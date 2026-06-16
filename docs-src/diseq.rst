@@ -623,23 +623,27 @@ than N-padding
     >>> dis.coord_strand
     '+'
     >>> dis.coordinate_intervals
-    (Interval("chr1", "+", 1000, 1100, "hg38"),
-     Interval("chr1", "+", 1200, 1300, "hg38"),
-     Interval("chr1", "+", 1500, 1600, "hg38"))
+    (Interval("chr1", "+", 11000, 11005, "hg38"),
+     Interval("chr1", "+", 11010, 11020, "hg38"),
+     Interval("chr1", "+", 11025, 11030, "hg38"))
     >>> dis.coordinate_length
-    300
+    20
     >>> dis.start, dis.end       # segment spans the coord space exactly
-    (0, 300)
+    (0, 20)
+    >>> dis.expand(5).dna()      # expanded segment is N-padded
+    'NNNNNAAGCCGCGGGGGTTGGCGTGNNNNN'
 
-    >>> expanded = dis.expand_coord(50)
+    >>> expanded = dis.expand_coord(5)
     >>> expanded.coordinate_intervals
-    (Interval("chr1", "+", 950, 1100, "hg38"),
-     Interval("chr1", "+", 1200, 1300, "hg38"),
-     Interval("chr1", "+", 1500, 1650, "hg38"))
+    (Interval("chr1", "+", 10995, 11005, "hg38"),
+     Interval("chr1", "+", 11010, 11020, "hg38"),
+     Interval("chr1", "+", 11025, 11035, "hg38"))
     >>> expanded.coordinate_length
-    400
+    30
     >>> expanded.start, expanded.end   # grew to span the enlarged coord space
-    (0, 400)
+    (0, 30)
+    >>> expanded.dna()              # new genomic context is now part of the DNA
+    'GACGCAAGCCGCGGGGGTTGGCGTGTGTTG'
 
 A segment that does **not** span the coordinate space exactly is left at its
 original size; only the coordinate space grows, and the segment shifts so its

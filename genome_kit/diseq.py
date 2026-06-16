@@ -428,9 +428,9 @@ class DisjointIntervalSequence:
             # i.e. the internal boundary between two coord intervals.
             upstream = ivs[interval_index - 1]
             if on_plus:
-                return [upstream.end, iv.start]  # indices ordered 5' -> 3'
+                return [upstream.end, iv.start]  # indices ordered 5' -> 3' w.r.t segment strand
             else:
-                return [upstream.start, iv.end]  # indices ordered 5' -> 3'
+                return [upstream.start, iv.end]  # indices ordered 5' -> 3' w.r.t segment strand
 
         if on_plus:
             return [iv.end - abs(delta)]

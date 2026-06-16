@@ -591,13 +591,21 @@ expand_coord
 ~~~~~~~~~~~~
 
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` and
-:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` both grow the segment,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` both extend the DIS,
 but they do so at different layers.
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` stretches the segment *within*
 the existing coordinate space; the coord intervals are unchanged.
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord` instead extends the
-coordinate space itself by lengthening the outermost coord intervals, and grows the
-segment by the same amount so it tracks the new edges.
+coordinate space itself by lengthening the outermost coord intervals. Whether the
+*segment* also grows depends on what it currently covers:
+
+- If the segment spans the coordinate space **exactly** (``start == 0`` and
+  ``end == coordinate_length``), it grows by the same amount so it continues to
+  span the enlarged coordinate space.
+- Otherwise the segment keeps its original size and simply shifts to track the
+  re-indexed coordinate space, so it still points at the same genomic bases
+  (its :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` projection is
+  unchanged).
 
 This distinction matters when you want flanking genomic context to become
 part of the indexed coordinate space rather than just a virtual extension,
@@ -605,9 +613,10 @@ such as when getting the DNA of the DIS segment (off-coordinate bases are
 N-padded).
 
 For example, when modeling a transcript plus its surrounding promoter and
-poly-A regions, ``expand_coord(50)`` adds 50 genomic bases to each end
-of the coordinate space, and those bases are now real, indexable, DNA-
-backed positions rather than N-padding
+poly-A regions, a full-span segment grows with the coordinate space:
+``expand_coord(50)`` adds 50 genomic bases to each end of the coordinate
+space, and those bases are now real, indexable, DNA-backed positions rather
+than N-padding
 
 .. code-block:: python
 
@@ -619,7 +628,7 @@ backed positions rather than N-padding
      Interval("chr1", "+", 1500, 1600, "hg38"))
     >>> dis.coordinate_length
     300
-    >>> dis.start, dis.end
+    >>> dis.start, dis.end       # segment spans the coord space exactly
     (0, 300)
 
     >>> expanded = dis.expand_coord(50)
@@ -629,8 +638,35 @@ backed positions rather than N-padding
      Interval("chr1", "+", 1500, 1650, "hg38"))
     >>> expanded.coordinate_length
     400
-    >>> expanded.start, expanded.end
+    >>> expanded.start, expanded.end   # grew to span the enlarged coord space
     (0, 400)
+
+A segment that does **not** span the coordinate space exactly is left at its
+original size; only the coordinate space grows, and the segment shifts so its
+genomic projection is unchanged
+
+.. code-block:: python
+
+    >>> partial = DisjointIntervalSequence(
+    ...     [Interval("chr1", "+", 1000, 1100, "hg38"),
+    ...      Interval("chr1", "+", 1200, 1300, "hg38"),
+    ...      Interval("chr1", "+", 1500, 1600, "hg38")],
+    ...     start=50, end=250,
+    ... )
+    >>> partial.lower()
+    [Interval("chr1", "+", 1050, 1100, "hg38"),
+     Interval("chr1", "+", 1200, 1300, "hg38"),
+     Interval("chr1", "+", 1500, 1550, "hg38")]
+
+    >>> expanded = partial.expand_coord(50)
+    >>> expanded.coordinate_length    # coord space still grows by 50 + 50
+    400
+    >>> expanded.start, expanded.end  # same size (200), shifted by upstream (50)
+    (100, 300)
+    >>> expanded.lower()              # genomic projection unchanged
+    [Interval("chr1", "+", 1050, 1100, "hg38"),
+     Interval("chr1", "+", 1200, 1300, "hg38"),
+     Interval("chr1", "+", 1500, 1550, "hg38")]
 
 Only the outer 5' edge of the first coord interval and the outer 3' edge
 of the last coord interval are extended; gaps between coord intervals are

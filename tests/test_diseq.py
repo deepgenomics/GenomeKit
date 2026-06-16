@@ -1016,6 +1016,11 @@ class TestExpand(unittest.TestCase):
 
 
 class TestExpandCoord(unittest.TestCase):
+    # A partial segment (one that does not span the coord intervals exactly) is
+    # NOT expanded: the coord space still grows, but the segment only shifts by
+    # ``upstream`` to keep pointing at the same genomic bases, so its ``lower()``
+    # projection is unchanged. A full-span segment grows to cover the enlarged
+    # coord space.
 
     def test_expand_coord_symmetric(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
@@ -1025,8 +1030,9 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 405)])),
         )
-        self.assertEqual(expanded.start, 30)
-        self.assertEqual(expanded.end, 160)
+        # Partial segment: not expanded, shifted by upstream (5).
+        self.assertEqual(expanded.start, 35)
+        self.assertEqual(expanded.end, 155)
 
     def test_expand_coord_asymmetric(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
@@ -1036,8 +1042,9 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 410)])),
         )
-        self.assertEqual(expanded.start, 30)
-        self.assertEqual(expanded.end, 165)
+        # Partial segment: shifted by upstream (5) only; dnstream does not grow it.
+        self.assertEqual(expanded.start, 35)
+        self.assertEqual(expanded.end, 155)
 
     def test_expand_coord_upstream_only(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
@@ -1047,7 +1054,7 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 400)])),
         )
-        self.assertEqual(expanded.start, 30)
+        self.assertEqual(expanded.start, 35)
         self.assertEqual(expanded.end, 155)
 
     def test_expand_coord_downstream_only(self):
@@ -1058,8 +1065,9 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 410)])),
         )
+        # Partial segment with upstream=0: indices unchanged.
         self.assertEqual(expanded.start, 30)
-        self.assertEqual(expanded.end, 160)
+        self.assertEqual(expanded.end, 150)
 
     def test_expand_coord_zero(self):
         dis = _dis(start=30, end=150)
@@ -1085,8 +1093,8 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "-", 300, 405), ("chr1", "-", 90, 200)])),
         )
-        self.assertEqual(expanded.start, 30)
-        self.assertEqual(expanded.end, 165)
+        self.assertEqual(expanded.start, 35)
+        self.assertEqual(expanded.end, 155)
 
     def test_expand_coord_single_interval_plus(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -1096,8 +1104,8 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "+", 95, 203)])),
         )
-        self.assertEqual(expanded.start, 20)
-        self.assertEqual(expanded.end, 38)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 35)
 
     def test_expand_coord_single_interval_minus(self):
         ivs = _make_intervals([("chr1", "-", 100, 200)])
@@ -1108,32 +1116,34 @@ class TestExpandCoord(unittest.TestCase):
             expanded.coordinate_intervals,
             tuple(_make_intervals([("chr1", "-", 97, 205)])),
         )
-        self.assertEqual(expanded.start, 20)
-        self.assertEqual(expanded.end, 38)
+        self.assertEqual(expanded.start, 25)
+        self.assertEqual(expanded.end, 35)
 
-    def test_expand_coord_lower_matches_genomic_expansion_plus(self):
-        # Original segment [30, 150) lowers to [(130,200),(300,350)].
+    def test_expand_coord_partial_segment_lower_unchanged_plus(self):
+        # A partial segment keeps pointing at the same genomic bases, so its
+        # lower() projection is invariant under expand_coord.
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=30, end=150)
         expanded = dis.expand_coord(5, 10)
+        self.assertEqual(expanded.lower(), dis.lower())
         self.assertEqual(
             expanded.lower(),
             [
-                Interval("chr1", "+", 125, 200, REFG),
-                Interval("chr1", "+", 300, 360, REFG),
+                Interval("chr1", "+", 130, 200, REFG),
+                Interval("chr1", "+", 300, 350, REFG),
             ],
         )
 
-    def test_expand_coord_lower_matches_genomic_expansion_minus(self):
-        # Original segment [30, 150) lowers to [(300,370),(150,200)] on minus.
+    def test_expand_coord_partial_segment_lower_unchanged_minus(self):
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=30, end=150)
         expanded = dis.expand_coord(5, 10)
+        self.assertEqual(expanded.lower(), dis.lower())
         self.assertEqual(
             expanded.lower(),
             [
-                Interval("chr1", "-", 300, 375, REFG),
-                Interval("chr1", "-", 140, 200, REFG),
+                Interval("chr1", "-", 300, 370, REFG),
+                Interval("chr1", "-", 150, 200, REFG),
             ],
         )
 
@@ -1170,15 +1180,17 @@ class TestExpandCoord(unittest.TestCase):
                 ("chr1", "+", 500, 610),
             ])),
         )
-        self.assertEqual(expanded.start, 50)
-        self.assertEqual(expanded.end, 265)
-        # Genomic span grows by 5 on coord-5' side and 10 on coord-3' side.
+        # Partial segment: shifted by upstream (5), not grown.
+        self.assertEqual(expanded.start, 55)
+        self.assertEqual(expanded.end, 255)
+        # Partial segment's genomic projection is unchanged by the expansion.
+        self.assertEqual(expanded.lower(), dis.lower())
         self.assertEqual(
             expanded.lower(),
             [
-                Interval("chr1", "+", 145, 200, REFG),
+                Interval("chr1", "+", 150, 200, REFG),
                 Interval("chr1", "+", 300, 400, REFG),
-                Interval("chr1", "+", 500, 560, REFG),
+                Interval("chr1", "+", 500, 550, REFG),
             ],
         )
 
@@ -1199,14 +1211,15 @@ class TestExpandCoord(unittest.TestCase):
                 ("chr1", "-", 90, 200),
             ])),
         )
-        self.assertEqual(expanded.start, 50)
-        self.assertEqual(expanded.end, 265)
+        self.assertEqual(expanded.start, 55)
+        self.assertEqual(expanded.end, 255)
+        self.assertEqual(expanded.lower(), dis.lower())
         self.assertEqual(
             expanded.lower(),
             [
-                Interval("chr1", "-", 500, 555, REFG),
+                Interval("chr1", "-", 500, 550, REFG),
                 Interval("chr1", "-", 300, 400, REFG),
-                Interval("chr1", "-", 140, 200, REFG),
+                Interval("chr1", "-", 150, 200, REFG),
             ],
         )
 
@@ -1224,8 +1237,97 @@ class TestExpandCoord(unittest.TestCase):
                 ("chr1", "+", 500, 600),
             ])),
         )
-        self.assertEqual(expanded.start, 50)
+        self.assertEqual(expanded.start, 55)
         self.assertEqual(expanded.end, 255)
+
+    # ---- Full-span segments: the segment grows to cover the enlarged coord ----
+
+    def test_expand_coord_full_span_symmetric_plus(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        expanded = dis.expand_coord(5)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 405)])),
+        )
+        # Full-span segment grows by upstream + dnstream (5 + 5).
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 210)
+        # Still spans the whole (enlarged) coord space exactly.
+        self.assertEqual(expanded.end, expanded.coordinate_length)
+
+    def test_expand_coord_full_span_asymmetric_plus(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        expanded = dis.expand_coord(5, 10)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 410)])),
+        )
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 215)
+        # The grown segment covers the full new genomic extent of the coord space.
+        self.assertEqual(
+            expanded.lower(),
+            [
+                Interval("chr1", "+", 95, 200, REFG),
+                Interval("chr1", "+", 300, 410, REFG),
+            ],
+        )
+
+    def test_expand_coord_full_span_asymmetric_minus(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        expanded = dis.expand_coord(5, 10)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "-", 300, 405), ("chr1", "-", 90, 200)])),
+        )
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 215)
+        self.assertEqual(
+            expanded.lower(),
+            [
+                Interval("chr1", "-", 300, 405, REFG),
+                Interval("chr1", "-", 90, 200, REFG),
+            ],
+        )
+
+    def test_expand_coord_full_span_downstream_only(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        expanded = dis.expand_coord(0, 10)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 410)])),
+        )
+        # upstream=0 so start stays 0; segment grows by dnstream (10) at the 3' end.
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 210)
+
+    def test_expand_coord_full_span_single_interval(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=100)
+        expanded = dis.expand_coord(5, 3)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 95, 203)])),
+        )
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 108)
+
+    def test_expand_coord_full_span_opposite_strand_grows(self):
+        # "Spans exactly" depends only on start/end, not the segment strand.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200, on_coordinate_strand=False)
+        expanded = dis.expand_coord(5, 10)
+        self.assertEqual(
+            expanded.coordinate_intervals,
+            tuple(_make_intervals([("chr1", "+", 95, 200), ("chr1", "+", 300, 410)])),
+        )
+        self.assertEqual(expanded.start, 0)
+        self.assertEqual(expanded.end, 215)
+        self.assertFalse(expanded.on_coordinate_strand)
 
 
 class TestUpstreamOf(unittest.TestCase):

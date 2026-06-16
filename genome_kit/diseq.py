@@ -547,12 +547,13 @@ class DisjointIntervalSequence:
     def expand_coord(
         self, upstream: int, dnstream: int | None = None
     ) -> "DisjointIntervalSequence":
-        """Expand the coordinate space and segment at its 5' and/or 3' ends.
+        """Expand the coordinate space and possibly segment at its 5' and/or 3' ends.
 
         The outer 5' edge of the first coord interval is extended ``upstream``
         bases and the outer 3' edge of the last coord interval is extended
-        ``dnstream`` bases. The segment is expanded an equal amount in the
-        upstream/downstream direction as the coordinate intervals.
+        ``dnstream`` bases. If the segment spans the coordinate intervals exactly,
+        it is expanded an equal amount in the upstream/downstream direction as
+        the coordinate intervals, otherwise it is left unexpanded.
 
         Parameters
         ----------
@@ -579,6 +580,21 @@ class DisjointIntervalSequence:
                 f"got upstream={upstream}, dnstream={dnstream}"
             )
 
+        # Segment does not span coord intervals exactly: do not expand segment
+        if self.start != 0 or self.end != self.coordinate_length:
+            # Re-indexing of coord space only occurs on upstream expansion, so only
+            # adjust indices based on this change. Downstream expansion leaves existing
+            # indices intact, so no adjustment needed
+            new_start = self._start + upstream
+            new_end = self._end + upstream
+        else:
+            # The interval's lower index stays at self._start in the new coord space due
+            # to re-indexing of the coord space implicitly 'expanding' start upstream.
+            # end index is adjusted to account for extra bases introduced by upstream and
+            # downstream expansion
+            new_start = self._start
+            new_end = self._end + upstream + dnstream
+
         coord_ivs = list(self._coordinate_intervals)
         iv0, ivn = coord_ivs[0], coord_ivs[-1]
         if len(coord_ivs) == 1:
@@ -589,17 +605,13 @@ class DisjointIntervalSequence:
             coord_ivs[0] = iv0.expand(upstream, 0)
             coord_ivs[-1] = ivn.expand(0, dnstream)
 
-        # The interval's lower index stays at self._start in the new coord space due
-        # to re-indexing of the coord space implicitly 'expanding' start upstream.
-        # end index is adjusted to account for extra bases introduced by upstream and
-        # downstream expansion
         return DisjointIntervalSequence(
             coord_ivs,
             coord_name=self._coord_metadata.name,
             segment_name=self._segment_metadata.name,
             on_coordinate_strand=self.on_coordinate_strand,
-            start=self._start,
-            end=self._end + upstream + dnstream,
+            start=new_start,
+            end=new_end
         )
 
     def upstream_of(self, other: "DisjointIntervalSequence") -> bool:

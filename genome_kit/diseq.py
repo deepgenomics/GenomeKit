@@ -194,10 +194,6 @@ class DisjointIntervalSequence:
             Optional name for the coordinate space.
         segment_name
             Optional name for the segment.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         coord_intervals = [
             iv.interval if hasattr(iv, "interval") else iv for iv in intervals
@@ -226,10 +222,6 @@ class DisjointIntervalSequence:
             Optional name for the coordinate space. Defaults to ``transcript.id``.
         segment_name
             Optional name for the segment. Defaults to ``transcript.id``.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
 
         Raises
         ------
@@ -392,11 +384,6 @@ class DisjointIntervalSequence:
         ----------
         coord
             Index in the DIS coordinate space.
-
-        Returns
-        -------
-        :py:class:`list[int]`
-            Either ``[pos]`` or ``[iv_upstream.end, iv_downstream.start]``.
         """
         ivs = self._coordinate_intervals
         on_plus = self.coord_strand == "+"
@@ -444,10 +431,6 @@ class DisjointIntervalSequence:
         on_coordinate_strand
             Override for which strand to compute the step for. Defaults to
             this segment's ``on_coordinate_strand``.
-
-        Returns
-        -------
-        :py:class:`int`
         """
         if on_coordinate_strand is None:
             on_coordinate_strand = self.on_coordinate_strand
@@ -494,10 +477,6 @@ class DisjointIntervalSequence:
         ----------
         amount
             Bases to shift the segment downstream. Negative values shift upstream.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         downstream_step = -self._upstream_index_step()
         delta = amount * downstream_step
@@ -520,10 +499,6 @@ class DisjointIntervalSequence:
         dnstream
             Bases to expand (or contract if negative) toward the 3' end.
             Defaults to upstream (symmetric).
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
 
         Raises
         ------
@@ -562,10 +537,6 @@ class DisjointIntervalSequence:
         dnstream
             Bases to add at the coordinate space's 3' end.
             Defaults to upstream (symmetric).
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
 
         Raises
         ------
@@ -669,19 +640,11 @@ class DisjointIntervalSequence:
 
     def is_same_strand(self) -> bool:
         """True if the segment is on the same strand as the coordinate intervals.
-
-        Returns
-        -------
-        :py:class:`bool`
         """
         return self.on_coordinate_strand
 
     def is_positive_strand(self) -> bool:
         """True if the segment is on the positive strand.
-
-        Returns
-        -------
-        :py:class:`bool`
         """
         if self.strand == "+":
             return True
@@ -692,10 +655,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the positive strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if self.is_positive_strand():
             return self
@@ -706,10 +665,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the negative strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if not self.is_positive_strand():
             return self
@@ -720,10 +675,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the opposite strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if not self.on_coordinate_strand:
             return self
@@ -734,10 +685,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the coordinate strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if self.on_coordinate_strand:
             return self
@@ -748,10 +695,6 @@ class DisjointIntervalSequence:
 
         The coordinate intervals are unchanged. The segment's
         ``on_coordinate_strand`` is flipped.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         return DisjointIntervalSequence(
             self._coordinate_intervals,
@@ -779,10 +722,6 @@ class DisjointIntervalSequence:
         value corresponds to either an upstream, or downstream interval boundary
         (more specifically, whichever value is an Interval.start,
         since Interval.end is exclusive).
-
-        Returns
-        -------
-        list[:py:class:`~genome_kit.Interval`]
         """
         chrom = self.chromosome
         strand = self.strand
@@ -851,10 +790,6 @@ class DisjointIntervalSequence:
         """Return a single :py:class:`~genome_kit.Interval` spanning the
         segment's genomic extent (from its 5'-most to 3'-most positions),
         ignoring gaps between coordinate intervals.
-
-        Returns
-        -------
-        :py:class:`~genome_kit.Interval`
         """
         start_positions = self._lower_coord(self.start)
         end_positions = self._lower_coord(self.end)
@@ -917,11 +852,6 @@ class DisjointIntervalSequence:
         coordinate strand, so an interval on the strand opposite this DIS's
         segment lifts to an opposite-strand segment.
 
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence` or None
-            None if the lifted interval does not overlap this DIS's segment.
-
         Raises
         ------
         ValueError
@@ -968,11 +898,6 @@ class DisjointIntervalSequence:
         Both DIS objects must share the same coordinate intervals and the same
         ``on_coordinate_strand``. 0-length intersections return None.
 
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence` or None
-            The intersection segment, or None if the segments do not overlap.
-
         Raises
         ------
         ValueError
@@ -1015,10 +940,6 @@ class DisjointIntervalSequence:
         allow_outside_coord
             When True (default), pad out-of-coord regions with ``N``. When
             False, raise if the segment extends past the coord intervals.
-
-        Returns
-        -------
-        :py:class:`str`
 
         Raises
         ------

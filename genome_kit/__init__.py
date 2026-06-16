@@ -71,6 +71,7 @@ __all__ = [
     "Cds",
     "CdsTable",
     "DataManager",
+    "DisjointIntervalSequence",
     "Exon",
     "ExonTable",
     "Gene",

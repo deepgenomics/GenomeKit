@@ -1,27 +1,10 @@
 from copy import deepcopy
-import enum
 from dataclasses import dataclass
 from typing import Sequence, Literal
 
 from .interval import Interval
 from .genome_annotation import Transcript
-
-
-class IndexDirection(enum.Enum):
-    """Controls how indices are assigned to the 5' and 3' ends of a coordinate space.
-    Changing this value will result in undefined behaviour for
-    :py:class:`DisjointIntervalSequence` objects created under a different convention.
-
-    ``TRANSCRIPT_FIVE_TO_THREE``
-        Index 0 is always at the coordinate transcript's 5' end, regardless of genomic strand.
-
-    ``POSITIVE_STRAND_LEFT_TO_RIGHT``
-        Index 0 is always at the leftmost genomic position relative to the positive strand.
-        On the negative strand, this means the 3' end is at index 0.
-    """
-
-    TRANSCRIPT_FIVE_TO_THREE = "transcript_five_to_three"
-    POSITIVE_STRAND_LEFT_TO_RIGHT = "positive_strand_left_to_right"
+from .genome import Genome
 
 
 @dataclass(frozen=True)
@@ -45,38 +28,14 @@ class DisjointIntervalSequence:
 
     - A **coordinate space** defined by a sequence of non-overlapping genomic
       :py:class:`~genome_kit.Interval` objects (e.g. the exons of a transcript),
-      which are flattened into a contiguous 0-based index space. Indices for the
-      coordinate space are assigned according to the current :py:class:`IndexDirection`
-      value.
+      which are flattened into a contiguous 0-based index space. Index 0 is
+      always at the coordinate space's 5' end, regardless of genomic strand.
     - A **segment** within that coordinate space, defined by a 5' and 3' index.
       The segment may lie on the same, or opposite, strand as the coordinate space.
 
     Use :py:meth:`from_transcript` or :py:meth:`from_intervals` to construct
     instances rather than calling the constructor directly.
     """
-
-    _index_direction: IndexDirection = IndexDirection.TRANSCRIPT_FIVE_TO_THREE
-
-    @classmethod
-    def set_index_direction(cls, direction: IndexDirection) -> None:
-        """Set the index direction convention for all DIS instances.
-
-        Parameters
-        ----------
-        direction : :py:class:`IndexDirection`
-            The index direction convention to use.
-        """
-        cls._index_direction = direction
-
-    @classmethod
-    def get_index_direction(cls) -> IndexDirection:
-        """Get the current index direction convention.
-
-        Returns
-        -------
-        :py:class:`IndexDirection`
-        """
-        return cls._index_direction
 
     def __init__(
         self,
@@ -95,20 +54,20 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        coordinate_intervals : Sequence[:py:class:`~genome_kit.Interval`]
+        coordinate_intervals
             Non-empty sequence of non-overlapping Intervals on the same
             chromosome, strand, and reference genome.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment.
-        on_coordinate_strand : :py:class:`bool`
+        on_coordinate_strand
             Whether the segment is on the same strand as the coordinate
             intervals. Defaults to True. Can be used to represent a sequence that binds
             to the transcript if set to False.
-        start : :py:class:`int` or None
+        start
             start index of the segment in the coordinate space. Defaults to 0
-        end : :py:class:`int` or None
+        end
             end index of the segment in the coordinate space. Defaults to the length
             of the coordinate space.
 
@@ -171,7 +130,24 @@ class DisjointIntervalSequence:
                     f"Intervals must not overlap: [{cur_iv.start}, {cur_iv.end}) and [{next_iv.start}, {next_iv.end})"
                 )
 
-        self._coordinate_intervals: tuple[Interval, ...] = tuple(sorted_intervals)
+        # Merge adjacent/touching intervals (e.g. [10, 20) and [20, 30) -> [10, 30)).
+        # Touching is detected on genomic coordinates (cur_iv.end == next_iv.start),
+        # which holds regardless of strand since start < end for every Interval.
+        merged_intervals: list[Interval] = [sorted_intervals[0]]
+        for next_iv in sorted_intervals[1:]:
+            last_iv = merged_intervals[-1]
+            if last_iv.end == next_iv.start or next_iv.end == last_iv.start:
+                merged_intervals[-1] = Interval(
+                    iv0.chromosome,
+                    iv0.strand,
+                    min(last_iv.start, next_iv.start),
+                    max(last_iv.end, next_iv.end),
+                    iv0.reference_genome,
+                )
+            else:
+                merged_intervals.append(next_iv)
+
+        self._coordinate_intervals: tuple[Interval, ...] = tuple(merged_intervals)
 
         self._coord_metadata = _CoordinateMetadata(
             name=coord_name,
@@ -212,16 +188,12 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        intervals : Sequence[:py:class:`~genome_kit.Interval`]
+        intervals
             Sequence of Interval or annotation objects.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         coord_intervals = [
             iv.interval if hasattr(iv, "interval") else iv for iv in intervals
@@ -241,19 +213,15 @@ class DisjointIntervalSequence:
 
         Parameters
         ----------
-        transcript : :py:class:`~genome_kit.Transcript`
+        transcript
             The source Transcript object.
-        region : :py:class:`str`
+        region
             Which region to extract — ``"exons"``, ``"cds"``,
             ``"utr5"``, or ``"utr3"``.
-        coord_name : :py:class:`str` or None
+        coord_name
             Optional name for the coordinate space. Defaults to ``transcript.id``.
-        segment_name : :py:class:`str` or None
+        segment_name
             Optional name for the segment. Defaults to ``transcript.id``.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
 
         Raises
         ------
@@ -320,24 +288,6 @@ class DisjointIntervalSequence:
         return "+"
 
     @property
-    def coordinate_end5_index(self) -> int:
-        """5' index of the coordinate space."""
-        if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
-            return 0
-        if self.coord_strand == "+":
-            return 0
-        return self.coordinate_length
-
-    @property
-    def coordinate_end3_index(self) -> int:
-        """3' index of the coordinate space."""
-        if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
-            return self.coordinate_length
-        if self.coord_strand == "+":
-            return self.coordinate_length
-        return 0
-
-    @property
     def end5_index(self) -> int:
         """5' index of the segment."""
         if self._upstream_index_step() == -1:
@@ -390,12 +340,12 @@ class DisjointIntervalSequence:
     @property
     def coord_end5(self) -> "DisjointIntervalSequence":
         """0-length DIS at the coordinate space's 5' end."""
-        return self._at_index(self.coordinate_end5_index, on_coordinate_strand=True)
+        return self._at_index(0, on_coordinate_strand=True)
 
     @property
     def coord_end3(self) -> "DisjointIntervalSequence":
         """0-length DIS at the coordinate space's 3' end."""
-        return self._at_index(self.coordinate_end3_index, on_coordinate_strand=True)
+        return self._at_index(self.coordinate_length, on_coordinate_strand=True)
 
     @property
     def coordinate_intervals(self) -> tuple[Interval, ...]:
@@ -413,19 +363,78 @@ class DisjointIntervalSequence:
         """Length of the segment on the coordinate space."""
         return self.end - self.start
 
+    def _lower_coord(self, coord: int) -> list[int]:
+        """Convert a DIS coordinate index to the genomic coordinate(s).
+
+        Returns a 1-element list for indices interior to a single coord
+        interval, at the outer 5' (``coord == 0``) and 3'
+        (``coord == coordinate_length``) edges of the DIS, and for any
+        extrapolated index (``coord < 0`` or ``coord > coordinate_length``).
+        Extrapolation is linear from the nearest interval boundary and may
+        yield negative values or values exceeding the chromosome length.
+
+        Returns a 2-element list ``[iv_upstream_coord, iv_downstream_coord]`` sorted
+        5' -> 3' when ``coord`` falls exactly on an internal boundary between two
+        adjacent coord intervals — where ``iv_upstream_coord`` is the upstream-most
+        coordinate boundary, and ``iv_downstream_coord`` is the downstream-most
+        coordinate boundary (regardless of strand). Touching intervals produce
+        two equal values.
+
+        Parameters
+        ----------
+        coord
+            Index in the DIS coordinate space.
+        """
+        ivs = self._coordinate_intervals
+        on_plus = self.coord_strand == "+"
+        coord_len = self.coordinate_length
+
+        # Upstream of first interval — extrapolate (no upstream neighbor)
+        if coord <= 0:
+            if on_plus:
+                return [ivs[0].start - abs(coord)]
+            return [ivs[0].end + abs(coord)]
+
+        # Downstream of last interval — extrapolate (no downstream neighbor)
+        if coord >= coord_len:
+            overshoot = coord - coord_len
+            if on_plus:
+                return [ivs[-1].end + overshoot]
+            return [ivs[-1].start - overshoot]
+
+        # Walk intervals, consuming coord with a decrementing delta
+        delta = coord
+        interval_index = -1
+        while delta >= 0:
+            interval_index += 1
+            delta -= len(ivs[interval_index])
+
+        iv = ivs[interval_index]
+        if delta == -len(iv):
+            # coord landed on the cumulative end of ivs[interval_index - 1],
+            # i.e. the internal boundary between two coord intervals.
+            upstream = ivs[interval_index - 1]
+            if on_plus:
+                return [upstream.end, iv.start]  # indices ordered 5' -> 3' w.r.t segment strand
+            else:
+                return [upstream.start, iv.end]  # indices ordered 5' -> 3' w.r.t segment strand
+
+        if on_plus:
+            return [iv.end - abs(delta)]
+        return [iv.start + abs(delta)]
+
     def _upstream_index_step(self, on_coordinate_strand: bool | None = None) -> int:
         """Return +1 or -1 indicating the upstream direction in index space.
 
-        Args:
-            on_coordinate_strand: Override for which strand to compute the step for.
-                Defaults to this segment's on_coordinate_strand.
+        Parameters
+        ----------
+        on_coordinate_strand
+            Override for which strand to compute the step for. Defaults to
+            this segment's ``on_coordinate_strand``.
         """
         if on_coordinate_strand is None:
             on_coordinate_strand = self.on_coordinate_strand
-        if self._index_direction == IndexDirection.TRANSCRIPT_FIVE_TO_THREE:
-            return -1 if on_coordinate_strand else 1
-        # POSITIVE_STRAND_LEFT_TO_RIGHT: effective strand determines direction
-        return -1 if self.strand == "+" else 1
+        return -1 if on_coordinate_strand else 1
 
     def _validate_same_coordinate_space(
         self, other: "DisjointIntervalSequence"
@@ -462,8 +471,12 @@ class DisjointIntervalSequence:
 
     def shift(self, amount: int) -> "DisjointIntervalSequence":
         """Shift the segment downstream by amount (negative shifts upstream).
-
         The coordinate space is unchanged. Only the segment indices move.
+
+        Parameters
+        ----------
+        amount
+            Bases to shift the segment downstream. Negative values shift upstream.
         """
         downstream_step = -self._upstream_index_step()
         delta = amount * downstream_step
@@ -477,13 +490,20 @@ class DisjointIntervalSequence:
     ) -> "DisjointIntervalSequence":
         """Expand the segment upstream and/or downstream.
 
-        Negative values contract the segment. Raises ValueError if contraction
-        would result in end5 being downstream of end3.
+        Negative values contract the segment.
 
-        Args:
-            upstream: Bases to expand (or contract if negative) toward the 5' end.
-            dnstream: Bases to expand (or contract if negative) toward the 3' end.
-                Defaults to upstream (symmetric).
+        Parameters
+        ----------
+        upstream
+            Bases to expand (or contract if negative) toward the 5' end.
+        dnstream
+            Bases to expand (or contract if negative) toward the 3' end.
+            Defaults to upstream (symmetric).
+
+        Raises
+        ------
+        ValueError
+            If contraction would result in end5 being downstream of end3.
         """
         if dnstream is None:
             dnstream = upstream
@@ -498,6 +518,72 @@ class DisjointIntervalSequence:
                 f"(end5={new_end5}, end3={new_end3})"
             )
         return self._from_end_indices(new_end5, new_end3)
+
+    def expand_coord(
+        self, upstream: int, dnstream: int | None = None
+    ) -> "DisjointIntervalSequence":
+        """Expand the coordinate space and possibly segment at its 5' and/or 3' ends.
+
+        The outer 5' edge of the first coord interval is extended ``upstream``
+        bases and the outer 3' edge of the last coord interval is extended
+        ``dnstream`` bases. If the segment spans the coordinate intervals exactly,
+        it is expanded an equal amount in the upstream/downstream direction as
+        the coordinate intervals, otherwise it is left unexpanded.
+
+        Parameters
+        ----------
+        upstream
+            Bases to add at the coordinate space's 5' end.
+        dnstream
+            Bases to add at the coordinate space's 3' end.
+            Defaults to upstream (symmetric).
+
+        Raises
+        ------
+        ValueError
+            If either argument is negative.
+        """
+        if dnstream is None:
+            dnstream = upstream
+        if upstream < 0 or dnstream < 0:
+            raise ValueError(
+                "expand_coord requires non-negative values; "
+                f"got upstream={upstream}, dnstream={dnstream}"
+            )
+
+        # Segment does not span coord intervals exactly: do not expand segment
+        if self.start != 0 or self.end != self.coordinate_length:
+            # Re-indexing of coord space only occurs on upstream expansion, so only
+            # adjust indices based on this change. Downstream expansion leaves existing
+            # indices intact, so no adjustment needed
+            new_start = self._start + upstream
+            new_end = self._end + upstream
+        else:
+            # The interval's lower index stays at self._start in the new coord space due
+            # to re-indexing of the coord space implicitly 'expanding' start upstream.
+            # end index is adjusted to account for extra bases introduced by upstream and
+            # downstream expansion
+            new_start = self._start
+            new_end = self._end + upstream + dnstream
+
+        coord_ivs = list(self._coordinate_intervals)
+        iv0, ivn = coord_ivs[0], coord_ivs[-1]
+        if len(coord_ivs) == 1:
+            coord_ivs = [
+                iv0.expand(upstream, dnstream)  # iv0 is ivn
+            ]
+        else:
+            coord_ivs[0] = iv0.expand(upstream, 0)
+            coord_ivs[-1] = ivn.expand(0, dnstream)
+
+        return DisjointIntervalSequence(
+            coord_ivs,
+            coord_name=self._coord_metadata.name,
+            segment_name=self._segment_metadata.name,
+            on_coordinate_strand=self.on_coordinate_strand,
+            start=new_start,
+            end=new_end
+        )
 
     def upstream_of(self, other: "DisjointIntervalSequence") -> bool:
         """True if self is strictly upstream of other (no overlap).
@@ -554,19 +640,11 @@ class DisjointIntervalSequence:
 
     def is_same_strand(self) -> bool:
         """True if the segment is on the same strand as the coordinate intervals.
-
-        Returns
-        -------
-        :py:class:`bool`
         """
         return self.on_coordinate_strand
 
     def is_positive_strand(self) -> bool:
         """True if the segment is on the positive strand.
-
-        Returns
-        -------
-        :py:class:`bool`
         """
         if self.strand == "+":
             return True
@@ -577,10 +655,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the positive strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if self.is_positive_strand():
             return self
@@ -591,10 +665,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the negative strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if not self.is_positive_strand():
             return self
@@ -605,10 +675,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the opposite strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if not self.on_coordinate_strand:
             return self
@@ -619,10 +685,6 @@ class DisjointIntervalSequence:
 
         Returns ``self`` if already on the coordinate strand. The coordinate
         intervals are unchanged; only the segment strand is affected.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         if self.on_coordinate_strand:
             return self
@@ -633,10 +695,6 @@ class DisjointIntervalSequence:
 
         The coordinate intervals are unchanged. The segment's
         ``on_coordinate_strand`` is flipped.
-
-        Returns
-        -------
-        :py:class:`DisjointIntervalSequence`
         """
         return DisjointIntervalSequence(
             self._coordinate_intervals,
@@ -646,6 +704,283 @@ class DisjointIntervalSequence:
             start=self._start,
             end=self._end,
         )
+
+    def lower(self) -> list[Interval]:
+        """Project the interval back to genomic :py:class:`~genome_kit.Interval` objects.
+
+        Returns the genomic representation of the DIS interval as one or more
+        Intervals, in 5'->3' order. Multiple intervals are returned when the
+        DIS interval spans boundaries between coordinate intervals. All
+        returned Intervals use the effective strand of the DIS interval.
+
+        Indices outside the coordinate space are extrapolated linearly from
+        the nearest boundary, so returned Intervals may extend beyond the
+        chromosome (their start may be negative or their end may exceed the
+        chromosome length).
+
+        When lowering a 0-length interval on an internal boundary, the returned
+        value corresponds to either an upstream, or downstream interval boundary
+        (more specifically, whichever value is an Interval.start,
+        since Interval.end is exclusive).
+        """
+        chrom = self.chromosome
+        strand = self.strand
+        refg = self.reference_genome
+        coord_strand = self.coord_strand
+        on_plus = coord_strand == "+"
+        start, end = self._start, self._end
+
+        if start == end:
+            positions = self._lower_coord(start)
+            # On an internal boundary _lower_coord returns two flanking values;
+            # collapse to a single 0-length Interval corresponding to the value of
+            # the index that is an Interval.start (we do this because Interval.end
+            # is exclusive).
+            pos = positions[0] if len(positions) == 1 else max(positions)
+            return [Interval(chrom, strand, pos, pos, refg)]
+
+        # _lower_coord returns 1 value interior/edge/extrapolated, or 2 values
+        # in 5'->3' order at an internal boundary. Cumulative len(_lower_coord(start)) +
+        # len(_lower_coord(end)) is 2 (neither on boundary), 3 (one on boundary), or 4
+        # (both on boundary). In all cases, the start_pos should be the downstream-most
+        # value and the end_pos should be the upstream-most value.
+        start_positions = self._lower_coord(start)
+        end_positions = self._lower_coord(end)
+        start_pos = start_positions[-1]  # Since sorted 5' -> 3', -1 is downstream
+        end_pos = end_positions[0]  # 0 is the upstream value
+
+        start_iv = Interval(chrom, coord_strand, start_pos, start_pos, refg)
+        end_iv = Interval(chrom, coord_strand, end_pos, end_pos, refg)
+
+        coord_ivs = self._coordinate_intervals
+        last_interval_index = len(coord_ivs) - 1
+
+        first_idx = 0
+        while first_idx < last_interval_index and start_iv.dnstream_of(
+            coord_ivs[first_idx]
+        ):
+            first_idx += 1
+        last_idx = last_interval_index
+        while last_idx > 0 and end_iv.upstream_of(coord_ivs[last_idx]):
+            last_idx -= 1
+
+        result: list[Interval] = []
+        for i in range(first_idx, last_idx + 1):
+            iv = coord_ivs[i]
+            is_first = i == first_idx
+            is_last = i == last_idx
+            if on_plus:
+                genomic_start = start_pos if is_first else iv.start
+                genomic_end = end_pos if is_last else iv.end
+            else:
+                # swap start and end positions since going from coordinate-space that
+                # runs 5' -> 3' (DIS) to genomic space (3' -> 5' on - strand)
+                genomic_start = end_pos if is_last else iv.start
+                genomic_end = start_pos if is_first else iv.end
+            result.append(Interval(chrom, strand, genomic_start, genomic_end, refg))
+
+        # The loop emits intervals in coord 5'->3' order. When the segment is on
+        # the opposite strand, that is the reverse of segment 5'->3'.
+        if not self.on_coordinate_strand:
+            result.reverse()
+
+        return result
+
+    def genomic_span(self) -> Interval:
+        """Return a single :py:class:`~genome_kit.Interval` spanning the
+        segment's genomic extent (from its 5'-most to 3'-most positions),
+        ignoring gaps between coordinate intervals.
+        """
+        start_positions = self._lower_coord(self.start)
+        end_positions = self._lower_coord(self.end)
+        start_pos = start_positions[-1]  # Since sorted 5' -> 3', -1 is downstream
+        end_pos = end_positions[0]  # 0 is the upstream value
+        return Interval(
+            self.chromosome,
+            self.strand,
+            min(start_pos, end_pos),
+            max(start_pos, end_pos),
+            self.reference_genome,
+        )
+
+    def _lift_position(self, pos: int) -> int:
+        """Map a genomic position to a DIS index in this coordinate space.
+
+        Positions outside the coord intervals are linearly extrapolated from
+        the nearest outer edge. Positions in a gap between coord intervals
+        are clipped to the cumulative end of the previous interval (i.e. the
+        boundary index).
+        """
+        ivs = self._coordinate_intervals
+        coord_len = self.coordinate_length
+        if self.coord_strand == "+":
+            if pos < ivs[0].start:
+                return pos - ivs[0].start
+            if pos > ivs[-1].end:
+                return coord_len + (pos - ivs[-1].end)
+            cumulative = 0
+            for iv in ivs:
+                if iv.start <= pos <= iv.end:
+                    return cumulative + (pos - iv.start)
+                if pos < iv.start:
+                    return cumulative
+                cumulative += len(iv)
+            assert False, "Position not found in any interval"
+        # minus
+        if pos > ivs[0].end:
+            return ivs[0].end - pos
+        if pos < ivs[-1].start:
+            return coord_len + (ivs[-1].start - pos)
+        cumulative = 0
+        for iv in ivs:
+            if iv.start <= pos <= iv.end:
+                return cumulative + (iv.end - pos)
+            if pos > iv.end:
+                return cumulative
+            cumulative += len(iv)
+        assert False, "Position not found in any interval"
+
+    def lift_interval(self, other: Interval) -> "DisjointIntervalSequence | None":
+        """Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS's segment.
+
+        The interval's genomic span is mapped into DIS coordinate-space indices
+        and intersected with this DIS's segment. The returned DIS represents
+        that intersection as a segment in this coordinate space.
+
+        ``other`` may lie on either strand. The returned DIS's
+        ``on_coordinate_strand`` reflects whether ``other`` is on the
+        coordinate strand, so an interval on the strand opposite this DIS's
+        segment lifts to an opposite-strand segment.
+
+        Raises
+        ------
+        ValueError
+            If ``other`` is not on the same chromosome and reference genome.
+        """
+        if other.chromosome != self.chromosome:
+            raise ValueError(
+                f"Interval chromosome {other.chromosome!r} does not match DIS "
+                f"chromosome {self.chromosome!r}"
+            )
+        if other.reference_genome != self.reference_genome:
+            raise ValueError(
+                f"Interval reference_genome {other.reference_genome!r} does not "
+                f"match DIS reference_genome {self.reference_genome!r}"
+            )
+
+        if self.coord_strand == "+":
+            seg_start = self._lift_position(other.start)
+            seg_end = self._lift_position(other.end)
+        else:
+            # On minus, lower genomic position maps to higher DIS index.
+            seg_start = self._lift_position(other.end)
+            seg_end = self._lift_position(other.start)
+
+        # Clip to self's segment via half-open intersection.
+        intersected_start = max(seg_start, self._start)
+        intersected_end = min(seg_end, self._end)
+        if intersected_start >= intersected_end:
+            return None
+
+        return DisjointIntervalSequence(
+            self._coordinate_intervals,
+            coord_name=self._coord_metadata.name,
+            on_coordinate_strand=(other.strand == self.coord_strand),
+            start=intersected_start,
+            end=intersected_end,
+        )
+
+    def intersect(
+        self, other: "DisjointIntervalSequence"
+    ) -> "DisjointIntervalSequence | None":
+        """Segment-wise intersection with another DIS in the same coord space.
+
+        Both DIS objects must share the same coordinate intervals and the same
+        ``on_coordinate_strand``. 0-length intersections return None.
+
+        Raises
+        ------
+        ValueError
+            If the DIS objects do not share the same coordinate space or
+            ``on_coordinate_strand`` differs.
+        """
+        self._validate_same_coordinate_space(other)
+        if self.on_coordinate_strand != other.on_coordinate_strand:
+            raise ValueError(
+                f"Cannot compare: self is on "
+                f"{'same' if self.on_coordinate_strand else 'opposite'} "
+                f"strand but other is on "
+                f"{'same' if other.on_coordinate_strand else 'opposite'} strand"
+            )
+
+        intersected_start = max(self._start, other._start)
+        intersected_end = min(self._end, other._end)
+        if intersected_start >= intersected_end:
+            return None
+
+        return DisjointIntervalSequence(
+            self._coordinate_intervals,
+            coord_name=self._coord_metadata.name,
+            on_coordinate_strand=self.on_coordinate_strand,
+            start=intersected_start,
+            end=intersected_end,
+        )
+
+    def dna(self, allow_outside_coord: bool = True) -> str:
+        """Return the DNA sequence corresponding to the segment.
+
+        Bases outside the coordinate intervals (segment indices ``< 0`` or
+        ``>= coordinate_length``) are returned as ``N`` when
+        ``allow_outside_coord`` is True; otherwise a ValueError is raised.
+        Returns an empty string for a 0-length segment. DNA is returned in
+        5' -> 3' order.
+
+        Parameters
+        ----------
+        allow_outside_coord
+            When True (default), pad out-of-coord regions with ``N``. When
+            False, raise if the segment extends past the coord intervals.
+
+        Raises
+        ------
+        ValueError
+            If the segment extends past the coord intervals and
+            ``allow_outside_coord`` is False.
+        """
+        if self._start == self._end:
+            return ""
+
+        coord_len = self.coordinate_length
+        if self._upstream_index_step() == -1:
+            upstream_pad = 0 if self._start >= 0 else abs(self._start)
+            downstream_pad = max(self._end - coord_len, 0)
+        else:
+            upstream_pad = max(self._end - coord_len, 0)
+            downstream_pad = 0 if self._start >= 0 else abs(self._start)
+        if (upstream_pad or downstream_pad) and not allow_outside_coord:
+            raise ValueError(
+                f"DIS segment [{self._start}, {self._end}) extends outside "
+                f"coord range [0, {coord_len})"
+            )
+
+        # Clip start to being at least start of coord space
+        clipped_start = max(self._start, 0)
+        # Clip end to being at most end of coord space
+        clipped_end = min(self._end, coord_len)
+        # If the clipped segment has a positive length, get the DNA
+        if clipped_start < clipped_end:
+            clipped = DisjointIntervalSequence(
+                self._coordinate_intervals,
+                on_coordinate_strand=self.on_coordinate_strand,
+                start=clipped_start,
+                end=clipped_end,
+            )
+            genome = Genome(self.reference_genome)
+            clipped_dna = "".join(genome.dna(iv) for iv in clipped.lower())
+        else:
+            clipped_dna = ""
+
+        return "N" * upstream_pad + clipped_dna + "N" * downstream_pad
 
     def __len__(self) -> int:
         """Return the length of the segment."""

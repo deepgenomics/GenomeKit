@@ -917,12 +917,3 @@ contrast to :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand_coord`, 
 extends the coord space itself so
 that new positions are backed by real reference DNA. Set
 ``allow_outside_coord=False`` to opt out of N-padding and raise an error instead.
-
-For convenience, :py:meth:`Genome.dna <genome_kit.Genome.dna>` accepts a
-DIS directly and dispatches to :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.dna`, so
-either of the following is equivalent
-
-.. code-block:: python
-
-    >>> dis.dna()
-    >>> genome.dna(dis)

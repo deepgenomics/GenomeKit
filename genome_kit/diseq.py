@@ -844,13 +844,16 @@ class DisjointIntervalSequence:
         -------
         :py:class:`~genome_kit.Interval`
         """
-        ivs = self.lower()
+        start_positions = self._lower_coord(self.start)
+        end_positions = self._lower_coord(self.end)
+        start_pos = start_positions[-1]  # Since sorted 5' -> 3', -1 is downstream
+        end_pos = end_positions[0]  # 0 is the upstream value
         return Interval(
-            ivs[0].chromosome,
-            ivs[0].strand,
-            min(iv.start for iv in ivs),
-            max(iv.end for iv in ivs),
-            ivs[0].reference_genome,
+            self.chromosome,
+            self.strand,
+            min(start_pos, end_pos),
+            max(start_pos, end_pos),
+            self.reference_genome,
         )
 
     def _lift_position(self, pos: int) -> int:

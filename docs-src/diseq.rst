@@ -843,6 +843,10 @@ segment returns ``None``
     >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38")) is None
     True
 
+    >>> lifted2 = dis.lift_interval(Interval("chr1", "+", 150, 450, "hg38"))
+    >>> lifted2.start, lifted2.end
+    (50, 200)   # clipped to the DIS segment
+
 Extracting DNA
 ==============
 

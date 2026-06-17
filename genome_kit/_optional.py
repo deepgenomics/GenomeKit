@@ -32,6 +32,20 @@ def require_polars():
     return pl
 
 
+def import_pandas():
+    """Import and return pandas if available, otherwise return None.
+    
+    Pandas is an optional dependency used for interoperability with pandas DataFrames. 
+    It is NOT required for core GenomeKit or GKDF functionality. The library will only
+    be used if the user passes a pd DataFrame on input, or requests it on output.
+    """
+    try:
+        import pandas as pd
+        return pd
+    except ModuleNotFoundError:
+        return None
+
+
 def check_under_rosetta():
     """Check if program is running under Rosetta translation on Apple Silicon.
 

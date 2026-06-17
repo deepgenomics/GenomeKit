@@ -10,10 +10,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    import pandas as pd
     import polars as pl
 
 import genome_kit as gk
-from genome_kit._optional import require_polars
+from genome_kit._optional import import_pandas, require_polars
 
 from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion
 from .registry import GK_TO_GKDF_TYPE, get_registry
@@ -317,22 +318,70 @@ def _deserialize_gk_cols(
     return lf.with_columns_seq(_build_deserialization_expr(col) for col in target_cols)
 
 
-# TODO: add union of pd.DataFrame
-def write_parquet(
-    df: pl.DataFrame | pl.LazyFrame, path: str | Path, infer_schema_length: int = 100
-) -> None:
-    """Serialize a DataFrame with GenomeKit objects to a Parquet file.
+def _convert_pandas_to_polars(df: pd.DataFrame) -> pl.LazyFrame:
+    """Convert a pandas DataFrame to a Polars LazyFrame.
+
+    Uses an intermediate representation to remove dependency on Pyarrow for conversion.
 
     Args:
-        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
+        df: The pandas DataFrame to convert.
+
+    Returns:
+        A Polars LazyFrame with the same data as the input pandas DataFrame.
+    """
+    pl = require_polars()
+
+    # pandas allows duplicate column names
+    if any(len(df[col].shape) > 1 for col in df.columns):
+        raise ValueError(
+            "Input DataFrame contains duplicated column names. "
+            "Unique column names are required for serialization."
+        )
+
+    lf = pl.LazyFrame(df.to_dict(orient="list"), strict=False)
+    # fill np.nan with nulls for consistent "None" values in polars
+    # ONLY applies to float columns, np.nan in object (GenomeKit) columns will remain
+    lf = lf.fill_nan(None)
+
+    return lf
+
+
+def write_parquet(
+    df: pl.DataFrame | pl.LazyFrame | pd.DataFrame,
+    path: str | Path,
+    infer_schema_length: int = 100,
+) -> None:
+    """Serialize a DataFrame or LazyFrame with GenomeKit objects to a Parquet file.
+
+    Args:
+        df: A Polars DataFrame or LazyFrame or pandas DataFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
         infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.
     """
     pl = require_polars()
 
     path = Path(path)
+    # convert input to a polars LazyFrame for processing.
     if isinstance(df, pl.DataFrame):
         df = df.lazy()
+    elif isinstance(df, pl.LazyFrame):
+        # no conversion needed from polars LazyFrame
+        pass
+    else:
+        # try to convert from pandas
+        pd = import_pandas()
+        if pd is None:
+            raise ImportError(
+                "Pandas is required to write from a pandas DataFrame. "
+                "Please install pandas into your environment to use this functionality."
+            )
+        else:
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError(
+                    f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
+                )
+            
+        df = _convert_pandas_to_polars(df)
 
     # mapping from column name to ColumnInfo dataclass
     target_cols = _detect_gk_cols(df, infer_schema_length=infer_schema_length)
@@ -382,17 +431,22 @@ def write_parquet(
     df.sink_parquet(path, metadata=metadata)
 
 
-def read_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
-    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
+def read_parquet(
+    path: str | Path, lazy: bool = False, to_pandas: bool = False
+) -> pl.DataFrame | pl.LazyFrame | pd.DataFrame:
+    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame or pandas DataFrame.
 
     Args:
         path: The file path to read the Parquet file from.
         lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
+        to_pandas: If True, convert the result to a pandas DataFrame. When True, this 
+            will override the ``lazy`` argument.
 
     Returns:
-        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects.
+        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects, or a pandas DataFrame if ``to_pandas`` is True.
     """
     pl = require_polars()
+    pd = import_pandas()
 
     path = Path(path)
     metadata = pl.read_parquet_metadata(path)
@@ -407,5 +461,13 @@ def read_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.Lazy
     _ = _init_gk_annotations(lf, target_cols)
 
     lf = _deserialize_gk_cols(lf, target_cols)
+
+    if to_pandas:
+        if pd is None:
+            raise ImportError(
+                "Pandas is required to convert to a pandas DataFrame. "
+                "Please install pandas into your environment to use this functionality."
+            )
+        return pd.DataFrame(lf.collect().to_dict(as_series=False))
 
     return lf if lazy else lf.collect()

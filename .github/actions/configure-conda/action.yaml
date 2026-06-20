@@ -7,17 +7,29 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash -l -e {0}
+    - shell: bash
       run: |
-        source ${HOME}/.bash_profile # for macos
-        set -x
-        if [ ! -e "${HOME}/.condarc" ]; then
+        set -eo pipefail
+        # Determine condarc location and how to run conda commands
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          CONDARC="$USERPROFILE/.condarc"
+          PKGS_ROOT="$MAMBA_ROOT_PREFIX"
+          RUN_PREFIX="micromamba run -n ${{ inputs.env }}"
+        else
+          source ${HOME}/.bash_profile 2>/dev/null || true  # for macos
+          CONDARC="${HOME}/.condarc"
+          PKGS_ROOT="${HOME}/micromamba"
           micromamba activate ${{ inputs.env }}
-          conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
+          RUN_PREFIX=""
+        fi
+
+        set -x
+        if [ ! -e "$CONDARC" ]; then
+          $RUN_PREFIX conda config --set always_yes yes --set changeps1 no --set auto_update_conda no
           # cache additional pkgs separately from docker pre-install
-          conda config --prepend pkgs_dirs ${HOME}/micromamba/envs/${{ inputs.env }}/pkgs
+          $RUN_PREFIX conda config --prepend pkgs_dirs "$PKGS_ROOT/envs/${{ inputs.env }}/pkgs"
           # fallback to docker pre-installed packages
-          conda config --append pkgs_dirs ${HOME}/micromamba/pkgs
-          conda config --prepend channels conda-forge
+          $RUN_PREFIX conda config --append pkgs_dirs "$PKGS_ROOT/pkgs"
+          $RUN_PREFIX conda config --prepend channels conda-forge
         fi
         set +x

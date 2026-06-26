@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.6.0](https://github.com/deepgenomics/GenomeKit/compare/v7.5.0...v7.6.0) (2026-06-26)
+
+
+### Features
+
+* add lower, lift, intersect, dna, expand_coord DIS methods ([#229](https://github.com/deepgenomics/GenomeKit/issues/229)) ([ecffc49](https://github.com/deepgenomics/GenomeKit/commit/ecffc49351b4c18019923a52af194c72b13e04d9))
+
 ## [7.5.0](https://github.com/deepgenomics/GenomeKit/compare/v7.4.5...v7.5.0) (2026-06-09)
 
 

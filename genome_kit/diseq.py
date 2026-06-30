@@ -415,9 +415,15 @@ class DisjointIntervalSequence:
             # i.e. the internal boundary between two coord intervals.
             upstream = ivs[interval_index - 1]
             if on_plus:
-                return [upstream.end, iv.start]  # indices ordered 5' -> 3' w.r.t segment strand
+                return [
+                    upstream.end,
+                    iv.start,
+                ]  # indices ordered 5' -> 3' w.r.t segment strand
             else:
-                return [upstream.start, iv.end]  # indices ordered 5' -> 3' w.r.t segment strand
+                return [
+                    upstream.start,
+                    iv.end,
+                ]  # indices ordered 5' -> 3' w.r.t segment strand
 
         if on_plus:
             return [iv.end - abs(delta)]
@@ -569,9 +575,7 @@ class DisjointIntervalSequence:
         coord_ivs = list(self._coordinate_intervals)
         iv0, ivn = coord_ivs[0], coord_ivs[-1]
         if len(coord_ivs) == 1:
-            coord_ivs = [
-                iv0.expand(upstream, dnstream)  # iv0 is ivn
-            ]
+            coord_ivs = [iv0.expand(upstream, dnstream)]  # iv0 is ivn
         else:
             coord_ivs[0] = iv0.expand(upstream, 0)
             coord_ivs[-1] = ivn.expand(0, dnstream)
@@ -582,7 +586,7 @@ class DisjointIntervalSequence:
             segment_name=self._segment_metadata.name,
             on_coordinate_strand=self.on_coordinate_strand,
             start=new_start,
-            end=new_end
+            end=new_end,
         )
 
     def upstream_of(self, other: "DisjointIntervalSequence") -> bool:
@@ -639,13 +643,11 @@ class DisjointIntervalSequence:
         return self._start >= other.start and self._end <= other.end
 
     def is_same_strand(self) -> bool:
-        """True if the segment is on the same strand as the coordinate intervals.
-        """
+        """True if the segment is on the same strand as the coordinate intervals."""
         return self.on_coordinate_strand
 
     def is_positive_strand(self) -> bool:
-        """True if the segment is on the positive strand.
-        """
+        """True if the segment is on the positive strand."""
         if self.strand == "+":
             return True
         return False
@@ -840,7 +842,9 @@ class DisjointIntervalSequence:
             cumulative += len(iv)
         assert False, "Position not found in any interval"
 
-    def lift_interval(self, other: Interval) -> "DisjointIntervalSequence | None":
+    def lift_interval(
+        self, other: Interval, intersect_on_lift: bool = False
+    ) -> "DisjointIntervalSequence | None":
         """Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS's segment.
 
         The interval's genomic span is mapped into DIS coordinate-space indices
@@ -851,6 +855,13 @@ class DisjointIntervalSequence:
         ``on_coordinate_strand`` reflects whether ``other`` is on the
         coordinate strand, so an interval on the strand opposite this DIS's
         segment lifts to an opposite-strand segment.
+
+        Parameters
+        ----------
+        intersect_on_lift
+            If True, the lifted interval is intersected with this DIS's segment.
+            Default is False, and results in a ValueError if the interval is not fully
+            contained within the DIS's segment.
 
         Raises
         ------
@@ -866,6 +877,25 @@ class DisjointIntervalSequence:
             raise ValueError(
                 f"Interval reference_genome {other.reference_genome!r} does not "
                 f"match DIS reference_genome {self.reference_genome!r}"
+            )
+        lowered = self.lower()
+        # Need the intervals on same strand as other to check if other is within any of
+        # the lowered intervals, since other may be on the opposite strand.
+        lowered_ivs_on_same_strand_as_other = (
+            lowered
+            if other.strand == self.strand
+            else [iv.as_opposite_strand() for iv in lowered]
+        )
+        # Since DIS segment lowered intervals are not contiguous, if other is not
+        # fully contained within one of the lowered intervals then it is not fully
+        # contained within the DIS segment.
+        if (
+            not intersect_on_lift
+            and sum(other.within(iv) for iv in lowered_ivs_on_same_strand_as_other) != 1
+        ):
+            raise ValueError(
+                f"Interval {other} lies outside the bases defined by the segment of this DIS. "
+                f"Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment."
             )
 
         if self.coord_strand == "+":

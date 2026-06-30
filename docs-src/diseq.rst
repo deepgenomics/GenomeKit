@@ -805,8 +805,9 @@ travel between them.
 
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` projects the segment back to
 genomic space. :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval`
-projects a genomic interval into the DIS's index space and clips it
-against the segment. They are conceptual inverses, but each has to deal
+projects a genomic interval into the DIS's index space, requiring it to map
+cleanly onto the segment (or clipping it against the segment when
+``intersect_on_lift=True``). They are conceptual inverses, but each has to deal
 with a structural mismatch — gaps in genomic space have no representation
 in DIS space, and contiguous DIS indices may correspond to two
 non-adjacent genomic regions — so neither is a clean bijection.
@@ -857,16 +858,22 @@ lift_interval
 
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval` is the inverse: it takes
 a genomic :py:class:`~genome_kit.Interval` and returns a new DIS whose segment is
-the intersection of that interval with this DIS's segment, expressed
-in the DIS coordinate space. The input must share the same chromosome, reference
-genome, and effective strand as the DIS.
+that interval expressed in the DIS coordinate space. The input must share the
+same chromosome, reference genome, and effective strand as the DIS.
 
-The lift is well-defined even when the input straddles gaps between coord
-intervals: positions inside a gap collapse to the boundary index of the
-adjacent coord interval, and positions outside the coord space extrapolate
-linearly. The result is then clipped against the DIS's segment, so a
-genomic interval that overlaps coord space but falls entirely outside the
-segment returns ``None``
+By default (``intersect_on_lift=False``) the input must map cleanly onto the
+DIS's segment — that is, it must be fully contained within the segment's bases.
+If it is not (it straddles the segment edge, falls in a coord-interval gap, or
+spans the gap between two coord intervals), :py:meth:`lift_interval` raises a
+``ValueError``.
+
+Pass ``intersect_on_lift=True`` to instead clip the lifted interval against the
+DIS's segment. This lift is well-defined even when the input straddles gaps
+between coord intervals: positions inside a gap collapse to the boundary index
+of the adjacent coord interval, and positions outside the coord space
+extrapolate linearly. The clipped result is then intersected with the segment,
+so a genomic interval that overlaps coord space but falls entirely outside the
+segment returns ``None``.
 
 .. code-block:: python
 
@@ -875,15 +882,22 @@ segment returns ``None``
     ...      Interval("chr1", "+", 300, 400, "hg38")],
     ...     start=0, end=200,
     ... )
+    >>> # Fully contained in the segment: lifts cleanly with the default.
     >>> lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, "hg38"))
     >>> lifted.start, lifted.end
     (120, 160)
 
-    >>> # Falls in a coord-interval gap with no overlap of any coord interval
-    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38")) is None
+    >>> # Not contained in the segment: raises unless intersect_on_lift=True.
+    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38"))
+    Traceback (most recent call last):
+        ...
+    ValueError: ... Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment.
+
+    >>> # Falls in a coord-interval gap with no overlap of any coord interval.
+    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38"), intersect_on_lift=True) is None
     True
 
-    >>> lifted2 = dis.lift_interval(Interval("chr1", "+", 150, 450, "hg38"))
+    >>> lifted2 = dis.lift_interval(Interval("chr1", "+", 150, 450, "hg38"), intersect_on_lift=True)
     >>> lifted2.start, lifted2.end
     (50, 200)   # clipped to the DIS segment
 

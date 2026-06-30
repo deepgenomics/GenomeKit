@@ -2035,7 +2035,7 @@ class TestLiftInterval(unittest.TestCase):
     def test_plus_partial_overlap(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=50)
-        lifted = dis.lift_interval(Interval("chr1", "+", 130, 170, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 130, 170, REFG), intersect_on_lift=True)
         self.assertIsNotNone(lifted)
         self.assertEqual(lifted.start, 30)
         self.assertEqual(lifted.end, 50)
@@ -2044,13 +2044,13 @@ class TestLiftInterval(unittest.TestCase):
     def test_no_overlap_returns_none(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=50)
-        lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, REFG), intersect_on_lift=True)
         self.assertIsNone(lifted)
 
     def test_lift_in_coord_gap_returns_none(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=200)
-        lifted = dis.lift_interval(Interval("chr1", "+", 250, 260, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 250, 260, REFG), intersect_on_lift=True)
         self.assertIsNone(lifted)
 
     def test_minus_coord(self):
@@ -2137,7 +2137,7 @@ class TestLiftInterval(unittest.TestCase):
     def test_lift_upstream_of_coord_plus(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=-50, end=200)
-        lifted = dis.lift_interval(Interval("chr1", "+", 70, 90, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 70, 90, REFG), intersect_on_lift=True)
         self.assertIsNotNone(lifted)
         self.assertEqual(lifted.start, -30)
         self.assertEqual(lifted.end, -10)
@@ -2164,7 +2164,7 @@ class TestLiftInterval(unittest.TestCase):
     def test_lift_outside_segment_returns_none(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=200)
-        lifted = dis.lift_interval(Interval("chr1", "+", 70, 90, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 70, 90, REFG), intersect_on_lift=True)
         self.assertIsNone(lifted)
 
     def test_lift_upstream_of_coord_minus(self):
@@ -2190,11 +2190,65 @@ class TestLiftInterval(unittest.TestCase):
         dis = DisjointIntervalSequence(
             ivs, start=-40, end=240, on_coordinate_strand=False,
         )
-        lifted = dis.lift_interval(Interval("chr1", "+", 50, 450, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 50, 450, REFG), intersect_on_lift=True)
         self.assertIsNotNone(lifted)
         self.assertEqual(lifted.start, -40)
         self.assertEqual(lifted.end, 240)
         self.assertFalse(lifted.on_coordinate_strand)
+
+    def test_plus_partial_overlap_raises_without_intersect(self):
+        # Interval straddles the segment's 3' edge: not fully contained, so
+        # lifting without intersect_on_lift must raise.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=50)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 130, 170, REFG))
+
+    def test_no_overlap_raises_without_intersect(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=50)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 320, 360, REFG))
+
+    def test_lift_in_coord_gap_raises_without_intersect(self):
+        # Interval falls in the gap between coord intervals.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 250, 260, REFG))
+
+    def test_lift_spanning_coord_gap_raises_without_intersect(self):
+        # Both endpoints land inside the segment, but the interval spans the
+        # gap between the two coord intervals, so it is not contained in any
+        # single lowered interval.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 150, 350, REFG))
+
+    def test_lift_outside_segment_raises_without_intersect(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 70, 90, REFG))
+
+    def test_lift_upstream_of_coord_plus_raises_without_intersect(self):
+        # Segment extends upstream of the coord 5' edge but does not reach the
+        # interval, leaving it outside the segment's bases.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=-50, end=200)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 20, 40, REFG))
+
+    def test_lift_minus_coord_off_strand_full_span_raises_without_intersect(self):
+        # Opposite-strand interval spans the full coord plus flanks; it crosses
+        # the coord gap and so is not contained in any single lowered interval.
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(
+            ivs, start=-40, end=240, on_coordinate_strand=False,
+        )
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 50, 450, REFG))
 
     def test_lift_idempotency(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])

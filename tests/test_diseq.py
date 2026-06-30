@@ -894,6 +894,74 @@ class TestShift(unittest.TestCase):
         self.assertEqual(shifted.end, 140)
 
 
+class TestCut(unittest.TestCase):
+
+    def test_cut_sets_indices(self):
+        dis = _dis(start=30, end=150)
+        cut = dis.cut(40, 120)
+        self.assertEqual(cut.start, 40)
+        self.assertEqual(cut.end, 120)
+
+    def test_cut_full_coordinate_space(self):
+        dis = _dis(start=30, end=150)
+        cut = dis.cut(0, dis.coordinate_length)
+        self.assertEqual(cut.start, 0)
+        self.assertEqual(cut.end, 200)
+
+    def test_cut_zero_length(self):
+        dis = _dis(start=30, end=150)
+        cut = dis.cut(80, 80)
+        self.assertEqual(cut.start, 80)
+        self.assertEqual(cut.end, 80)
+        self.assertEqual(cut.length, 0)
+
+    def test_cut_extrapolated_indices(self):
+        # Indices outside [0, coordinate_length] represent flanking positions.
+        dis = _dis(start=30, end=150)
+        cut = dis.cut(-20, 210)
+        self.assertEqual(cut.start, -20)
+        self.assertEqual(cut.end, 210)
+
+    def test_cut_start_greater_than_end_raises(self):
+        dis = _dis(start=30, end=150)
+        with self.assertRaises(ValueError):
+            dis.cut(120, 40)
+
+    def test_cut_preserves_coordinate_space(self):
+        dis = _dis(start=30, end=150)
+        cut = dis.cut(40, 120)
+        self.assertEqual(cut.coordinate_intervals, dis.coordinate_intervals)
+
+    def test_cut_preserves_metadata(self):
+        dis = _dis(start=30, end=150, coord_name="mycoord", segment_name="myiv")
+        cut = dis.cut(40, 120)
+        self.assertEqual(cut.coord_name, "mycoord")
+        self.assertEqual(cut.name, "myiv")
+        self.assertTrue(cut.on_coordinate_strand)
+
+    def test_cut_preserves_opposite_strand(self):
+        dis = _dis(start=30, end=150, on_coordinate_strand=False)
+        cut = dis.cut(40, 120)
+        self.assertEqual(cut.start, 40)
+        self.assertEqual(cut.end, 120)
+        self.assertFalse(cut.on_coordinate_strand)
+
+    def test_cut_negative_strand_coords(self):
+        # start/end are absolute coord-space indices regardless of genomic strand.
+        dis = _neg_dis(start=30, end=150)
+        cut = dis.cut(40, 120)
+        self.assertEqual(cut.start, 40)
+        self.assertEqual(cut.end, 120)
+
+    def test_cut_negative_strand_coords_segment_opposite_strand_flanking(self):
+        # start/end are absolute coord-space indices regardless of genomic strand.
+        dis = _neg_dis(start=30, end=150, on_coordinate_strand=False)
+        cut = dis.cut(-40, -20)
+        self.assertEqual(cut.start, -40)
+        self.assertEqual(cut.end, -20)
+        self.assertFalse(cut.on_coordinate_strand)
+
+
 class TestExpand(unittest.TestCase):
 
     def test_expand_symmetric(self):

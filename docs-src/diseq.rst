@@ -470,8 +470,9 @@ segment layer, not the coordinate intervals.
 Shifting and Expanding
 ======================
 
-Both :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` and
-:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` return a **new** DIS with
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift`,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand`, and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.cut` all return a **new** DIS with
 modified segment indices. The coordinate space is always unchanged.
 
 shift
@@ -586,6 +587,25 @@ Negative values contract the segment::
 
     Contracting to exactly zero length is valid, but contracting past
     zero raises ``ValueError``.
+
+cut
+~~~
+
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.cut` sets the segment directly from
+absolute coordinate-space indices, rather than moving or growing the existing
+segment. ``start`` and ``end`` use the same convention as the
+:py:attr:`~genome_kit.diseq.DisjointIntervalSequence.start` and
+:py:attr:`~genome_kit.diseq.DisjointIntervalSequence.end` attributes.
+
+.. code-block:: python
+
+    >>> dis.start, dis.end
+    (30, 150)
+    >>> cut = dis.cut(40, 120)
+    >>> cut.start, cut.end
+    (40, 120)
+    >>> cut.coordinate_intervals == dis.coordinate_intervals
+    True
 
 expand_coord
 ~~~~~~~~~~~~

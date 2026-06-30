@@ -475,6 +475,37 @@ class DisjointIntervalSequence:
             end=max(end5, end3),
         )
 
+    def cut(self, start: int, end: int) -> "DisjointIntervalSequence":
+        """Return a new DIS with the segment set to absolute coordinate-space indices.
+
+        The coordinate space and ``on_coordinate_strand`` are preserved; only the
+        segment's :py:attr:`start` and :py:attr:`end` indices change. ``start`` and
+        ``end`` are absolute, 0-based, half-open indices into the coordinate space,
+        so ``start`` must be the lower index regardless of strand. Indices
+        outside ``[0, coordinate_length]`` are permitted and represent flanking positions
+        extrapolated past the coordinate space's edges.
+
+        Parameters
+        ----------
+        start
+            New segment start index in the coordinate space.
+        end
+            New segment end index in the coordinate space (exclusive).
+
+        Raises
+        ------
+        ValueError
+            If ``start`` is greater than ``end``.
+        """
+        return DisjointIntervalSequence(
+            self._coordinate_intervals,
+            coord_name=self._coord_metadata.name,
+            segment_name=self._segment_metadata.name,
+            on_coordinate_strand=self.on_coordinate_strand,
+            start=start,
+            end=end,
+        )
+
     def shift(self, amount: int) -> "DisjointIntervalSequence":
         """Shift the segment downstream by amount (negative shifts upstream).
         The coordinate space is unchanged. Only the segment indices move.

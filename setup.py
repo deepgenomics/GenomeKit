@@ -21,7 +21,7 @@ tests_require = [
     "twobitreader>=3.1",
 ]
 
-version = "7.4.0"
+version = "7.5.0"
 
 # See https://stackoverflow.com/questions/9977889/how-to-include-license-file-in-setup-py-script/66443941#66443941
 class egg_info_ex(egg_info):
@@ -382,14 +382,14 @@ if __name__ == "__main__":
     setup(
         author="Deep Genomics",
         author_email="info@deepgenomics.com",
-        python_requires=">=3.9, <4",
+        python_requires=">=3.10, <4",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "License :: OSI Approved :: Apache Software License",
-            "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
+            "Programming Language :: Python :: 3.13",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         long_description=(Path(__file__).parent / "README.md").read_text(),

@@ -14,9 +14,6 @@ Interval
 DisjointIntervalSequence
 ========================
 
-.. autoclass:: genome_kit.diseq.IndexDirection
-    :members:
-
 .. autoclass:: genome_kit.diseq.DisjointIntervalSequence
     :special-members:
     :members:

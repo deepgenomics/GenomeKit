@@ -1,5 +1,47 @@
 # Changelog
 
+## [7.5.0](https://github.com/deepgenomics/GenomeKit/compare/v7.4.5...v7.5.0) (2026-06-09)
+
+
+### Features
+
+* expose chrom aliases ([#237](https://github.com/deepgenomics/GenomeKit/issues/237)) ([8e4d1c1](https://github.com/deepgenomics/GenomeKit/commit/8e4d1c1aa929f16a946a1da727c6e718a3778ab4))
+
+## [7.4.5](https://github.com/deepgenomics/GenomeKit/compare/v7.4.4...v7.4.5) (2026-05-19)
+
+
+### Miscellaneous Chores
+
+* support py313 ([#233](https://github.com/deepgenomics/GenomeKit/issues/233)) ([7c49e9c](https://github.com/deepgenomics/GenomeKit/commit/7c49e9c7cf9004a1b4d0bd4a99625a4132ab5e82)), closes [#102](https://github.com/deepgenomics/GenomeKit/issues/102)
+
+## [7.4.4](https://github.com/deepgenomics/GenomeKit/compare/v7.4.3...v7.4.4) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* macos-13 github actions builder no longer available ([#225](https://github.com/deepgenomics/GenomeKit/issues/225)) ([a8db54b](https://github.com/deepgenomics/GenomeKit/commit/a8db54b630e9b6d51a119288b1e7770350545207))
+
+## [7.4.3](https://github.com/deepgenomics/GenomeKit/compare/v7.4.2...v7.4.3) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* fix error on build-wheels ([#223](https://github.com/deepgenomics/GenomeKit/issues/223)) ([ea06da2](https://github.com/deepgenomics/GenomeKit/commit/ea06da2ba7737dff9bf88ad15f2e5df135073d79))
+
+## [7.4.2](https://github.com/deepgenomics/GenomeKit/compare/v7.4.1...v7.4.2) (2026-05-04)
+
+
+### Miscellaneous Chores
+
+* fix CI for release-please tag triggers ([#221](https://github.com/deepgenomics/GenomeKit/issues/221)) ([e18fb5a](https://github.com/deepgenomics/GenomeKit/commit/e18fb5a8c65899159b7b4a54aee610b3e225fc84))
+
+## [7.4.1](https://github.com/deepgenomics/GenomeKit/compare/v7.4.0...v7.4.1) (2026-05-01)
+
+
+### Miscellaneous Chores
+
+* fix publish-docs github action ([#219](https://github.com/deepgenomics/GenomeKit/issues/219)) ([70a1c8a](https://github.com/deepgenomics/GenomeKit/commit/70a1c8a220ef8c20d7b697a190ab66afc08e62a0)), closes [#218](https://github.com/deepgenomics/GenomeKit/issues/218)
+
 ## [7.4.0](https://github.com/deepgenomics/GenomeKit/compare/v7.3.0...v7.4.0) (2026-04-29)
 
 

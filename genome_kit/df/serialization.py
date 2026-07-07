@@ -380,7 +380,7 @@ def write_parquet(
                 raise ValueError(
                     f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
                 )
-            
+
         df = _convert_pandas_to_polars(df)
 
     # mapping from column name to ColumnInfo dataclass
@@ -439,14 +439,13 @@ def read_parquet(
     Args:
         path: The file path to read the Parquet file from.
         lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
-        to_pandas: If True, convert the result to a pandas DataFrame. When True, this 
-            will override the ``lazy`` argument.
+        to_pandas: If True, convert the result to a pandas DataFrame. When True, ``lazy``
+            is ignored.
 
     Returns:
         A Polars DataFrame or LazyFrame with deserialized GenomeKit objects, or a pandas DataFrame if ``to_pandas`` is True.
     """
     pl = require_polars()
-    pd = import_pandas()
 
     path = Path(path)
     metadata = pl.read_parquet_metadata(path)
@@ -463,6 +462,7 @@ def read_parquet(
     lf = _deserialize_gk_cols(lf, target_cols)
 
     if to_pandas:
+        pd = import_pandas()
         if pd is None:
             raise ImportError(
                 "Pandas is required to convert to a pandas DataFrame. "

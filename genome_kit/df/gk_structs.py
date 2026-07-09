@@ -168,15 +168,17 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         GkDfType.VARIANT: VariantStruct,
     }
 
-_STRUCT_KEYS: dict[frozenset[str], GkDfType] = {
-    frozenset(f.name for f in struct.fields): t
-    for t, struct in get_structs().items()
-}
+_STRUCT_KEYS: dict[frozenset[str], GkDfType] | None = None
 
 def identify_struct(data: dict[str, Any]) -> GkDfType | None:
     """Identify the GkDfType of a given dictionary based on its keys."""
+    global _STRUCT_KEYS
+    
+    if _STRUCT_KEYS is None:
+        _STRUCT_KEYS = {
+            frozenset(f.name for f in struct.fields): t
+            for t, struct in get_structs().items()
+        }
 
-    data_keys = frozenset(data.keys())
-
-    return _STRUCT_KEYS.get(data_keys, None)
+    return _STRUCT_KEYS.get(frozenset(data.keys()), None)
 

@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from genome_kit import Genome, Interval, Variant
-from genome_kit.df import read_parquet, write_parquet
+from genome_kit.df import deserialize_gk_object, read_parquet, write_parquet
 from genome_kit.df.gk_structs import CURRENT_VERSION
 
 HAS_POLARS = importlib.util.find_spec("polars") is not None
@@ -314,6 +314,62 @@ class TestGkdfRoundTrip(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             read_parquet(path, lazy=False)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_deserialize_gk_objects_false(self):
+        g = Genome("gencode.v41.mini")
+        gene = g.genes[0]
+        df = pl.DataFrame({"gene": [gene]})
+
+        path = self.tmp_dir_path / "deserialize_false.parquet"
+        write_parquet(df, path)
+
+        re_df = read_parquet(path, lazy=False, deserialize_gk_objects=False)
+
+        # column should contain raw struct, not a deserialized GenomeKit object
+        cell = re_df["gene"].item()
+        self.assertIsInstance(cell, dict)
+        self.assertIn("gene_table_index", cell)
+        self.assertIn("anno", cell)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_deserialize_lazy(self):
+        g = Genome("gencode.v41.mini")
+        gene = g.genes[0]
+        df = pl.DataFrame({"gene": [gene]})
+
+        path = self.tmp_dir_path / "deserialize_lazy.parquet"
+        write_parquet(df, path)
+
+        re_df = read_parquet(path, lazy=True)
+        self.assertIsInstance(re_df, pl.LazyFrame)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_deserialize_gk_object_roundtrip(self):
+        g = Genome("gencode.v41.mini")
+        gene = g.genes[0]
+        df = pl.DataFrame({"gene": [gene]})
+
+        path = self.tmp_dir_path / "deserialize_single.parquet"
+        write_parquet(df, path)
+
+        re_df = read_parquet(path, lazy=False, deserialize_gk_objects=False)
+        data = re_df["gene"].item()
+
+        obj = deserialize_gk_object(data)
+        self.assertEqual(obj, gene)
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_deserialize_gk_object_invalid_dict(self):
+        # test that error raised when dict keys don't match any GkDfType
+        with self.assertRaises(ValueError):
+            deserialize_gk_object({"not_a_valid": "key", "foo": "bar"})
+
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
+    def test_deserialize_gk_object_empty_dict(self):
+        # test that error raised when dict is empty
+        with self.assertRaises(ValueError):
+            deserialize_gk_object({})
 
 
 if __name__ == "__main__":

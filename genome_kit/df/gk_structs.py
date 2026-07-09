@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from genome_kit._optional import require_polars
 
@@ -167,3 +167,16 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         GkDfType.UTR: UtrStruct,
         GkDfType.VARIANT: VariantStruct,
     }
+
+_STRUCT_KEYS: dict[frozenset[str], GkDfType] = {
+    frozenset(f.name for f in struct.fields): t
+    for t, struct in get_structs().items()
+}
+
+def identify_struct(data: dict[str, Any]) -> GkDfType | None:
+    """Identify the GkDfType of a given dictionary based on its keys."""
+
+    data_keys = frozenset(data.keys())
+
+    return _STRUCT_KEYS.get(data_keys, None)
+

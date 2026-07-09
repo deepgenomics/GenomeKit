@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 import genome_kit as gk
 from genome_kit._optional import require_polars
 
-from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion
+from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion, identify_struct
 from .registry import GK_TO_GKDF_TYPE, get_registry
 
 
@@ -382,7 +382,9 @@ def write_parquet(
     df.sink_parquet(path, metadata=metadata)
 
 
-def read_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.LazyFrame:
+def read_parquet(
+    path: str | Path, lazy: bool = False, deserialize_gk_objects: bool = True
+) -> pl.DataFrame | pl.LazyFrame:
     """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
 
     Args:
@@ -401,11 +403,40 @@ def read_parquet(path: str | Path, lazy: bool = False) -> pl.DataFrame | pl.Lazy
 
     lf = pl.scan_parquet(path)
 
-    # collect unique genome strings in the file and initialize, prevents race conditions
-    # on opening dganno files.
-    # genomes returned in dummy variable to keep weak reference alive for deserialization
-    _ = _init_gk_annotations(lf, target_cols)
+    if deserialize_gk_objects:
+        # collect unique genome strings in the file and initialize, prevents race conditions
+        # on opening dganno files.
+        # genomes returned in dummy variable to keep weak reference alive for deserialization
+        _ = _init_gk_annotations(lf, target_cols)
 
-    lf = _deserialize_gk_cols(lf, target_cols)
+        lf = _deserialize_gk_cols(lf, target_cols)
 
     return lf if lazy else lf.collect()
+
+
+def deserialize_gk_object(data: dict[str, Any]) -> Any:
+    """Deserialize a serialized GenomeKit object (dictionary) into a GenomeKit object. 
+
+    Intended for use with a dict representation of a single GenomeKit object created
+    from GenomeKit.write_parquet
+
+    Args:
+        data: A dictionary representation of a serialized GenomeKit object
+
+    Returns:
+        A deserialized GenomeKit object.
+    """
+    gkdf_type = identify_struct(data)
+    if gkdf_type is None:
+        raise ValueError(
+            "Unable to identify GenomeKit object type from dictionary keys. "
+            "Please ensure the dictionary is a valid serialized GenomeKit object."
+        )
+
+    registry = get_registry()
+    deserializer = registry[CURRENT_VERSION][gkdf_type].deserializer
+
+    pl = require_polars()
+    # deserializer takes in a polars Series
+    s = pl.Series(values=[data], dtype=pl.Object)
+    return deserializer(s)[0]

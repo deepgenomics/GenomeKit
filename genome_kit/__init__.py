@@ -50,7 +50,7 @@ from .variant import Variant, VariantTable
 from .variant_genome import VariantGenome
 from .vcf_table import VCFTable, VCFVariant
 from . import serialize
-from .df import write_parquet, read_parquet
+from .df import write_parquet, read_parquet, deserialize_gk_object
 
 #########################################################################
 
@@ -71,6 +71,7 @@ __all__ = [
     "Cds",
     "CdsTable",
     "DataManager",
+    "deserialize_gk_object",
     "DisjointIntervalSequence",
     "Exon",
     "ExonTable",

@@ -390,6 +390,8 @@ def read_parquet(
     Args:
         path: The file path to read the Parquet file from.
         lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
+        deserialize_gk_objects: If True, deserialize all GenomeKit objects in the 
+            DataFrame. If False, the serialized structs will be returned as is.
 
     Returns:
         A Polars DataFrame or LazyFrame with deserialized GenomeKit objects.

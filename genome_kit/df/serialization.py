@@ -433,8 +433,9 @@ def deserialize_gk_object(data: dict[str, Any]) -> Any:
             "Please ensure the dictionary is a valid serialized GenomeKit object."
         )
 
+    version = data['schema_version']
     registry = get_registry()
-    deserializer = registry[CURRENT_VERSION][gkdf_type].deserializer
+    deserializer = registry[version][gkdf_type].deserializer
 
     pl = require_polars()
     # deserializer takes in a polars Series

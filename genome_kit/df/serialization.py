@@ -7,14 +7,19 @@ import warnings
 from collections.abc import Callable
 from inspect import signature
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload, TypeVar, TypeAlias
 
 if TYPE_CHECKING:
+    # import libraries for static type checkers
     import pandas as pd
     import polars as pl
 
+    # supported dataframe types for serialization/deserialization
+    SupportedTabular: TypeAlias = pl.DataFrame | pl.LazyFrame | pd.DataFrame
+    DF = TypeVar("DF", pl.DataFrame, pl.LazyFrame, pd.DataFrame)
+
 import genome_kit as gk
-from genome_kit._optional import import_pandas, require_polars
+from genome_kit._optional import require_pandas, require_polars
 
 from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion
 from .registry import GK_TO_GKDF_TYPE, get_registry
@@ -346,8 +351,38 @@ def _convert_pandas_to_polars(df: pd.DataFrame) -> pl.LazyFrame:
     return lf
 
 
+def _convert_to_polars_lf(
+    df: SupportedTabular,
+) -> pl.LazyFrame:
+    """Convert a tabular data format to a Polars LazyFrame.
+
+    Currently supports Polars DataFrames, LazyFrames, and pandas DataFrames
+
+    Args:
+        df: A Polars DataFrame, LazyFrame, or pandas DataFrame.
+
+    Returns:
+        A Polars LazyFrame with the same data as the input.
+    """
+    pl = require_polars()
+
+    if isinstance(df, pl.DataFrame):
+        return df.lazy()
+    elif isinstance(df, pl.LazyFrame):
+        return df
+    # passed object is not a polars DataFrame/LazyFrame, check module and import
+    if type(df).__module__.startswith("pandas"):
+        pd = require_pandas()
+        if isinstance(df, pd.DataFrame):
+            return _convert_pandas_to_polars(df)
+
+    raise ValueError(
+        f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
+    )
+
+
 def write_parquet(
-    df: pl.DataFrame | pl.LazyFrame | pd.DataFrame,
+    df: SupportedTabular,
     path: str | Path,
     infer_schema_length: int = 100,
 ) -> None:
@@ -362,26 +397,7 @@ def write_parquet(
 
     path = Path(path)
     # convert input to a polars LazyFrame for processing.
-    if isinstance(df, pl.DataFrame):
-        df = df.lazy()
-    elif isinstance(df, pl.LazyFrame):
-        # no conversion needed from polars LazyFrame
-        pass
-    else:
-        # try to convert from pandas
-        pd = import_pandas()
-        if pd is None:
-            raise ImportError(
-                "Pandas is required to write from a pandas DataFrame. "
-                "Please install pandas into your environment to use this functionality."
-            )
-        else:
-            if not isinstance(df, pd.DataFrame):
-                raise ValueError(
-                    f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
-                )
-
-        df = _convert_pandas_to_polars(df)
+    df = _convert_to_polars_lf(df)
 
     # mapping from column name to ColumnInfo dataclass
     target_cols = _detect_gk_cols(df, infer_schema_length=infer_schema_length)
@@ -431,23 +447,16 @@ def write_parquet(
     df.sink_parquet(path, metadata=metadata)
 
 
-def read_parquet(
-    path: str | Path, lazy: bool = False, to_pandas: bool = False
-) -> pl.DataFrame | pl.LazyFrame | pd.DataFrame:
-    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame or pandas DataFrame.
+def _process_genomekit_parquet(path: Path) -> pl.LazyFrame:
+    """Read and process a parquet file containing GenomeKit objects into a Polars LazyFrame.
 
     Args:
-        path: The file path to read the Parquet file from.
-        lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
-        to_pandas: If True, convert the result to a pandas DataFrame. When True, ``lazy``
-            is ignored.
+        path: The file path to read the GenomeKit parquet file from.
 
     Returns:
-        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects, or a pandas DataFrame if ``to_pandas`` is True.
+        A Polars LazyFrame with deserialized GenomeKit objects.
     """
     pl = require_polars()
-
-    path = Path(path)
     metadata = pl.read_parquet_metadata(path)
     _validate_gkdf_metadata(metadata)
     target_cols = json.loads(metadata.get("target_cols"))
@@ -461,13 +470,61 @@ def read_parquet(
 
     lf = _deserialize_gk_cols(lf, target_cols)
 
-    if to_pandas:
-        pd = import_pandas()
-        if pd is None:
-            raise ImportError(
-                "Pandas is required to convert to a pandas DataFrame. "
-                "Please install pandas into your environment to use this functionality."
-            )
-        return pd.DataFrame(lf.collect().to_dict(as_series=False))
+    return lf
 
-    return lf if lazy else lf.collect()
+
+def _convert_to_output_format(lf: pl.LazyFrame, astype: type[DF]) -> DF:
+    """Convert a Polars LazyFrame to the specified output format.
+    
+    Args:
+        lf: The Polars LazyFrame to convert.
+        astype: The data type of tabular data to return.
+
+    Returns:
+        The tabular data converted to the specified output format.
+    """
+    pl = require_polars()
+
+    if astype is pl.DataFrame:
+        return lf.collect()
+    elif astype is pl.LazyFrame:
+        return lf
+    elif astype.__module__.startswith("pandas"):
+        pd = require_pandas()
+        if astype is pd.DataFrame:
+            # not using to_pandas() to avoid pyarrow dependency
+            return pd.DataFrame(lf.collect().to_dict(as_series=False))
+
+    raise ValueError(
+        f"Unsupported astype {astype}. Please provide pl.DataFrame, pl.LazyFrame, or pd.DataFrame."
+    )
+
+
+@overload
+def read_parquet(path: str | Path) -> pl.DataFrame: ...
+
+@overload
+def read_parquet(path: str | Path, astype: type[DF]) -> DF: ...
+
+
+def read_parquet(path: str | Path, astype: type[DF] | None = None) -> DF:
+    """Deserialize a Parquet file containing GenomeKit objects into a tabular data format.
+
+    The type of the returned object is determined by the `astype` argument.
+
+    Args:
+        path: The file path to read the Parquet file from.
+        astype: The data type of tabular data to return.
+
+    Returns:
+        A tabular data format with the deserialized GenomeKit objects.
+    """
+    pl = require_polars()
+
+    path = Path(path)
+    lf = _process_genomekit_parquet(path)
+
+    return _convert_to_output_format(lf, astype or pl.DataFrame)
+
+
+

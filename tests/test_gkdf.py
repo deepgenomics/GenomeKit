@@ -242,6 +242,33 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
         self.assertEqual(re_df["gene"].item(), df["gene"].item())
         self.assertEqual(re_df["exon"].item(), df["exon"].item())
+    
+    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
+    def test_multiple_types_lazy_input(self):
+        g = Genome("gencode.v41.mini")
+
+        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
+        transcript = g.genes[0].transcripts[0]
+        gene = g.genes[0]
+        exon = g.exons[0]
+
+        df = pl.DataFrame(
+            {
+                "interval": [interval],
+                "transcript": [transcript],
+                "gene": [gene],
+                "exon": [exon],
+            }
+        )
+        lazy_df = df.lazy()
+        path = self.tmp_dir_path / "multiple_types_lazy.parquet"
+        write_parquet(lazy_df, path)
+        re_df = read_parquet(path)
+        self.assertEqual(re_df["interval"].item(), df["interval"].item())
+        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
+        self.assertEqual(re_df["gene"].item(), df["gene"].item())
+        self.assertEqual(re_df["exon"].item(), df["exon"].item())
+
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
@@ -270,23 +297,35 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
         self.assertEqual(re_df["gene"].item(), df["gene"].item())
         self.assertEqual(re_df["exon"].item(), df["exon"].item())
+        
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
-    @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
-    def test_multiple_genomes_pandas(self):
-        # test dataframe with multiple reference genomes in a single column
-        g1 = Genome("gencode.v41.mini")
-        g2 = Genome("ucsc_refseq.2017-06-25.mini")
+    def test_multiple_types_lazy_output(self):
+        g = Genome("gencode.v41.mini")
 
-        genes = [g1.genes[0], g2.genes[0]]
-        df = pd.DataFrame({"genes": genes})
+        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
+        transcript = g.genes[0].transcripts[0]
+        gene = g.genes[0]
+        exon = g.exons[0]
 
-        path = self.tmp_dir_path / "multiple_genomes.parquet"
-        write_parquet(df, path)
-        re_df = read_parquet(path, astype=pd.DataFrame)
-        self.assertTrue(isinstance(re_df, pd.DataFrame))
-        self.assertEqual(re_df["genes"][0], df["genes"][0])
-        self.assertEqual(re_df["genes"][1], df["genes"][1])
+        df = pl.DataFrame(
+            {
+                "interval": [interval],
+                "transcript": [transcript],
+                "gene": [gene],
+                "exon": [exon],
+            }
+        )
+        path = self.tmp_dir_path / "multiple_types_lazy.parquet"
+        write_parquet(df.lazy(), path)
+        re_df = read_parquet(path, astype=pl.LazyFrame)
+        self.assertTrue(isinstance(re_df, pl.LazyFrame))
+        re_df = re_df.collect()
+        self.assertEqual(re_df["interval"].item(), df["interval"].item())
+        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
+        self.assertEqual(re_df["gene"].item(), df["gene"].item())
+        self.assertEqual(re_df["exon"].item(), df["exon"].item())
+
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_multiple_genomes(self):

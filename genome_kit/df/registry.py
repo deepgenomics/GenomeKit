@@ -51,7 +51,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
     gkdf_structs = get_structs()
 
     def _serialize_genome(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Genome objects by genome name."""
         return pl.Series(
             name=s.name,
             values=[
@@ -70,7 +69,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_genome(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of GenomeStruct back into GenomeKit Genome objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -81,7 +79,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_interval(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Interval objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -104,7 +101,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_interval(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of IntervalStruct back into GenomeKit Interval objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -125,7 +121,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_transcript(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Transcript objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -144,7 +139,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_transcript(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of TranscriptStruct back into GenomeKit Transcript objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -157,7 +151,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_gene(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Gene objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -174,7 +167,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_gene(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of GeneStruct back into GenomeKit Gene objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -187,7 +179,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_exon(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Exon objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -204,7 +195,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_exon(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of ExonStruct back into GenomeKit Exon objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -217,7 +207,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_intron(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Intron objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -236,7 +225,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_intron(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of IntronStruct back into GenomeKit Intron objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -249,7 +237,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_cds(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Cds objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -266,7 +253,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_cds(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of CDSStruct back into GenomeKit Cds objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -279,7 +265,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_utr(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Utr objects."""
         values = []
         for utr in s:
             if utr is None:
@@ -309,7 +294,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_utr(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of UtrStruct back into GenomeKit Utr objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -326,7 +310,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _serialize_variant(s: pl.Series) -> pl.Series:
-        """Serialize a Series of GenomeKit Variant objects."""
         return pl.Series(
             name=s.name,
             values=[
@@ -347,7 +330,6 @@ def get_registry() -> dict[GkDfVersion, dict[GkDfType, GKTypeEntry]]:
         )
 
     def _deserialize_variant(s: pl.Series) -> pl.Series:
-        """Deserialize a Series of VariantStruct back into GenomeKit Variant objects."""
         return pl.Series(
             name=s.name,
             values=[

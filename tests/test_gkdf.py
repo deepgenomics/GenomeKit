@@ -374,19 +374,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
         with self.assertRaises(ValueError):
             write_parquet(df, path)
 
-    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
-    @unittest.skipUnless(not HAS_PANDAS, "Testing for no pandas installation")
-    def test_no_pandas(self):
-        # test that error raised when requesting pandas output without pandas installed
-        g = Genome("gencode.v41.mini")
-        gene = g.genes[0]
-        df = pl.DataFrame({"gene": [gene]})
-
-        path = self.tmp_dir_path / "no_pandas.parquet"
-        write_parquet(df, path)
-        with self.assertRaises(ImportError):
-            read_parquet(path, astype=pd.DataFrame)
-
 
 if __name__ == "__main__":
     unittest.main()

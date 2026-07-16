@@ -601,7 +601,7 @@ class JReadAlignments(_cxx.JReadAlignments):
             Optional. Only junctions within these intervals will be included,
             so long as they are not excluded.
 
-        include_variants : :py:class`bool`
+        include_variants : :py:class:`bool`
             Optional. True if variants are to be included in the output file.
             Default will exclude all variants.
 
@@ -617,7 +617,7 @@ class JReadAlignments(_cxx.JReadAlignments):
             which represents unstranded [no strand inference]).
             See https://salmon.readthedocs.io/en/stable/library_type.html.
 
-        overhang_error: : :class:`str`
+        overhang_error : :py:class:`str`
             Determines how build_jralign handles reads with >255 length
             overhangs. "error" stops and reports the error. "clamp" limits
             the read to the maximum 255 positions on each side.

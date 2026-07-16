@@ -318,7 +318,7 @@ def _convert_to_polars_lf(df: SupportedTabular) -> pl.LazyFrame:
         if isinstance(df, pd.DataFrame):
             return _convert_pandas_to_polars(df)
 
-    raise ValueError(
+    raise TypeError(
         f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
     )
 
@@ -417,10 +417,9 @@ def _convert_to_output_format(lf: pl.LazyFrame, astype: type[DF]) -> DF:
     elif astype.__module__.startswith("pandas"):
         pd = require_pandas()
         if astype is pd.DataFrame:
-            # not using to_pandas() to avoid pyarrow dependency
-            return pd.DataFrame(lf.collect().to_dict(as_series=False))
+            return lf.collect().to_pandas(use_pyarrow_extension_array=False)
 
-    raise ValueError(
+    raise TypeError(
         f"Unsupported astype {astype}. Please provide pl.DataFrame, pl.LazyFrame, or pd.DataFrame."
     )
 

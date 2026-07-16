@@ -242,90 +242,53 @@ class TestGkdfRoundTrip(unittest.TestCase):
         self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
         self.assertEqual(re_df["gene"].item(), df["gene"].item())
         self.assertEqual(re_df["exon"].item(), df["exon"].item())
-    
-    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
-    def test_multiple_types_lazy_input(self):
-        g = Genome("gencode.v41.mini")
-
-        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
-        transcript = g.genes[0].transcripts[0]
-        gene = g.genes[0]
-        exon = g.exons[0]
-
-        df = pl.DataFrame(
-            {
-                "interval": [interval],
-                "transcript": [transcript],
-                "gene": [gene],
-                "exon": [exon],
-            }
-        )
-        lazy_df = df.lazy()
-        path = self.tmp_dir_path / "multiple_types_lazy.parquet"
-        write_parquet(lazy_df, path)
-        re_df = read_parquet(path)
-        self.assertEqual(re_df["interval"].item(), df["interval"].item())
-        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
-        self.assertEqual(re_df["gene"].item(), df["gene"].item())
-        self.assertEqual(re_df["exon"].item(), df["exon"].item())
-
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
-    def test_multiple_types_pandas(self):
-        g = Genome("gencode.v41.mini")
-
+    def test_read_parquet_types(self):
         interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
-        transcript = g.genes[0].transcripts[0]
-        gene = g.genes[0]
-        exon = g.exons[0]
+        df = pl.DataFrame({"interval": [interval]})
 
-        df = pd.DataFrame(
-            {
-                "interval": [interval],
-                "transcript": [transcript],
-                "gene": [gene],
-                "exon": [exon],
-            }
-        )
-
-        path = self.tmp_dir_path / "multiple_types.parquet"
+        path = self.tmp_dir_path / "read_parquet_types.parquet"
         write_parquet(df, path)
-        re_df = read_parquet(path, astype=pd.DataFrame)
+        re_df = read_parquet(path, pl.LazyFrame)
+        self.assertTrue(isinstance(re_df, pl.LazyFrame))
+
+        re_df = read_parquet(path, pl.DataFrame)
+        self.assertTrue(isinstance(re_df, pl.DataFrame))
+
+        re_df = read_parquet(path, pd.DataFrame)
         self.assertTrue(isinstance(re_df, pd.DataFrame))
-        self.assertEqual(re_df["interval"].item(), df["interval"].item())
-        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
-        self.assertEqual(re_df["gene"].item(), df["gene"].item())
-        self.assertEqual(re_df["exon"].item(), df["exon"].item())
-        
+
+        with self.assertRaises(TypeError):
+            read_parquet(path, astype=str)
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
-    def test_multiple_types_lazy_output(self):
-        g = Genome("gencode.v41.mini")
+    @unittest.skipUnless(HAS_PANDAS, "Pandas is required for this genome_kit.df test")
+    def test_write_parquet_types(self):
+        genome = Genome("gencode.v41.mini")
+        genome_struct = {
+            "schema_version": CURRENT_VERSION,
+            "genome_name": genome.config,
+        }
+        df = pl.DataFrame({"genome": [genome]})
 
-        interval = Interval("chr5", "+", 2000, 3000, "hg19.mini")
-        transcript = g.genes[0].transcripts[0]
-        gene = g.genes[0]
-        exon = g.exons[0]
+        path = self.tmp_dir_path / "write_parquet_types.parquet"
+        # test successful write by reading with standard polars
+        write_parquet(pl.LazyFrame(df), path)
+        re_df = pl.read_parquet(path)
+        self.assertEqual(re_df.item(), genome_struct)
 
-        df = pl.DataFrame(
-            {
-                "interval": [interval],
-                "transcript": [transcript],
-                "gene": [gene],
-                "exon": [exon],
-            }
-        )
-        path = self.tmp_dir_path / "multiple_types_lazy.parquet"
-        write_parquet(df.lazy(), path)
-        re_df = read_parquet(path, astype=pl.LazyFrame)
-        self.assertTrue(isinstance(re_df, pl.LazyFrame))
-        re_df = re_df.collect()
-        self.assertEqual(re_df["interval"].item(), df["interval"].item())
-        self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
-        self.assertEqual(re_df["gene"].item(), df["gene"].item())
-        self.assertEqual(re_df["exon"].item(), df["exon"].item())
+        write_parquet(pl.DataFrame(df), path)
+        re_df = pl.read_parquet(path)
+        self.assertEqual(re_df.item(), genome_struct)
 
+        write_parquet(df.to_pandas(use_pyarrow_extension_array=False), path)
+        re_df = pl.read_parquet(path)
+        self.assertEqual(re_df.item(), genome_struct)
+
+        with self.assertRaises(TypeError):
+            write_parquet("invalid_type", path)
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_multiple_genomes(self):
@@ -356,7 +319,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_mismatch_list_types(self):
-        # test that error is raised when cols have different types
+        # test that error is raised when a list contains different types
         g = Genome("gencode.v41.mini")
         gene = g.genes[0]
 
@@ -367,7 +330,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_no_gkdf_version(self):
-        # test that error raised when no gkdf version is found in metadata
         df = pl.DataFrame({"genome": ["hg38.p12"]})
 
         path = self.tmp_dir_path / "no_gkdf_version.parquet"
@@ -377,7 +339,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_no_target_cols(self):
-        # test that error raised when no target_cols is found in metadata
         df = pl.DataFrame({"genome": ["hg38.p12"]})
 
         path = self.tmp_dir_path / "no_target_cols.parquet"
@@ -387,7 +348,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_no_gk_version(self):
-        # test that error raised when no gk version is found in metadata
         df = pl.DataFrame({"genome": ["hg38.p12.mini"]})
 
         path = self.tmp_dir_path / "no_gk_version.parquet"

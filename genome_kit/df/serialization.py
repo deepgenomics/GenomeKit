@@ -7,29 +7,29 @@ import warnings
 from collections.abc import Callable
 from inspect import signature
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload, TypeVar, TypeAlias
 
 if TYPE_CHECKING:
+    # import libraries for static type checkers
+    import pandas as pd
     import polars as pl
 
+    # supported dataframe types for serialization/deserialization
+    SupportedTabular: TypeAlias = pl.DataFrame | pl.LazyFrame | pd.DataFrame
+    DF = TypeVar("DF", pl.DataFrame, pl.LazyFrame, pd.DataFrame)
+
 import genome_kit as gk
-from genome_kit._optional import require_polars
+from genome_kit._optional import require_pandas, require_polars
 
 from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion, identify_struct
 from .registry import GK_TO_GKDF_TYPE, get_registry
 
 
 def _map_batches_safe(fn: Callable) -> Callable:
-    """Helper function to wrap a UDF and run safely with polars map_batches.
+    """Wrap a user defined function (UDF) and run safely with polars map_batches.
 
     Polars has a bug in map_batches that incorrectly forwards the return_dtype argument
     to the UDF. See https://github.com/pola-rs/polars/issues/24840.
-
-    Args:
-        fn: The user defined function to wrap.
-
-    Returns:
-        A wrapped version of the UDF that can be safely used with map_batches.
     """
     sig = signature(fn)
 
@@ -45,16 +45,9 @@ def _map_batches_safe(fn: Callable) -> Callable:
 def _detect_gk_cols(
     lf: pl.LazyFrame, infer_schema_length: int = 100
 ) -> dict[str, ColumnInfo]:
-    """Detect columns in the LazyFrame that contains GenomeKit objects.
+    """Infer columns containing GenomeKit objects and their shape (list or scalar).
 
-    Args:
-        lf: The LazyFrame to inspect.
-        infer_schema_length: The number of rows to use for schema inference when
-            detecting GenomeKit columns.
-
-    Returns:
-        A dictionary mapping column names to the ColumnInfo dataclass containing the
-        GkDfType and CellType for the column.
+    Uses the first `infer_schema_length` rows for inference.
     """
     pl = require_polars()
 
@@ -115,15 +108,11 @@ def _detect_gk_cols(
 def _list_serializer(
     serializer: Callable[[pl.Series], pl.Series], return_dtype: Any
 ) -> Callable[[pl.Series], pl.Series]:
-    """Helper function to convert a serializer to accept lists of GenomeKit objects.
-
-    Args:
-        serializer: A serializer function for a series of GenomeKit objects
-        return_dtype: The return data type for the serialized series
-
-    Returns:
-        A serializer function for a series of lists of GenomeKit objects.
+    """Convert a serializer to accept a series of lists of objects.
+    
+    Default serializers accept a series of single objects.
     """
+
     pl = require_polars()
 
     def _serialize_list(s: pl.Series) -> pl.Series:
@@ -146,14 +135,6 @@ def _init_gk_annotations(
 
     Prevents race conditions when opening dganno files during polars operations.
     Objects are returned in a list to keep weak references alive.
-
-    Args:
-        lf: The LazyFrame containing the serialized GenomeKit objects.
-        target_cols: A dictionary mapping column names to their column information.
-            Each value is a dictionary representation of the ColumnInfo dataclass.
-
-    Returns:
-        A list of initialized gene tables for the unique genomes in the LazyFrame.
     """
     pl = require_polars()
 
@@ -221,11 +202,6 @@ def _init_gk_annotations(
 
 
 def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
-    """Validate the parquet metadata for a gkdf parquet file.
-
-    Args:
-        metadata: The parquet metadata to validate.
-    """
     # gkdf version
     metadata_version = metadata.get("gkdf_version")
     version = GkDfVersion(metadata_version) if metadata_version is not None else None
@@ -255,13 +231,9 @@ def _validate_gkdf_metadata(metadata: dict[str, str]) -> None:
 def _list_deserializer(
     deserializer: Callable[[pl.Series], pl.Series],
 ) -> Callable[[pl.Series], pl.Series]:
-    """Helper function to convert a deserializer to accept lists of serialized GenomeKit objects.
+    """Convert a deserializer to accept a series of lists of objects.
 
-    Args:
-        deserializer: A deserializer function for a series of serialized GenomeKit objects
-
-    Returns:
-        A deserializer function for a series of lists of serialized GenomeKit objects.
+    Default deserializers accept a series of single objects.
     """
     pl = require_polars()
 
@@ -281,15 +253,9 @@ def _list_deserializer(
 def _deserialize_gk_cols(
     lf: pl.LazyFrame, target_cols: dict[str, dict]
 ) -> pl.LazyFrame:
-    """Deserialize columns containing GenomeKit objects.
+    """Deserialize specified columns containing GenomeKit objects.
 
-    Args:
-        lf: The LazyFrame containing the serialized GenomeKit objects.
-        target_cols: A dictionary mapping column names to their column information.
-            Each value is a dictionary representation of the ColumnInfo dataclass.
-
-    Returns:
-        A LazyFrame with deserialized GenomeKit objects in the target columns.
+    target_cols is a dictionary representation of the ColumnInfo dataclass.
     """
     pl = require_polars()
     registry = get_registry()
@@ -317,22 +283,63 @@ def _deserialize_gk_cols(
     return lf.with_columns_seq(_build_deserialization_expr(col) for col in target_cols)
 
 
-# TODO: add union of pd.DataFrame
+def _convert_pandas_to_polars(df: pd.DataFrame) -> pl.LazyFrame:
+    """Convert a pandas DataFrame to a Polars LazyFrame.
+
+    Uses an intermediate representation to remove dependency on pyarrow for conversion.
+    """
+    pl = require_polars()
+
+    # pandas allows duplicate column names
+    if any(len(df[col].shape) > 1 for col in df.columns):
+        raise ValueError(
+            "Input DataFrame contains duplicated column names. "
+            "Unique column names are required for serialization."
+        )
+
+    lf = pl.LazyFrame(df.to_dict(orient="list"), strict=False)
+    # fill np.nan with nulls for consistent "None" values in polars
+    # ONLY applies to float columns, np.nan in object (GenomeKit) columns will remain
+    lf = lf.fill_nan(None)
+
+    return lf
+
+
+def _convert_to_polars_lf(df: SupportedTabular) -> pl.LazyFrame:
+    pl = require_polars()
+
+    if isinstance(df, pl.DataFrame):
+        return df.lazy()
+    elif isinstance(df, pl.LazyFrame):
+        return df
+    # passed object is not a polars DataFrame/LazyFrame, check module and import
+    if type(df).__module__.startswith("pandas"):
+        pd = require_pandas()
+        if isinstance(df, pd.DataFrame):
+            return _convert_pandas_to_polars(df)
+
+    raise TypeError(
+        f"Unsupported DataFrame type {type(df)}. Please provide a Polars DataFrame or LazyFrame, or a pandas DataFrame."
+    )
+
+
 def write_parquet(
-    df: pl.DataFrame | pl.LazyFrame, path: str | Path, infer_schema_length: int = 100
+    df: SupportedTabular,
+    path: str | Path,
+    infer_schema_length: int = 100,
 ) -> None:
-    """Serialize a DataFrame with GenomeKit objects to a Parquet file.
+    """Serialize a DataFrame or LazyFrame with GenomeKit objects to a Parquet file.
 
     Args:
-        df: A Polars DataFrame or LazyFrame with columns containing GenomeKit objects.
+        df: A Polars DataFrame or LazyFrame or pandas DataFrame with columns containing GenomeKit objects.
         path: The file path to write the Parquet file to.
         infer_schema_length: The number of rows to use for schema inference when writing the Parquet file.
     """
     pl = require_polars()
 
     path = Path(path)
-    if isinstance(df, pl.DataFrame):
-        df = df.lazy()
+    # convert input to a polars LazyFrame for processing.
+    df = _convert_to_polars_lf(df)
 
     # mapping from column name to ColumnInfo dataclass
     target_cols = _detect_gk_cols(df, infer_schema_length=infer_schema_length)
@@ -382,23 +389,8 @@ def write_parquet(
     df.sink_parquet(path, metadata=metadata)
 
 
-def read_parquet(
-    path: str | Path, lazy: bool = False, deserialize_gk_objects: bool = True
-) -> pl.DataFrame | pl.LazyFrame:
-    """Deserialize a Parquet file containing GenomeKit objects into a Polars DataFrame or LazyFrame.
-
-    Args:
-        path: The file path to read the Parquet file from.
-        lazy: If True, return a LazyFrame. Otherwise, return a DataFrame.
-        deserialize_gk_objects: If True, deserialize all GenomeKit objects in the 
-            DataFrame. If False, the serialized structs will be returned as is.
-
-    Returns:
-        A Polars DataFrame or LazyFrame with deserialized GenomeKit objects.
-    """
+def _process_genomekit_parquet(path: Path, deserialize_gk_objects: bool = True) -> pl.LazyFrame:
     pl = require_polars()
-
-    path = Path(path)
     metadata = pl.read_parquet_metadata(path)
     _validate_gkdf_metadata(metadata)
     target_cols = json.loads(metadata.get("target_cols"))
@@ -407,39 +399,57 @@ def read_parquet(
 
     if deserialize_gk_objects:
         # collect unique genome strings in the file and initialize, prevents race conditions
-        # on opening dganno files.
+        # on opening dganno files in concurrent scenarios.
         # genomes returned in dummy variable to keep weak reference alive for deserialization
         _ = _init_gk_annotations(lf, target_cols)
 
         lf = _deserialize_gk_cols(lf, target_cols)
 
-    return lf if lazy else lf.collect()
+    return lf
 
 
-def deserialize_gk_object(data: dict[str, Any]) -> Any:
-    """Deserialize a serialized GenomeKit object (dictionary) into a GenomeKit object. 
+def _convert_to_output_format(lf: pl.LazyFrame, astype: type[DF]) -> DF:
+    pl = require_polars()
 
-    Intended for use with a dict representation of a single GenomeKit object created
-    from GenomeKit.write_parquet
+    if astype is pl.DataFrame:
+        return lf.collect()
+    elif astype is pl.LazyFrame:
+        return lf
+    elif astype.__module__.startswith("pandas"):
+        pd = require_pandas()
+        if astype is pd.DataFrame:
+            return lf.collect().to_pandas(use_pyarrow_extension_array=False)
+
+    raise TypeError(
+        f"Unsupported astype {astype}. Please provide pl.DataFrame, pl.LazyFrame, or pd.DataFrame."
+    )
+
+
+@overload
+def read_parquet(path: str | Path) -> pl.DataFrame: ...
+
+@overload
+def read_parquet(path: str | Path, astype: type[DF]) -> DF: ...
+
+
+def read_parquet(path: str | Path, astype: type[DF] | None = None, deserialize_gk_objects: bool = True) -> DF:
+    """Deserialize a Parquet file containing GenomeKit objects into a tabular data format.
+
+    The type of the returned object is determined by the `astype` argument.
 
     Args:
-        data: A dictionary representation of a serialized GenomeKit object
+        path: The file path to read the Parquet file from.
+        astype: The data type of tabular data to return. Defaults to a Polars DataFrame.
 
     Returns:
-        A deserialized GenomeKit object.
+        A tabular data format with the deserialized GenomeKit objects.
     """
-    gkdf_type = identify_struct(data)
-    if gkdf_type is None:
-        raise ValueError(
-            "Unable to identify GenomeKit object type from dictionary keys. "
-            "Please ensure the dictionary is a valid serialized GenomeKit object."
-        )
-
-    version = data['schema_version']
-    registry = get_registry()
-    deserializer = registry[version][gkdf_type].deserializer
-
     pl = require_polars()
-    # deserializer takes in a polars Series
-    s = pl.Series(values=[data], dtype=pl.Object)
-    return deserializer(s)[0]
+
+    path = Path(path)
+    lf = _process_genomekit_parquet(path, deserialize_gk_objects)
+
+    return _convert_to_output_format(lf, astype or pl.DataFrame)
+
+
+

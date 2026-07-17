@@ -278,7 +278,7 @@ class Genome(_cxx.Genome):
 
         Returns
         -------
-        :py:class:`~genome_kit.Utr5Table`
+        :py:class:`~genome_kit.UtrTable`
            An object that supports looping or queries over annotated coding sequences.
         """
         return mock_result(_ga.UtrTable)
@@ -292,7 +292,7 @@ class Genome(_cxx.Genome):
 
         Returns
         -------
-        :py:class:`~genome_kit.Utr3Table`
+        :py:class:`~genome_kit.UtrTable`
            An object that supports looping or queries over annotated coding sequences.
         """
         return mock_result(_ga.UtrTable)

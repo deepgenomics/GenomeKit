@@ -155,12 +155,12 @@ class GenomeTrackBuilder(_cxx.GenomeTrackBuilder):
         The dictionary must be a float16/32 numpy array.
         For etype f<n>, there must be `2**n` entries in the array.
         Numerical values must be in non-decreasing order.
-        The last entry in `dict` can be :py:data:`np.nan`
+        The last entry in `dict` can be :py:data:`~numpy.nan`
         if you wish to be able to encode NaN at specific positions.
 
         Parameters
         ----------
-        dict : :py:class:`np.ndarray`
+        dict : :py:class:`~numpy.ndarray`
             The array of values comprising the dictionary.
         """
         mock_unreachable()
@@ -229,7 +229,7 @@ class GenomeTrackBuilder(_cxx.GenomeTrackBuilder):
         ----------
         interval : :py:class:`~genome_kit.Interval`
             The interval to fill with data.
-        data : :py:class:`np.ndarray`
+        data : :py:class:`~numpy.ndarray`
             The data array, ordered according to the strandedness argument passed to the
             builder's constructor.
         """

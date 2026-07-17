@@ -458,7 +458,7 @@ class VCFTable(_cxx.VCFTable):
 
         Parameters
         ----------
-        mask : :py:class:`ndarray`
+        mask : :py:class:`~numpy.ndarray`
             A boolean mask the same size as the table.
 
         Returns

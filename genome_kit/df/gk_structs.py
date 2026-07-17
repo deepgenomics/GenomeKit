@@ -180,9 +180,4 @@ def _get_struct_keys() -> dict[frozenset[str], GkDfType]:
 
 def identify_struct(data: dict[str, Any]) -> GkDfType:
     """Identify the GkDfType of a given dictionary based on its keys."""
-    gkdf_type = _get_struct_keys().get(frozenset(data.keys()), None)
-
-    if gkdf_type is None:
-        raise ValueError(f"Unrecognized struct keys: {data.keys()}")
-
-    return gkdf_type
+    return _get_struct_keys()[frozenset(data.keys())]

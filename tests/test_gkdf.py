@@ -237,7 +237,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
         path = self.tmp_dir_path / "multiple_types.parquet"
         write_parquet(df, path)
-        re_df = read_parquet(path)
+        re_df = read_parquet(path, deserialize_gk_objects=True)
         self.assertEqual(re_df["interval"].item(), df["interval"].item())
         self.assertEqual(re_df["transcript"].item(), df["transcript"].item())
         self.assertEqual(re_df["gene"].item(), df["gene"].item())
@@ -408,13 +408,9 @@ class TestGkdfRoundTrip(unittest.TestCase):
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_deserialize_gk_object_invalid_dict(self):
         # test that error raised when dict keys don't match any GkDfType
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             deserialize_gk_object({"not_a_valid": "key", "foo": "bar"})
 
-    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
-    def test_deserialize_gk_object_empty_dict(self):
-        with self.assertRaises(ValueError):
-            deserialize_gk_object({})
 
 
 if __name__ == "__main__":

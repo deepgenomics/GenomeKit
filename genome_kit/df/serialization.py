@@ -463,7 +463,7 @@ def deserialize_gk_object(data: dict[str, Any]) -> Any:
         
     Returns:
         The deserialized GenomeKit object.
-    """
+    """ 
     # deserializer identified by gkdf version and gkdf type
     gkdf_type = identify_struct(data)
     version = data["schema_version"]

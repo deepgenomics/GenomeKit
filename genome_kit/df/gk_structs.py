@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 from genome_kit._optional import require_polars
@@ -168,17 +169,20 @@ def get_structs() -> dict[GkDfType, pl.Struct]:
         GkDfType.VARIANT: VariantStruct,
     }
 
-_STRUCT_KEYS: dict[frozenset[str], GkDfType] | None = None
 
-def identify_struct(data: dict[str, Any]) -> GkDfType | None:
+@lru_cache(maxsize=1)
+def _get_struct_keys() -> dict[frozenset[str], GkDfType]:
+    return {
+        frozenset(f.name for f in struct.fields): t
+        for t, struct in get_structs().items()
+    }
+
+
+def identify_struct(data: dict[str, Any]) -> GkDfType:
     """Identify the GkDfType of a given dictionary based on its keys."""
-    global _STRUCT_KEYS
-    
-    if _STRUCT_KEYS is None:
-        _STRUCT_KEYS = {
-            frozenset(f.name for f in struct.fields): t
-            for t, struct in get_structs().items()
-        }
+    gkdf_type = _get_struct_keys().get(frozenset(data.keys()), None)
 
-    return _STRUCT_KEYS.get(frozenset(data.keys()), None)
+    if gkdf_type is None:
+        raise ValueError(f"Unrecognized struct keys: {data.keys()}")
 
+    return gkdf_type

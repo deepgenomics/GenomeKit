@@ -452,4 +452,26 @@ def read_parquet(path: str | Path, astype: type[DF] | None = None, deserialize_g
     return _convert_to_output_format(lf, astype or pl.DataFrame)
 
 
+def deserialize_gk_object(data: dict[str, Any]) -> Any:
+    """Deserialize a serialized GenomeKit object from a dictionary representation.
+    
+    Intended for use with a dict representation of a single GenomeKit object 
+    created from GenomeKit.write_parquet()
+    
+    Args:
+        data: A dictionary representation of a serialized GenomeKit object.
+        
+    Returns:
+        The deserialized GenomeKit object.
+    """
+    # deserializer identified by gkdf version and gkdf type
+    gkdf_type = identify_struct(data)
+    version = data["schema_version"]
+
+    registry = get_registry()
+    deserializer = registry[version][gkdf_type].deserializer
+    pl = require_polars()
+    s = pl.Series(values=[data], dtype=pl.Object)
+
+    return deserializer(s).item()
 

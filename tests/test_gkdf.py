@@ -382,25 +382,13 @@ class TestGkdfRoundTrip(unittest.TestCase):
         path = self.tmp_dir_path / "deserialize_false.parquet"
         write_parquet(df, path)
 
-        re_df = read_parquet(path, lazy=False, deserialize_gk_objects=False)
+        re_df = read_parquet(path, deserialize_gk_objects=False)
 
         # column should contain raw struct, not a deserialized GenomeKit object
         cell = re_df["gene"].item()
         self.assertIsInstance(cell, dict)
         self.assertIn("gene_table_index", cell)
         self.assertIn("anno", cell)
-
-    @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
-    def test_deserialize_lazy(self):
-        g = Genome("gencode.v41.mini")
-        gene = g.genes[0]
-        df = pl.DataFrame({"gene": [gene]})
-
-        path = self.tmp_dir_path / "deserialize_lazy.parquet"
-        write_parquet(df, path)
-
-        re_df = read_parquet(path, lazy=True)
-        self.assertIsInstance(re_df, pl.LazyFrame)
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_deserialize_gk_object_roundtrip(self):
@@ -411,7 +399,7 @@ class TestGkdfRoundTrip(unittest.TestCase):
         path = self.tmp_dir_path / "deserialize_single.parquet"
         write_parquet(df, path)
 
-        re_df = read_parquet(path, lazy=False, deserialize_gk_objects=False)
+        re_df = read_parquet(path, deserialize_gk_objects=False)
         data = re_df["gene"].item()
 
         obj = deserialize_gk_object(data)
@@ -425,7 +413,6 @@ class TestGkdfRoundTrip(unittest.TestCase):
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df tests")
     def test_deserialize_gk_object_empty_dict(self):
-        # test that error raised when dict is empty
         with self.assertRaises(ValueError):
             deserialize_gk_object({})
 

@@ -4,7 +4,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 
 def require_polars():
-    """Import Polars if available, otherwise provide helpful error messages.
+    """Import and return Polars if available. 
 
     Also checks for compatibility on MacOS with Apple Silicon, which may require
     an additional package if running Python under Rosetta translation.
@@ -30,6 +30,24 @@ def require_polars():
         ) from e
 
     return pl
+
+
+def require_pandas():
+    """Import and return pandas if available.
+    
+    Pandas is an optional dependency used for interoperability with pandas DataFrames. 
+    It is NOT required for core GenomeKit or GKDF functionality. The library will only
+    be used if the user passes a pd DataFrame on input, or requests it on output.
+    """
+    try:
+        import pandas as pd
+    except ModuleNotFoundError as e:
+        raise ImportError(
+            "Optional dependency `pandas` is required for this functionality. Please "
+            "install `pandas` in your environment."
+        ) from e
+    
+    return pd
 
 
 def check_under_rosetta():

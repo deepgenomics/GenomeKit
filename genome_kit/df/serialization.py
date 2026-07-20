@@ -109,6 +109,7 @@ def _unflatten_list(flattened: list[Any], orig_lengths: list[int]) -> list[list 
     out = []
     pos = 0
     for length in orig_lengths:
+        # null values stored as length 0
         if length == 0:
             out.append(None)
         else:
@@ -133,8 +134,8 @@ def _list_serializer(
         flattened = []
         orig_lengths = []
         # keep track of original lengths to restore original list structure
-        for row in s:
-            if row is None:
+        for row in s.to_list():
+            if row is None: # when converting to list, pl.Null becomes None
                 orig_lengths.append(0)
             else:
                 flattened.extend(row)
@@ -257,8 +258,11 @@ def _list_deserializer(
     pl = require_polars()
 
     def _deserialize_list(s: pl.Series) -> pl.Series:
-        lengths = s.list.len().to_list()
-        exploded = s.explode(empty_as_null=False)
+        # fill_null with 0 so None values are treated as empty lists
+        lengths = s.list.len().fill_null(0).to_list()
+        # don't keep nulls or empty lists when exploding
+        # consistent with empty list and nulls as length 0 in _unflatten_list
+        exploded = s.explode(empty_as_null=False, keep_nulls=False)
         deserialized = deserializer(exploded).to_list()
 
         return pl.Series(name=s.name, values=_unflatten_list(deserialized, lengths), dtype=pl.Object)

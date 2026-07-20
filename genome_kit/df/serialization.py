@@ -104,8 +104,8 @@ def _detect_gk_cols(
 
     return target_cols
 
-def _explode_list(flattened: list[Any], orig_lengths: list[int]) -> list[list | None]:
-    """Explode a flattened list back into its original list structure."""
+def _unflatten_list(flattened: list[Any], orig_lengths: list[int]) -> list[list | None]:
+    """Restore a flattened list back into its original list structure."""
     out = []
     pos = 0
     for length in orig_lengths:
@@ -123,8 +123,8 @@ def _list_serializer(
     """Convert a serializer to accept a series of lists of objects.
     
     Default serializers accept a series of single objects. Flattens pl.Series of 
-    lists to a pl.Series of single objects, applies serialization, then explodes
-    back to original list structure.
+    lists to a pl.Series of single objects, applies serialization, then restores
+    back the original list structure.
     """
     pl = require_polars()
 
@@ -132,7 +132,7 @@ def _list_serializer(
     def _serialize_list(s: pl.Series) -> pl.Series:
         flattened = []
         orig_lengths = []
-        # keep track of original lengths to explode back to original list structure
+        # keep track of original lengths to restore original list structure
         for row in s:
             if row is None:
                 orig_lengths.append(0)
@@ -142,7 +142,7 @@ def _list_serializer(
 
         serialized = serializer(pl.Series(values=flattened)).to_list()
 
-        return pl.Series(name=s.name, values=_explode_list(serialized, orig_lengths), dtype=return_dtype)
+        return pl.Series(name=s.name, values=_unflatten_list(serialized, orig_lengths), dtype=return_dtype)
 
     return _serialize_list
 
@@ -258,10 +258,10 @@ def _list_deserializer(
 
     def _deserialize_list(s: pl.Series) -> pl.Series:
         lengths = s.list.len().to_list()
-        flat = s.explode(empty_as_null=False)
-        deserialized = deserializer(flat).to_list()
+        exploded = s.explode(empty_as_null=False)
+        deserialized = deserializer(exploded).to_list()
 
-        return pl.Series(name=s.name, values=_explode_list(deserialized, lengths), dtype=pl.Object)
+        return pl.Series(name=s.name, values=_unflatten_list(deserialized, lengths), dtype=pl.Object)
 
     return _deserialize_list
 

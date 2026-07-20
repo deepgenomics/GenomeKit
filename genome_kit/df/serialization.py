@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 import genome_kit as gk
 from genome_kit._optional import require_pandas, require_polars
 
-from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion
+from .gk_structs import CURRENT_VERSION, CellType, ColumnInfo, GkDfType, GkDfVersion, identify_struct
 from .registry import GK_TO_GKDF_TYPE, get_registry
 
 
@@ -389,7 +389,7 @@ def write_parquet(
     df.sink_parquet(path, metadata=metadata)
 
 
-def _process_genomekit_parquet(path: Path) -> pl.LazyFrame:
+def _process_genomekit_parquet(path: Path, deserialize_gk_objects: bool = True) -> pl.LazyFrame:
     pl = require_polars()
     metadata = pl.read_parquet_metadata(path)
     _validate_gkdf_metadata(metadata)
@@ -397,12 +397,13 @@ def _process_genomekit_parquet(path: Path) -> pl.LazyFrame:
 
     lf = pl.scan_parquet(path)
 
-    # collect unique genome strings in the file and initialize, prevents race conditions
-    # on opening dganno files.
-    # genomes returned in dummy variable to keep weak reference alive for deserialization
-    _ = _init_gk_annotations(lf, target_cols)
+    if deserialize_gk_objects:
+        # collect unique genome strings in the file and initialize, prevents race conditions
+        # on opening dganno files in concurrent scenarios.
+        # genomes returned in dummy variable to keep weak reference alive for deserialization
+        _ = _init_gk_annotations(lf, target_cols)
 
-    lf = _deserialize_gk_cols(lf, target_cols)
+        lf = _deserialize_gk_cols(lf, target_cols)
 
     return lf
 
@@ -431,7 +432,7 @@ def read_parquet(path: str | Path) -> pl.DataFrame: ...
 def read_parquet(path: str | Path, astype: type[DF]) -> DF: ...
 
 
-def read_parquet(path: str | Path, astype: type[DF] | None = None) -> DF:
+def read_parquet(path: str | Path, astype: type[DF] | None = None, deserialize_gk_objects: bool = True) -> DF:
     """Deserialize a Parquet file containing GenomeKit objects into a tabular data format.
 
     The type of the returned object is determined by the `astype` argument.
@@ -446,9 +447,31 @@ def read_parquet(path: str | Path, astype: type[DF] | None = None) -> DF:
     pl = require_polars()
 
     path = Path(path)
-    lf = _process_genomekit_parquet(path)
+    lf = _process_genomekit_parquet(path, deserialize_gk_objects)
 
     return _convert_to_output_format(lf, astype or pl.DataFrame)
 
 
+def deserialize_gk_object(data: dict[str, Any]) -> Any:
+    """Deserialize a serialized GenomeKit object from a dictionary representation.
+    
+    Intended for use with a dict representation of a single GenomeKit object 
+    created from GenomeKit.write_parquet()
+    
+    Args:
+        data: A dictionary representation of a serialized GenomeKit object.
+        
+    Returns:
+        The deserialized GenomeKit object.
+    """ 
+    # deserializer identified by gkdf version and gkdf type
+    gkdf_type = identify_struct(data)
+    version = data["schema_version"]
+
+    registry = get_registry()
+    deserializer = registry[version][gkdf_type].deserializer
+    pl = require_polars()
+    s = pl.Series(values=[data], dtype=pl.Object)
+
+    return deserializer(s).item()
 

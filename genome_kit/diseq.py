@@ -673,8 +673,15 @@ class DisjointIntervalSequence:
             )
         return self._start >= other.start and self._end <= other.end
 
-    def is_same_strand(self) -> bool:
-        """True if the segment is on the same strand as the coordinate intervals."""
+    def contains(self, other: "DisjointIntervalSequence") -> bool:
+        """True if self's segment contains other's segment.
+
+        Requires the same coordinate space and same on_coordinate_strand.
+        """
+        return other.within(self)
+
+    def is_on_coordinate_strand(self) -> bool:
+        """True if the segment is on the coordinate strand."""
         return self.on_coordinate_strand
 
     def is_positive_strand(self) -> bool:
@@ -691,7 +698,7 @@ class DisjointIntervalSequence:
         """
         if self.is_positive_strand():
             return self
-        return self.flip_strand()
+        return self.as_opposite_strand()
 
     def as_negative_strand(self) -> "DisjointIntervalSequence":
         """Return a DIS with the segment on the negative strand.
@@ -701,33 +708,36 @@ class DisjointIntervalSequence:
         """
         if not self.is_positive_strand():
             return self
-        return self.flip_strand()
+        return self.as_opposite_strand()
 
-    def as_opposite_strand(self) -> "DisjointIntervalSequence":
-        """Return a DIS with the segment on the opposite strand.
+    def as_off_coordinate_strand(self) -> "DisjointIntervalSequence":
+        """Return a DIS with the segment on the strand opposite the coordinate strand.
 
-        Returns ``self`` if already on the opposite strand. The coordinate
-        intervals are unchanged; only the segment strand is affected.
+        Returns ``self`` if the segment is already off the coordinate strand.
+        The coordinate intervals are unchanged; only the segment strand is
+        affected.
         """
         if not self.on_coordinate_strand:
             return self
-        return self.flip_strand()
+        return self.as_opposite_strand()
 
-    def as_same_strand(self) -> "DisjointIntervalSequence":
+    def as_on_coordinate_strand(self) -> "DisjointIntervalSequence":
         """Return a DIS with the segment on the coordinate strand.
 
-        Returns ``self`` if already on the coordinate strand. The coordinate
-        intervals are unchanged; only the segment strand is affected.
+        Returns ``self`` if the segment is already on the coordinate strand.
+        The coordinate intervals are unchanged; only the segment strand is
+        affected.
         """
         if self.on_coordinate_strand:
             return self
-        return self.flip_strand()
+        return self.as_opposite_strand()
 
-    def flip_strand(self) -> "DisjointIntervalSequence":
-        """Return a new DIS with ``on_coordinate_strand`` toggled.
+    def as_opposite_strand(self) -> "DisjointIntervalSequence":
+        """Return a new DIS with the segment on the opposite strand.
 
-        The coordinate intervals are unchanged. The segment's
-        ``on_coordinate_strand`` is flipped.
+        Toggles the segment's ``on_coordinate_strand`` (matching
+        :py:meth:`~genome_kit.Interval.as_opposite_strand`). The coordinate
+        intervals are unchanged; only the segment strand is affected.
         """
         return DisjointIntervalSequence(
             self._coordinate_intervals,
@@ -836,13 +846,13 @@ class DisjointIntervalSequence:
             self.reference_genome,
         )
 
-    def _lift_position(self, pos: int) -> int:
+    def _lift_position(self, pos: int, lift_pos_in_genomic_gap: bool = False) -> int | None:
         """Map a genomic position to a DIS index in this coordinate space.
 
         Positions outside the coord intervals are linearly extrapolated from
-        the nearest outer edge. Positions in a gap between coord intervals
-        are clipped to the cumulative end of the previous interval (i.e. the
-        boundary index).
+        the nearest outer edge. If ``lift_pos_in_genomic_gap`` is True, positions
+        in a gap between coord intervals are clipped to the cumulative end of the
+        previous interval (i.e. the boundary index), otherwise they return None.
         """
         ivs = self._coordinate_intervals
         coord_len = self.coordinate_length
@@ -856,7 +866,7 @@ class DisjointIntervalSequence:
                 if iv.start <= pos <= iv.end:
                     return cumulative + (pos - iv.start)
                 if pos < iv.start:
-                    return cumulative
+                    return cumulative if lift_pos_in_genomic_gap else None
                 cumulative += len(iv)
             assert False, "Position not found in any interval"
         # minus
@@ -869,7 +879,7 @@ class DisjointIntervalSequence:
             if iv.start <= pos <= iv.end:
                 return cumulative + (iv.end - pos)
             if pos > iv.end:
-                return cumulative
+                return cumulative if lift_pos_in_genomic_gap else None
             cumulative += len(iv)
         assert False, "Position not found in any interval"
 
@@ -929,19 +939,39 @@ class DisjointIntervalSequence:
                 f"Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment."
             )
 
+        # Set variables for the other interval's start and end positions in the DIS
+        # coordinate space to keep logic simple
         if self.coord_strand == "+":
-            seg_start = self._lift_position(other.start)
-            seg_end = self._lift_position(other.end)
+            other_corrected_start = other.start
+            other_corrected_end = other.end
         else:
             # On minus, lower genomic position maps to higher DIS index.
-            seg_start = self._lift_position(other.end)
-            seg_end = self._lift_position(other.start)
+            other_corrected_start = other.end
+            other_corrected_end = other.start
+        lift_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=False)
+        lift_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=False)
 
-        # Clip to self's segment via half-open intersection.
+        if not intersect_on_lift and (lift_start is None or lift_end is None):
+            raise ValueError(
+                f"Interval {other} lies between the intervals that define the segment of this DIS. "
+                f"Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment."
+            )
+        if intersect_on_lift and lift_start is None and lift_end is None:
+            return None
+        # lifted interval is entirely upstream or downstream of the DIS segment
+        if lift_end < self.start or lift_start > self.end:
+            return None
+
+        seg_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=intersect_on_lift)
+        seg_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=intersect_on_lift)
+        assert seg_start is not None and seg_end is not None
+
+        # Clip to self's segment via half-open intersection
+        # (no-op if intersect_on_lift=False due to prior checks)
         intersected_start = max(seg_start, self._start)
         intersected_end = min(seg_end, self._end)
-        if intersected_start >= intersected_end:
-            return None
+        assert intersected_start <= intersected_end
+        assert intersected_start == seg_start and intersected_end == seg_end if not intersect_on_lift else True
 
         return DisjointIntervalSequence(
             self._coordinate_intervals,

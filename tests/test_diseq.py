@@ -399,15 +399,15 @@ class TestProperties(unittest.TestCase):
 
 class TestStrandMethods(unittest.TestCase):
 
-    def test_is_same_strand_true(self):
+    def test_is_on_coordinate_strand_true(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertTrue(dis.is_same_strand())
+        self.assertTrue(dis.is_on_coordinate_strand())
 
-    def test_is_same_strand_false(self):
+    def test_is_on_coordinate_strand_false(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertFalse(dis.is_same_strand())
+        self.assertFalse(dis.is_on_coordinate_strand())
 
     def test_is_positive_strand_plus_on_coord(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -469,87 +469,88 @@ class TestStrandMethods(unittest.TestCase):
         self.assertEqual(result.end, 80)
         self.assertEqual(result, expected)
 
-    def test_flip_strand(self):
+    def test_as_opposite_strand(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        flipped = dis.flip_strand()
+        flipped = dis.as_opposite_strand()
         self.assertFalse(flipped.on_coordinate_strand)
-        flipped2 = flipped.flip_strand()
+        flipped2 = flipped.as_opposite_strand()
         self.assertTrue(flipped2.on_coordinate_strand)
 
-    def test_flip_strand_preserves_coordinate_intervals(self):
+    def test_as_opposite_strand_preserves_coordinate_intervals(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs)
-        flipped = dis.flip_strand()
+        flipped = dis.as_opposite_strand()
         self.assertEqual(flipped.coordinate_intervals, dis.coordinate_intervals)
 
-    def test_flip_strand_preserves_start_end(self):
+    def test_as_opposite_strand_preserves_start_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=10, end=80)
-        flipped = dis.flip_strand()
+        flipped = dis.as_opposite_strand()
         self.assertEqual(flipped.start, 10)
         self.assertEqual(flipped.end, 80)
 
-    def test_flip_strand_preserves_metadata(self):
+    def test_as_opposite_strand_preserves_metadata(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
-        flipped = dis.flip_strand()
+        flipped = dis.as_opposite_strand()
         self.assertEqual(flipped.coord_name, "c")
         self.assertEqual(flipped.name, "i")
 
-    def test_end5_end3_swap_on_flip_strand(self):
+    def test_end5_end3_swap_on_as_opposite_strand(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=10, end=80)
         # On coordinate strand: end5 at start, end3 at end
         self.assertEqual(dis.end5_index, 10)
         self.assertEqual(dis.end3_index, 80)
         # Flipped: end5 at end, end3 at start
-        flipped = dis.flip_strand()
+        flipped = dis.as_opposite_strand()
         self.assertEqual(flipped.end5_index, 80)
         self.assertEqual(flipped.end3_index, 10)
 
-    def test_as_opposite_strand_already_opposite(self):
+    def test_as_off_coordinate_strand_already_off(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        result = dis.as_opposite_strand()
+        result = dis.as_off_coordinate_strand()
         self.assertIs(result, dis)
 
-    def test_as_opposite_strand_from_same(self):
+    def test_as_off_coordinate_strand_from_on(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True, start=10, end=80)
-        result = dis.as_opposite_strand()
+        result = dis.as_off_coordinate_strand()
         self.assertFalse(result.on_coordinate_strand)
         self.assertEqual(result.start, 10)
         self.assertEqual(result.end, 80)
 
-    def test_as_opposite_strand_preserves_metadata(self):
+    def test_as_off_coordinate_strand_preserves_metadata(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, coord_name="c", segment_name="i")
-        opp = dis.as_opposite_strand()
-        self.assertEqual(opp.coord_name, "c")
-        self.assertEqual(opp.name, "i")
+        off = dis.as_off_coordinate_strand()
+        self.assertEqual(off.coord_name, "c")
+        self.assertEqual(off.name, "i")
 
-    def test_as_same_strand_already_same(self):
+    def test_as_on_coordinate_strand_already_on(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        result = dis.as_same_strand()
+        result = dis.as_on_coordinate_strand()
         self.assertIs(result, dis)
 
-    def test_as_same_strand_flips(self):
+    def test_as_on_coordinate_strand_flips(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=10, end=80)
-        result = dis.as_same_strand()
+        result = dis.as_on_coordinate_strand()
         self.assertTrue(result.on_coordinate_strand)
         self.assertEqual(result.start, 10)
         self.assertEqual(result.end, 80)
 
     def test_idempotency(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
-        dis_pos = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
-        self.assertIs(dis_pos.as_positive_strand().as_positive_strand(), dis_pos)
-        self.assertIs(dis_pos.as_same_strand().as_same_strand(), dis_pos)
-        dis_opp = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
-        self.assertIs(dis_opp.as_opposite_strand().as_opposite_strand(), dis_opp)
+        dis_on = DisjointIntervalSequence(ivs, on_coordinate_strand=True)
+        self.assertIs(dis_on.as_positive_strand().as_positive_strand(), dis_on)
+        self.assertIs(dis_on.as_on_coordinate_strand().as_on_coordinate_strand(), dis_on)
+        dis_off = DisjointIntervalSequence(ivs, on_coordinate_strand=False)
+        self.assertIs(dis_off.as_off_coordinate_strand().as_off_coordinate_strand(), dis_off)
+        self.assertEqual(dis_off.as_opposite_strand().as_opposite_strand(), dis_off)
 
     def test_as_positive_strand_preserves_start_end(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
@@ -2121,6 +2122,24 @@ class TestLiftInterval(unittest.TestCase):
         lifted = dis.lift_interval(Interval("chr1", "+", 250, 260, REFG), intersect_on_lift=True)
         self.assertIsNone(lifted)
 
+    def test_lift_interval_filling_coord_gap(self):
+        # A (non-zero-length) interval that exactly fills the coord gap (genomic
+        # 200..300), touching iv1's 3' end and iv2's 5' start. The gap contributes
+        # no bases to the spliced sequence, so with intersect_on_lift the interval
+        # collapses to a zero-length segment at the junction index (100). Without
+        # intersect_on_lift the interval is not contained in the segment's bases,
+        # so lifting raises.
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(Interval("chr1", "+", 200, 300, REFG))
+        lifted = dis.lift_interval(Interval("chr1", "+", 200, 300, REFG), intersect_on_lift=True)
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 100)
+        self.assertEqual(lifted.end, 100)
+        self.assertEqual(len(lifted), 0)
+        self.assertTrue(lifted.on_coordinate_strand)
+
     def test_minus_coord(self):
         ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=200)
@@ -2196,11 +2215,80 @@ class TestLiftInterval(unittest.TestCase):
         self.assertEqual(lifted.coord_name, "cs")
         self.assertIsNone(lifted.name)
 
-    def test_zero_length_interval_returns_none(self):
+    def test_zero_length_interval(self):
         ivs = _make_intervals([("chr1", "+", 100, 200)])
         dis = DisjointIntervalSequence(ivs, start=0, end=100)
         lifted = dis.lift_interval(Interval("chr1", "+", 150, 150, REFG))
-        self.assertIsNone(lifted)
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 50)
+        self.assertEqual(lifted.end, 50)
+        self.assertTrue(lifted.on_coordinate_strand)
+
+    def _assert_zero_len_lift_contained(self, dis, iv_strand, pos, exp_pos):
+        iv = Interval("chr1", iv_strand, pos, pos, REFG)
+        intersect_lift = dis.lift_interval(iv, intersect_on_lift=False)
+        no_intersect_lift = dis.lift_interval(iv, intersect_on_lift=True)
+        # intersect_on_lift makes no difference for a contained zero-length key.
+        self.assertEqual(intersect_lift, no_intersect_lift)
+        for lifted in (intersect_lift, no_intersect_lift):
+            self.assertIsNotNone(lifted)
+            self.assertEqual(len(lifted), 0)
+            self.assertEqual(lifted.start, exp_pos)
+            self.assertEqual(lifted.end, exp_pos)
+
+    def _assert_zero_len_lift_outside(self, dis, iv_strand, pos):
+        iv = Interval("chr1", iv_strand, pos, pos, REFG)
+        # Off the segment's bases the flag matters: without intersect the lift
+        # raises; with intersect it clips to nothing and returns None.
+        with self.assertRaisesRegex(ValueError, "intersect_on_lift=True"):
+            dis.lift_interval(iv, intersect_on_lift=False)
+        self.assertIsNone(dis.lift_interval(iv, intersect_on_lift=True))
+
+    def test_zero_length_lift_plus_coord(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        for test_name, genomic_pos, dis_pos in [
+            ("within an interval", 150, 50),
+            ("touching the start boundary", 100, 0),
+            ("touching an internal boundary (iv1 3' end)", 200, 100),
+            ("touching an internal boundary (iv2 5' start)", 300, 100),
+            ("touching the end boundary", 400, 200),
+        ]:
+            with self.subTest(case=test_name):
+                self._assert_zero_len_lift_contained(dis, "+", genomic_pos, dis_pos)
+        for test_name, genomic_pos in [
+            ("completely off, upstream", 50),
+            ("completely off, downstream", 450),
+            ("within an interval gap", 250),
+        ]:
+            with self.subTest(case=test_name):
+                self._assert_zero_len_lift_outside(dis, "+", genomic_pos)
+
+    def test_zero_length_lift_minus_coord(self):
+        ivs = _make_intervals([("chr1", "-", 100, 200), ("chr1", "-", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        for test_name, genomic_pos, dis_pos in [
+            ("within an interval", 350, 50),
+            ("touching the start boundary", 400, 0),
+            ("touching an internal boundary (iv1 3' end)", 300, 100),
+            ("touching an internal boundary (iv2 5' start)", 200, 100),
+            ("touching the end boundary", 100, 200),
+        ]:
+            with self.subTest(case=test_name):
+                self._assert_zero_len_lift_contained(dis, "-", genomic_pos, dis_pos)
+        for test_name, genomic_pos in [
+            ("completely off, upstream (5')", 450),
+            ("completely off, downstream (3')", 50),
+            ("within an interval gap", 250),
+        ]:
+            with self.subTest(case=test_name):
+                self._assert_zero_len_lift_outside(dis, "-", genomic_pos)
+
+    def test_zero_length_lift_at_segment_boundary(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=30, end=50)
+        self._assert_zero_len_lift_contained(dis, "+", 130, 30)
+        self._assert_zero_len_lift_contained(dis, "+", 150, 50)
 
     def test_lift_upstream_of_coord_plus(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])

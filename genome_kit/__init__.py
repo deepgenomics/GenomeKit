@@ -25,6 +25,7 @@ from .genome_annotation import (
 from .genome_dna import GenomeDNA
 from .genome_track import GenomeTrack, GenomeTrackBuilder
 from .interval import Interval
+from .interval_data import IntervalData
 from .jralign import (
     JReadAlignments,
     JunctionReadAlignment,
@@ -84,6 +85,7 @@ __all__ = [
     "GenomeTrackBuilder",
     "gk_data",
     "Interval",
+    "IntervalData",
     "Intron",
     "IntronTable",
     "JReadAlignments",

@@ -71,6 +71,7 @@ Contents:
 
     quickstart
     diseq
+    interval_data
     anchors
     api
     genomes

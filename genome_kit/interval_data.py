@@ -14,20 +14,16 @@ class IntervalData:
     Associates a data sequence with the genomic interval for convenient splicing.
 
     Array indexing via [index] will act directly on `data`. Array splicing (via ``slice`` or
-    ``genome_kit.Interval``) will splice both the `interval` and `data`; the associated `data` is assumed to be
-    unstranded 5" to 3", so splicing via the opposite strand will reverse the `data` (similar to tracks).
-
-    References
-    ----------
-    https://deep-genomics-genomekit.readthedocs-hosted.com/en/latest/quickstart.html#tracks
+    ``Interval`` or ``DisjointIntervalSequence``) will splice both the `interval` and `data`;
+    the associated `data` is assumed to beunstranded 5" to 3", so splicing via the
+    opposite strand will reverse the `data` (similar to tracks).
 
     Examples
     --------
-    >>> from dgutils.interval import IntervalData
-    >>> import genome_kit as gk
+    >>> from genome_kit import Interval, IntervalData
     >>> import numpy as np
     >>> interval_len = 500
-    >>> position = gk.Interval('chr7', '+', 100000, 100000, 'hg19')
+    >>> position = Interval('chr7', '+', 100000, 100000, 'hg19')
     >>> interval = position.expand(0, interval_len)
     >>> data = np.arange(5 * interval_len * 10).reshape(5, interval_len, 10)
     >>> interval_data = IntervalData(interval, data, axis=1)

@@ -10,13 +10,13 @@ IntervalLike: TypeAlias = Interval | DisjointIntervalSequence
 
 
 class IntervalData:
-    r"""
-    Associates a data sequence with the genomic interval for convenient splicing.
+    r"""Associates a data sequence with a genomic interval for convenient splicing.
 
-    Array indexing via [index] will act directly on `data`. Array splicing (via ``slice`` or
-    ``Interval`` or ``DisjointIntervalSequence``) will splice both the `interval` and `data`;
-    the associated `data` is assumed to beunstranded 5" to 3", so splicing via the
-    opposite strand will reverse the `data` (similar to tracks).
+    Array indexing via ``[index]`` acts directly on ``data``. Array splicing (via
+    ``slice``, :py:class:`~genome_kit.Interval`, or
+    :py:class:`~genome_kit.DisjointIntervalSequence`) splices both the ``interval``
+    and ``data``; the associated ``data`` is assumed to be unstranded 5'->3', so
+    splicing via the opposite strand will reverse the ``data`` (similar to tracks).
 
     Examples
     --------
@@ -47,25 +47,25 @@ class IntervalData:
 
         Parameters
         ----------
-        interval : :py:class:`~genome_kit.Interval` or :py:class:`~genome_kit.DisjointIntervalSequence`
-            The genomic interval or disjoint interval(s) of interest.
-
-        data : array_like
-            Must be the same dimension as `interval` and ordered from 5" to 3".
-            If required, `axis` can be used to realign;
+        interval
+            The genomic :py:class:`~genome_kit.Interval` or
+            :py:class:`~genome_kit.DisjointIntervalSequence` of interest.
+        data
+            An ``array_like`` the same length as ``interval`` along ``axis`` and
+            ordered 5'->3'. If required, ``axis`` can be used to realign;
             otherwise, :func:`~numpy.rollaxis` can be used to reindex.
-
-        axis : optional
-            Axis of the multidimensional `data` to align to `interval`. Defaults to 0.
+        axis
+            Axis of the multidimensional ``data`` aligned to ``interval``.
+            Defaults to 0.
 
         Raises
         ------
         IndexError
-            `axis` cannot be negative
+            If ``axis`` is negative.
         ValueError
-            The `data` aligned to the `axis` is not the same dimension as the `interval`.
+            If the length of ``data`` along ``axis`` does not match ``interval``.
         TypeError
-            `interval` is neither an :py:class:`~genome_kit.Interval` nor a
+            If ``interval`` is neither an :py:class:`~genome_kit.Interval` nor a
             :py:class:`~genome_kit.DisjointIntervalSequence`.
         """
 
@@ -100,11 +100,11 @@ class IntervalData:
 
         Parameters
         ----------
-        interval : :py:class:`~genome_kit.Interval`
-            The genomic interval of interest.
-        data : array_like
+        interval
+            The genomic :py:class:`~genome_kit.Interval` of interest.
+        data
             See :py:meth:`__init__`.
-        axis : optional
+        axis
             See :py:meth:`__init__`.
         """
         return cls(interval, data, axis)
@@ -115,13 +115,13 @@ class IntervalData:
 
         Parameters
         ----------
-        dis : :py:class:`~genome_kit.DisjointIntervalSequence`
-            The DIS whose segment defines the genomic interval(s).
-        data : array_like
+        dis
+            The :py:class:`~genome_kit.DisjointIntervalSequence` whose segment
+            defines the genomic interval(s).
+        data
             See :py:meth:`__init__`.
-        axis : optional
+        axis
             See :py:meth:`__init__`.
-
         """
         return cls(dis, data, axis)
 
@@ -135,21 +135,39 @@ class IntervalData:
 
         Parameters
         ----------
-        intervals : Sequence[:py:class:`~genome_kit.Interval`]
-            Non-overlapping intervals on the same chromosome, strand, and reference genome.
-        data : array_like
+        intervals
+            Non-overlapping :py:class:`~genome_kit.Interval` objects on the same
+            chromosome, strand, and reference genome.
+        data
             See :py:meth:`__init__`.
-        axis : optional
+        axis
             See :py:meth:`__init__`.
-
         """
         return cls(DisjointIntervalSequence.from_intervals(intervals), data, axis)
 
     def __len__(self) -> int:
+        """Return the number of aligned positions, i.e. ``len(interval)``."""
         return len(self.interval)
 
     @staticmethod
     def _get_interval(interval: IntervalLike, slice_index: slice) -> IntervalLike:
+        """Return the sub-interval selected by a slice along the aligned axis.
+
+        A negative step reverses the slice and flips the result to the opposite
+        strand, so it stays ordered 5'->3'.
+
+        Parameters
+        ----------
+        interval
+            The interval-like object being sliced.
+        slice_index
+            The slice applied to the aligned axis.
+
+        Raises
+        ------
+        KeyError
+            If ``slice_index`` has a step other than ``±1``.
+        """
         length = len(interval)
         start, stop, step = slice_index.indices(length)
         if abs(step) != 1:
@@ -168,6 +186,22 @@ class IntervalData:
 
     @staticmethod
     def _get_slice(interval: IntervalLike, interval_slice: IntervalLike) -> slice:
+        """Return the aligned-axis slice that selects an interval-like key.
+
+        A key on the opposite strand produces a reversed (negative-step) slice.
+
+        Parameters
+        ----------
+        interval
+            The backing interval-like object.
+        interval_slice
+            The interval-like key to locate within ``interval``.
+
+        Raises
+        ------
+        IndexError
+            If ``interval`` does not contain ``interval_slice``.
+        """
         if interval_slice.strand == interval.strand:
             if not interval.contains(interval_slice):
                 raise IndexError(
@@ -195,7 +229,7 @@ class IntervalData:
         """Normalize an interval-like key into the backing interval's coordinate space.
 
         When this IntervalData is backed by a
-        :py:class:`~genome_kit.DisjointIntervalSequence` and `key` is a genomic
+        :py:class:`~genome_kit.DisjointIntervalSequence` and ``key`` is a genomic
         :py:class:`~genome_kit.Interval`, the key is lifted (via
         :py:meth:`~genome_kit.DisjointIntervalSequence.lift_interval`) so that
         indexing happens in the DIS's flattened coordinate space. All other cases
@@ -205,7 +239,7 @@ class IntervalData:
         Raises
         ------
         IndexError
-            If `key` is not fully contained within the backing DIS's segment
+            If ``key`` is not fully contained within the backing DIS's segment
             (see :py:meth:`~genome_kit.DisjointIntervalSequence.lift_interval`).
         """
         if isinstance(self.interval, DisjointIntervalSequence) and isinstance(
@@ -229,6 +263,15 @@ class IntervalData:
     def __getitem__(
         self, item: slice | tuple | int | IntervalLike
     ) -> "IntervalData" | Sequence:
+        """Index the data, or splice both the interval and data together.
+
+        An integer (or a tuple whose aligned-axis entry is an integer) indexes
+        ``data`` directly and returns the raw array value. A ``slice``, an
+        :py:class:`~genome_kit.Interval`, or a
+        :py:class:`~genome_kit.DisjointIntervalSequence` slices both ``interval``
+        and ``data`` and returns a new :py:class:`IntervalData`. Splicing onto
+        the opposite strand reverses ``data``.
+        """
         data = self.data
         axis = self.axis
 
@@ -256,14 +299,23 @@ class IntervalData:
         return data[item]
 
     def __setitem__(self, key: slice | tuple | IntervalLike, value):
+        """Assign into ``data`` in place.
+
+        An :py:class:`~genome_kit.Interval` or
+        :py:class:`~genome_kit.DisjointIntervalSequence` key is first resolved to
+        the corresponding slice of the aligned axis; a ``slice`` or tuple is
+        forwarded to ``data`` directly.
+        """
         if isinstance(key, _INTERVAL_LIKE):
             key = self._get_slice(self.interval, self._lift_key(key))
         self.data[key] = value
 
     def __repr__(self):
+        """Return a human-readable representation."""
         return "IntervalData({}, {}, {})".format(
             repr(self.interval), repr(self.data), repr(self.axis)
         )
 
     def __str__(self):
+        """Return the data type together with the interval it is indexed by."""
         return "<{} indexed by <{}>>".format(type(self.data), self.interval)

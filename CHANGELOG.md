@@ -1,5 +1,19 @@
 # Changelog
 
+## [7.6.0](https://github.com/deepgenomics/GenomeKit/compare/v7.5.0...v7.6.0) (2026-07-27)
+
+
+### Features
+
+* add gkdf deserialization options ([#242](https://github.com/deepgenomics/GenomeKit/issues/242)) ([648fa49](https://github.com/deepgenomics/GenomeKit/commit/648fa49590de6245da11e64115f4d5ca94385951))
+* add gkdf pandas support ([#217](https://github.com/deepgenomics/GenomeKit/issues/217)) ([077353e](https://github.com/deepgenomics/GenomeKit/commit/077353e15da427dbb219c93c658bf024aa752fa3))
+* add lower, lift, intersect, dna, expand_coord DIS methods ([#229](https://github.com/deepgenomics/GenomeKit/issues/229)) ([ecffc49](https://github.com/deepgenomics/GenomeKit/commit/ecffc49351b4c18019923a52af194c72b13e04d9))
+
+
+### Bug Fixes
+
+* remove python roundtrip in list ser/de ([#244](https://github.com/deepgenomics/GenomeKit/issues/244)) ([f5abf33](https://github.com/deepgenomics/GenomeKit/commit/f5abf33e3713998d8f16a244ca9b565c21300be5))
+
 ## [7.5.0](https://github.com/deepgenomics/GenomeKit/compare/v7.4.5...v7.5.0) (2026-06-09)
 
 

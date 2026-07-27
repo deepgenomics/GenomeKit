@@ -14,6 +14,7 @@ dependencies:
   - boto3>=1.43.54
   - grpcio=1.74.0
   - grpcio-status=1.74.0
+  - certifi
 
   # dev + test dependencies
   - ccache

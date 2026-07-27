@@ -402,6 +402,7 @@ if __name__ == "__main__":
             "tqdm",
             "importlib-metadata",
             "typing-extensions",
+            "certifi",
         ],
         extras_require={
             # install polars-runtime-compat if running on x86_64 Python on macOS

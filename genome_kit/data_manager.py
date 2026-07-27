@@ -16,6 +16,7 @@ import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
 from botocore.exceptions import ClientError
+import certifi
 from tqdm.auto import tqdm
 from tqdm.utils import ObjectWrapper
 from . import _cxx
@@ -341,7 +342,7 @@ class DefaultDataManager(DataManager):
     @property
     def client(self):
         if not hasattr(self, "_client"):
-            s3_client = boto3.client("s3") if self._require_auth else boto3.client("s3", config=Config(signature_version=UNSIGNED))
+            s3_client = boto3.client("s3") if self._require_auth else boto3.client("s3", config=Config(signature_version=UNSIGNED), verify=certifi.where())
             self._client = s3_client
 
         return self._client

@@ -40,6 +40,9 @@ The serialization and deserialization entry points are :py:func:`~genome_kit.df.
     ...
     restored_df = gk.read_parquet("genes.parquet")
 
+.. note::
+    In this subpackage, lists of GenomeKit objects are supported, (e.g. ``List[Gene]``) while nested lists of GenomeKit objects are not supported (e.g. ``List[List[Transcript]]``). 
+    Nested lists of standard Python objects (e.g. ``List[List[int]]``) are supported.
 
 .. note::
     

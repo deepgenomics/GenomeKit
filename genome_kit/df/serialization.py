@@ -104,26 +104,46 @@ def _detect_gk_cols(
 
     return target_cols
 
+def _unflatten_list(flattened: list[Any], orig_lengths: list[int]) -> list[list | None]:
+    """Restore a flattened list back into its original list structure."""
+    out = []
+    pos = 0
+    for length in orig_lengths:
+        # null values stored as length 0
+        if length == 0:
+            out.append(None)
+        else:
+            out.append(flattened[pos : pos + length])
+            pos += length
+    return out
+
 
 def _list_serializer(
     serializer: Callable[[pl.Series], pl.Series], return_dtype: Any
 ) -> Callable[[pl.Series], pl.Series]:
     """Convert a serializer to accept a series of lists of objects.
     
-    Default serializers accept a series of single objects.
+    Default serializers accept a series of single objects. Flattens pl.Series of 
+    lists to a pl.Series of single objects, applies serialization, then restores
+    back the original list structure.
     """
-
     pl = require_polars()
 
+    # input `s` will be a column, where each cell is a list or None
     def _serialize_list(s: pl.Series) -> pl.Series:
-        return pl.Series(
-            name=s.name,
-            values=[
-                serializer(pl.Series(values=l)).to_list() if l is not None else None
-                for l in s
-            ],
-            dtype=return_dtype,
-        )
+        flattened = []
+        orig_lengths = []
+        # keep track of original lengths to restore original list structure
+        for row in s.to_list():
+            if row is None: # when converting to list, pl.Null becomes None
+                orig_lengths.append(0)
+            else:
+                flattened.extend(row)
+                orig_lengths.append(len(row))
+
+        serialized = serializer(pl.Series(values=flattened)).to_list()
+
+        return pl.Series(name=s.name, values=_unflatten_list(serialized, orig_lengths), dtype=return_dtype)
 
     return _serialize_list
 
@@ -158,7 +178,7 @@ def _init_gk_annotations(
         if target_cols[c]["cell_type"] == CellType.SCALAR:
             genomes_exprs.append(pl.col(c).struct.field(genome_field))
         else:
-            genomes_list_exprs.append(pl.col(c).explode().struct.field(genome_field))
+            genomes_list_exprs.append(pl.col(c).explode(empty_as_null=False).struct.field(genome_field))
 
     # expressions to extract genome_str must be run separately since exploded lists
     # may have more rows than the original dataframe
@@ -168,7 +188,7 @@ def _init_gk_annotations(
         plans.append(
             lf.select(
                 pl.concat_list(genomes_exprs)
-                .explode()
+                .explode(empty_as_null=False)
                 .drop_nulls()
                 .unique()
                 .alias("genome_str")
@@ -179,7 +199,7 @@ def _init_gk_annotations(
         plans.append(
             lf.select(
                 pl.concat(genomes_list_exprs)
-                .explode()
+                .explode(empty_as_null=False)
                 .drop_nulls()
                 .unique()
                 .alias("genome_str")
@@ -238,14 +258,14 @@ def _list_deserializer(
     pl = require_polars()
 
     def _deserialize_list(s: pl.Series) -> pl.Series:
-        return pl.Series(
-            name=s.name,
-            values=[
-                deserializer(pl.Series(values=l)).to_list() if l is not None else None
-                for l in s
-            ],
-            dtype=pl.Object,
-        )
+        # fill_null with 0 so None values are treated as empty lists
+        lengths = s.list.len().fill_null(0).to_list()
+        # don't keep nulls or empty lists when exploding
+        # consistent with empty list and nulls as length 0 in _unflatten_list
+        exploded = s.explode(empty_as_null=False, keep_nulls=False)
+        deserialized = deserializer(exploded).to_list()
+
+        return pl.Series(name=s.name, values=_unflatten_list(deserialized, lengths), dtype=pl.Object)
 
     return _deserialize_list
 

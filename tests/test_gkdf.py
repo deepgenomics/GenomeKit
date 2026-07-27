@@ -209,13 +209,17 @@ class TestGkdfRoundTrip(unittest.TestCase):
         transcripts = list(g.transcripts)[:10]
         transcripts[:3] = [None] * 3
         df = pl.DataFrame(
-            {"transcripts": [transcripts]}, schema={"transcripts": pl.Object}
+            {"transcripts": [transcripts, [], [None], None]}, schema={"transcripts": pl.Object}
         )
 
         path = self.tmp_dir_path / "list_of_transcripts_with_null.parquet"
         write_parquet(df, path)
         re_df = read_parquet(path)
-        self.assertEqual(re_df.item(), df.item())
+        self.assertEqual(re_df["transcripts"][0], df["transcripts"][0])
+        # empty list becomes none on deserialization
+        self.assertEqual(re_df["transcripts"][1], None)
+        self.assertEqual(re_df["transcripts"][2], df["transcripts"][2])
+        self.assertEqual(re_df["transcripts"][3], df["transcripts"][3])
 
     @unittest.skipUnless(HAS_POLARS, "Polars is required for this genome_kit.df test")
     def test_multiple_types(self):

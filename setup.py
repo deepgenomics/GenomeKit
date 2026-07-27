@@ -398,7 +398,7 @@ if __name__ == "__main__":
             "appdirs",
             "numpy",
             "google-cloud-storage",
-            "boto3",
+            "boto3>=1.43.54",
             "tqdm",
             "importlib-metadata",
             "typing-extensions",

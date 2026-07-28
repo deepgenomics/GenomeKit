@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.6.1](https://github.com/deepgenomics/GenomeKit/compare/v7.6.0...v7.6.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* verify AWS SSL connection ([#246](https://github.com/deepgenomics/GenomeKit/issues/246)) ([ec53862](https://github.com/deepgenomics/GenomeKit/commit/ec538625dc7e5dd2fdd8c025e730acdc25c6e4f5))
+
 ## [7.6.0](https://github.com/deepgenomics/GenomeKit/compare/v7.5.0...v7.6.0) (2026-07-27)
 
 

@@ -2110,6 +2110,15 @@ class TestLiftInterval(unittest.TestCase):
         self.assertEqual(lifted.end, 50)
         self.assertTrue(lifted.on_coordinate_strand)
 
+    def test_interval_partially_in_gap(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
+        dis = DisjointIntervalSequence(ivs, start=0, end=200)
+        lifted = dis.lift_interval(Interval("chr1", "+", 150, 250, REFG), intersect_on_lift=True)
+        self.assertIsNotNone(lifted)
+        self.assertEqual(lifted.start, 50)
+        self.assertEqual(lifted.end, 100)
+        self.assertTrue(lifted.on_coordinate_strand)
+
     def test_no_overlap_returns_none(self):
         ivs = _make_intervals([("chr1", "+", 100, 200), ("chr1", "+", 300, 400)])
         dis = DisjointIntervalSequence(ivs, start=0, end=50)

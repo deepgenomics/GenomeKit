@@ -958,12 +958,15 @@ class DisjointIntervalSequence:
             )
         if intersect_on_lift and lift_start is None and lift_end is None:
             return None
-        # lifted interval is entirely upstream or downstream of the DIS segment
-        if lift_end < self.start or lift_start > self.end:
-            return None
+        # It should only be permissible to have a single None when intersect_on_lift=True,
+        # since it's possible to lift an interval that is partially in a gap between coord intervals
+        assert lift_start is not None and lift_end is not None if not intersect_on_lift else True
 
         seg_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=intersect_on_lift)
         seg_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=intersect_on_lift)
+        # lifted interval is entirely upstream or downstream of the DIS segment
+        if seg_end < self.start or seg_start > self.end:
+            return None
         assert seg_start is not None and seg_end is not None
 
         # Clip to self's segment via half-open intersection

@@ -398,11 +398,10 @@ if __name__ == "__main__":
             "appdirs",
             "numpy",
             "google-cloud-storage",
-            "boto3>=1.43.54",
+            "boto3",
             "tqdm",
             "importlib-metadata",
             "typing-extensions",
-            "certifi",
         ],
         extras_require={
             # install polars-runtime-compat if running on x86_64 Python on macOS

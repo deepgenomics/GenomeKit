@@ -341,7 +341,7 @@ class DefaultDataManager(DataManager):
     @property
     def client(self):
         if not hasattr(self, "_client"):
-            s3_client = boto3.client("s3") if self._require_auth else boto3.client("s3", config=Config(signature_version=UNSIGNED))
+            s3_client = boto3.client("s3") if self._require_auth else boto3.client("s3", config=Config(signature_version=UNSIGNED), verify=True)
             self._client = s3_client
 
         return self._client

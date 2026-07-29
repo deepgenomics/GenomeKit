@@ -9,8 +9,8 @@ Overview
 
 An :py:class:`~genome_kit.IntervalData` is an object that associates a NumPy array with
 a genomic interval. Conceptually, it is similar to a
-:py:class:`~genome_kit.GenomeTrack`, but in-memory and scoped to a single
-interval-like object.
+:py:class:`~genome_kit.GenomeTrack`, but in-memory (doesn't require a file) and
+scoped to a single interval-like object.
 
 More specifically, an :py:class:`~genome_kit.IntervalData` binds three things:
 

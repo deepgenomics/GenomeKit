@@ -87,7 +87,7 @@ class TestIntervalData(unittest.TestCase):
         data = np.arange(0, 30).reshape(3, 10)
         interval_data = IntervalData(interval, data)
         self.assertEqual(len(interval), len(interval_data))
-        self.assertEqual(interval, interval_data.interval)
+        self.assertEqual(interval, interval_data._interval)
         np.testing.assert_equal(data, [x for x in interval_data])
 
     def test_same_dimension_dis(self):
@@ -96,7 +96,7 @@ class TestIntervalData(unittest.TestCase):
             with self.subTest(name):
                 interval_data = IntervalData(dis, data)
                 self.assertEqual(len(dis), len(interval_data))
-                self.assertEqual(dis, interval_data.interval)
+                self.assertEqual(dis, interval_data._interval)
                 np.testing.assert_equal(data, [x for x in interval_data])
 
     def test_empty(self):
@@ -462,9 +462,9 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         interval_data = IntervalData(interval, deepcopy(data))
         interval_data[interval.expand(-1, 0)] = 0
         np.testing.assert_array_equal(
-            interval_data.data[1:, :], np.zeros_like(interval_data.data[1:, :])
+            interval_data._data[1:, :], np.zeros_like(interval_data._data[1:, :])
         )
-        np.testing.assert_array_equal(interval_data.data[:1, :], data[:1, :])
+        np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
 
     def test_set_data_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -473,10 +473,10 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 interval_data = IntervalData(dis, deepcopy(data))
                 interval_data[dis.expand(-1, 0)] = 0
                 np.testing.assert_array_equal(
-                    interval_data.data[1:, :],
-                    np.zeros_like(interval_data.data[1:, :]),
+                    interval_data._data[1:, :],
+                    np.zeros_like(interval_data._data[1:, :]),
                 )
-                np.testing.assert_array_equal(interval_data.data[:1, :], data[:1, :])
+                np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
 
 
 class TestIntervalDataAxisAlign(unittest.TestCase):
@@ -490,7 +490,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         data = np.arange(0, 30).reshape(5, 3, 2)
         interval_data = IntervalData(interval, data, axis=1)
         self.assertEqual(len(interval), len(interval_data))
-        self.assertEqual(interval, interval_data.interval)
+        self.assertEqual(interval, interval_data._interval)
         np.testing.assert_equal(data, [x for x in interval_data])
 
     def test_same_dimension_dis(self):
@@ -499,7 +499,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
             with self.subTest(name):
                 interval_data = IntervalData(dis, data, axis=1)
                 self.assertEqual(len(dis), len(interval_data))
-                self.assertEqual(dis, interval_data.interval)
+                self.assertEqual(dis, interval_data._interval)
                 np.testing.assert_equal(data, [x for x in interval_data])
 
     def test_negative_axis(self):
@@ -629,9 +629,9 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval_data = IntervalData(interval, deepcopy(data), axis=1)
         interval_data[interval.expand(-1, 0)] = 0
         np.testing.assert_array_equal(
-            interval_data.data[:, 1:, :], np.zeros_like(interval_data.data[:, 1:, :])
+            interval_data._data[:, 1:, :], np.zeros_like(interval_data._data[:, 1:, :])
         )
-        np.testing.assert_array_equal(interval_data.data[:, :1, :], data[:, :1, :])
+        np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
 
     def test_set_data_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)
@@ -640,10 +640,10 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 interval_data = IntervalData(dis, deepcopy(data), axis=1)
                 interval_data[dis.expand(-1, 0)] = 0
                 np.testing.assert_array_equal(
-                    interval_data.data[:, 1:, :],
-                    np.zeros_like(interval_data.data[:, 1:, :]),
+                    interval_data._data[:, 1:, :],
+                    np.zeros_like(interval_data._data[:, 1:, :]),
                 )
-                np.testing.assert_array_equal(interval_data.data[:, :1, :], data[:, :1, :])
+                np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
 
 
 if __name__ == '__main__':

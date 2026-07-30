@@ -89,10 +89,10 @@ class IntervalData:
                     len(interval), len(data) if axis == 0 else data.shape[axis]
                 )
             )
-        self.axis = axis
+        self._axis = axis
 
-        self.interval = interval
-        self.data = data
+        self._interval = interval
+        self._data = data
 
     @classmethod
     def from_interval(cls, interval: Interval, data, axis=0) -> "IntervalData":
@@ -127,7 +127,22 @@ class IntervalData:
 
     def __len__(self) -> int:
         """Return the number of aligned positions, i.e. ``len(interval)``."""
-        return len(self.interval)
+        return len(self._interval)
+
+    @property
+    def interval(self) -> IntervalLike:
+        """Return the backing interval-like object."""
+        return self._interval
+
+    @property
+    def data(self):
+        """Return the backing data array."""
+        return self._data
+
+    @property
+    def axis(self) -> int:
+        """Return the axis of ``data`` aligned to ``interval``."""
+        return self._axis
 
     @staticmethod
     def _get_interval(interval: IntervalLike, slice_index: slice) -> IntervalLike:
@@ -222,7 +237,7 @@ class IntervalData:
             If ``key`` is not fully contained within the backing DIS's segment
             (see :py:meth:`~genome_kit.DisjointIntervalSequence.lift_interval`).
         """
-        if isinstance(self.interval, DisjointIntervalSequence) and isinstance(
+        if isinstance(self._interval, DisjointIntervalSequence) and isinstance(
             key, Interval
         ):
             # lift_interval raises ValueError when `key` is not contained in the
@@ -230,12 +245,12 @@ class IntervalData:
             # indexing caller's perspective those are all "key not in this data",
             # so surface an IndexError to match the Interval-backed path.
             try:
-                lifted = self.interval.lift_interval(key)
+                lifted = self._interval.lift_interval(key)
             except ValueError as ex:
                 raise IndexError(str(ex)) from ex
             if lifted is None:
                 raise IndexError(
-                    "interval {} does not contain {}".format(self.interval, key)
+                    "interval {} does not contain {}".format(self._interval, key)
                 )
             return lifted
         return key
@@ -252,25 +267,25 @@ class IntervalData:
         and ``data`` and returns a new :py:class:`IntervalData`. Splicing onto
         the opposite strand reverses ``data``.
         """
-        data = self.data
-        axis = self.axis
+        data = self._data
+        axis = self._axis
 
         if isinstance(item, slice):
             if axis > 0:
                 raise IndexError(
                     "aligned axis {} requires multidimensional slice.".format(axis)
                 )
-            return IntervalData(self._get_interval(self.interval, item), data[item])
+            return IntervalData(self._get_interval(self._interval, item), data[item])
         elif isinstance(item, tuple):
             index = item[axis]
             if isinstance(index, slice):
                 return IntervalData(
-                    self._get_interval(self.interval, index), data[item], axis
+                    self._get_interval(self._interval, index), data[item], axis
                 )
             return data[item]
         elif isinstance(item, _INTERVAL_LIKE):
             item = self._lift_key(item)
-            slice_index = self._get_slice(self.interval, item)
+            slice_index = self._get_slice(self._interval, item)
             if axis > 0:
                 slices = data.ndim * [slice(None)]
                 slices[axis] = slice_index
@@ -293,25 +308,25 @@ class IntervalData:
             explicitly.
         """
         if isinstance(key, _INTERVAL_LIKE):
-            slice_index = self._get_slice(self.interval, self._lift_key(key))
-            if self.axis > 0:
-                slices = self.data.ndim * [slice(None)]
-                slices[self.axis] = slice_index
+            slice_index = self._get_slice(self._interval, self._lift_key(key))
+            if self._axis > 0:
+                slices = self._data.ndim * [slice(None)]
+                slices[self._axis] = slice_index
                 key = tuple(slices)
             else:
                 key = slice_index
-        elif isinstance(key, slice) and self.axis > 0:
+        elif isinstance(key, slice) and self._axis > 0:
             raise IndexError(
-                "aligned axis {} requires multidimensional slice.".format(self.axis)
+                "aligned axis {} requires multidimensional slice.".format(self._axis)
             )
-        self.data[key] = value
+        self._data[key] = value
 
     def __repr__(self):
         """Return a human-readable representation."""
         return "IntervalData({}, {}, {})".format(
-            repr(self.interval), repr(self.data), repr(self.axis)
+            repr(self._interval), repr(self._data), repr(self._axis)
         )
 
     def __str__(self):
         """Return the data type together with the interval it is indexed by."""
-        return "<{} indexed by <{}>>".format(type(self.data), self.interval)
+        return "<{} indexed by <{}>>".format(type(self._data), self._interval)

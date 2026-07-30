@@ -566,6 +566,22 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 with self.assertRaises(IndexError):
                     interval_data[1:]
 
+    def test_invalid_slice_set(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        with self.assertRaises(IndexError):
+            interval_data[1:] = 0
+
+    def test_invalid_slice_set_dis(self):
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        for name, dis in _dis_cases(3):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, data, axis=1)
+                with self.assertRaises(IndexError):
+                    interval_data[1:] = 0
+
     def test_slice_index(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
@@ -605,6 +621,29 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[:, 1:, ...], [x for x in sliced])
+
+    def test_set_data(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, deepcopy(data), axis=1)
+        interval_data[interval.expand(-1, 0)] = 0
+        np.testing.assert_array_equal(
+            interval_data.data[:, 1:, :], np.zeros_like(interval_data.data[:, 1:, :])
+        )
+        np.testing.assert_array_equal(interval_data.data[:, :1, :], data[:, :1, :])
+
+    def test_set_data_dis(self):
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        for name, dis in _dis_cases(3):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, deepcopy(data), axis=1)
+                interval_data[dis.expand(-1, 0)] = 0
+                np.testing.assert_array_equal(
+                    interval_data.data[:, 1:, :],
+                    np.zeros_like(interval_data.data[:, 1:, :]),
+                )
+                np.testing.assert_array_equal(interval_data.data[:, :1, :], data[:, :1, :])
 
 
 if __name__ == '__main__':

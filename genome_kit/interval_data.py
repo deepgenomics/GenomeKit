@@ -305,9 +305,25 @@ class IntervalData:
         :py:class:`~genome_kit.DisjointIntervalSequence` key is first resolved to
         the corresponding slice of the aligned axis; a ``slice`` or tuple is
         forwarded to ``data`` directly.
+
+        Raises
+        ------
+        IndexError
+            If ``key`` is a plain ``slice`` and the aligned axis is not axis 0.
+            explicitly.
         """
         if isinstance(key, _INTERVAL_LIKE):
-            key = self._get_slice(self.interval, self._lift_key(key))
+            slice_index = self._get_slice(self.interval, self._lift_key(key))
+            if self.axis > 0:
+                slices = self.data.ndim * [slice(None)]
+                slices[self.axis] = slice_index
+                key = tuple(slices)
+            else:
+                key = slice_index
+        elif isinstance(key, slice) and self.axis > 0:
+            raise IndexError(
+                "aligned axis {} requires multidimensional slice.".format(self.axis)
+            )
         self.data[key] = value
 
     def __repr__(self):

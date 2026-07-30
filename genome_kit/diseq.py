@@ -846,11 +846,11 @@ class DisjointIntervalSequence:
             self.reference_genome,
         )
 
-    def _lift_position(self, pos: int, lift_pos_in_genomic_gap: bool = False) -> int | None:
+    def _lift_position(self, pos: int, clip: bool = False) -> int | None:
         """Map a genomic position to a DIS index in this coordinate space.
 
         Positions outside the coord intervals are linearly extrapolated from
-        the nearest outer edge. If ``lift_pos_in_genomic_gap`` is True, positions
+        the nearest outer edge. If ``clip`` is True, positions
         in a gap between coord intervals are clipped to the cumulative end of the
         previous interval (i.e. the boundary index), otherwise they return None.
         """
@@ -866,7 +866,7 @@ class DisjointIntervalSequence:
                 if iv.start <= pos <= iv.end:
                     return cumulative + (pos - iv.start)
                 if pos < iv.start:
-                    return cumulative if lift_pos_in_genomic_gap else None
+                    return cumulative if clip else None
                 cumulative += len(iv)
             assert False, "Position not found in any interval"
         # minus
@@ -879,7 +879,7 @@ class DisjointIntervalSequence:
             if iv.start <= pos <= iv.end:
                 return cumulative + (iv.end - pos)
             if pos > iv.end:
-                return cumulative if lift_pos_in_genomic_gap else None
+                return cumulative if clip else None
             cumulative += len(iv)
         assert False, "Position not found in any interval"
 
@@ -948,8 +948,8 @@ class DisjointIntervalSequence:
             # On minus, lower genomic position maps to higher DIS index.
             other_corrected_start = other.end
             other_corrected_end = other.start
-        lift_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=False)
-        lift_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=False)
+        lift_start = self._lift_position(other_corrected_start, clip=False)
+        lift_end = self._lift_position(other_corrected_end, clip=False)
 
         if not intersect_on_lift and (lift_start is None or lift_end is None):
             raise ValueError(
@@ -963,8 +963,8 @@ class DisjointIntervalSequence:
         if not intersect_on_lift:
             assert lift_start is not None and lift_end is not None
 
-        seg_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=intersect_on_lift)
-        seg_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=intersect_on_lift)
+        seg_start = self._lift_position(other_corrected_start, clip=intersect_on_lift)
+        seg_end = self._lift_position(other_corrected_end, clip=intersect_on_lift)
         # lifted interval is entirely upstream or downstream of the DIS segment
         if seg_end < self.start or seg_start > self.end:
             return None

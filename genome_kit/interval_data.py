@@ -85,8 +85,8 @@ class IntervalData:
             and len(interval) != data.shape[axis]
         ):
             raise ValueError(
-                "interval ({}) and data ({}) must be of the same rank.".format(
-                    len(interval), len(data)
+                "interval ({}) and data axis ({}) must be of the same length.".format(
+                    len(interval), len(data) if axis == 0 else data.shape[axis]
                 )
             )
         self.axis = axis

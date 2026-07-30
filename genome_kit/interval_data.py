@@ -125,26 +125,6 @@ class IntervalData:
         """
         return cls(dis, data, axis)
 
-    @classmethod
-    def from_intervals(
-        cls, intervals: Sequence[Interval], data, axis=0
-    ) -> "IntervalData":
-        """Construct an IntervalData from a sequence of disjoint genomic Intervals.
-
-        The intervals are transformed into a :py:class:`~genome_kit.DisjointIntervalSequence`.
-
-        Parameters
-        ----------
-        intervals
-            Non-overlapping :py:class:`~genome_kit.Interval` objects on the same
-            chromosome, strand, and reference genome.
-        data
-            See :py:meth:`__init__`.
-        axis
-            See :py:meth:`__init__`.
-        """
-        return cls(DisjointIntervalSequence.from_intervals(intervals), data, axis)
-
     def __len__(self) -> int:
         """Return the number of aligned positions, i.e. ``len(interval)``."""
         return len(self.interval)

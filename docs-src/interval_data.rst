@@ -75,23 +75,6 @@ the genomic span
     >>> data = np.arange(len(dis))
     >>> interval_data = gk.IntervalData.from_dis(dis, data)
 
-From a sequence of Intervals
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-:py:meth:`~genome_kit.IntervalData.from_intervals` builds the backing DIS for you
-from a set of non-overlapping intervals on the same chromosome, strand, and
-reference genome
-
-.. code-block:: python
-
-    >>> exons = [e.interval for e in transcript.exons]
-    >>> data = np.arange(sum(len(e) for e in exons))
-    >>> interval_data = gk.IntervalData.from_intervals(exons, data)
-
-This is equivalent to calling
-:py:meth:`~genome_kit.DisjointIntervalSequence.from_intervals` and then
-:py:meth:`~genome_kit.IntervalData.from_dis`.
-
 The aligned axis
 ~~~~~~~~~~~~~~~~~
 

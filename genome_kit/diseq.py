@@ -960,7 +960,8 @@ class DisjointIntervalSequence:
             return None
         # It should only be permissible to have a single None when intersect_on_lift=True,
         # since it's possible to lift an interval that is partially in a gap between coord intervals
-        assert lift_start is not None and lift_end is not None if not intersect_on_lift else True
+        if not intersect_on_lift:
+            assert lift_start is not None and lift_end is not None
 
         seg_start = self._lift_position(other_corrected_start, lift_pos_in_genomic_gap=intersect_on_lift)
         seg_end = self._lift_position(other_corrected_end, lift_pos_in_genomic_gap=intersect_on_lift)
@@ -974,7 +975,8 @@ class DisjointIntervalSequence:
         intersected_start = max(seg_start, self._start)
         intersected_end = min(seg_end, self._end)
         assert intersected_start <= intersected_end
-        assert intersected_start == seg_start and intersected_end == seg_end if not intersect_on_lift else True
+        if not intersect_on_lift:
+            assert intersected_start == seg_start and intersected_end == seg_end
 
         return DisjointIntervalSequence(
             self._coordinate_intervals,

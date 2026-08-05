@@ -320,6 +320,99 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 self.assertEqual(dis, sliced.interval)
                 np.testing.assert_equal(data, [x for x in sliced])
 
+    def test_dis_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        key = DisjointIntervalSequence([interval], start=1, end=self.rank)
+        sliced = interval_data[key]
+        self.assertEqual(key, sliced.interval)
+        np.testing.assert_equal(data[1:, :], sliced.data)
+
+    def test_dis_key_on_interval_backed_multi_region(self):
+        # DIS spans two coord intervals with a gap between them; lowering it
+        # against Interval-backed data must fetch (and concatenate) each
+        # genomic sub-interval's data separately, skipping the gap.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, data)
+        key = DisjointIntervalSequence([e1, e2], start=0, end=10)
+        sliced = interval_data[key]
+        self.assertEqual(key, sliced.interval)
+        np.testing.assert_equal(
+            np.concatenate([data[0:5, :], data[100:105, :]]), sliced.data
+        )
+
+    def test_list_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        sliced = interval_data[key]
+        np.testing.assert_equal(data[1:, :], sliced.data)
+
+    def test_list_key_on_dis_backed(self):
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        single = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(single, start=50, end=50 + self.rank)
+        interval_data = IntervalData(dis, data)
+        key = [
+            Interval("chr1", "+", 151, 152, self.genome),
+            Interval("chr1", "+", 152, 153, self.genome),
+        ]
+        sliced = interval_data[key]
+        np.testing.assert_equal(data[1:, :], sliced.data)
+
+    def test_list_key_multi_region(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, data)
+        sliced = interval_data[[e1, e2]]
+        np.testing.assert_equal(
+            np.concatenate([data[0:5, :], data[100:105, :]]), sliced.data
+        )
+
+    def test_list_key_invalid_element(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        key = [Interval('chr1', '+', 101, 102, self.genome), slice(0, 1)]
+        with self.assertRaises(TypeError):
+            interval_data[key]
+
+    def test_list_key_overlapping(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        key = [
+            Interval('chr1', '+', 100, 102, self.genome),
+            Interval('chr1', '+', 101, 103, self.genome),
+        ]
+        with self.assertRaises(ValueError):
+            interval_data[key]
+
+    def test_list_key_overlapping_unordered(self):
+        # a and c overlap; b sits elsewhere and overlaps neither
+        backing = Interval('chr1', '+', 100, 215, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, data)
+        a = Interval('chr1', '+', 100, 110, self.genome)
+        b = Interval('chr1', '+', 200, 210, self.genome)
+        c = Interval('chr1', '+', 105, 115, self.genome)
+        with self.assertRaises(ValueError):
+            interval_data[[a, b, c]]
+
     def test_outside_range(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, self.rank)
@@ -466,6 +559,18 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         )
         np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
 
+    def test_set_data_dis_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        key = DisjointIntervalSequence([interval], start=1, end=self.rank)
+        interval_data[key] = 0
+        np.testing.assert_array_equal(
+            interval_data._data[1:, :], np.zeros_like(interval_data._data[1:, :])
+        )
+        np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
+
     def test_set_data_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
         for name, dis in _dis_cases(self.rank):
@@ -477,6 +582,43 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                     np.zeros_like(interval_data._data[1:, :]),
                 )
                 np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
+
+    def test_set_data_dis_key_on_interval_backed_multi_region(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        key = DisjointIntervalSequence([e1, e2], start=0, end=10)
+        interval_data[key] = 0
+
+        zeroed_mask = np.zeros(len(backing), dtype=bool)
+        zeroed_mask[0:5] = True
+        zeroed_mask[100:105] = True
+        np.testing.assert_array_equal(
+            interval_data._data[zeroed_mask], np.zeros_like(interval_data._data[zeroed_mask])
+        )
+        np.testing.assert_array_equal(interval_data._data[~zeroed_mask], data[~zeroed_mask])
+
+    def test_set_data_dis_key_on_interval_backed_multi_region_array_value(self):
+        # value's length matches the combined length of the DIS's lowered
+        # sub-intervals, so it should be split per sub-interval rather than
+        # broadcast whole into each one.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        key = DisjointIntervalSequence([e1, e2], start=0, end=10)
+        value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        interval_data[key] = value
+
+        np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
+        np.testing.assert_array_equal(interval_data._data[100:105, :], value[5:10, :])
+        untouched_mask = np.ones(len(backing), dtype=bool)
+        untouched_mask[0:5] = False
+        untouched_mask[100:105] = False
+        np.testing.assert_array_equal(interval_data._data[untouched_mask], data[untouched_mask])
 
 
 class TestIntervalDataAxisAlign(unittest.TestCase):
@@ -622,6 +764,28 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[:, 1:, ...], [x for x in sliced])
 
+    def test_dis_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        key = DisjointIntervalSequence([interval], start=1, end=3)
+        sliced = interval_data[key]
+        self.assertEqual(key, sliced.interval)
+        np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+
+    def test_list_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        sliced = interval_data[key]
+        np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+
     def test_set_data(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
@@ -631,6 +795,51 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         np.testing.assert_array_equal(
             interval_data._data[:, 1:, :], np.zeros_like(interval_data._data[:, 1:, :])
         )
+        np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_data_dis_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, deepcopy(data), axis=1)
+        key = DisjointIntervalSequence([interval], start=1, end=3)
+        interval_data[key] = 0
+        np.testing.assert_array_equal(
+            interval_data._data[:, 1:, :], np.zeros_like(interval_data._data[:, 1:, :])
+        )
+        np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_list_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, deepcopy(data), axis=1)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        interval_data[key] = 0
+        np.testing.assert_array_equal(
+            interval_data._data[:, 1:, :], np.zeros_like(interval_data._data[:, 1:, :])
+        )
+        np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_list_key_on_interval_backed_array_value(self):
+        # value's length along the aligned axis matches the combined length
+        # of the list's elements, so it should be split per element rather
+        # than broadcast whole into each one.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, deepcopy(data), axis=1)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        value = -np.arange(1, 5 * 2 * 2 + 1).reshape(5, 2, 2)
+        interval_data[key] = value
+        np.testing.assert_array_equal(interval_data._data[:, 1, :], value[:, 0, :])
+        np.testing.assert_array_equal(interval_data._data[:, 2, :], value[:, 1, :])
         np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
 
     def test_set_data_dis(self):

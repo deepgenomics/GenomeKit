@@ -1,6 +1,7 @@
 from .diseq import DisjointIntervalSequence
 from .interval import Interval
 from typing import TypeAlias, Sequence
+import numpy as np
 
 # Interval-like types IntervalData can be backed by and indexed with. Both present
 # the same 5'->3' coordinate-space interface (__len__, strand, end5.start, expand,
@@ -220,6 +221,35 @@ class IntervalData:
             step = -1
         return slice(start, stop, step)
 
+    @staticmethod
+    def _validate_interval_list(items: list) -> None:
+        """Validate a ``list`` key/item of genomic Intervals.
+
+        Every element must be an :py:class:`~genome_kit.Interval`, and no two
+        elements may overlap (a shared boundary, e.g. ``[10, 20)`` and
+        ``[20, 30)``, is fine).
+
+        Raises
+        ------
+        TypeError
+            If any element is not an :py:class:`~genome_kit.Interval`.
+        ValueError
+            If any two elements overlap.
+        """
+        if not all(isinstance(item, Interval) for item in items):
+            raise TypeError("list elements must be Interval.")
+        if len(items) < 2:
+            return
+        if items[0].strand == "+":
+            sorted_items = sorted(items, key=lambda iv: iv.start)
+        else:
+            sorted_items = sorted(items, key=lambda iv: -iv.end)
+        for a, b in zip(sorted_items, sorted_items[1:]):
+            if a.overlaps(b):
+                raise ValueError(
+                    "list elements must not overlap: {} overlaps {}.".format(a, b)
+                )
+
     def _lift_key(self, key: IntervalLike) -> IntervalLike:
         """Normalize an interval-like key into the backing interval's coordinate space.
 
@@ -256,16 +286,17 @@ class IntervalData:
         return key
 
     def __getitem__(
-        self, item: slice | tuple | int | IntervalLike
+        self, item: slice | tuple | int | IntervalLike | list[Interval]
     ) -> "IntervalData" | Sequence:
         """Index the data, or splice both the interval and data together.
 
         An integer (or a tuple whose aligned-axis entry is an integer) indexes
         ``data`` directly and returns the raw array value. A ``slice``, an
-        :py:class:`~genome_kit.Interval`, or a
-        :py:class:`~genome_kit.DisjointIntervalSequence` slices both ``interval``
-        and ``data`` and returns a new :py:class:`IntervalData`. Splicing onto
-        the opposite strand reverses ``data``.
+        :py:class:`~genome_kit.Interval`, a
+        :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
+        non-overlapping :py:class:`~genome_kit.Interval` objects slices both
+        ``interval`` and ``data`` and returns a new :py:class:`IntervalData`.
+        Splicing onto the opposite strand reverses ``data``.
         """
         data = self._data
         axis = self._axis
@@ -283,15 +314,40 @@ class IntervalData:
                     self._get_interval(self._interval, index), data[item], axis
                 )
             return data[item]
-        elif isinstance(item, _INTERVAL_LIKE):
-            item = self._lift_key(item)
-            slice_index = self._get_slice(self._interval, item)
-            if axis > 0:
-                slices = data.ndim * [slice(None)]
-                slices[axis] = slice_index
-                slice_index = tuple(slices)
-            return IntervalData(item, data[slice_index], axis)
+        elif isinstance(item, _INTERVAL_LIKE) or isinstance(item, list):
+            return self._get_interval_like(item)
         return data[item]
+
+    def _get_interval_like(self, item: IntervalLike | list[Interval]) -> "IntervalData":
+        """Return the sub-``IntervalData`` selected by an interval-like item.
+
+        If ``item`` is a :py:class:`~genome_kit.DisjointIntervalSequence` or ``List``,
+        the multi-region data returned from this IntervalData is
+        concatenated along the aligned axis, in 5'->3' order.
+
+        Raises
+        ------
+        TypeError
+            If ``item`` is a ``list`` containing an element that is not an
+            :py:class:`~genome_kit.Interval`.
+        ValueError
+            If ``item`` is a ``list`` containing two overlapping Intervals.
+        """
+        if isinstance(item, list):
+            self._validate_interval_list(item)
+            dis = DisjointIntervalSequence.from_intervals(item)
+            return IntervalData(dis, self._concat_pieces(dis.lower()), self._axis)
+
+        if isinstance(self._interval, Interval) and isinstance(item, DisjointIntervalSequence):
+            return IntervalData(item, self._concat_pieces(item.lower()), self._axis)
+
+        lifted = self._lift_key(item)
+        slice_index = self._get_slice(self._interval, lifted)
+        if self._axis > 0:
+            slices = self._data.ndim * [slice(None)]
+            slices[self._axis] = slice_index
+            slice_index = tuple(slices)
+        return IntervalData(lifted, self._data[slice_index], self._axis)
 
     def __setitem__(self, key: slice | tuple | IntervalLike, value):
         """Assign into ``data`` in place.

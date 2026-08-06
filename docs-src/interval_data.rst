@@ -159,6 +159,8 @@ slices the aligned axis explicitly instead
     >>> sub = interval_data[:, 1:, ...]    # slice the aligned axis (1)
     >>> sub.interval
     Interval("chr1", "+", 101, 103, "hg19")
+    >>> np.array_equal(interval_data[:, 1:, ...].data, data[:, 1:, ...])
+    True  # A slice is forwarded to the underlying array
 
 By Interval or DIS
 ~~~~~~~~~~~~~~~~~~~

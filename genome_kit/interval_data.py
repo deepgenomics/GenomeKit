@@ -512,6 +512,9 @@ class IntervalData:
         to the corresponding region(s) of the aligned axis;
         a ``slice`` or tuple is forwarded to ``data`` directly.
 
+        If setting via an Interval-like key, the key must be fully contained within
+        the backing interval.
+
         For an interval-like ``key``, ``value`` must take one of three forms
         (see :py:meth:`_resolve_value_form`): ``data``'s shape with the aligned
         axis resized to the key's length, supplying one value per selected

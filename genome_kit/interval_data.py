@@ -31,11 +31,11 @@ class IntervalData:
     >>>
     >>> # Slicing with __getitem__ is applied to both the interval and data array
     >>> str(interval_data[:, 100:200, 2:6])
-    '<<type \'numpy.ndarray\'> indexed by <Interval("chr7", "+", 100100, 100200, "hg19")>>'
+    '<<class \'numpy.ndarray\'> indexed by <Interval("chr7", "+", 100100, 100200, "hg19")>>'
     >>>
     >>> # Slicing with interval reproduces the same results
     >>> str(interval_data[position.shift(100).expand(0, 100)])
-    '<<type \'numpy.ndarray\'> indexed by <Interval("chr7", "+", 100100, 100200, "hg19")>>'
+    '<<class \'numpy.ndarray\'> indexed by <Interval("chr7", "+", 100100, 100200, "hg19")>>'
     >>>
     >>> # Indexing with __getitem__ is applied to the data array
     >>> interval_data[1, 0, 0]
@@ -349,29 +349,194 @@ class IntervalData:
             slice_index = tuple(slices)
         return IntervalData(lifted, self._data[slice_index], self._axis)
 
-    def __setitem__(self, key: slice | tuple | IntervalLike, value):
+    def _concat_pieces(self, intervals: list[Interval]):
+        """Fetch and concatenate the data slices for ``intervals`` (in order)
+        along the aligned axis.
+        """
+        pieces = [self._get_interval_like(iv).data for iv in intervals]
+        return pieces[0] if len(pieces) == 1 else np.concatenate(pieces, axis=self._axis)
+
+    # The forms a value assigned via an interval-like key may take. See
+    # :py:meth:`_resolve_value_form`.
+    _SCALAR = "scalar"
+    _BLOCK = "block"
+    _POSITION = "position"
+
+    def _data_shape(self) -> tuple:
+        return self._data.shape if hasattr(self._data, "shape") else np.shape(self._data)
+
+    @staticmethod
+    def _value_shape(value) -> tuple | None:
+        """Return ``value``'s shape, or ``None`` if it has no well-defined one
+        (e.g. a ragged nested ``list``).
+        """
+        if hasattr(value, "shape"):
+            return value.shape
+        try:
+            return np.shape(value)
+        except ValueError:
+            return None
+
+    def _resolve_value_form(self, value, total: int) -> str:
+        """Classify ``value`` against the ``total`` aligned positions selected by
+        an interval-like key.
+
+        Exactly three forms are accepted, chosen so that which axis of ``value``
+        is the aligned one is never ambiguous — ``value``'s rank pins it down:
+
+        ``"block"``
+            ``value`` has ``data``'s shape with the aligned axis resized to
+            ``total``, i.e. the shape :py:meth:`__getitem__` returns for the same
+            key. Supplies one value per selected position.
+        ``"position"``
+            ``value`` has ``data``'s shape with the aligned axis removed. Describes
+            a single position, and is broadcast to every selected one.
+        ``"scalar"``
+            ``value`` has no shape at all, and is broadcast to everything.
+
+        A value that would otherwise reach the aligned axis only through NumPy's
+        right-aligned broadcasting is rejected, since the axis it lands on depends
+        on its rank rather than on the caller's intent.
+
+        Raises
+        ------
+        ValueError
+            If ``value`` matches none of the three forms.
+        """
+        shape = self._value_shape(value)
+        if shape == ():
+            return self._SCALAR
+        data_shape = self._data_shape()
+        block = data_shape[: self._axis] + (total,) + data_shape[self._axis + 1 :]
+        position = data_shape[: self._axis] + data_shape[self._axis + 1 :]
+        if shape == block:
+            return self._BLOCK
+        if shape == position:
+            return self._POSITION
+        raise ValueError(
+            f"value shape {shape if shape is not None else 'unknown'} does not fit "
+            f"{total} aligned position(s): expected {block} (one value per position), "
+            f"{position} (one value broadcast to every position), or a scalar."
+        )
+
+    def _normalize_to_backing_coord(self, key: IntervalLike | list[Interval]) -> list[IntervalLike]:
+        """Resolve an interval-like key into the region(s) of the aligned axis it
+        selects, each normalized into the backing coordinate space and ordered
+        5'->3'.
+
+        A ``list`` key is normalized through a
+        :py:class:`~genome_kit.DisjointIntervalSequence`, so its elements come back
+        merged where adjacent and in 5'->3' order
+
+        Raises
+        ------
+        TypeError
+            If ``key`` is a ``list`` containing an element that is not an
+            :py:class:`~genome_kit.Interval`.
+        ValueError
+            If ``key`` is an empty ``list``, or a ``list`` containing two
+            overlapping Intervals.
+        IndexError
+            If ``key`` is not contained within the backing interval.
+        """
+        if isinstance(key, list):
+            self._validate_interval_list(key)
+            key = DisjointIntervalSequence.from_intervals(key)
+            return [self._lift_key(iv) for iv in key.lower()]
+        if isinstance(key, DisjointIntervalSequence) and isinstance(self._interval, Interval):
+            return [self._lift_key(iv) for iv in key.lower()]
+        return [self._lift_key(key)]
+
+    def _set_interval_like(self, key: IntervalLike | list[Interval], value) -> None:
+        """Assign ``value`` into ``data`` at the aligned-axis region(s) selected by
+        an interval-like key.
+
+        A ``"block"`` value is split along the aligned axis, one chunk per selected
+        region in 5'->3' order; the other forms are broadcast to every region.
+
+        Raises
+        ------
+        TypeError
+            If ``key`` is a ``list`` containing an element that is not an
+            :py:class:`~genome_kit.Interval`.
+        ValueError
+            If ``key`` is an empty ``list`` or contains overlapping Intervals, or if
+            ``value`` matches none of the accepted forms.
+        IndexError
+            If ``key`` is not contained within the backing interval.
+        """
+        keys = self._normalize_to_backing_coord(key)
+        lengths = [len(interval) for interval in keys]
+        form = self._resolve_value_form(value, sum(lengths))
+
+        if form == self._BLOCK:
+            offset = 0
+            for interval, length in zip(keys, lengths):
+                self._set_slice(interval, self._slice_axis(value, offset, offset + length))
+                offset += length
+            return
+        if form == self._POSITION:
+            # Re-insert the aligned axis so NumPy broadcasts `value` along it;
+            # left as-is it would right-align onto the trailing axes instead.
+            value = np.expand_dims(value, self._axis)
+        for interval in keys:
+            self._set_slice(interval, value)
+
+    def _set_slice(self, key: IntervalLike, value) -> None:
+        """Assign ``value`` into ``data`` at the aligned-axis slice selected by a
+        single ``key`` already normalized into the backing coordinate space.
+        """
+        slice_index = self._get_slice(self._interval, key)
+        if self._axis > 0:
+            slices = len(self._data_shape()) * [slice(None)]
+            slices[self._axis] = slice_index
+            slice_index = tuple(slices)
+        self._data[slice_index] = value
+
+    def _slice_axis(self, value, start: int, stop: int):
+        """Return ``value`` sliced to ``[start:stop)`` along the aligned axis
+        of this IntervalData.
+        """
+        if hasattr(value, "shape"):
+            slices = value.ndim * [slice(None)]
+            slices[self._axis] = slice(start, stop)
+            return value[tuple(slices)]
+        return value[start:stop]
+
+    def __setitem__(self, key: slice | tuple | IntervalLike | list[Interval], value):
         """Assign into ``data`` in place.
 
-        An :py:class:`~genome_kit.Interval` or
-        :py:class:`~genome_kit.DisjointIntervalSequence` key is first resolved to
-        the corresponding slice of the aligned axis; a ``slice`` or tuple is
-        forwarded to ``data`` directly.
+        An :py:class:`~genome_kit.Interval`, a
+        :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
+        non-overlapping :py:class:`~genome_kit.Interval` objects is resolved
+        to the corresponding region(s) of the aligned axis;
+        a ``slice`` or tuple is forwarded to ``data`` directly.
+
+        For an interval-like ``key``, ``value`` must take one of three forms
+        (see :py:meth:`_resolve_value_form`): ``data``'s shape with the aligned
+        axis resized to the key's length, supplying one value per selected
+        position; ``data``'s shape with the aligned axis removed, describing a
+        single position to broadcast to every selected one; or a scalar. Shapes
+        that would reach the aligned axis only via NumPy's right-aligned
+        broadcasting — including ones padded with length-1 axes — are rejected.
 
         Raises
         ------
         IndexError
-            If ``key`` is a plain ``slice`` and the aligned axis is not axis 0.
-            explicitly.
+            If ``key`` is a plain ``slice`` and the aligned axis is not axis 0,
+            or if an interval-like ``key`` is not contained within ``interval``.
+        TypeError
+            If ``key`` is a ``list`` containing an element that is not an
+            :py:class:`~genome_kit.Interval`.
+        ValueError
+            If ``key`` is an empty ``list`` or a ``list`` containing two
+            overlapping Intervals, or if ``value`` matches none of the accepted
+            forms.
         """
-        if isinstance(key, _INTERVAL_LIKE):
-            slice_index = self._get_slice(self._interval, self._lift_key(key))
-            if self._axis > 0:
-                slices = self._data.ndim * [slice(None)]
-                slices[self._axis] = slice_index
-                key = tuple(slices)
-            else:
-                key = slice_index
-        elif isinstance(key, slice) and self._axis > 0:
+        if isinstance(key, _INTERVAL_LIKE) or isinstance(key, list):
+            self._set_interval_like(key, value)
+            return
+        if isinstance(key, slice) and self._axis > 0:
             raise IndexError(
                 "aligned axis {} requires multidimensional slice.".format(self._axis)
             )

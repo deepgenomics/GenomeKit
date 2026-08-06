@@ -620,6 +620,254 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         untouched_mask[100:105] = False
         np.testing.assert_array_equal(interval_data._data[untouched_mask], data[untouched_mask])
 
+    def test_set_list_key_on_interval_backed(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        interval_data[key] = 0
+        np.testing.assert_array_equal(
+            interval_data._data[1:, :], np.zeros_like(interval_data._data[1:, :])
+        )
+        np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
+
+    def test_set_list_key_on_dis_backed(self):
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        single = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(single, start=50, end=50 + self.rank)
+        interval_data = IntervalData(dis, deepcopy(data))
+        key = [
+            Interval("chr1", "+", 151, 152, self.genome),
+            Interval("chr1", "+", 152, 153, self.genome),
+        ]
+        interval_data[key] = 0
+        np.testing.assert_array_equal(
+            interval_data._data[1:, :], np.zeros_like(interval_data._data[1:, :])
+        )
+        np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
+
+    def test_set_list_key_multi_region(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        interval_data[[e1, e2]] = 0
+
+        zeroed_mask = np.zeros(len(backing), dtype=bool)
+        zeroed_mask[0:5] = True
+        zeroed_mask[100:105] = True
+        np.testing.assert_array_equal(
+            interval_data._data[zeroed_mask], np.zeros_like(interval_data._data[zeroed_mask])
+        )
+        np.testing.assert_array_equal(interval_data._data[~zeroed_mask], data[~zeroed_mask])
+
+    def test_set_list_key_multi_region_array_value(self):
+        # value's length matches the combined length of the list's elements,
+        # so it should be split per element rather than broadcast whole into
+        # each one.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        interval_data[[e1, e2]] = value
+
+        np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
+        np.testing.assert_array_equal(interval_data._data[100:105, :], value[5:10, :])
+        untouched_mask = np.ones(len(backing), dtype=bool)
+        untouched_mask[0:5] = False
+        untouched_mask[100:105] = False
+        np.testing.assert_array_equal(interval_data._data[untouched_mask], data[untouched_mask])
+
+    def test_set_list_key_invalid_value_shape(self):
+        # value's length along the aligned axis (7) doesn't match the
+        # combined length of the list's elements (10), so the up-front shape
+        # check should raise before any assignment.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = np.zeros((7, 10))
+        with self.assertRaises(ValueError):
+            interval_data[[e1, e2]] = value
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_data_invalid_value_shape(self):
+        # value's length along the aligned axis (7) doesn't match the
+        # length of the Interval key (2), so the up-front shape check
+        # should raise before any assignment.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        value = np.zeros((7, 10))
+        with self.assertRaises(ValueError):
+            interval_data[interval.expand(-1, 0)] = value
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_data_position_value(self):
+        # value has data's shape with the aligned axis removed, so it describes a
+        # single position and is broadcast to every position the key selects.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        value = -np.arange(1, 11)
+        interval_data[interval.expand(-1, 0)] = value
+
+        np.testing.assert_array_equal(
+            interval_data._data[1:, :], np.broadcast_to(value, (self.rank - 1, 10))
+        )
+        np.testing.assert_array_equal(interval_data._data[:1, :], data[:1, :])
+
+    def test_set_list_key_multi_region_position_value(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 11)
+        interval_data[[e1, e2]] = value
+
+        selected_mask = np.zeros(len(backing), dtype=bool)
+        selected_mask[0:5] = True
+        selected_mask[100:105] = True
+        np.testing.assert_array_equal(
+            interval_data._data[selected_mask], np.broadcast_to(value, (10, 10))
+        )
+        np.testing.assert_array_equal(interval_data._data[~selected_mask], data[~selected_mask])
+
+    def test_set_data_dis_key_on_interval_backed_position_value(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 11)
+        interval_data[DisjointIntervalSequence([e1, e2], start=0, end=10)] = value
+
+        selected_mask = np.zeros(len(backing), dtype=bool)
+        selected_mask[0:5] = True
+        selected_mask[100:105] = True
+        np.testing.assert_array_equal(
+            interval_data._data[selected_mask], np.broadcast_to(value, (10, 10))
+        )
+        np.testing.assert_array_equal(interval_data._data[~selected_mask], data[~selected_mask])
+
+    def test_set_data_broadcastable_value_rejected(self):
+        # (rank, 1) and (1, 10) would each reach the aligned axis only through
+        # NumPy's right-aligned broadcasting, so neither is accepted even though
+        # NumPy would stretch them to fit.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        for shape in [(self.rank, 1), (1, 10)]:
+            with self.subTest(shape):
+                interval_data = IntervalData(interval, deepcopy(data))
+                with self.assertRaises(ValueError):
+                    interval_data[interval] = np.zeros(shape)
+                np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_unordered_splits_5p_to_3p(self):
+        # __getitem__ concatenates a list key in 5'->3' order, so __setitem__ must
+        # split a block-shaped value in that order too, whatever order was given.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        interval_data[[e2, e1]] = value
+
+        np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
+        np.testing.assert_array_equal(interval_data._data[100:105, :], value[5:10, :])
+        np.testing.assert_array_equal(interval_data[e1].data, value[0:5, :])
+        np.testing.assert_array_equal(interval_data[e2].data, value[5:10, :])
+
+    def test_set_list_key_unordered_splits_5p_to_3p_minus_strand(self):
+        # on the minus strand 5'->3' runs from high coordinates to low, so e2 is the
+        # 5'-most region
+        e1 = Interval('chr1', '-', 100, 105, self.genome)
+        e2 = Interval('chr1', '-', 200, 205, self.genome)
+        backing = Interval('chr1', '-', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        interval_data[[e1, e2]] = value
+
+        # index 0 is the 5' end, i.e. genomic 205, so e2 takes the first chunk
+        np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
+        np.testing.assert_array_equal(interval_data._data[100:105, :], value[5:10, :])
+        np.testing.assert_array_equal(interval_data[e2].data, value[0:5, :])
+        np.testing.assert_array_equal(interval_data[e1].data, value[5:10, :])
+
+    def test_set_list_key_round_trip(self):
+        # a block-shaped value is exactly what __getitem__ returns for the same
+        # key, so writing it straight back must leave data untouched.
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        for name, key in [("ordered", [e1, e2]), ("unordered", [e2, e1])]:
+            with self.subTest(name):
+                interval_data = IntervalData(backing, deepcopy(data))
+                interval_data[key] = interval_data[key].data
+                np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_empty(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        with self.assertRaises(ValueError):
+            interval_data[[]] = 0
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_invalid_element(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        key = [Interval('chr1', '+', 101, 102, self.genome), slice(0, 1)]
+        with self.assertRaises(TypeError):
+            interval_data[key] = 0
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_overlapping(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, deepcopy(data))
+        key = [
+            Interval('chr1', '+', 100, 102, self.genome),
+            Interval('chr1', '+', 101, 103, self.genome),
+        ]
+        with self.assertRaises(ValueError):
+            interval_data[key] = 0
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_overlapping_unordered(self):
+        # a and c overlap; b sits elsewhere and overlaps neither. Passed in
+        # list order [a, b, c] to verify the overlap is still caught after
+        # sorting 5'->3', even though a and c are not adjacent in the given
+        # (unsorted) list order.
+        backing = Interval('chr1', '+', 100, 215, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        a = Interval('chr1', '+', 100, 110, self.genome)
+        b = Interval('chr1', '+', 200, 210, self.genome)
+        c = Interval('chr1', '+', 105, 115, self.genome)
+        with self.assertRaises(ValueError):
+            interval_data[[a, b, c]] = 0
+        np.testing.assert_array_equal(interval_data._data, data)
+
 
 class TestIntervalDataAxisAlign(unittest.TestCase):
     @classmethod
@@ -841,6 +1089,41 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         np.testing.assert_array_equal(interval_data._data[:, 1, :], value[:, 0, :])
         np.testing.assert_array_equal(interval_data._data[:, 2, :], value[:, 1, :])
         np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_position_value(self):
+        # data's shape with the aligned axis (1) removed is (5, 2); that value is
+        # broadcast along the aligned axis, not right-aligned onto the trailing one.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        value = -np.arange(1, 5 * 2 + 1).reshape(5, 2)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        for name, item in [("interval", interval.expand(-1, 0)), ("list", key)]:
+            with self.subTest(name):
+                interval_data = IntervalData(interval, deepcopy(data), axis=1)
+                interval_data[item] = value
+                np.testing.assert_array_equal(interval_data._data[:, 1, :], value)
+                np.testing.assert_array_equal(interval_data._data[:, 2, :], value)
+                np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_ambiguous_value_rejected(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        key = [
+            Interval('chr1', '+', 101, 102, self.genome),
+            Interval('chr1', '+', 102, 103, self.genome),
+        ]
+        # Shapes where assignment is ambigous should be rejected
+        for shape in [(2,), (1, 1, 2), (2, 2), (5, 2, 1)]:
+            with self.subTest(shape):
+                interval_data = IntervalData(interval, deepcopy(data), axis=1)
+                with self.assertRaises(ValueError):
+                    interval_data[key] = np.zeros(shape)
+                np.testing.assert_array_equal(interval_data._data, data)
 
     def test_set_data_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)

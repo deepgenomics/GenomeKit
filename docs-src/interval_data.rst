@@ -231,7 +231,7 @@ directly to the underlying array
 
 .. code-block:: python
 
-    >>> interval_data[0] = interval_data[0].transpose()
+    >>> interval_data[0] = -interval_data[0]
 
 An :py:class:`~genome_kit.Interval` or
 :py:class:`~genome_kit.DisjointIntervalSequence` key is first resolved to the

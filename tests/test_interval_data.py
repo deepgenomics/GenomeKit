@@ -144,16 +144,16 @@ class TestIntervalData(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 30).reshape(3, 10)
         interval_data = IntervalData(interval, deepcopy(data))
-        interval_data[0] = interval_data[0].transpose()
-        np.testing.assert_equal(data[0].transpose(), interval_data[0])
+        interval_data[0] = -interval_data[0]
+        np.testing.assert_equal(-data[0], interval_data[0])
 
     def test_set_dis(self):
         data = np.arange(0, 30).reshape(3, 10)
         for name, dis in _dis_cases(3):
             with self.subTest(name):
                 interval_data = IntervalData(dis, deepcopy(data))
-                interval_data[0] = interval_data[0].transpose()
-                np.testing.assert_equal(data[0].transpose(), interval_data[0])
+                interval_data[0] = -interval_data[0]
+                np.testing.assert_equal(-data[0], interval_data[0])
 
 
 class TestIntervalDataSliceIndex(unittest.TestCase):

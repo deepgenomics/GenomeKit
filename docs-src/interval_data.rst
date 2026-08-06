@@ -44,36 +44,30 @@ much like a :ref:`track <tracks>`. Indexing then falls into two categories:
 Construction
 ============
 
-From a single Interval
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-The most direct case is a contiguous genomic region. The aligned axis of ``data``
-must have the same length as the interval
+An :py:class:`~genome_kit.IntervalData` can be backed two ways: by an
+:py:class:`~genome_kit.Interval` for a contiguous genomic region, or by a
+:py:class:`~genome_kit.DisjointIntervalSequence` for a discontiguous one (e.g. a
+transcript's exons). Either way, the aligned axis of ``data`` must have the same
+length as the backing object — for a DIS that is the length of the segment
+(``len(dis)``)
 
 .. code-block:: python
 
+    >>> # backed by an Interval: one value per base of a contiguous region
     >>> interval = gk.Interval("chr7", "+", 100000, 100500, "hg19")
-    >>> data = np.arange(len(interval))          # length 500, one value per base
+    >>> data = np.arange(len(interval))          # length 500
     >>> interval_data = gk.IntervalData(interval, data)
-
-:py:meth:`~genome_kit.IntervalData.from_interval` is an explicit alias for this
-case and behaves identically to the constructor.
-
-From a DisjointIntervalSequence
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When the data describes a discontiguous region (e.g. a transcript's exons), back the
-:py:class:`~genome_kit.IntervalData` with a
-:py:class:`~genome_kit.DisjointIntervalSequence`. The aligned axis must match the
-DIS segment length (``len(dis)``), i.e. the length of the *spliced* sequence, not
-the genomic span
-
-.. code-block:: python
-
+    >>>
+    >>> # backed by a DIS: one value per base of the spliced sequence
     >>> from genome_kit.diseq import DisjointIntervalSequence
     >>> dis = DisjointIntervalSequence.from_transcript(transcript)
     >>> data = np.arange(len(dis))
     >>> interval_data = gk.IntervalData.from_dis(dis, data)
+
+The constructor takes either kind of backing object;
+:py:meth:`~genome_kit.IntervalData.from_interval` and
+:py:meth:`~genome_kit.IntervalData.from_dis` are explicit aliases that behave
+identically to it.
 
 The aligned axis
 ~~~~~~~~~~~~~~~~~
@@ -88,9 +82,6 @@ Data is rarely one-dimensional. The ``axis`` argument tells
     >>> interval_data = gk.IntervalData(interval, data, axis=1)
     >>> len(interval_data)
     500
-
-If your aligned axis is not where you need it, use ``axis`` to point at it, or
-reorder the array up-front and leave ``axis`` at its default.
 
 Array Indexing
 ==============
@@ -169,9 +160,6 @@ slices the aligned axis explicitly instead
     >>> sub.interval
     Interval("chr1", "+", 101, 103, "hg19")
 
-Here the tuple's entry on the aligned axis is a ``slice``, so the whole tuple is
-applied to ``data`` and the interval is narrowed to match that slice.
-
 By Interval or DIS
 ~~~~~~~~~~~~~~~~~~~
 
@@ -226,15 +214,12 @@ is translated into spliced-coordinate offsets before the data is sliced
     >>> exon = transcript.exons[0].interval
     >>> sub = interval_data[exon]          # genomic key lifted into DIS space
 
-If the genomic key is not fully contained within the DIS segment — it straddles
-the segment edge, lands in an intron, or lies on a mismatched chromosome or
-reference genome — the lift fails and :py:class:`~genome_kit.IntervalData`
-surfaces it as an ``IndexError`` (``"... does not contain ..."``), matching the
-behavior of an ``Interval``-backed :py:class:`~genome_kit.IntervalData`.
+The genomic key must be fully contained within the DIS segment, otherwise
+an ``IndexError`` is raised.
 
-Indexing a DIS-backed :py:class:`~genome_kit.IntervalData` with a
-:py:class:`~genome_kit.DisjointIntervalSequence` key (sharing the same coordinate
-space) works too and skips the lift, since the key is already in DIS coordinates.
+It is also possible to index a DIS-backed :py:class:`~genome_kit.IntervalData` with a
+:py:class:`~genome_kit.DisjointIntervalSequence` key, but they must share the same
+coordinate intervals.
 
 Assigning Data
 ==============
@@ -261,6 +246,31 @@ necessary), then assigned into ``data``
     True
     >>> bool(np.all(interval_data.data[1:] == 0))
     True
+
+A ``list`` of non-overlapping :py:class:`~genome_kit.Interval` objects assigns
+across several regions at once. The list is normalized 5'->3' first, so the order
+it is given in does not matter.
+
+When assigning via an Interval-like or ``List`` object, ``value`` must
+take one of three shapes:
+
+- ``data``'s shape with the aligned axis resized to the key's length — one value
+  per selected position, i.e. the shape of ``interval_data[key].data``
+- ``data``'s shape with the aligned axis removed — a single position's worth of
+  data, broadcast to every position the key selects.
+- a scalar, broadcast to everything.
+
+.. code-block:: python
+
+    >>> exons = [gk.Interval("chr1", "+", 100, 102, "hg19"),
+    ...          gk.Interval("chr1", "+", 104, 106, "hg19")]
+    >>> base = gk.Interval("chr1", "+", 100, 106, "hg19")
+    >>> interval_data = gk.IntervalData(base, np.zeros((6, 10), dtype=int))
+    >>> interval_data[exons] = np.arange(40).reshape(4, 10)   # one value per position
+    >>> interval_data[exons] = np.arange(10)                  # one row, to all four
+    >>> interval_data[exons] = 0                              # scalar
+
+Any other shape raises ``ValueError`` to prevent silent bugs due to ambiguous assignment.
 
 Assignment mutates the existing ``data`` array in place; it does not create a new
 :py:class:`~genome_kit.IntervalData`.

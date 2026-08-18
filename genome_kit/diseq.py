@@ -897,6 +897,9 @@ class DisjointIntervalSequence:
         coordinate strand, so an interval on the strand opposite this DIS's
         segment lifts to an opposite-strand segment.
 
+        Returns None if intersection is empty when ``other`` is lifted
+        (``other`` lies entirely outside the DIS's segment).
+
         Parameters
         ----------
         intersect_on_lift

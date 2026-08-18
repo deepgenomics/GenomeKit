@@ -53,8 +53,7 @@ class IntervalData:
             :py:class:`~genome_kit.DisjointIntervalSequence` of interest.
         data
             An ``array_like`` the same length as ``interval`` along ``axis`` and
-            ordered 5'->3'. If required, ``axis`` can be used to realign;
-            otherwise, :func:`~numpy.rollaxis` can be used to reindex.
+            ordered 5'->3'.
         axis
             Axis of the multidimensional ``data`` aligned to ``interval``.
             Defaults to 0.

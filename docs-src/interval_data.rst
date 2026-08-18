@@ -287,15 +287,6 @@ An :py:class:`~genome_kit.IntervalData` exposes its components directly:
 - ``data`` — the underlying array.
 - ``axis`` — the aligned axis.
 
-``len(interval_data)`` returns ``len(interval)`` (the number of aligned
-positions), and ``str(interval_data)`` shows the data type together with the
-interval it is indexed by
-
-.. code-block:: python
-
-    >>> str(interval_data)
-    "<<class 'numpy.ndarray'> indexed by <Interval(\"chr1\", \"+\", 100, 103, \"hg19\")>>"
-
 See Also
 ========
 

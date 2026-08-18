@@ -137,7 +137,11 @@ class IntervalData:
     @property
     def data(self):
         """Return the backing data array."""
-        return self._data
+        if isinstance(self._data, np.ndarray):
+            read_only_view = self._data.view()
+            read_only_view.flags.writeable = False
+            return read_only_view
+        return tuple(self._data)
 
     @property
     def axis(self) -> int:

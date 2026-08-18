@@ -532,7 +532,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
     def test_negative_strand(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, self.rank).as_opposite_strand()
-        data = range(len(interval))
+        data = tuple(range(len(interval)))  # tuple to force evaluation
         interval_data = IntervalData(interval, data)
         np.testing.assert_equal(interval_data[interval.end5.expand(0, 1)].data, data[:1])
         np.testing.assert_equal(interval_data[interval].data, data)
@@ -541,7 +541,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         for name, dis in _dis_cases(self.rank):
             with self.subTest(name):
                 backing = dis.as_opposite_strand()
-                data = range(len(backing))
+                data = tuple(range(len(backing)))  # tuple to force evaluation
                 interval_data = IntervalData(backing, data)
                 np.testing.assert_equal(
                     interval_data[backing.end5.expand(0, 1)].data, data[:1]

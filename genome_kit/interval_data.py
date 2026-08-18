@@ -13,6 +13,9 @@ IntervalLike: TypeAlias = Interval | DisjointIntervalSequence
 class IntervalData:
     r"""Associates a data sequence with a genomic interval for convenient splicing.
 
+    Conceptually, an IntervalData is similar to a :py:class:`~genome_kit.GenomeTrack`,
+    but in-memory (doesn't require a file) and scoped to a single interval-like object.
+
     Array indexing via ``[index]`` acts directly on ``data``. Array splicing (via
     ``slice``, :py:class:`~genome_kit.Interval`, or
     :py:class:`~genome_kit.DisjointIntervalSequence`) splices both the ``interval``
@@ -46,6 +49,11 @@ class IntervalData:
     def __init__(self, interval: IntervalLike, data, axis=0):
         """Initialize an IntervalData.
 
+        An IntervalData can be backed by either a :py:class:`~genome_kit.Interval` or a
+        :py:class:`~genome_kit.DisjointIntervalSequence`. The length of the Interval
+        (or segment length for DisjointIntervalSequence) must match the length of the
+        aligned axis of ``data``.
+
         Parameters
         ----------
         interval
@@ -67,6 +75,24 @@ class IntervalData:
         TypeError
             If ``interval`` is neither an :py:class:`~genome_kit.Interval` nor a
             :py:class:`~genome_kit.DisjointIntervalSequence`.
+
+        Examples
+        --------
+        >>> # backed by an Interval: one value per base of a contiguous region
+        >>> interval = Interval("chr7", "+", 100000, 100500, "hg19")
+        >>> data = np.arange(len(interval))          # length 500
+        >>> interval_data = IntervalData(interval, data)
+        >>>
+        >>> # backed by a DIS: one value per base of the spliced sequence
+        >>> dis = DisjointIntervalSequence.from_transcript(transcript)
+        >>> data = np.arange(len(dis))
+        >>> interval_data = IntervalData.from_dis(dis, data)
+        >>>
+        >>> # `axis` selects which axis of `data` is aligned to `interval`
+        >>> data = np.zeros((5, len(interval), 10))   # length is on axis 1
+        >>> interval_data = IntervalData(interval, data, axis=1)
+        >>> len(interval_data)
+        500
         """
 
         if not isinstance(interval, _INTERVAL_LIKE):
@@ -294,12 +320,65 @@ class IntervalData:
         """Index the data, or splice both the interval and data together.
 
         An integer (or a tuple whose aligned-axis entry is an integer) indexes
-        ``data`` directly and returns the raw array value. A ``slice``, an
-        :py:class:`~genome_kit.Interval`, a
+        ``data`` directly and returns the raw array value.
+
+        A ``slice``, an :py:class:`~genome_kit.Interval`, a
         :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
         non-overlapping :py:class:`~genome_kit.Interval` objects slices both
-        ``interval`` and ``data`` and returns a new :py:class:`IntervalData`.
-        Splicing onto the opposite strand reverses ``data``.
+        ``interval`` and ``data`` and returns a new :py:class:`IntervalData` whose
+        ``interval`` and ``data`` still line up. Splicing onto the opposite strand
+        reverses ``data``, so index 0 always corresponds to the 5' end of the
+        result.
+
+        A plain ``slice`` selects a sub-range along the aligned axis; a negative step
+        reverses the slice and flips the strand of the interval, so the data
+        and interval stay consistent. Only steps of ``±1`` are supported.
+        If ``axis > 0``, a regular slice is ambigous. Use a tuple that slices the
+        aligned axis explicitly instead.
+
+        Indexing with an Interval-like (:py:class:`~genome_kit.Interval`,
+        :py:class:`~genome_kit.DisjointIntervalSequence`, ``List[Interval]``) key
+        selects the portion of the data corresponding to that region,
+        and the result is indexed by the key itself. The key is lifted or
+        lowered to the backing coordinate space if necessary.
+
+        Raises
+        ------
+        IndexError
+            If ``item`` is a plain ``slice`` and the aligned axis is not axis 0,
+            or if an Interval-like ``item`` is not contained within ``interval``.
+        KeyError
+            If ``item`` is a ``slice`` (or a tuple whose aligned-axis entry is a
+            ``slice``) with a step other than ``±1``.
+        TypeError
+            If ``item`` is a ``list`` containing an element that is not an
+            :py:class:`~genome_kit.Interval`.
+        ValueError
+            If ``item`` is a ``list`` containing two overlapping Intervals.
+
+        Examples
+        --------
+        >>> data = np.arange(30).reshape(3, 10)
+        >>> interval = Interval("chr1", "+", 100, 103, "hg19")
+        >>> interval_data = IntervalData(interval, data)
+        >>> interval_data[0]           # first position along the interval
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>>
+        >>> sub = interval_data[1:]            # drop the first position
+        >>> sub.interval
+        Interval("chr1", "+", 101, 103, "hg19")
+        >>> len(sub)
+        2
+        >>>
+        >>> rev = interval_data[::-1]
+        >>> rev.interval.strand
+        '-'
+        >>>
+        >>> base = Interval("chr1", "+", 100, 103, "hg19")
+        >>> key = base.expand(-1, 0)           # drop one base at the 5' end
+        >>> sub = interval_data[key]
+        >>> sub.interval == key
+        True
         """
         data = self._data
         axis = self._axis
@@ -509,22 +588,24 @@ class IntervalData:
     def __setitem__(self, key: slice | tuple | IntervalLike | list[Interval], value):
         """Assign into ``data`` in place.
 
-        An :py:class:`~genome_kit.Interval`, a
+        When setting by a ``slice`` or tuple key, the value is forwarded directly
+        to the underlying array.
+
+        When setting by an Interval-like key (:py:class:`~genome_kit.Interval`, a
         :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
-        non-overlapping :py:class:`~genome_kit.Interval` objects is resolved
-        to the corresponding region(s) of the aligned axis;
-        a ``slice`` or tuple is forwarded to ``data`` directly.
+        non-overlapping :py:class:`~genome_kit.Interval` objects), the key is first
+        lifted or lowered to the backing coordinate-space, then data is assigned at
+        the positions corresponding to that key. The key must be fully contained within
+        the backing interval. A ``list`` of Intervals is normalized 5'->3'.
 
-        If setting via an Interval-like key, the key must be fully contained within
-        the backing interval.
-
-        For an interval-like ``key``, ``value`` must take one of three forms
-        (see :py:meth:`_resolve_value_form`): ``data``'s shape with the aligned
-        axis resized to the key's length, supplying one value per selected
-        position; ``data``'s shape with the aligned axis removed, describing a
-        single position to broadcast to every selected one; or a scalar. Shapes
-        that would reach the aligned axis only via NumPy's right-aligned
-        broadcasting — including ones padded with length-1 axes — are rejected.
+        For an interval-like ``key``, ``value`` must take one of three forms:
+        ``data``'s shape with the aligned axis resized to the key's length,
+            supplying one value per selected position;
+        ``data``'s shape with the aligned axis removed, describing a
+            single position to broadcast to every selected one;
+        or a scalar.
+        Any other shape raises ``ValueError`` to prevent silent bugs due to ambiguous
+            assignment.
 
         Raises
         ------
@@ -538,6 +619,23 @@ class IntervalData:
             If ``key`` is an empty ``list`` or a ``list`` containing two
             overlapping Intervals, or if ``value`` matches none of the accepted
             forms.
+
+        Examples
+        --------
+        >>> interval_data[0] = -interval_data[0]
+        >>>
+        >>> base = Interval("chr1", "+", 100, 103, "hg19")
+        >>> data = np.arange(30).reshape(3, 10)
+        >>> interval_data = IntervalData(base, data.copy())
+        >>> interval_data[base.expand(-1, 0)] = 0    # zero out all but the first position
+        >>>
+        >>> exons = [Interval("chr1", "+", 100, 102, "hg19"),
+        ...          Interval("chr1", "+", 104, 106, "hg19")]
+        >>> base = Interval("chr1", "+", 100, 106, "hg19")
+        >>> interval_data = IntervalData(base, np.zeros((6, 10), dtype=int))
+        >>> interval_data[exons] = np.arange(40).reshape(4, 10)   # one value per position
+        >>> interval_data[exons] = np.arange(10)                  # one row, to all selected positions
+        >>> interval_data[exons] = 0                              # scalar
         """
         if isinstance(key, _INTERVAL_LIKE) or isinstance(key, list):
             self._set_interval_like(key, value)

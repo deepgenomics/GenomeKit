@@ -70,12 +70,11 @@ Contents:
     :maxdepth: 2
 
     quickstart
-    diseq
-    interval_data
     anchors
     api
     genomes
     df
+    diseq
     develop
     data_org
 

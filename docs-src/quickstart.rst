@@ -152,6 +152,8 @@ plus several other attributes::
     >>> exon.next_exon
     <Exon 2/27 of ENST00000003084.6>
 
+.. _tracks:
+
 Tracks
 ------
 

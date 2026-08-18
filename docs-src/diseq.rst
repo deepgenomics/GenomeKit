@@ -25,12 +25,12 @@ is conceptually distinct in several ways:
   regardless of genomic strand. This contrasts with
   :py:class:`~genome_kit.Interval`, where ``start < end`` always holds in
   genomic coordinates, so on the ``-`` strand ``start`` is the 3' end.
-- **Same-strand / opposite-strand semantics.** Because a DIS models spliced
+- **On-coordinate / off-coordinate semantics.** Because a DIS models spliced
   RNA rather than raw DNA, the concept of ``+``/``-`` strand is replaced by
-  ``on_coordinate_strand`` (same strand as the transcript) versus opposite
-  strand. The underlying genomic strand is accessible via ``coord_strand``,
-  but segments within the DIS are described relative to the coordinate
-  space rather than in absolute genomic terms.
+  ``on_coordinate_strand``: a segment is either on the coordinate strand (the
+  strand of the coordinate intervals) or off it. The underlying genomic strand
+  is accessible via ``coord_strand``, but segments within the DIS are described
+  relative to the coordinate space rather than in absolute genomic terms.
 
 Overview
 ========
@@ -114,7 +114,7 @@ and an end index of 7
     :py:class:`~genome_kit.Interval` where ranges are half-open
     (the end index is exclusive).
 
-A DIS can also represent a segment on the strand opposite the coordinate space.
+A DIS can also represent a segment off the coordinate strand.
 This is useful for modeling the complementary sequence or a binding partner.
 
 Starting from the coordinate space defined above::
@@ -124,7 +124,7 @@ Starting from the coordinate space defined above::
                         |  |<----->|   |<->|   |<->|  |
                         5'   Exon1     Exon2   Exon3  3'
 
-The opposite strand shares the same DIS coordinate indices::
+A segment off the coordinate strand shares the same DIS coordinate indices::
 
                         5'      Positive strand          3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
@@ -134,10 +134,10 @@ The opposite strand shares the same DIS coordinate indices::
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
                         3'      Negative Strand          5'
 
-The DIS coordinate indices are identical on both strands. To obtain the complement
-of a given segment, the same start and end indices apply; only the
-``on_coordinate_strand`` flag changes. The following shows the full-length segment
-on the opposite strand::
+The DIS coordinate indices are identical whether or not the segment is on the
+coordinate strand. To obtain the complement of a given segment, the same start
+and end indices apply; only the ``on_coordinate_strand`` flag changes. The
+following shows the full-length segment off the coordinate strand::
 
                         5'      Coordinate Strand        3'
     DIS Coordinates:    |  0   1   2   3   4   5   6   7 |
@@ -145,14 +145,14 @@ on the opposite strand::
     -----------------------------------------------------
     DNA Sequence (-):      T   A   C   G   T   C   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                  Opposite Strand
+                               Off Coordinate Strand
                            |<--------------------->|
                           end3       Segment       end5
     Start Index:     0
     End Index:       7
     On Coordinate Strand: False
 
-The ``on_coordinate_strand`` flag distinguishes same-strand from opposite-strand
+The ``on_coordinate_strand`` flag distinguishes on-coordinate from off-coordinate
 segments, since the start and end indices alone do not encode strand information
 
 .. code-block:: python
@@ -235,7 +235,8 @@ A full-length segment on the coordinate strand::
 
 Despite creating the DIS from the negative strand, the full-length segment on the
 coordinate strand is identical to the + strand example. When working with DIS
-objects, strand is expressed only as "same strand" or "opposite strand"
+objects, strand is expressed only as "on the coordinate strand" or "off the
+coordinate strand"
 
 .. code-block:: python
 
@@ -246,7 +247,7 @@ objects, strand is expressed only as "same strand" or "opposite strand"
     >>> dis_neg.on_coordinate_strand
     True
 
-The same coordinate space with an opposite-strand segment::
+The same coordinate space with an off-coordinate-strand segment::
 
     DIS Coordinates:       0   1   2   3   4   5   6   7
     DNA Sequence (-):      T   G   A   C   C   T   G
@@ -390,7 +391,7 @@ When ``on_coordinate_strand`` is ``True``, ``end5_index`` equals ``start`` and
     -----------------------------------------------------
     DNA Sequence:          A   C   T   G   G   A   C
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                  Opposite Strand
+                               Off Coordinate Strand
 
 .. code-block:: python
 
@@ -411,7 +412,7 @@ When ``on_coordinate_strand`` is ``False``, the mapping reverses:
     DNA Sequence:          A   C   T   G   G   A   C
     DIS Coordinates:       0   1   2   3   4   5   6   7
                                        |<--------->|
-                                  Opposite Strand
+                               Off Coordinate Strand
 
 .. code-block:: python
 
@@ -440,7 +441,7 @@ Strand Methods
 
 A DIS segment can sit on either 'virtual' strand independently of the coordinate
 intervals. The ``on_coordinate_strand`` property indicates whether the
-segment is on the same strand as the coordinate intervals::
+segment is on the coordinate strand::
 
     On Coordinate Strand: True
     Start Index:     1
@@ -451,27 +452,28 @@ segment is on the same strand as the coordinate intervals::
     -----------------------------------------------------
     DNA Sequence (-):      T   A   G   G   C   T   G
     DIS Coordinates:       0   1   2   3   4   5   6   7
-                                  Opposite Strand
+                               Off Coordinate Strand
 
 .. code-block:: python
 
     >>> dis.on_coordinate_strand
     True
-    >>> dis.is_same_strand()
+    >>> dis.is_on_coordinate_strand()
     True
     >>> dis.is_positive_strand()
     True
 
-Strand methods (:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.is_same_strand`,
-:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.flip_strand`, etc.) only affect the
+Strand methods (:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.is_on_coordinate_strand`,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.as_opposite_strand`, etc.) only affect the
 segment layer, not the coordinate intervals.
 
 
 Shifting and Expanding
 ======================
 
-Both :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift` and
-:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand` return a **new** DIS with
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.shift`,
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.expand`, and
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.cut` all return a **new** DIS with
 modified segment indices. The coordinate space is always unchanged.
 
 shift
@@ -492,7 +494,7 @@ On the coordinate strand, downstream means increasing indices::
                                    |<--------->|
                                   end5        end3
 
-On the opposite strand, "downstream" is the reverse direction in index
+Off the coordinate strand, "downstream" is the reverse direction in index
 space, so ``shift(1)`` moves the segment toward *lower* indices::
 
     Before shift(1) (on_coordinate_strand=False):
@@ -519,7 +521,7 @@ space, so ``shift(1)`` moves the segment toward *lower* indices::
     >>> dis.shift(-10).start, dis.shift(-10).end
     (20, 140)
 
-    >>> # On the opposite strand, downstream reverses in index space
+    >>> # Off the coordinate strand, downstream reverses in index space
     >>> opp = dis.as_opposite_strand()
     >>> opp.start, opp.end
     (30, 150)
@@ -586,6 +588,25 @@ Negative values contract the segment::
 
     Contracting to exactly zero length is valid, but contracting past
     zero raises ``ValueError``.
+
+cut
+~~~
+
+:py:meth:`~genome_kit.diseq.DisjointIntervalSequence.cut` sets the segment directly from
+absolute coordinate-space indices, rather than moving or growing the existing
+segment. ``start`` and ``end`` use the same convention as the
+:py:attr:`~genome_kit.diseq.DisjointIntervalSequence.start` and
+:py:attr:`~genome_kit.diseq.DisjointIntervalSequence.end` attributes.
+
+.. code-block:: python
+
+    >>> dis.start, dis.end
+    (30, 150)
+    >>> cut = dis.cut(40, 120)
+    >>> cut.start, cut.end
+    (40, 120)
+    >>> cut.coordinate_intervals == dis.coordinate_intervals
+    True
 
 expand_coord
 ~~~~~~~~~~~~
@@ -805,8 +826,9 @@ travel between them.
 
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lower` projects the segment back to
 genomic space. :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval`
-projects a genomic interval into the DIS's index space and clips it
-against the segment. They are conceptual inverses, but each has to deal
+projects a genomic interval into the DIS's index space, requiring it to map
+cleanly onto the segment (or clipping it against the segment when
+``intersect_on_lift=True``). They are conceptual inverses, but each has to deal
 with a structural mismatch — gaps in genomic space have no representation
 in DIS space, and contiguous DIS indices may correspond to two
 non-adjacent genomic regions — so neither is a clean bijection.
@@ -841,8 +863,8 @@ extrapolated** from the nearest outer edge of the coord intervals. The
 returned intervals can therefore have negative starts or ends past the
 chromosome length — there is no clipping to chromosome boundaries.
 
-A segment on the opposite strand lowers to genomic intervals on the
-opposite strand, listed in *segment* 5'→3' order (which is the reverse of
+A segment off the coordinate strand lowers to genomic intervals on the
+off-coordinate strand, listed in *segment* 5'→3' order (which is the reverse of
 coord 5'→3' order)
 
 .. code-block:: python
@@ -857,16 +879,22 @@ lift_interval
 
 :py:meth:`~genome_kit.diseq.DisjointIntervalSequence.lift_interval` is the inverse: it takes
 a genomic :py:class:`~genome_kit.Interval` and returns a new DIS whose segment is
-the intersection of that interval with this DIS's segment, expressed
-in the DIS coordinate space. The input must share the same chromosome, reference
-genome, and effective strand as the DIS.
+that interval expressed in the DIS coordinate space. The input must share the
+same chromosome, reference genome, and effective strand as the DIS.
 
-The lift is well-defined even when the input straddles gaps between coord
-intervals: positions inside a gap collapse to the boundary index of the
-adjacent coord interval, and positions outside the coord space extrapolate
-linearly. The result is then clipped against the DIS's segment, so a
-genomic interval that overlaps coord space but falls entirely outside the
-segment returns ``None``
+By default (``intersect_on_lift=False``) the input must map cleanly onto the
+DIS's segment — that is, it must be fully contained within the segment's bases.
+If it is not (it straddles the segment edge, falls in a coord-interval gap, or
+spans the gap between two coord intervals), :py:meth:`lift_interval` raises a
+``ValueError``.
+
+Pass ``intersect_on_lift=True`` to instead clip the lifted interval against the
+DIS's segment. This lift is well-defined even when the input straddles gaps
+between coord intervals: positions inside a gap collapse to the boundary index
+of the adjacent coord interval, and positions outside the coord space
+extrapolate linearly. The clipped result is then intersected with the segment,
+so a genomic interval that overlaps coord space but falls entirely outside the
+segment returns ``None``.
 
 .. code-block:: python
 
@@ -875,15 +903,22 @@ segment returns ``None``
     ...      Interval("chr1", "+", 300, 400, "hg38")],
     ...     start=0, end=200,
     ... )
+    >>> # Fully contained in the segment: lifts cleanly with the default.
     >>> lifted = dis.lift_interval(Interval("chr1", "+", 320, 360, "hg38"))
     >>> lifted.start, lifted.end
     (120, 160)
 
-    >>> # Falls in a coord-interval gap with no overlap of any coord interval
-    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38")) is None
+    >>> # Not contained in the segment: raises unless intersect_on_lift=True.
+    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38"))
+    Traceback (most recent call last):
+        ...
+    ValueError: ... Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment.
+
+    >>> # Falls in a coord-interval gap with no overlap of any coord interval.
+    >>> dis.lift_interval(Interval("chr1", "+", 250, 260, "hg38"), intersect_on_lift=True) is None
     True
 
-    >>> lifted2 = dis.lift_interval(Interval("chr1", "+", 150, 450, "hg38"))
+    >>> lifted2 = dis.lift_interval(Interval("chr1", "+", 150, 450, "hg38"), intersect_on_lift=True)
     >>> lifted2.start, lifted2.end
     (50, 200)   # clipped to the DIS segment
 
@@ -898,8 +933,8 @@ reference, and the pieces are concatenated. This returns the spliced sequence
 of the transcript: the gaps between coord intervals are dropped so that introns
 (or other intervening regions) never appear in the output.
 
-The returned string already accounts for strand: if the segment is on the
-opposite strand, the segment's bases are returned, and the bases are
+The returned string already accounts for strand: if the segment is off the
+coordinate strand, the segment's bases are returned, and the bases are
 ordered 5'→3'
 
 .. code-block:: python
@@ -909,7 +944,7 @@ ordered 5'→3'
     'ACGTGGTTTCA'        # full spliced sequence, 5'→3'
 
     >>> opp = dis.as_opposite_strand()
-    >>> opp.dna()       # reverse complement, 5'→3' along the opposite strand
+    >>> opp.dna()       # reverse complement, 5'→3' along the off-coordinate strand
     'TGAAACCACGT'
 
 When the segment extends past the coord space — e.g. after

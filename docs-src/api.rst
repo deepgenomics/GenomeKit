@@ -63,6 +63,14 @@ GenomeTrackBuilder
     :special-members:
     :members:
 
+IntervalData
+-------------
+
+.. autoclass:: genome_kit.IntervalData
+    :special-members:
+    :members:
+    :exclude-members: __weakref__
+
 Annotations
 ===========
 

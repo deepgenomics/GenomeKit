@@ -38,12 +38,26 @@ runs:
 
     - name: create build env
       if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
-      shell: bash -l -e {0}
+      shell: bash
       run: |
+        set -e
+        if [[ "$RUNNER_OS" != "Windows" ]]; then
+          source ${HOME}/.bash_profile 2>/dev/null || true
+        fi
+        # Determine env directory
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          ENV_DIR="$MAMBA_ROOT_PREFIX/envs/build"
+        else
+          ENV_DIR="${HOME}/micromamba/envs/build"
+        fi
         set -x
-        # boa required for the mambabuild subcommand
-        if [ ! -d "${HOME}/micromamba/envs/build" ]; then
-          micromamba create -yqn build -c conda-forge boa==0.17.0 mamba==1.5.8 conda=24.5 ccache
+        if [ ! -d "$ENV_DIR" ]; then
+          # boa required for the mambabuild subcommand
+          PKGS="boa==0.17.0 mamba==1.5.8 conda=24.5"
+          if [[ "$RUNNER_OS" != "Windows" ]]; then
+            PKGS="$PKGS ccache"
+          fi
+          micromamba create -yqn build -c conda-forge $PKGS
         fi
         set +x
 
@@ -53,7 +67,7 @@ runs:
         env: build
 
     - name: save mamba gk ccache
-      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' && runner.os != 'Windows' }}
       id: save_mamba_gk_ccache
       uses: actions/cache@v4
       with:
@@ -65,9 +79,10 @@ runs:
           ~/.ccache
 
     - name: set compiler cache size
-      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
-      shell: bash -l -e {0}
+      if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' && runner.os != 'Windows' }}
+      shell: bash
       run: |
+        source ${HOME}/.bash_profile 2>/dev/null || true
         set -x
         micromamba activate build
         ccache -M 100M
@@ -76,14 +91,24 @@ runs:
 
     - if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}
       name: build conda package
-      shell: bash -l -e {0}
+      shell: bash
       run: |
+        set -e
+        if [[ "$RUNNER_OS" != "Windows" ]]; then
+          source ${HOME}/.bash_profile 2>/dev/null || true
+        fi
         set -x
-        micromamba activate build
-        mkdir ~/conda-bld
-        conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
-        conda build --croot ~/conda-bld purge
-        conda clean -it
+        mkdir -p ~/conda-bld
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          micromamba run -n build conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+          micromamba run -n build conda build --croot ~/conda-bld purge
+          micromamba run -n build conda clean -it
+        else
+          micromamba activate build
+          conda mambabuild --croot ~/conda-bld -q --no-test conda-recipe
+          conda build --croot ~/conda-bld purge
+          conda clean -it
+        fi
 
     - name: cache mamba env
       if: ${{ steps.restore_gk_pkg.outputs.cache-hit != 'true' }}

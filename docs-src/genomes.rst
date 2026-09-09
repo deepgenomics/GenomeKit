@@ -76,6 +76,29 @@ Annotations
    contains metadata, such as ``refg=hg38``.
 
 
+Mouse GENCODE M39
+^^^^^^^^^^^^^^^^^
+
+GENCODE M39 (Ensembl 116) can be built on the existing ``mm39`` assembly as
+``gencode.vM39`` (comprehensive) or ``gencode.vM39.basic`` (basic). Both use
+the reference-chromosome GFF3 files from the
+`M39 release <https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M39/>`_.
+
+From the repository root, choose a data directory and build both annotations::
+
+    export GENOMEKIT_DATA_DIR="$PWD/build/gencode-m39/artifacts"
+    mkdir -p "$GENOMEKIT_DATA_DIR"
+    python data-src/build.py mm39/GENCODE/vM39 "$GENOMEKIT_DATA_DIR"
+    python data-src/build.py mm39/GENCODE/vM39.basic "$GENOMEKIT_DATA_DIR"
+
+With the same ``GENOMEKIT_DATA_DIR``, load them using
+``Genome("gencode.vM39")`` and ``Genome("gencode.vM39.basic")``.
+
+APPRIS support is pending a release for M39 / Ensembl 116. The
+`2026_06.v50 APPRIS release notes <https://apprisws.bioinfo.cnio.es/pub/releases/2026_06.v50/relnotes.md>`_
+identify its mouse annotation as M38, so that release is not used for M39.
+
+
 APPRIS / MANE
 -------------
 

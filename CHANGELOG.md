@@ -1,5 +1,14 @@
 # Changelog
 
+## [7.7.0](https://github.com/deepgenomics/GenomeKit/compare/v7.6.1...v7.7.0) (2026-09-10)
+
+
+### Features
+
+* add human GENCODE v50 annotations ([#253](https://github.com/deepgenomics/GenomeKit/issues/253)) ([cdcafa8](https://github.com/deepgenomics/GenomeKit/commit/cdcafa89f6731f5eec6b67416bc4cdd8262cfce9))
+* add IntervalData ([#245](https://github.com/deepgenomics/GenomeKit/issues/245)) ([a28bbc1](https://github.com/deepgenomics/GenomeKit/commit/a28bbc1ced42f21d4545a19a0b85513d8159af4d))
+* add mouse GENCODE M39 annotations ([#252](https://github.com/deepgenomics/GenomeKit/issues/252)) ([c41117a](https://github.com/deepgenomics/GenomeKit/commit/c41117a24c367a8bca67770104558d26445a2263))
+
 ## [7.6.1](https://github.com/deepgenomics/GenomeKit/compare/v7.6.0...v7.6.1) (2026-07-28)
 
 

@@ -1046,6 +1046,10 @@ class DisjointIntervalSequence:
             If the segment extends past the coord intervals and
             ``allow_outside_coord`` is False.
         """
+        if type(allow_outside_coord) is not bool:
+            raise TypeError(
+                f"allow_outside_coord must be a bool, got {type(allow_outside_coord).__name__}"
+            )
         if self._start == self._end:
             return ""
 

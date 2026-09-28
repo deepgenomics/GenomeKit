@@ -1,11 +1,7 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 import unittest
 import gc
 import os
-import genome_kit
 from genome_kit import Genome
 from genome_kit import GenomeAnnotation
 from genome_kit import GeneTable
@@ -476,6 +472,8 @@ class TestGencode(unittest.TestCase):
         self.assertEqual(len(tran.cdss), 4)
         self.assertEqual(len(tran.utr5s), 1)
         self.assertEqual(len(tran.utr3s), 1)
+        self.assertEqual(tran.length, 2895)      # 515 + 227 + 197 + 1956
+        self.assertEqual(tran.length_cds, 2514)  # 352 + 227 + 197 + 1738
         self.assertIsInstance(tran, Interval)
         self.assertIsInstance(tran.__repr__(), str)
 

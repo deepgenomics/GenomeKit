@@ -1,13 +1,20 @@
 # Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 from __future__ import absolute_import
 
+import gzip
+import hashlib
+import os
 import pickle
+import tempfile
 from functools import partial
 from operator import attrgetter
 
 from . import _util
+from . import gk_data
 from . import interval as _interval
 from ._apply_variants import apply_variants, check_variants_list
+from .genome import Genome
+from .variant import Variant
 
 
 class VariantGenome(object):
@@ -24,6 +31,8 @@ class VariantGenome(object):
     """
 
     __slots__ = ('genome', 'variants')
+
+    _FILENAME_FORMAT = "variant_genome.{}.txt.gz"
 
     def __init__(self, reference_genome, variants):
         """Initialize a variant genome.
@@ -204,20 +213,81 @@ class VariantGenome(object):
     def reference_genome(self):
         return self.genome.reference_genome
 
+    def _canonical_variants(self) -> list[Variant]:
+        # Normalized variants in a deterministic order, shared by `__eq__` and `id`.
+        return sorted((vv for v in self.variants for vv in v._normalized_variant),
+                      key=attrgetter("chromosome", "start", "ref", "alt"))
+
+    @property
+    def id(self) -> str:
+        """A content-derived identifier for this variant genome (hex SHA-256 digest of the genome config and the normalized variants).
+
+        Two variant genomes have the same id if and only if they compare equal,
+        i.e. they have the same genome config and the same variants after normalization.
+        """
+        hasher = hashlib.sha256(self.genome.config.encode())
+        for variant in self._canonical_variants():
+            hasher.update(b"\n" + variant.as_variant_string().encode())
+        return hasher.hexdigest()
+
+    def save(self) -> str:
+        """Save this variant genome so that it can be recreated with :py:meth:`load`.
+        Returns the :py:attr:`id` to pass to :py:meth:`load`.
+
+        In the current implementation, a file is uploaded per-variant genome with ``genome_kit.gk_data.data_manager``.
+        Equal variant genomes share a single file.
+
+        The default open source data manager points at GenomeKit's public bucket, which is
+        read-only. To save, bring your own data manager (see :ref:`sharing-data`).
+        """
+        variant_genome_id = self.id
+        filename = self._FILENAME_FORMAT.format(variant_genome_id)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, filename)
+            lines = [self.genome.config] + [v.as_variant_string() for v in self._canonical_variants()]
+            with open(path, "wb") as f:
+                # mtime=0 keeps the bytes deterministic so re-saving an equal genome matches the existing upload
+                f.write(gzip.compress("".join(line + "\n" for line in lines).encode(), mtime=0))
+            gk_data.data_manager.upload_file(path, filename)
+        return variant_genome_id
+
+    @classmethod
+    def load(cls, variant_genome_id: str) -> "VariantGenome":
+        """Recreate a variant genome that was stored with :py:meth:`save`.
+        Returns a variant genome equal to the one that was saved.
+
+        In the current implementation, a file is fetched with ``genome_kit.gk_data.data_manager``.
+
+        Parameters
+        ----------
+        variant_genome_id : :py:class:`str`
+            The id returned by :py:meth:`save`.
+
+        Raises
+        ------
+        :py:class:`~genome_kit.data_manager.GKDataFileNotFoundError`
+            No variant genome with this id was found.
+        :py:exc:`ValueError`
+            The stored file does not match `variant_genome_id`.
+        """
+        path = gk_data.data_manager.get_file(cls._FILENAME_FORMAT.format(variant_genome_id))
+        with gzip.open(path, "rt") as f:
+            genome = Genome(f.readline().rstrip("\n"))
+            variants = []
+            for line in f:
+                chrom, pos, ref, alt = line.rstrip("\n").split(":")
+                variants.append(Variant(chrom, int(pos) - 1, ref, alt, genome))
+        variant_genome = cls(genome, variants)
+        if variant_genome.id != variant_genome_id:
+            raise ValueError("Stored variant genome does not match id {}".format(variant_genome_id))
+        return variant_genome
+
     def __eq__(self, other):
         if not isinstance(other, VariantGenome):
             return False
-        if self.genome != other.genome:
+        if self.genome.config != other.genome.config:
             return False
-        # sort and normalize both sides.
-        # `start` is ok to use here because VariantGenome doesn't support overlapping variants in any case.
-        vself = sorted((vv for n in (v._normalized_variant for v in self.variants) for vv in n),
-                          key=attrgetter('start'))
-        vother = sorted((vv for n in (v._normalized_variant for v in other.variants) for vv in n),
-                          key=attrgetter('start'))
-        if vself != vother:
-            return False
-        return True
+        return self._canonical_variants() == other._canonical_variants()
 
     def __getattr__(self, name):
         # Intercept any attribute requests that weren't found on the VariantGenome object itself,

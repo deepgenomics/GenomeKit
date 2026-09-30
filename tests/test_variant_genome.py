@@ -2,11 +2,34 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import gzip
+import os
+import shutil
+import tempfile
 import unittest
+from unittest.mock import patch
+from genome_kit import DataManager
 from genome_kit import VariantGenome
 from genome_kit import Interval
 from genome_kit import Variant
-from . import MiniGenome
+from genome_kit import gk_data
+from genome_kit.data_manager import GKDataFileNotFoundError
+from . import MiniGenome, get_test_file
+
+
+class LocalDataManager(DataManager):
+    """Stores uploads in a local directory, serving other files from the test data."""
+
+    def get_file(self, filename):
+        path = os.path.join(self.data_dir, filename)
+        if os.path.exists(path):
+            return path
+        if filename.startswith(VariantGenome._FILENAME_FORMAT.split("{")[0]):
+            raise GKDataFileNotFoundError(filename, "not found")
+        return get_test_file(filename)
+
+    def upload_file(self, filepath, filename, metadata=None):
+        shutil.copyfile(filepath, os.path.join(self.data_dir, filename))
 
 
 class TestVariantGenome(unittest.TestCase):
@@ -264,6 +287,60 @@ class TestVariantGenome(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             VariantGenome(self.genome, ["chr1:15:G:T"])
+
+    def _variant(self, chrom, start, alt, ref_len=1, genome=None):
+        genome = genome or self.genome
+        ref = genome.dna(Interval(chrom, "+", start, start + ref_len, genome))
+        return Variant(chrom, start, ref, alt, genome)
+
+    def test_eq(self):
+        # Same start on different chromosomes, in different orders
+        a = self._variant("chr1", 10, "T")
+        b = self._variant("chr2", 10, "C")
+        self.assertEqual(VariantGenome(self.genome, [a, b]), VariantGenome(self.genome, [b, a]))
+
+        # Un-normalized variant equals its normalized form
+        ref = self.genome.dna(Interval("chr1", "+", 10, 12, self.genome))
+        padded = Variant("chr1", 10, ref, ref[0] + "C", self.genome)
+        self.assertEqual(VariantGenome(self.genome, padded), VariantGenome(self.genome, self._variant("chr1", 11, "C")))
+
+        self.assertNotEqual(VariantGenome(self.genome, a), VariantGenome(self.genome, b))
+        self.assertNotEqual(VariantGenome(self.genome, a), VariantGenome(MiniGenome("hg19"), self._variant("chr1", 10, "T", genome=MiniGenome("hg19"))))
+
+    def test_id(self):
+        a = self._variant("chr1", 10, "T")
+        b = self._variant("chr2", 10, "C")
+        vg = VariantGenome(self.genome, [a, b])
+        self.assertRegex(vg.id, "^[0-9a-f]{64}$")
+        self.assertEqual(vg.id, VariantGenome(self.genome, [b, a]).id)
+        self.assertNotEqual(vg.id, VariantGenome(self.genome, a).id)
+        self.assertNotEqual(vg.id, VariantGenome(self.genome, []).id)
+
+    def test_save_load(self):
+        variants = [self._variant("chr1", 10, "T"), self._variant("chr2", 10, "C"), self._variant("chr1", 20, "", ref_len=2)]
+        vg = VariantGenome(self.genome, variants)
+        with tempfile.TemporaryDirectory() as tmpdir, patch.object(gk_data, "data_manager", LocalDataManager(tmpdir)):
+            vg_id = vg.save()
+            self.assertEqual(vg_id, vg.id)
+            with open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "rb") as f:
+                saved = f.read()
+            with patch("time.time", return_value=0.0):
+                VariantGenome(self.genome, variants[::-1]).save()
+            with open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "rb") as f:
+                self.assertEqual(f.read(), saved)
+            loaded = VariantGenome.load(vg_id)
+            self.assertEqual(loaded, vg)
+            self.assertEqual(loaded.id, vg_id)
+            self.assertEqual(loaded.dna(Interval("chr1", "+", 5, 25, loaded)), vg.dna(Interval("chr1", "+", 5, 25, vg)))
+
+            with self.assertRaises(GKDataFileNotFoundError):
+                VariantGenome.load("0" * 64)
+
+            # Stored content that does not match its id is rejected
+            with gzip.open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "wt") as f:
+                f.write(self.genome.config + "\n")
+            with self.assertRaisesRegex(ValueError, "does not match id"):
+                VariantGenome.load(vg_id)
 
     def test_allow_outside_chromsome(self):
         variant = VariantGenome(

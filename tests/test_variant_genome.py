@@ -301,10 +301,14 @@ class TestVariantGenome(unittest.TestCase):
 
         # Un-normalized variant equals its normalized form
         ref = self.genome.dna(Interval("chr1", "+", 10, 12, self.genome))
+        # G-padded = "11:GT:GC", non-padded = "12:T:C"
         padded = Variant("chr1", 10, ref, ref[0] + "C", self.genome)
-        self.assertEqual(VariantGenome(self.genome, padded), VariantGenome(self.genome, self._variant("chr1", 11, "C")))
+        non_padded = self._variant("chr1", 11, "C")
+        self.assertEqual(VariantGenome(self.genome, padded), VariantGenome(self.genome, non_padded))
 
+        # different variants
         self.assertNotEqual(VariantGenome(self.genome, a), VariantGenome(self.genome, b))
+        # different genome
         self.assertNotEqual(VariantGenome(self.genome, a), VariantGenome(MiniGenome("hg19"), self._variant("chr1", 10, "T", genome=MiniGenome("hg19"))))
 
     def test_id(self):

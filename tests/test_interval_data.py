@@ -155,6 +155,36 @@ class TestIntervalData(unittest.TestCase):
                 interval_data[0] = -interval_data[0]
                 np.testing.assert_equal(-data[0], interval_data[0])
 
+    def test_data_read_only_does_not_affect_backing_array(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+
+        view = interval_data.data
+        self.assertFalse(view.flags.writeable)
+        with self.assertRaises(ValueError):
+            view[0, 0] = 1
+
+        self.assertTrue(data.flags.writeable)
+        interval_data[0] = -interval_data[0]
+        np.testing.assert_equal(-np.arange(0, 10), interval_data[0])
+
+    def test_set_after_single_piece_concat(self):
+        base = Interval('chr1', '+', 100, 106, self.genome)
+        piece = Interval('chr1', '+', 101, 103, self.genome)
+        keys = {
+            'list': [piece],
+            'dis': DisjointIntervalSequence.from_intervals([piece]),
+        }
+        for name, key in keys.items():
+            with self.subTest(name):
+                interval_data = IntervalData(base, np.zeros((6, 4), dtype=int))
+                sub = interval_data[key]
+                sub[0] = 1
+                np.testing.assert_equal(np.ones(4), sub[0])
+                np.testing.assert_equal(np.ones(4), interval_data[1])
+
 
 class TestIntervalDataSliceIndex(unittest.TestCase):
     rank = 3

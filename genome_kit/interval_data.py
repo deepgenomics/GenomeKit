@@ -435,7 +435,7 @@ class IntervalData:
         """Fetch and concatenate the data slices for ``intervals`` (in order)
         along the aligned axis.
         """
-        pieces = [self._get_interval_like(iv).data for iv in intervals]
+        pieces = [self._get_interval_like(iv)._data for iv in intervals]
         return pieces[0] if len(pieces) == 1 else np.concatenate(pieces, axis=self._axis)
 
     # The forms a value assigned via an interval-like key may take. See

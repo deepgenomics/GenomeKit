@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.interval_data &mdash; GenomeKit 7.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=61be4fa1"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../df.html">DataFrame Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diseq.html">Disjoint Interval Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_org.html">Remote Data Organization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.interval_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.interval_data</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">.diseq</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisjointIntervalSequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.interval</span><span class="w"> </span><span class="kn">import</span> <span class="n">Interval</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Interval-like types IntervalData can be backed by and indexed with. Both present</span>
+<span class="c1"># the same 5'-&gt;3' coordinate-space interface (__len__, strand, end5.start, expand,</span>
+<span class="c1"># as_opposite_strand, contains), so IntervalData stays agnostic to which one it holds.</span>
+<span class="n">_INTERVAL_LIKE</span> <span class="o">=</span> <span class="p">(</span><span class="n">Interval</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">)</span>
+<span class="n">IntervalLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Interval</span> <span class="o">|</span> <span class="n">DisjointIntervalSequence</span>
+
+
+<div class="viewcode-block" id="IntervalData">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IntervalData</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Associates a data sequence with a genomic interval for convenient splicing.</span>
+
+<span class="sd">    Conceptually, an IntervalData is similar to a :py:class:`~genome_kit.GenomeTrack`,</span>
+<span class="sd">    but in-memory (doesn't require a file) and scoped to a single interval-like object.</span>
+
+<span class="sd">    Array indexing via ``[index]`` acts directly on ``data``. Array splicing (via</span>
+<span class="sd">    ``slice``, :py:class:`~genome_kit.Interval`, or</span>
+<span class="sd">    :py:class:`~genome_kit.DisjointIntervalSequence`) splices both the ``interval``</span>
+<span class="sd">    and ``data``; the associated ``data`` is assumed to be unstranded 5'-&gt;3', so</span>
+<span class="sd">    splicing via the opposite strand will reverse the ``data`` (similar to tracks).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from genome_kit import Interval, IntervalData</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; interval_len = 500</span>
+<span class="sd">    &gt;&gt;&gt; position = Interval('chr7', '+', 100000, 100000, 'hg19')</span>
+<span class="sd">    &gt;&gt;&gt; interval = position.expand(0, interval_len)</span>
+<span class="sd">    &gt;&gt;&gt; data = np.arange(5 * interval_len * 10).reshape(5, interval_len, 10)</span>
+<span class="sd">    &gt;&gt;&gt; interval_data = IntervalData(interval, data, axis=1)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Slicing with __getitem__ is applied to both the interval and data array</span>
+<span class="sd">    &gt;&gt;&gt; str(interval_data[:, 100:200, 2:6])</span>
+<span class="sd">    '&lt;&lt;class \'numpy.ndarray\'&gt; indexed by &lt;Interval("chr7", "+", 100100, 100200, "hg19")&gt;&gt;'</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Slicing with interval reproduces the same results</span>
+<span class="sd">    &gt;&gt;&gt; str(interval_data[position.shift(100).expand(0, 100)])</span>
+<span class="sd">    '&lt;&lt;class \'numpy.ndarray\'&gt; indexed by &lt;Interval("chr7", "+", 100100, 100200, "hg19")&gt;&gt;'</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Indexing with __getitem__ is applied to the data array</span>
+<span class="sd">    &gt;&gt;&gt; interval_data[1, 0, 0]</span>
+<span class="sd">    5000</span>
+
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="IntervalData.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize an IntervalData.</span>
+
+<span class="sd">        An IntervalData can be backed by either a :py:class:`~genome_kit.Interval` or a</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence`. The length of the Interval</span>
+<span class="sd">        (or segment length for DisjointIntervalSequence) must match the length of the</span>
+<span class="sd">        aligned axis of ``data``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval</span>
+<span class="sd">            The genomic :py:class:`~genome_kit.Interval` or</span>
+<span class="sd">            :py:class:`~genome_kit.DisjointIntervalSequence` of interest.</span>
+<span class="sd">        data</span>
+<span class="sd">            An ``array_like`` the same length as ``interval`` along ``axis`` and</span>
+<span class="sd">            ordered 5'-&gt;3'.</span>
+<span class="sd">        axis</span>
+<span class="sd">            Axis of the multidimensional ``data`` aligned to ``interval``.</span>
+<span class="sd">            Defaults to 0.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``axis`` is negative.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the length of ``data`` along ``axis`` does not match ``interval``.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``interval`` is neither an :py:class:`~genome_kit.Interval` nor a</span>
+<span class="sd">            :py:class:`~genome_kit.DisjointIntervalSequence`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # backed by an Interval: one value per base of a contiguous region</span>
+<span class="sd">        &gt;&gt;&gt; interval = Interval("chr7", "+", 100000, 100500, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; data = np.arange(len(interval))          # length 500</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData(interval, data)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # backed by a DIS: one value per base of the spliced sequence</span>
+<span class="sd">        &gt;&gt;&gt; dis = DisjointIntervalSequence.from_transcript(transcript)</span>
+<span class="sd">        &gt;&gt;&gt; data = np.arange(len(dis))</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData.from_dis(dis, data)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # `axis` selects which axis of `data` is aligned to `interval`</span>
+<span class="sd">        &gt;&gt;&gt; data = np.zeros((5, len(interval), 10))   # length is on axis 1</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData(interval, data, axis=1)</span>
+<span class="sd">        &gt;&gt;&gt; len(interval_data)</span>
+<span class="sd">        500</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">_INTERVAL_LIKE</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"interval must be an Interval or DisjointIntervalSequence, got </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">"axis </span><span class="si">{}</span><span class="s2"> must be non-negative."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">axis</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"interval (</span><span class="si">{}</span><span class="s2">) and data axis (</span><span class="si">{}</span><span class="s2">) must be of the same length."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">=</span> <span class="n">axis</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="IntervalData.from_interval">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.from_interval">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_interval</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"IntervalData"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct an IntervalData from a single genomic Interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval</span>
+<span class="sd">            The genomic :py:class:`~genome_kit.Interval` of interest.</span>
+<span class="sd">        data</span>
+<span class="sd">            See :py:meth:`__init__`.</span>
+<span class="sd">        axis</span>
+<span class="sd">            See :py:meth:`__init__`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntervalData.from_dis">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.from_dis">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dis</span><span class="p">:</span> <span class="n">DisjointIntervalSequence</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"IntervalData"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct an IntervalData from a DisjointIntervalSequence.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dis</span>
+<span class="sd">            The :py:class:`~genome_kit.DisjointIntervalSequence` whose segment</span>
+<span class="sd">            defines the genomic interval(s).</span>
+<span class="sd">        data</span>
+<span class="sd">            See :py:meth:`__init__`.</span>
+<span class="sd">        axis</span>
+<span class="sd">            See :py:meth:`__init__`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">dis</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntervalData.__len__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__len__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the number of aligned positions, i.e. ``len(interval)``."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interval</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntervalLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the backing interval-like object."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the backing data array."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">read_only_view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">view</span><span class="p">()</span>
+            <span class="n">read_only_view</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">read_only_view</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">axis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the axis of ``data`` aligned to ``interval``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_interval</span><span class="p">(</span><span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">,</span> <span class="n">slice_index</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntervalLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sub-interval selected by a slice along the aligned axis.</span>
+
+<span class="sd">        A negative step reverses the slice and flips the result to the opposite</span>
+<span class="sd">        strand, so it stays ordered 5'-&gt;3'.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval</span>
+<span class="sd">            The interval-like object being sliced.</span>
+<span class="sd">        slice_index</span>
+<span class="sd">            The slice applied to the aligned axis.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If ``slice_index`` has a step other than ``±1``.</span>
+<span class="sd">        """</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="n">slice_index</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">"discontinuous steps are not supported for intervals."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">upstream</span> <span class="o">=</span> <span class="o">-</span><span class="n">start</span>
+            <span class="n">downstream</span> <span class="o">=</span> <span class="n">stop</span> <span class="o">-</span> <span class="n">length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upstream</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">stop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">downstream</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">length</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">interval</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">downstream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">interval</span> <span class="o">=</span> <span class="n">interval</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">interval</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_slice</span><span class="p">(</span><span class="n">interval</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">,</span> <span class="n">interval_slice</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">slice</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the aligned-axis slice that selects an interval-like key.</span>
+
+<span class="sd">        A key on the opposite strand produces a reversed (negative-step) slice.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interval</span>
+<span class="sd">            The backing interval-like object.</span>
+<span class="sd">        interval_slice</span>
+<span class="sd">            The interval-like key to locate within ``interval``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``interval`` does not contain ``interval_slice``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">interval_slice</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="n">interval</span><span class="o">.</span><span class="n">strand</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">interval</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">interval_slice</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">"interval </span><span class="si">{}</span><span class="s2"> does not contain </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">interval_slice</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">interval_slice</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval_slice</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opp_strand</span> <span class="o">=</span> <span class="n">interval_slice</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">interval</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">opp_strand</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">"interval </span><span class="si">{}</span><span class="s2"> does not contain </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">interval_slice</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">stop</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">opp_strand</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">interval</span><span class="o">.</span><span class="n">end5</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">stop</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">opp_strand</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">stop</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_interval_list</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Validate a ``list`` key/item of genomic Intervals.</span>
+
+<span class="sd">        Every element must be an :py:class:`~genome_kit.Interval`, and no two</span>
+<span class="sd">        elements may overlap (a shared boundary, e.g. ``[10, 20)`` and</span>
+<span class="sd">        ``[20, 30)``, is fine).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If any element is not an :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If any two elements overlap.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Interval</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"list elements must be Interval."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="n">sorted_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">iv</span><span class="p">:</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sorted_items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">iv</span><span class="p">:</span> <span class="o">-</span><span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_items</span><span class="p">,</span> <span class="n">sorted_items</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"list elements must not overlap: </span><span class="si">{}</span><span class="s2"> overlaps </span><span class="si">{}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lift_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IntervalLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Normalize an interval-like key into the backing interval's coordinate space.</span>
+
+<span class="sd">        When this IntervalData is backed by a</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence` and ``key`` is a genomic</span>
+<span class="sd">        :py:class:`~genome_kit.Interval`, the key is lifted (via</span>
+<span class="sd">        :py:meth:`~genome_kit.DisjointIntervalSequence.lift_interval`) so that</span>
+<span class="sd">        indexing happens in the DIS's flattened coordinate space. All other cases</span>
+<span class="sd">        — an Interval-backed IntervalData, or a key already in the backing</span>
+<span class="sd">        coordinate space — pass through unchanged.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``key`` is not fully contained within the backing DIS's segment</span>
+<span class="sd">            (see :py:meth:`~genome_kit.DisjointIntervalSequence.lift_interval`).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">Interval</span>
+        <span class="p">):</span>
+            <span class="c1"># lift_interval raises ValueError when `key` is not contained in the</span>
+            <span class="c1"># segment or is on a mismatched chromosome/reference genome. From the</span>
+            <span class="c1"># indexing caller's perspective those are all "key not in this data",</span>
+            <span class="c1"># so surface an IndexError to match the Interval-backed path.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">lifted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="o">.</span><span class="n">lift_interval</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ex</span><span class="p">))</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ex</span>
+            <span class="k">if</span> <span class="n">lifted</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">"interval </span><span class="si">{}</span><span class="s2"> does not contain </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">lifted</span>
+        <span class="k">return</span> <span class="n">key</span>
+
+<div class="viewcode-block" id="IntervalData.__getitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__getitem__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">slice</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">IntervalLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"IntervalData"</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Index the data, or splice both the interval and data together.</span>
+
+<span class="sd">        An integer (or a tuple whose aligned-axis entry is an integer) indexes</span>
+<span class="sd">        ``data`` directly and returns the raw array value.</span>
+
+<span class="sd">        A ``slice``, an :py:class:`~genome_kit.Interval`, a</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of</span>
+<span class="sd">        non-overlapping :py:class:`~genome_kit.Interval` objects slices both</span>
+<span class="sd">        ``interval`` and ``data`` and returns a new :py:class:`IntervalData` whose</span>
+<span class="sd">        ``interval`` and ``data`` still line up. Splicing onto the opposite strand</span>
+<span class="sd">        reverses ``data``, so index 0 always corresponds to the 5' end of the</span>
+<span class="sd">        result.</span>
+
+<span class="sd">        A plain ``slice`` selects a sub-range along the aligned axis; a negative step</span>
+<span class="sd">        reverses the slice and flips the strand of the interval, so the data</span>
+<span class="sd">        and interval stay consistent. Only steps of ``±1`` are supported.</span>
+<span class="sd">        If ``axis &gt; 0``, a regular slice is ambigous. Use a tuple that slices the</span>
+<span class="sd">        aligned axis explicitly instead.</span>
+
+<span class="sd">        Indexing with an Interval-like (:py:class:`~genome_kit.Interval`,</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence`, ``List[Interval]``) key</span>
+<span class="sd">        selects the portion of the data corresponding to that region,</span>
+<span class="sd">        and the result is indexed by the key itself. The key is lifted or</span>
+<span class="sd">        lowered to the backing coordinate space if necessary.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``item`` is a plain ``slice`` and the aligned axis is not axis 0,</span>
+<span class="sd">            or if an Interval-like ``item`` is not contained within ``interval``.</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If ``item`` is a ``slice`` (or a tuple whose aligned-axis entry is a</span>
+<span class="sd">            ``slice``) with a step other than ``±1``.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``item`` is a ``list`` containing an element that is not an</span>
+<span class="sd">            :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``item`` is a ``list`` containing two overlapping Intervals.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; data = np.arange(30).reshape(3, 10)</span>
+<span class="sd">        &gt;&gt;&gt; interval = Interval("chr1", "+", 100, 103, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData(interval, data)</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[0]           # first position along the interval</span>
+<span class="sd">        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; sub = interval_data[1:]            # drop the first position</span>
+<span class="sd">        &gt;&gt;&gt; sub.interval</span>
+<span class="sd">        Interval("chr1", "+", 101, 103, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; len(sub)</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; rev = interval_data[::-1]</span>
+<span class="sd">        &gt;&gt;&gt; rev.interval.strand</span>
+<span class="sd">        '-'</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; base = Interval("chr1", "+", 100, 103, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; key = base.expand(-1, 0)           # drop one base at the 5' end</span>
+<span class="sd">        &gt;&gt;&gt; sub = interval_data[key]</span>
+<span class="sd">        &gt;&gt;&gt; sub.interval == key</span>
+<span class="sd">        True</span>
+<span class="sd">        """</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="s2">"aligned axis </span><span class="si">{}</span><span class="s2"> requires multidimensional slice."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">IntervalData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">item</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">IntervalData</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">index</span><span class="p">),</span> <span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">],</span> <span class="n">axis</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">_INTERVAL_LIKE</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_interval_like</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">item</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_interval_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">IntervalLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"IntervalData"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sub-``IntervalData`` selected by an interval-like item.</span>
+
+<span class="sd">        If ``item`` is a :py:class:`~genome_kit.DisjointIntervalSequence` or ``List``,</span>
+<span class="sd">        the multi-region data returned from this IntervalData is</span>
+<span class="sd">        concatenated along the aligned axis, in 5'-&gt;3' order.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``item`` is a ``list`` containing an element that is not an</span>
+<span class="sd">            :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``item`` is a ``list`` containing two overlapping Intervals.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_interval_list</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">dis</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">IntervalData</span><span class="p">(</span><span class="n">dis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat_pieces</span><span class="p">(</span><span class="n">dis</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">Interval</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">IntervalData</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat_pieces</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+
+        <span class="n">lifted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lift_key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">slice_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">lifted</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">*</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span>
+            <span class="n">slices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">slice_index</span>
+            <span class="n">slice_index</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">IntervalData</span><span class="p">(</span><span class="n">lifted</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">slice_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_concat_pieces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intervals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Fetch and concatenate the data slices for ``intervals`` (in order)</span>
+<span class="sd">        along the aligned axis.</span>
+<span class="sd">        """</span>
+        <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_interval_like</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pieces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pieces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">pieces</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+
+    <span class="c1"># The forms a value assigned via an interval-like key may take. See</span>
+    <span class="c1"># :py:meth:`_resolve_value_form`.</span>
+    <span class="n">_SCALAR</span> <span class="o">=</span> <span class="s2">"scalar"</span>
+    <span class="n">_BLOCK</span> <span class="o">=</span> <span class="s2">"block"</span>
+    <span class="n">_POSITION</span> <span class="o">=</span> <span class="s2">"position"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_data_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_value_shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``value``'s shape, or ``None`` if it has no well-defined one</span>
+<span class="sd">        (e.g. a ragged nested ``list``).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_value_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Classify ``value`` against the ``total`` aligned positions selected by</span>
+<span class="sd">        an interval-like key.</span>
+
+<span class="sd">        Exactly three forms are accepted, chosen so that which axis of ``value``</span>
+<span class="sd">        is the aligned one is never ambiguous — ``value``'s rank pins it down:</span>
+
+<span class="sd">        ``"block"``</span>
+<span class="sd">            ``value`` has ``data``'s shape with the aligned axis resized to</span>
+<span class="sd">            ``total``, i.e. the shape :py:meth:`__getitem__` returns for the same</span>
+<span class="sd">            key. Supplies one value per selected position.</span>
+<span class="sd">        ``"position"``</span>
+<span class="sd">            ``value`` has ``data``'s shape with the aligned axis removed. Describes</span>
+<span class="sd">            a single position, and is broadcast to every selected one.</span>
+<span class="sd">        ``"scalar"``</span>
+<span class="sd">            ``value`` has no shape at all, and is broadcast to everything.</span>
+
+<span class="sd">        A value that would otherwise reach the aligned axis only through NumPy's</span>
+<span class="sd">        right-aligned broadcasting is rejected, since the axis it lands on depends</span>
+<span class="sd">        on its rank rather than on the caller's intent.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``value`` matches none of the three forms.</span>
+<span class="sd">        """</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value_shape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SCALAR</span>
+        <span class="n">data_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_shape</span><span class="p">()</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">data_shape</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">total</span><span class="p">,)</span> <span class="o">+</span> <span class="n">data_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">data_shape</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="n">block</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BLOCK</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="n">position</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_POSITION</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"value shape </span><span class="si">{</span><span class="n">shape</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="kc">None</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'unknown'</span><span class="si">}</span><span class="s2"> does not fit "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2"> aligned position(s): expected </span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2"> (one value per position), "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2"> (one value broadcast to every position), or a scalar."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_to_backing_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IntervalLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">IntervalLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Resolve an interval-like key into the region(s) of the aligned axis it</span>
+<span class="sd">        selects, each normalized into the backing coordinate space and ordered</span>
+<span class="sd">        5'-&gt;3'.</span>
+
+<span class="sd">        A ``list`` key is normalized through a</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence`, so its elements come back</span>
+<span class="sd">        merged where adjacent and in 5'-&gt;3' order</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``key`` is a ``list`` containing an element that is not an</span>
+<span class="sd">            :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``key`` is an empty ``list``, or a ``list`` containing two</span>
+<span class="sd">            overlapping Intervals.</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``key`` is not contained within the backing interval.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_interval_list</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="o">.</span><span class="n">from_intervals</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_lift_key</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_lift_key</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_lift_key</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_interval_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IntervalLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Assign ``value`` into ``data`` at the aligned-axis region(s) selected by</span>
+<span class="sd">        an interval-like key.</span>
+
+<span class="sd">        A ``"block"`` value is split along the aligned axis, one chunk per selected</span>
+<span class="sd">        region in 5'-&gt;3' order; the other forms are broadcast to every region.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``key`` is a ``list`` containing an element that is not an</span>
+<span class="sd">            :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``key`` is an empty ``list`` or contains overlapping Intervals, or if</span>
+<span class="sd">            ``value`` matches none of the accepted forms.</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``key`` is not contained within the backing interval.</span>
+<span class="sd">        """</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_to_backing_coord</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_value_form</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BLOCK</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">interval</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_slice</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_axis</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">))</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">length</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">form</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_POSITION</span><span class="p">:</span>
+            <span class="c1"># Re-insert the aligned axis so NumPy broadcasts `value` along it;</span>
+            <span class="c1"># left as-is it would right-align onto the trailing axes instead.</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">interval</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_slice</span><span class="p">(</span><span class="n">interval</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">IntervalLike</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Assign ``value`` into ``data`` at the aligned-axis slice selected by a</span>
+<span class="sd">        single ``key`` already normalized into the backing coordinate space.</span>
+<span class="sd">        """</span>
+        <span class="n">slice_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_shape</span><span class="p">())</span> <span class="o">*</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span>
+            <span class="n">slices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">slice_index</span>
+            <span class="n">slice_index</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">slice_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_slice_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stop</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``value`` sliced to ``[start:stop)`` along the aligned axis</span>
+<span class="sd">        of this IntervalData.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">):</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">*</span> <span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)]</span>
+            <span class="n">slices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+
+<div class="viewcode-block" id="IntervalData.__setitem__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__setitem__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">slice</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="n">IntervalLike</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">],</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Assign into ``data`` in place.</span>
+
+<span class="sd">        When setting by a ``slice`` or tuple key, the value is forwarded directly</span>
+<span class="sd">        to the underlying array.</span>
+
+<span class="sd">        When setting by an Interval-like key (:py:class:`~genome_kit.Interval`, a</span>
+<span class="sd">        :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of</span>
+<span class="sd">        non-overlapping :py:class:`~genome_kit.Interval` objects), the key is first</span>
+<span class="sd">        lifted or lowered to the backing coordinate-space, then data is assigned at</span>
+<span class="sd">        the positions corresponding to that key. The key must be fully contained within</span>
+<span class="sd">        the backing interval. A ``list`` of Intervals is normalized 5'-&gt;3'.</span>
+
+<span class="sd">        For an interval-like ``key``, ``value`` must take one of three forms:</span>
+<span class="sd">        ``data``'s shape with the aligned axis resized to the key's length,</span>
+<span class="sd">            supplying one value per selected position;</span>
+<span class="sd">        ``data``'s shape with the aligned axis removed, describing a</span>
+<span class="sd">            single position to broadcast to every selected one;</span>
+<span class="sd">        or a scalar.</span>
+<span class="sd">        Any other shape raises ``ValueError`` to prevent silent bugs due to ambiguous</span>
+<span class="sd">            assignment.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If ``key`` is a plain ``slice`` and the aligned axis is not axis 0,</span>
+<span class="sd">            or if an interval-like ``key`` is not contained within ``interval``.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``key`` is a ``list`` containing an element that is not an</span>
+<span class="sd">            :py:class:`~genome_kit.Interval`.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``key`` is an empty ``list`` or a ``list`` containing two</span>
+<span class="sd">            overlapping Intervals, or if ``value`` matches none of the accepted</span>
+<span class="sd">            forms.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[0] = -interval_data[0]</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; base = Interval("chr1", "+", 100, 103, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; data = np.arange(30).reshape(3, 10)</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData(base, data.copy())</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[base.expand(-1, 0)] = 0    # zero out all but the first position</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; exons = [Interval("chr1", "+", 100, 102, "hg19"),</span>
+<span class="sd">        ...          Interval("chr1", "+", 104, 106, "hg19")]</span>
+<span class="sd">        &gt;&gt;&gt; base = Interval("chr1", "+", 100, 106, "hg19")</span>
+<span class="sd">        &gt;&gt;&gt; interval_data = IntervalData(base, np.zeros((6, 10), dtype=int))</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[exons] = np.arange(40).reshape(4, 10)   # one value per position</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[exons] = np.arange(10)                  # one row, to all selected positions</span>
+<span class="sd">        &gt;&gt;&gt; interval_data[exons] = 0                              # scalar</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">_INTERVAL_LIKE</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_interval_like</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_axis</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                <span class="s2">"aligned axis </span><span class="si">{}</span><span class="s2"> requires multidimensional slice."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="IntervalData.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__repr__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a human-readable representation."""</span>
+        <span class="k">return</span> <span class="s2">"IntervalData(</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_axis</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntervalData.__str__">
+<a class="viewcode-back" href="../../api.html#genome_kit.IntervalData.__str__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the data type together with the interval it is indexed by."""</span>
+        <span class="k">return</span> <span class="s2">"&lt;</span><span class="si">{}</span><span class="s2"> indexed by &lt;</span><span class="si">{}</span><span class="s2">&gt;&gt;"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

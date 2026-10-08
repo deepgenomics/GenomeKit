@@ -29,6 +29,16 @@ class VariantGenome(object):
     will be aligned to the variant genome's coordinate system.
 
     TODO: see explanation of anchors.
+
+    A variant genome can be persisted and recreated later, in another process
+    or on another machine, from its content-derived :py:attr:`id`::
+
+        >>> variant_genome = VariantGenome(genome, variants)
+        >>> variant_genome_id = variant_genome.save()  # keep this id, e.g. in a database
+        >>> VariantGenome.load(variant_genome_id) == variant_genome
+        True
+
+    Saving requires a writable data manager; see :py:meth:`save`.
     """
 
     __slots__ = ('genome', 'variants')

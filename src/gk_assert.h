@@ -6,6 +6,7 @@ Copyright (C) 2016-2023 Deep Genomics Inc. All Rights Reserved.
 #define __GK_ASSERT_H__
 
 #include "defines.h"
+#include <exception>
 #include <format>
 #include <stdexcept>
 #include <string>

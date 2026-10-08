@@ -328,8 +328,7 @@ class TestVariantGenome(unittest.TestCase):
             self.assertEqual(vg_id, vg.id)
             with open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "rb") as f:
                 saved = f.read()
-            with patch("time.time", return_value=0.0):
-                VariantGenome(self.genome, variants[::-1]).save()
+            VariantGenome(self.genome, variants[::-1]).save()
             with open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "rb") as f:
                 self.assertEqual(f.read(), saved)
             loaded = VariantGenome.load(vg_id)

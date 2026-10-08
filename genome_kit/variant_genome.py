@@ -256,9 +256,9 @@ class VariantGenome(object):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, filename)
             lines = [self.genome.config] + [v.as_variant_string() for v in self._canonical_variants()]
-            with open(path, "wb") as f:
-                # mtime=0 keeps the bytes deterministic so re-saving an equal genome matches the existing upload
-                f.write(gzip.compress("".join(line + "\n" for line in lines).encode(), mtime=0))
+            # Fixed gzip header so equal genomes produce identical bytes
+            with open(path, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", filename="", mtime=0) as f:
+                f.write("".join(line + "\n" for line in lines).encode())
             gk_data.data_manager.upload_file(path, filename)
         return variant_genome_id
 

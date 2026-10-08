@@ -5,6 +5,7 @@ import gzip
 import hashlib
 import os
 import pickle
+import re
 import tempfile
 from functools import partial
 from operator import attrgetter
@@ -268,8 +269,10 @@ class VariantGenome(object):
         :py:class:`~genome_kit.data_manager.GKDataFileNotFoundError`
             No variant genome with this id was found.
         :py:exc:`ValueError`
-            The stored file does not match `variant_genome_id`.
+            `variant_genome_id` is not an id produced by :py:meth:`save`, or the stored file does not match it.
         """
+        if not re.fullmatch("[0-9a-f]{64}", variant_genome_id):
+            raise ValueError("Invalid variant genome id: {!r}".format(variant_genome_id))
         path = gk_data.data_manager.get_file(cls._FILENAME_FORMAT.format(variant_genome_id))
         with gzip.open(path, "rt") as f:
             genome = Genome(f.readline().rstrip("\n"))

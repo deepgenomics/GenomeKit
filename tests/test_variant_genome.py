@@ -340,6 +340,10 @@ class TestVariantGenome(unittest.TestCase):
             with self.assertRaises(GKDataFileNotFoundError):
                 VariantGenome.load("0" * 64)
 
+            for bad_id in ["", vg_id[:-1], vg_id.upper(), "../" + vg_id, vg_id + "\n"]:
+                with self.assertRaisesRegex(ValueError, "Invalid variant genome id"):
+                    VariantGenome.load(bad_id)
+
             # Stored content that does not match its id is rejected
             with gzip.open(os.path.join(tmpdir, VariantGenome._FILENAME_FORMAT.format(vg_id)), "wt") as f:
                 f.write(self.genome.config + "\n")

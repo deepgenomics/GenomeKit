@@ -2663,6 +2663,13 @@ class TestDna(unittest.TestCase):
         )
         self.assertEqual(dis.dna(), expected)
 
+    def test_passing_non_bool_raises(self):
+        ivs = _make_intervals([("chr1", "+", 100, 200)])
+        dis = DisjointIntervalSequence(ivs, on_coordinate_strand=False, start=0, end=50)
+        dis2 = dis.cut(10, 20)
+        with self.assertRaises(TypeError):
+            dis.dna(dis2)
+
 
 if __name__ == "__main__":
     unittest.main()

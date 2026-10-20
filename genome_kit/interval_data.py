@@ -161,8 +161,8 @@ class IntervalData:
         return self._interval
 
     @property
-    def data(self):
-        """Return the backing data array."""
+    def data(self) -> np.ndarray:
+        """Return the backing data array as read-only."""
         if isinstance(self._data, np.ndarray):
             read_only_view = self._data.view()
             read_only_view.flags.writeable = False

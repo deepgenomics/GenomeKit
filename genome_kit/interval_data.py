@@ -61,7 +61,8 @@ class IntervalData:
             :py:class:`~genome_kit.DisjointIntervalSequence` of interest.
         data
             An ``array_like`` the same length as ``interval`` along ``axis`` and
-            ordered 5'->3'.
+            ordered 5'->3'. Anything other than a ``numpy.ndarray`` (e.g. a ``list``)
+            is converted to one.
         axis
             Axis of the multidimensional ``data`` aligned to ``interval``.
             Defaults to 0.
@@ -104,15 +105,11 @@ class IntervalData:
 
         if axis < 0:
             raise IndexError("axis {} must be non-negative.".format(axis))
-        if (
-            axis == 0
-            and len(interval) != len(data)
-            or axis > 0
-            and len(interval) != data.shape[axis]
-        ):
+        data = np.asarray(data)
+        if len(interval) != data.shape[axis]:
             raise ValueError(
                 "interval ({}) and data axis ({}) must be of the same length.".format(
-                    len(interval), len(data) if axis == 0 else data.shape[axis]
+                    len(interval), data.shape[axis]
                 )
             )
         self._axis = axis
@@ -162,12 +159,10 @@ class IntervalData:
 
     @property
     def data(self) -> np.ndarray:
-        """Return the backing data array as read-only."""
-        if isinstance(self._data, np.ndarray):
-            read_only_view = self._data.view()
-            read_only_view.flags.writeable = False
-            return read_only_view
-        return tuple(self._data)
+        """Return a read-only view of the backing data array."""
+        read_only_view = self._data.view()
+        read_only_view.flags.writeable = False
+        return read_only_view
 
     @property
     def axis(self) -> int:
@@ -444,9 +439,6 @@ class IntervalData:
     _BLOCK = "block"
     _POSITION = "position"
 
-    def _data_shape(self) -> tuple:
-        return self._data.shape if hasattr(self._data, "shape") else np.shape(self._data)
-
     @staticmethod
     def _value_shape(value) -> tuple | None:
         """Return ``value``'s shape, or ``None`` if it has no well-defined one
@@ -488,7 +480,7 @@ class IntervalData:
         shape = self._value_shape(value)
         if shape == ():
             return self._SCALAR
-        data_shape = self._data_shape()
+        data_shape = self._data.shape
         block = data_shape[: self._axis] + (total,) + data_shape[self._axis + 1 :]
         position = data_shape[: self._axis] + data_shape[self._axis + 1 :]
         if shape == block:
@@ -570,7 +562,7 @@ class IntervalData:
         """
         slice_index = self._get_slice(self._interval, key)
         if self._axis > 0:
-            slices = len(self._data_shape()) * [slice(None)]
+            slices = self._data.ndim * [slice(None)]
             slices[self._axis] = slice_index
             slice_index = tuple(slices)
         self._data[slice_index] = value
@@ -579,11 +571,10 @@ class IntervalData:
         """Return ``value`` sliced to ``[start:stop)`` along the aligned axis
         of this IntervalData.
         """
-        if hasattr(value, "shape"):
-            slices = value.ndim * [slice(None)]
-            slices[self._axis] = slice(start, stop)
-            return value[tuple(slices)]
-        return value[start:stop]
+        value = np.asarray(value)
+        slices = value.ndim * [slice(None)]
+        slices[self._axis] = slice(start, stop)
+        return value[tuple(slices)]
 
     def __setitem__(self, key: slice | tuple | IntervalLike | list[Interval], value):
         """Assign into ``data`` in place.

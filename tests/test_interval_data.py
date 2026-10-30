@@ -123,6 +123,32 @@ class TestIntervalData(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     IntervalData(dis, [1])
 
+    def test_list_data_converted_to_np_array(self):
+        backing = Interval('chr1', '+', 100, 106, self.genome)
+        key = [
+            Interval('chr1', '+', 100, 101, self.genome),
+            Interval('chr1', '+', 103, 105, self.genome),
+        ]
+        data = [[i, i] for i in range(len(backing))]
+        for name, value, expected in [
+            ("block", [[9, 9], [8, 8], [7, 7]], [[9, 9], [8, 8], [7, 7]]),
+            ("position", [9, 9], [[9, 9]] * 3),
+            ("scalar", 9, [[9, 9]] * 3),
+        ]:
+            with self.subTest(name):
+                interval_data = IntervalData(backing, deepcopy(data))
+                self.assertIsInstance(interval_data.data, np.ndarray)
+                interval_data[key] = value
+                self.assertEqual((len(backing), 2), interval_data.data.shape)
+                np.testing.assert_array_equal(interval_data.data[[0, 3, 4]], expected)
+                np.testing.assert_array_equal(
+                    interval_data.data[[1, 2, 5]], [data[1], data[2], data[5]]
+                )
+
+    def test_non_interval_backing_rejected(self):
+        with self.assertRaises(TypeError):
+            IntervalData("chr1:100-103", np.zeros(3))
+
     def test_outside_range(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
@@ -459,6 +485,23 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 with self.assertRaises(IndexError):
                     interval_data[dis.shift(1)]
 
+    def test_opposite_strand_outside_range(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        with self.assertRaises(IndexError):
+            interval_data[interval.shift(1).as_opposite_strand()]
+
+    def test_key_on_different_chromosome_dis(self):
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        for name, dis in _dis_cases(self.rank):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, data)
+                key = Interval('chr2', dis.strand, 150, 150 + self.rank, self.genome)
+                with self.assertRaises(IndexError):
+                    interval_data[key]
+
     def test_start_middle(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         base = position.expand(0, self.rank)
@@ -727,6 +770,28 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         value = np.zeros((7, 10))
         with self.assertRaises(ValueError):
             interval_data[[e1, e2]] = value
+        np.testing.assert_array_equal(interval_data._data, data)
+
+    def test_set_list_key_multi_region_nested_list_value(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        interval_data[[e1, e2]] = value.tolist()
+
+        np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
+        np.testing.assert_array_equal(interval_data._data[100:105, :], value[5:10, :])
+
+    def test_set_list_key_invalid_value_shape_list(self):
+        e1 = Interval('chr1', '+', 100, 105, self.genome)
+        e2 = Interval('chr1', '+', 200, 205, self.genome)
+        backing = Interval('chr1', '+', 100, 205, self.genome)
+        data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
+        interval_data = IntervalData(backing, deepcopy(data))
+        with self.assertRaises(ValueError):
+            interval_data[[e1, e2]] = [[0] * 10, [0]]
         np.testing.assert_array_equal(interval_data._data, data)
 
     def test_set_data_invalid_value_shape(self):
@@ -1119,6 +1184,21 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         np.testing.assert_array_equal(interval_data._data[:, 1, :], value[:, 0, :])
         np.testing.assert_array_equal(interval_data._data[:, 2, :], value[:, 1, :])
         np.testing.assert_array_equal(interval_data._data[:, :1, :], data[:, :1, :])
+
+    def test_set_list_key_multi_region_nested_list_value(self):
+        interval = Interval('chr1', '+', 100, 106, self.genome)
+        data = np.arange(0, 5 * 6 * 2).reshape(5, 6, 2)
+        interval_data = IntervalData(interval, deepcopy(data), axis=1)
+        # Non-adjacent elements, so the value is split along the aligned axis.
+        key = [
+            Interval('chr1', '+', 100, 102, self.genome),
+            Interval('chr1', '+', 104, 106, self.genome),
+        ]
+        value = -np.arange(1, 5 * 4 * 2 + 1).reshape(5, 4, 2)
+        interval_data[key] = value.tolist()
+        np.testing.assert_array_equal(interval_data._data[:, 0:2, :], value[:, 0:2, :])
+        np.testing.assert_array_equal(interval_data._data[:, 4:6, :], value[:, 2:4, :])
+        np.testing.assert_array_equal(interval_data._data[:, 2:4, :], data[:, 2:4, :])
 
     def test_set_position_value(self):
         # data's shape with the aligned axis (1) removed is (5, 2); that value is

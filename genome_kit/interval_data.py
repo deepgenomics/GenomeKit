@@ -158,7 +158,7 @@ class IntervalData:
         return self._interval
 
     @property
-    def data(self) -> np.ndarray | "DisjointView":
+    def data(self) -> np.ndarray:
         """Return a read-only view of the backing data array."""
         read_only_view = self._data.view()
         read_only_view.flags.writeable = False

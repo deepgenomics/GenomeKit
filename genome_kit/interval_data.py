@@ -1,6 +1,8 @@
+from ._disjoint_view import DisjointView
+from ._indexing import BASIC_INDICES, key_layout
 from .diseq import DisjointIntervalSequence
 from .interval import Interval
-from typing import TypeAlias, Sequence
+from typing import TypeAlias
 import numpy as np
 
 # Interval-like types IntervalData can be backed by and indexed with. Both present
@@ -9,6 +11,15 @@ import numpy as np
 _INTERVAL_LIKE = (Interval, DisjointIntervalSequence)
 IntervalLike: TypeAlias = Interval | DisjointIntervalSequence
 
+# The keys IntervalData can be indexed by, for error messages.
+_SUPPORTED_KEYS = (
+    "an Interval, a DisjointIntervalSequence or a list of Intervals, or "
+    + BASIC_INDICES
+)
+
+# Python sequences converted to a numpy.ndarray.
+_CONVERTED_SEQUENCES = (list, tuple, range)
+
 
 class IntervalData:
     r"""Associates a data sequence with a genomic interval for convenient splicing.
@@ -16,11 +27,14 @@ class IntervalData:
     Conceptually, an IntervalData is similar to a :py:class:`~genome_kit.GenomeTrack`,
     but in-memory (doesn't require a file) and scoped to a single interval-like object.
 
-    Array indexing via ``[index]`` acts directly on ``data``. Array splicing (via
-    ``slice``, :py:class:`~genome_kit.Interval`, or
+    Indexing via ``[index]`` (an integer, ``slice``, tuple,
+    :py:class:`~genome_kit.Interval`, or
     :py:class:`~genome_kit.DisjointIntervalSequence`) splices both the ``interval``
-    and ``data``; the associated ``data`` is assumed to be unstranded 5'->3', so
-    splicing via the opposite strand will reverse the ``data`` (similar to tracks).
+    and ``data``, and returns an IntervalData, unless an integer selects a single
+    position on the aligned axis, in which case the indexed ``data`` is returned as
+    NumPy would; the associated ``data`` is
+    assumed to be unstranded 5'->3', so splicing via the opposite strand will
+    reverse the ``data`` (similar to tracks).
 
     Examples
     --------
@@ -40,9 +54,9 @@ class IntervalData:
     >>> str(interval_data[position.shift(100).expand(0, 100)])
     '<<class \'numpy.ndarray\'> indexed by <Interval("chr7", "+", 100100, 100200, "hg19")>>'
     >>>
-    >>> # Indexing with __getitem__ is applied to the data array
-    >>> interval_data[1, 0, 0]
-    5000
+    >>> # Indexing with __getitem__ behaves like NumPy
+    >>> interval_data[1, 0, 2:4]
+    array([5002, 5003])
 
     """
 
@@ -61,8 +75,9 @@ class IntervalData:
             :py:class:`~genome_kit.DisjointIntervalSequence` of interest.
         data
             An ``array_like`` the same length as ``interval`` along ``axis`` and
-            ordered 5'->3'. Anything other than a ``numpy.ndarray`` (e.g. a ``list``)
-            is converted to one.
+            ordered 5'->3'. A ``numpy.ndarray`` or ``DisjointView`` is stored as
+            is, so writes reach it; a ``list``, ``tuple`` or ``range`` is
+            converted to a ``numpy.ndarray``.
         axis
             Axis of the multidimensional ``data`` aligned to ``interval``.
             Defaults to 0.
@@ -71,11 +86,16 @@ class IntervalData:
         ------
         IndexError
             If ``axis`` is negative.
+        NotImplementedError
+            If ``data`` is a subclass of ``numpy.ndarray`` (e.g.
+            ``numpy.ma.MaskedArray``, ``numpy.matrix``, ``numpy.recarray`` or
+            ``numpy.memmap``).
         ValueError
             If the length of ``data`` along ``axis`` does not match ``interval``.
         TypeError
             If ``interval`` is neither an :py:class:`~genome_kit.Interval` nor a
-            :py:class:`~genome_kit.DisjointIntervalSequence`.
+            :py:class:`~genome_kit.DisjointIntervalSequence`, or if ``data`` is not
+            one of the types above.
 
         Examples
         --------
@@ -105,7 +125,20 @@ class IntervalData:
 
         if axis < 0:
             raise IndexError("axis {} must be non-negative.".format(axis))
-        data = np.asarray(data)
+        if isinstance(data, np.ndarray):
+            # Subclasses may change indexing, concatenation or assignment.
+            if type(data) is not np.ndarray:
+                raise NotImplementedError(
+                    "{} data is not supported; use a numpy.ndarray.".format(type(data).__name__)
+                )
+        elif isinstance(data, _CONVERTED_SEQUENCES):
+            data = np.asarray(data)
+        elif not isinstance(data, DisjointView):
+            raise TypeError(
+                "data must be a numpy.ndarray, list, tuple or range, got {}.".format(
+                    type(data).__name__
+                )
+            )
         if len(interval) != data.shape[axis]:
             raise ValueError(
                 "interval ({}) and data axis ({}) must be of the same length.".format(
@@ -152,14 +185,42 @@ class IntervalData:
         """Return the number of aligned positions, i.e. ``len(interval)``."""
         return len(self._interval)
 
+    def __iter__(self):
+        """Iterate over the aligned positions, 5'->3'.
+
+        Each item is ``data`` indexed by one position on the aligned axis, as
+        returned by an integer key (see :py:meth:`__getitem__`).
+
+        Examples
+        --------
+        >>> data = np.arange(6).reshape(2, 3)
+        >>> interval = Interval("chr1", "+", 100, 103, "hg19")
+        >>> [list(x) for x in IntervalData(interval, data, axis=1)]
+        [[0, 3], [1, 4], [2, 5]]
+        """
+        leading_slices = self._axis * (slice(None),)
+        for i in range(len(self)):
+            yield self[leading_slices + (i,)]
+
     @property
     def interval(self) -> IntervalLike:
         """Return the backing interval-like object."""
         return self._interval
 
     @property
-    def data(self) -> np.ndarray:
-        """Return a read-only view of the backing data array."""
+    def data(self) -> np.ndarray | DisjointView:
+        """Return a read-only view of the backing data array.
+
+        If data array backing the IntervalData is a ``numpy.ndarray``, the returned view
+        shares its memory, so later writes on the IntervalData (or to the array) are
+        reflected in the returned view.
+
+        If the backing data is a ``DisjointView`` (e.g. after indexing with a
+        :py:class:`~genome_kit.DisjointIntervalSequence` or a ``list`` of
+        Intervals), no single array can share memory with the gapped regions, so
+        this returns a view of a fresh concatenation of them: a snapshot that does
+        not reflect later writes. Access ``data`` again to see them.
+        """
         read_only_view = self._data.view()
         read_only_view.flags.writeable = False
         return read_only_view
@@ -185,6 +246,8 @@ class IntervalData:
 
         Raises
         ------
+        IndexError
+            If ``slice_index`` stops before its start, or after it with a negative step.
         KeyError
             If ``slice_index`` has a step other than ``±1``.
         """
@@ -192,6 +255,12 @@ class IntervalData:
         start, stop, step = slice_index.indices(length)
         if abs(step) != 1:
             raise KeyError("discontinuous steps are not supported for intervals.")
+        if (stop - start) * step < 0:
+            raise IndexError(
+                "a slice with step {} must not stop ({}) {} its start ({}).".format(
+                    step, stop, "before" if step > 0 else "after", start
+                )
+            )
 
         if step > 0:
             upstream = -start
@@ -311,25 +380,29 @@ class IntervalData:
 
     def __getitem__(
         self, item: slice | tuple | int | IntervalLike | list[Interval]
-    ) -> "IntervalData" | Sequence:
-        """Index the data, or splice both the interval and data together.
+    ) -> "IntervalData | np.ndarray | DisjointView":
+        """Splice both the interval and data together.
 
-        An integer (or a tuple whose aligned-axis entry is an integer) indexes
-        ``data`` directly and returns the raw array value.
-
-        A ``slice``, an :py:class:`~genome_kit.Interval`, a
-        :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
-        non-overlapping :py:class:`~genome_kit.Interval` objects slices both
-        ``interval`` and ``data`` and returns a new :py:class:`IntervalData` whose
-        ``interval`` and ``data`` still line up. Splicing onto the opposite strand
-        reverses ``data``, so index 0 always corresponds to the 5' end of the
-        result.
+        Slices and Interval-like keys return a new :py:class:`IntervalData` whose
+        ``interval`` and ``data`` still line up. Splicing onto the opposite strand reverses
+        ``data``, so index 0 always corresponds to the 5' end of the result.
 
         A plain ``slice`` selects a sub-range along the aligned axis; a negative step
         reverses the slice and flips the strand of the interval, so the data
         and interval stay consistent. Only steps of ``±1`` are supported.
-        If ``axis > 0``, a regular slice is ambigous. Use a tuple that slices the
-        aligned axis explicitly instead.
+        An integer selects a single position along the aligned axis. There is no
+        interval left to align, so the result is ``data`` indexed exactly as NumPy
+        would index it (dropping the aligned axis), not an IntervalData. As with
+        NumPy, basic indexing returns a view, so chained writes such as
+        ``interval_data[5][3] = 0`` reach the original ``data``.
+        If ``axis > 0``, a plain ``slice`` or integer is ambiguous. Use a tuple that
+        indexes the aligned axis explicitly instead.
+
+        A tuple indexes ``data`` with NumPy basic indexing (integers, slices,
+        ``None`` and ``Ellipsis``). Its aligned-axis entry is applied as above;
+        the other entries apply to ``data`` only, and the aligned axis of the result
+        moves to account for any dimensions they remove or insert. Advanced
+        indexing (index arrays and masks) is not supported.
 
         Indexing with an Interval-like (:py:class:`~genome_kit.Interval`,
         :py:class:`~genome_kit.DisjointIntervalSequence`, ``List[Interval]``) key
@@ -340,14 +413,18 @@ class IntervalData:
         Raises
         ------
         IndexError
-            If ``item`` is a plain ``slice`` and the aligned axis is not axis 0,
-            or if an Interval-like ``item`` is not contained within ``interval``.
+            If ``item`` is a plain ``slice`` or integer and the aligned axis is not
+            axis 0, or if the key is not well-formed.
         KeyError
             If ``item`` is a ``slice`` (or a tuple whose aligned-axis entry is a
             ``slice``) with a step other than ``±1``.
+        NotImplementedError
+            If ``item`` (or an entry of a tuple ``item``) is an advanced index: an
+            index array, a nested sequence or a mask.
         TypeError
-            If ``item`` is a ``list`` containing an element that is not an
-            :py:class:`~genome_kit.Interval`.
+            If ``item`` (or an entry of a tuple ``item``) is not one of the
+            supported index types, or if ``item`` is a ``list`` containing an
+            element that is not an :py:class:`~genome_kit.Interval`.
         ValueError
             If ``item`` is a ``list`` containing two overlapping Intervals.
 
@@ -356,7 +433,7 @@ class IntervalData:
         >>> data = np.arange(30).reshape(3, 10)
         >>> interval = Interval("chr1", "+", 100, 103, "hg19")
         >>> interval_data = IntervalData(interval, data)
-        >>> interval_data[0]           # first position along the interval
+        >>> interval_data[0]                   # data at the first position
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         >>>
         >>> sub = interval_data[1:]            # drop the first position
@@ -375,32 +452,54 @@ class IntervalData:
         >>> sub.interval == key
         True
         """
-        data = self._data
-        axis = self._axis
-
-        if isinstance(item, slice):
-            if axis > 0:
-                raise IndexError(
-                    "aligned axis {} requires multidimensional slice.".format(axis)
-                )
-            return IntervalData(self._get_interval(self._interval, item), data[item])
-        elif isinstance(item, tuple):
-            index = item[axis]
-            if isinstance(index, slice):
-                return IntervalData(
-                    self._get_interval(self._interval, index), data[item], axis
-                )
-            return data[item]
-        elif isinstance(item, _INTERVAL_LIKE) or isinstance(item, list):
+        if isinstance(item, _INTERVAL_LIKE) or isinstance(item, list):
             return self._get_interval_like(item)
-        return data[item]
+        if isinstance(item, tuple):
+            return self._get_index(item)
+        if isinstance(item, (slice, int, np.integer)) and not isinstance(item, bool):
+            if self._axis > 0:
+                raise IndexError(
+                    "aligned axis {} requires multidimensional index.".format(self._axis)
+                )
+        return self._get_index((item,))
+
+    def _get_index(self, item: tuple) -> "IntervalData | np.ndarray | DisjointView":
+        """Return the sub-``IntervalData`` selected by a tuple of basic indices.
+
+        If the aligned-axis entry is an integer, return ``data`` indexed by
+        ``item`` instead, as NumPy would.
+
+        Raises
+        ------
+        IndexError
+            If ``item`` has too many indices or more than one ``Ellipsis``, or if
+            an integer on the aligned axis is out of bounds.
+        KeyError
+            If the aligned-axis entry is a ``slice`` with a step other than ``±1``.
+        NotImplementedError
+            If an entry of ``item`` is an index array, a nested sequence or a mask.
+        TypeError
+            If an entry of ``item`` is not an integer, ``slice``, ``None`` or
+            ``Ellipsis``.
+        """
+        layout = key_layout(item, self._data.ndim, self._axis, _SUPPORTED_KEYS)
+        if layout.new_axis is None:
+            # The aligned axis was dropped, so there is no interval
+            # left to align: return `data` directly
+            return self._data[item]
+        return IntervalData(
+            self._get_interval(self._interval, layout.expanded_key[layout.axis_key_index]),
+            self._data[item],
+            layout.new_axis,
+        )
 
     def _get_interval_like(self, item: IntervalLike | list[Interval]) -> "IntervalData":
         """Return the sub-``IntervalData`` selected by an interval-like item.
 
         If ``item`` is a :py:class:`~genome_kit.DisjointIntervalSequence` or ``List``,
-        the multi-region data returned from this IntervalData is
-        concatenated along the aligned axis, in 5'->3' order.
+        the multi-region data returned from this IntervalData is presented as its
+        concatenation along the aligned axis, in 5'->3' order (see
+        :py:meth:`_concat_pieces`).
 
         Raises
         ------
@@ -426,12 +525,15 @@ class IntervalData:
             slice_index = tuple(slices)
         return IntervalData(lifted, self._data[slice_index], self._axis)
 
-    def _concat_pieces(self, intervals: list[Interval]):
-        """Fetch and concatenate the data slices for ``intervals`` (in order)
-        along the aligned axis.
+    def _concat_pieces(self, intervals: list[Interval]) -> np.ndarray | DisjointView:
+        """Fetch the data slices for ``intervals`` and join them (in order) along
+        the aligned axis.
+
+        If provided multiple intervals, the result is wrapped in a ``DisjointView``.
         """
         pieces = [self._get_interval_like(iv)._data for iv in intervals]
-        return pieces[0] if len(pieces) == 1 else np.concatenate(pieces, axis=self._axis)
+        # Return a DisjointView as np.concatenate creates a copy
+        return pieces[0] if len(pieces) == 1 else DisjointView(self._data, pieces, self._axis)
 
     # The forms a value assigned via an interval-like key may take. See
     # :py:meth:`_resolve_value_form`.
@@ -544,6 +646,7 @@ class IntervalData:
         form = self._resolve_value_form(value, sum(lengths))
 
         if form == self._BLOCK:
+            value = np.array(value)  # Creates a copy incase value shares memory with self._data
             offset = 0
             for interval, length in zip(keys, lengths):
                 self._set_slice(interval, self._slice_axis(value, offset, offset + length))
@@ -571,7 +674,6 @@ class IntervalData:
         """Return ``value`` sliced to ``[start:stop)`` along the aligned axis
         of this IntervalData.
         """
-        value = np.asarray(value)
         slices = value.ndim * [slice(None)]
         slices[self._axis] = slice(start, stop)
         return value[tuple(slices)]
@@ -579,8 +681,9 @@ class IntervalData:
     def __setitem__(self, key: slice | tuple | IntervalLike | list[Interval], value):
         """Assign into ``data`` in place.
 
-        When setting by a ``slice`` or tuple key, the value is forwarded directly
-        to the underlying array.
+        When setting by a ``slice``, integer or tuple key, the value is forwarded
+        directly to the underlying array. Only basic indexing
+        (integers, slices, ``None`` and ``Ellipsis``) is supported.
 
         When setting by an Interval-like key (:py:class:`~genome_kit.Interval`, a
         :py:class:`~genome_kit.DisjointIntervalSequence`, or a ``list`` of
@@ -601,11 +704,16 @@ class IntervalData:
         Raises
         ------
         IndexError
-            If ``key`` is a plain ``slice`` and the aligned axis is not axis 0,
-            or if an interval-like ``key`` is not contained within ``interval``.
+            If ``key`` is a plain ``slice`` or integer and the aligned axis is not axis 0,
+            if an interval-like ``key`` is not contained within ``interval``, or
+            if ``key``'s indices don't match the expected shape.
+        NotImplementedError
+            If ``key`` (or an entry of a tuple ``key``) is an advanced index: an
+            index array, a nested sequence or a mask.
         TypeError
-            If ``key`` is a ``list`` containing an element that is not an
-            :py:class:`~genome_kit.Interval`.
+            If ``key`` (or an entry of a tuple ``key``) is not one of the supported
+            index types, or if ``key`` is a ``list`` containing an element that is
+            not an :py:class:`~genome_kit.Interval`.
         ValueError
             If ``key`` is an empty ``list`` or a ``list`` containing two
             overlapping Intervals, or if ``value`` matches none of the accepted
@@ -631,10 +739,15 @@ class IntervalData:
         if isinstance(key, _INTERVAL_LIKE) or isinstance(key, list):
             self._set_interval_like(key, value)
             return
-        if isinstance(key, slice) and self._axis > 0:
-            raise IndexError(
-                "aligned axis {} requires multidimensional slice.".format(self._axis)
-            )
+        if isinstance(key, (slice, int, np.integer)) and not isinstance(key, bool):
+            if self._axis > 0:
+                raise IndexError(
+                    "aligned axis {} requires multidimensional index.".format(self._axis)
+                )
+        # Only to reject unsupported keys, as NumPy would accept them.
+        key_layout(
+            key if isinstance(key, tuple) else (key,), self._data.ndim, self._axis, _SUPPORTED_KEYS
+        )
         self._data[key] = value
 
     def __repr__(self):

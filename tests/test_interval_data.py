@@ -1,12 +1,37 @@
 from copy import deepcopy
-from genome_kit import Genome, Interval, IntervalData
+from genome_kit import Interval, IntervalData
 from genome_kit.diseq import DisjointIntervalSequence
 from tests import MiniGenome
 import numpy as np
+import os
+import tempfile
 import unittest
+import warnings
 
 nucleotide_complement = str.maketrans('ACGT', 'TGCA')
 REFG = "hg19.mini"
+
+
+def _assert_writes_back(interval_data, accessed, original_data, *regions):
+    """Assert a write through ``accessed`` lands in ``original_data``, the data array
+    backing ``interval_data``.
+
+    ``regions`` are the views of ``original_data`` that ``accessed`` was taken from,
+    in 5'->3' order. Every position in them must take the written value, every
+    other position must stay unchanged, and ``interval_data`` must read back
+    ``original_data``. ``original_data`` is restored afterwards.
+    """
+    before = original_data.copy()
+    # Integer keys on the aligned axis return plain data, with no aligned axis.
+    axis = getattr(accessed, "axis", 0)
+    assigned_values = -1 - np.concatenate(regions, axis=axis)
+    try:
+        accessed[...] = assigned_values
+        np.testing.assert_array_equal(assigned_values, np.concatenate(regions, axis=axis))
+        assert np.count_nonzero(original_data != before) == assigned_values.size
+        np.testing.assert_array_equal(original_data, interval_data.data)
+    finally:
+        original_data[...] = before
 
 
 def _make_intervals(specs, refg=REFG):
@@ -165,6 +190,197 @@ class TestIntervalData(unittest.TestCase):
                 with self.assertRaises(IndexError):
                     interval_data[len(data)]
 
+    def test_get_index(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        for index, start in [(1, 1), (-1, 2), (np.int64(0), 0)]:
+            with self.subTest(index=index):
+                indexed = interval_data[index]
+                self.assertIsInstance(indexed, np.ndarray)
+                np.testing.assert_equal(data[index], indexed)
+                _assert_writes_back(interval_data, indexed, data, data[start])
+
+    def test_get_index_negative_strand(self):
+        interval = Interval('chr1', '-', 100, 103, self.genome)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        indexed = interval_data[0]
+        np.testing.assert_equal(data[0], indexed)
+        _assert_writes_back(interval_data, indexed, data, data[0])
+
+    def test_get_index_dis(self):
+        data = np.arange(0, 30).reshape(3, 10)
+        for name, dis in _dis_cases(3):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, data)
+                indexed = interval_data[-1]
+                self.assertIsInstance(indexed, np.ndarray)
+                np.testing.assert_equal(data[2], indexed)
+                _assert_writes_back(interval_data, indexed, data, data[2])
+
+    def test_iter(self):
+        interval = Interval('chr1', '+', 100, 103, self.genome)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        items = [x for x in interval_data]
+        self.assertEqual(len(interval_data), len(items))
+        for i, item in enumerate(items):
+            self.assertIsInstance(item, np.ndarray)
+            np.testing.assert_equal(data[i], item)
+            _assert_writes_back(interval_data, item, data, data[i])
+
+    def test_iter_dis(self):
+        data = np.arange(0, 30).reshape(3, 10)
+        for name, dis in _dis_cases(3):
+            with self.subTest(name):
+                items = [x for x in IntervalData(dis, data)]
+                np.testing.assert_equal(list(data), items)
+
+    def test_iter_disjoint_view(self):
+        base = Interval('chr1', '+', 100, 106, self.genome)
+        data = np.arange(0, 60).reshape(6, 10)
+        exons = [Interval('chr1', '+', 100, 102, self.genome), Interval('chr1', '+', 104, 106, self.genome)]
+        sub = IntervalData(base, data)[exons]
+        items = [x for x in sub]
+        np.testing.assert_equal([data[0], data[1], data[4], data[5]], items)
+        items[2][...] = -1
+        np.testing.assert_equal(-1, data[4])
+
+    def test_chained_index(self):
+        interval = Interval('chr1', '+', 100, 110, self.genome)
+        data = np.arange(10 * 4 * 3 * 2).reshape(10, 4, 3, 2)
+        interval_data = IntervalData(interval, data)
+        np.testing.assert_equal(data[5][3][2], interval_data[5][3][2])
+
+        value = [-1, -2]
+        expected = data.copy()
+        expected[5][3][2] = value
+        interval_data[5][3][2] = value
+        np.testing.assert_equal(expected, data)
+        np.testing.assert_equal(expected, interval_data.data)
+
+    def test_get_slice_stop_past_start(self):
+        interval = Interval('chr1', '+', 100, 107, self.genome)
+        data = np.arange(7)
+        interval_data = IntervalData(interval, data)
+        keys = [
+            slice(5, 2), slice(-1, 1), (slice(3, 2),),
+            slice(1, -1, -1), slice(2, 5, -1), (slice(2, 3, -1),),
+        ]
+        for key in keys:
+            with self.subTest(key=key):
+                with self.assertRaises(IndexError):
+                    interval_data[key]
+
+    def test_get_empty_slice(self):
+        # 0-length slices are valid since 0-length intervals are valid
+        interval = Interval('chr1', '+', 100, 107, self.genome)
+        data = np.arange(7)
+        interval_data = IntervalData(interval, data)
+        sliced = interval_data[3:3]
+        self.assertEqual(0, len(sliced))
+        self.assertEqual(Interval('chr1', '+', 103, 103, self.genome), sliced.interval)
+        np.testing.assert_equal(data[3:3], sliced.data)
+
+        sliced = interval_data[3:3:-1]
+        self.assertEqual(0, len(sliced))
+        self.assertEqual(Interval('chr1', '-', 104, 104, self.genome), sliced.interval)
+        np.testing.assert_equal(data[3:3:-1], sliced.data)
+
+    def test_ndarray_subclass_unsupported(self):
+        interval = Interval('chr1', '+', 100, 103, self.genome)
+        with warnings.catch_warnings():
+            # np.matrix is pending deprecation.
+            warnings.simplefilter('ignore', PendingDeprecationWarning)
+            matrix = np.matrix([[1], [2], [3]])
+        subclassed = [
+            np.ma.array([1, 2, 3], mask=[False, True, False]),
+            matrix,
+            np.rec.array([(1,), (2,), (3,)], dtype=[('a', int)]),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            subclassed.append(
+                np.memmap(os.path.join(directory, 'data'), dtype=int, mode='w+', shape=(3,))
+            )
+            for data in subclassed:
+                with self.subTest(type(data).__name__):
+                    with self.assertRaises(NotImplementedError):
+                        IntervalData(interval, data)
+            del subclassed, data
+
+    def test_data_types(self):
+        interval = Interval('chr1', '+', 100, 103, self.genome)
+        for data in [[1, 2, 3], (1, 2, 3), range(1, 4)]:
+            with self.subTest(type(data).__name__):
+                interval_data = IntervalData(interval, data)
+                self.assertIs(type(interval_data.data), np.ndarray)
+                np.testing.assert_equal([1, 2, 3], interval_data.data)
+        for data in [{1, 2, 3}, 'abc', {0: 1, 1: 2, 2: 3}, iter([1, 2, 3])]:
+            with self.subTest(type(data).__name__):
+                with self.assertRaises(TypeError):
+                    IntervalData(interval, data)
+
+    def test_get_ellipsis(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        sliced = interval_data[...]
+        self.assertEqual(interval, sliced.interval)
+        np.testing.assert_equal(data, sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data)
+
+    def test_get_advanced_key(self):
+        # Advanced indexing (index arrays and masks) is not implemented, on any axis.
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        keys = [
+            np.array([2, 0]), np.array([True, False, True]), data > 5, True, np.True_,
+            (0, [1, 2]), (slice(1, None), [0, 4]), (slice(None), data[0] > 4),
+        ]
+        for key in keys:
+            with self.subTest(key=key):
+                with self.assertRaises(NotImplementedError):
+                    interval_data[key]
+
+    def test_get_unsupported_key(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        interval_data = IntervalData(interval, np.arange(0, 30).reshape(3, 10))
+        for key in ['chr1', 1.5, (0, 'chr1')]:
+            with self.subTest(key=key):
+                with self.assertRaises(TypeError):
+                    interval_data[key]
+
+    def test_set_unsupported_key(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        for key in [np.array([2, 0]), data > 5, True, (slice(1, None), [0, 4])]:
+            with self.subTest(key=key):
+                with self.assertRaises(NotImplementedError):
+                    interval_data[key] = 0
+        for key in ['chr1', (0, 1.5)]:
+            with self.subTest(key=key):
+                with self.assertRaises(TypeError):
+                    interval_data[key] = 0
+        np.testing.assert_equal(np.arange(0, 30).reshape(3, 10), data)
+
+    def test_too_many_indices(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+        with self.assertRaises(IndexError):
+            interval_data[0, 0, 0]
+        with self.assertRaises(IndexError):
+            interval_data[..., 0, ...]
+
     def test_set(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
@@ -244,6 +460,7 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
                     np.testing.assert_equal(
                         [x for x in data[start:stop:step]], [x for x in sliced]
                     )
+                    _assert_writes_back(interval_data, sliced, data, data[start:stop:step])
 
     def test_slice_index_dis(self):
         rank = self.rank
@@ -269,6 +486,7 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
                         np.testing.assert_equal(
                             [x for x in data[start:stop:step]], [x for x in sliced]
                         )
+                        _assert_writes_back(interval_data, sliced, data, data[start:stop:step])
 
     def test_negative_strand_negative_step(self):
         rank = self.rank
@@ -278,11 +496,13 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
         start = None
         stop = 1
         step = -1  # Will flip the strand and reverse the slice
-        interval_data = IntervalData(interval, data)[start:stop:step]
+        parent = IntervalData(interval, data)
+        interval_data = parent[start:stop:step]
         dna = self.genome.dna(interval)[start:stop:step].translate(nucleotide_complement)
         expected_data = data[start:stop:step]
         self.assertEqual(dna, self.genome.dna(interval_data.interval))
         np.testing.assert_equal([x for x in expected_data], [x for x in interval_data])
+        _assert_writes_back(parent, interval_data, data, data[start:stop:step])
 
     def test_negative_strand_negative_step_dis(self):
         rank = self.rank
@@ -293,13 +513,15 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
         for name, dis in _dis_cases(rank):
             with self.subTest(name):
                 backing = dis.as_opposite_strand()
-                interval_data = IntervalData(backing, data)[start:stop:step]
+                parent = IntervalData(backing, data)
+                interval_data = parent[start:stop:step]
                 dna = backing.dna()[start:stop:step].translate(nucleotide_complement)
                 expected_data = data[start:stop:step]
                 self.assertEqual(dna, interval_data.interval.dna())
                 np.testing.assert_equal(
                     [x for x in expected_data], [x for x in interval_data]
                 )
+                _assert_writes_back(parent, interval_data, data, data[start:stop:step])
 
     def test_negative_strand(self):
         rank = self.rank
@@ -309,11 +531,13 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
         start = 2
         stop = None
         step = 1
-        interval_data = IntervalData(interval, data)[start:stop:step]
+        parent = IntervalData(interval, data)
+        interval_data = parent[start:stop:step]
         dna = self.genome.dna(interval)[start:stop:step]
         expected_data = data[start:stop:step]
         self.assertEqual(dna, self.genome.dna(interval_data.interval))
         np.testing.assert_equal([x for x in expected_data], [x for x in interval_data])
+        _assert_writes_back(parent, interval_data, data, data[start:stop:step])
 
     def test_negative_strand_dis(self):
         rank = self.rank
@@ -324,13 +548,15 @@ class TestIntervalDataSliceIndex(unittest.TestCase):
         for name, dis in _dis_cases(rank):
             with self.subTest(name):
                 backing = dis.as_opposite_strand()
-                interval_data = IntervalData(backing, data)[start:stop:step]
+                parent = IntervalData(backing, data)
+                interval_data = parent[start:stop:step]
                 dna = backing.dna()[start:stop:step]
                 expected_data = data[start:stop:step]
                 self.assertEqual(dna, interval_data.interval.dna())
                 np.testing.assert_equal(
                     [x for x in expected_data], [x for x in interval_data]
                 )
+                _assert_writes_back(parent, interval_data, data, data[start:stop:step])
 
 
 class TestIntervalDataSliceInterval(unittest.TestCase):
@@ -348,6 +574,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[position]
         self.assertEqual(position, sliced.interval)
         self.assertEqual(0, len([x for x in sliced]))
+        _assert_writes_back(interval_data, sliced, data, data[0:0])
 
     def test_empty_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -357,6 +584,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[dis.end5]
                 self.assertEqual(dis.end5, sliced.interval)
                 self.assertEqual(0, len([x for x in sliced]))
+                _assert_writes_back(interval_data, sliced, data, data[0:0])
 
     def test_full(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -366,6 +594,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data, [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data)
 
     def test_full_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -375,6 +604,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[dis]
                 self.assertEqual(dis, sliced.interval)
                 np.testing.assert_equal(data, [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data)
 
     def test_dis_key_on_interval_backed(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -385,6 +615,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[key]
         self.assertEqual(key, sliced.interval)
         np.testing.assert_equal(data[1:, :], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[1:, :])
 
     def test_dis_key_on_interval_backed_multi_region(self):
         # DIS spans two coord intervals with a gap between them; lowering it
@@ -401,6 +632,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         np.testing.assert_equal(
             np.concatenate([data[0:5, :], data[100:105, :]]), sliced.data
         )
+        _assert_writes_back(interval_data, sliced, data, data[0:5, :], data[100:105, :])
 
     def test_list_key_on_interval_backed(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -413,6 +645,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         ]
         sliced = interval_data[key]
         np.testing.assert_equal(data[1:, :], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[1:, :])
 
     def test_list_key_on_dis_backed(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -425,6 +658,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         ]
         sliced = interval_data[key]
         np.testing.assert_equal(data[1:, :], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[1:, :])
 
     def test_list_key_multi_region(self):
         e1 = Interval('chr1', '+', 100, 105, self.genome)
@@ -436,6 +670,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         np.testing.assert_equal(
             np.concatenate([data[0:5, :], data[100:105, :]]), sliced.data
         )
+        _assert_writes_back(interval_data, sliced, data, data[0:5, :], data[100:105, :])
 
     def test_list_key_invalid_element(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -511,6 +746,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data[1:], [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data[1:])
 
     def test_start_middle_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -521,6 +757,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[1:], [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data[1:])
 
     def test_end_middle(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -531,6 +768,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data[:-1], [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data[:-1])
 
     def test_end_middle_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -541,6 +779,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[:-1], [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data[:-1])
 
     def test_reverse_full(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -551,6 +790,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data[::-1], [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data[::-1])
 
     def test_reverse_full_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -561,6 +801,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[::-1], [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data[::-1])
 
     def test_reverse_start_middle(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -571,6 +812,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data[-2::-1], [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data[-2::-1])
 
     def test_reverse_start_middle_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -581,6 +823,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[-2::-1], [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data[-2::-1])
 
     def test_reverse_end_middle(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -591,6 +834,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
         np.testing.assert_equal(data[:0:-1], [x for x in sliced])
+        _assert_writes_back(interval_data, sliced, data, data[:0:-1])
 
     def test_reverse_end_middle_dis(self):
         data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
@@ -601,6 +845,7 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
                 np.testing.assert_equal(data[:0:-1], [x for x in sliced])
+                _assert_writes_back(interval_data, sliced, data, data[:0:-1])
 
     def test_negative_strand(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -609,6 +854,11 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         interval_data = IntervalData(interval, data)
         np.testing.assert_equal(interval_data[interval.end5.expand(0, 1)].data, data[:1])
         np.testing.assert_equal(interval_data[interval].data, data)
+        array = interval_data._data
+        _assert_writes_back(
+            interval_data, interval_data[interval.end5.expand(0, 1)], array, array[:1]
+        )
+        _assert_writes_back(interval_data, interval_data[interval], array, array)
 
     def test_negative_strand_dis(self):
         for name, dis in _dis_cases(self.rank):
@@ -620,6 +870,11 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                     interval_data[backing.end5.expand(0, 1)].data, data[:1]
                 )
                 np.testing.assert_equal(interval_data[backing].data, data)
+                array = interval_data._data
+                _assert_writes_back(
+                    interval_data, interval_data[backing.end5.expand(0, 1)], array, array[:1]
+                )
+                _assert_writes_back(interval_data, interval_data[backing], array, array)
 
     def test_set_data(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -916,6 +1171,20 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 interval_data[key] = interval_data[key].data
                 np.testing.assert_array_equal(interval_data._data, data)
 
+    def test_set_list_key_value_overlaps_data(self):
+        e1 = Interval('chr1', '+', 100, 102, self.genome)
+        e2 = Interval('chr1', '+', 104, 106, self.genome)
+        backing = Interval('chr1', '+', 100, 106, self.genome)
+        data = np.arange(6)
+        interval_data = IntervalData(backing, data)
+        interval_data[[e1, e2]] = interval_data[[e1, e2]][::-1]
+        np.testing.assert_array_equal([5, 4, 2, 3, 1, 0], data)
+
+        data = np.arange(6)
+        interval_data = IntervalData(backing, data)
+        interval_data[[e1, e2]] = data[0:4][::-1]
+        np.testing.assert_array_equal([3, 2, 2, 3, 1, 0], data)
+
     def test_set_list_key_empty(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, self.rank)
@@ -976,7 +1245,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval_data = IntervalData(interval, data, axis=1)
         self.assertEqual(len(interval), len(interval_data))
         self.assertEqual(interval, interval_data._interval)
-        np.testing.assert_equal(data, [x for x in interval_data])
+        np.testing.assert_equal(data, interval_data.data)
 
     def test_same_dimension_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)
@@ -985,7 +1254,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 interval_data = IntervalData(dis, data, axis=1)
                 self.assertEqual(len(dis), len(interval_data))
                 self.assertEqual(dis, interval_data._interval)
-                np.testing.assert_equal(data, [x for x in interval_data])
+                np.testing.assert_equal(data, interval_data.data)
 
     def test_negative_axis(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -1051,6 +1320,79 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 with self.assertRaises(IndexError):
                     interval_data[1:]
 
+    def test_invalid_index(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        with self.assertRaises(IndexError):
+            interval_data[0]
+
+    def test_get_index(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        # An integer on the aligned axis returns `data` indexed as NumPy would.
+        for key in [(2, 1), (slice(None), -1, 0), (None, slice(None), 1), (Ellipsis, 1, 0)]:
+            with self.subTest(key=key):
+                indexed = interval_data[key]
+                self.assertIsInstance(indexed, np.ndarray)
+                np.testing.assert_equal(data[key], indexed)
+                self.assertTrue(np.shares_memory(data, indexed))
+
+    def test_iter(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        items = [x for x in interval_data]
+        self.assertEqual(3, len(items))
+        for i, item in enumerate(items):
+            np.testing.assert_equal(data[:, i], item)
+            self.assertTrue(np.shares_memory(data, item))
+
+    def test_get_slice_moves_axis(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        # (key, the same selection on `data`, the result's aligned axis)
+        cases = [
+            ((2, slice(1, 2)), data[2, 1:2], 0),
+            ((slice(None), slice(-1, None), 0), data[:, 2:3, 0], 1),
+            ((None, slice(None), slice(1, 2)), data[None, :, 1:2], 2),
+            ((Ellipsis, slice(1, 2), 0), data[..., 1:2, 0], 1),
+        ]
+        for key, expected, axis in cases:
+            with self.subTest(key=key):
+                sliced = interval_data[key]
+                self.assertIsInstance(sliced, IntervalData)
+                self.assertEqual(axis, sliced.axis)
+                self.assertEqual(1, len(sliced))
+                np.testing.assert_equal(expected, sliced.data)
+                _assert_writes_back(interval_data, sliced, data, expected)
+
+    def test_get_index_dis(self):
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        for name, dis in _dis_cases(3):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, data, axis=1)
+                indexed = interval_data[2, 1]
+                np.testing.assert_equal(data[2, 1], indexed)
+                _assert_writes_back(interval_data, indexed, data, data[2, 1])
+
+    def test_slice_with_leading_index(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        sliced = interval_data[0, 1:]
+        self.assertEqual(interval.expand(-1, 0), sliced.interval)
+        self.assertEqual(0, sliced.axis)
+        np.testing.assert_equal(data[0, 1:], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[0, 1:])
+
     def test_invalid_slice_set(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
@@ -1058,6 +1400,27 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval_data = IntervalData(interval, data, axis=1)
         with self.assertRaises(IndexError):
             interval_data[1:] = 0
+
+    def test_invalid_index_set(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 30).reshape(5, 3, 2)
+        interval_data = IntervalData(interval, data, axis=1)
+        for key in [0, np.int64(0)]:
+            with self.subTest(key=key):
+                with self.assertRaises(IndexError):
+                    interval_data[key] = 0
+        np.testing.assert_equal(np.arange(0, 30).reshape(5, 3, 2), data)
+
+    def test_get_unsupported_key(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        data = np.arange(0, 60).reshape(5, 3, 4)
+        interval_data = IntervalData(interval, data, axis=1)
+        for key in [([0, 2], slice(1, 3)), (slice(None), slice(None), [1, 0]), (data[:, 0, 0] > 10,)]:
+            with self.subTest(key=key):
+                with self.assertRaises(NotImplementedError):
+                    interval_data[key]
 
     def test_invalid_slice_set_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)
@@ -1075,7 +1438,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         start = 1
         sliced = interval_data[:, start:, ...]
         self.assertEqual(interval.expand(-1, 0), sliced.interval)
-        np.testing.assert_equal(data[:, start:, ...], [x for x in sliced])
+        np.testing.assert_equal(data[:, start:, ...], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[:, start:, ...])
 
     def test_slice_index_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)
@@ -1085,7 +1449,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 interval_data = IntervalData(dis, data, axis=1)
                 sliced = interval_data[:, start:, ...]
                 self.assertEqual(dis.expand(-1, 0), sliced.interval)
-                np.testing.assert_equal(data[:, start:, ...], [x for x in sliced])
+                np.testing.assert_equal(data[:, start:, ...], sliced.data)
+                _assert_writes_back(interval_data, sliced, data, data[:, start:, ...])
 
     def test_slice_interval(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -1095,7 +1460,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = base.expand(-1, 0)
         sliced = interval_data[interval]
         self.assertEqual(interval, sliced.interval)
-        np.testing.assert_equal(data[:, 1:, ...], [x for x in sliced])
+        np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[:, 1:, ...])
 
     def test_slice_interval_dis(self):
         data = np.arange(0, 30).reshape(5, 3, 2)
@@ -1105,7 +1471,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
                 key = dis.expand(-1, 0)
                 sliced = interval_data[key]
                 self.assertEqual(key, sliced.interval)
-                np.testing.assert_equal(data[:, 1:, ...], [x for x in sliced])
+                np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+                _assert_writes_back(interval_data, sliced, data, data[:, 1:, ...])
 
     def test_dis_key_on_interval_backed(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -1116,6 +1483,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         sliced = interval_data[key]
         self.assertEqual(key, sliced.interval)
         np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[:, 1:, ...])
 
     def test_list_key_on_interval_backed(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
@@ -1128,6 +1496,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         ]
         sliced = interval_data[key]
         np.testing.assert_equal(data[:, 1:, ...], sliced.data)
+        _assert_writes_back(interval_data, sliced, data, data[:, 1:, ...])
 
     def test_set_data(self):
         position = Interval('chr1', '+', 100, 100, self.genome)

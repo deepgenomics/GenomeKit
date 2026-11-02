@@ -1,5 +1,13 @@
 # Changelog
 
+## [7.8.0](https://github.com/deepgenomics/GenomeKit/compare/v7.7.0...v7.8.0) (2026-11-02)
+
+
+### Features
+
+* **annotations:** add human gencode v43 annotations ([#266](https://github.com/deepgenomics/GenomeKit/issues/266)) ([8a59f82](https://github.com/deepgenomics/GenomeKit/commit/8a59f82bcbccb76232d18010b95336f8fa54f0bb))
+* **annotations:** add mouse gencode m32 annotations ([#265](https://github.com/deepgenomics/GenomeKit/issues/265)) ([20161dc](https://github.com/deepgenomics/GenomeKit/commit/20161dc0d5305f892e7892089b3c27531e3490b2))
+
 ## [7.7.0](https://github.com/deepgenomics/GenomeKit/compare/v7.6.1...v7.7.0) (2026-10-08)
 
 

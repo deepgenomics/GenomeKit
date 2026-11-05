@@ -24,6 +24,8 @@ def _assert_writes_back(interval_data, accessed, original_data, *regions):
     before = original_data.copy()
     # Integer keys on the aligned axis return plain data, with no aligned axis.
     axis = getattr(accessed, "axis", 0)
+    # Each x becomes -1 - x (0 -> -1, 5 -> -6, ...). Every new value differs from
+    # every original non-negative value, so a misplaced write can't hide.
     assigned_values = -1 - np.concatenate(regions, axis=axis)
     try:
         accessed[...] = assigned_values
@@ -212,6 +214,7 @@ class TestIntervalData(unittest.TestCase):
         interval = Interval('chr1', '-', 100, 103, self.genome)
         data = np.arange(0, 30).reshape(3, 10)
         interval_data = IntervalData(interval, data)
+        # Integer keys follow data order on either strand: [0] is data row 0.
         indexed = interval_data[0]
         np.testing.assert_equal(data[0], indexed)
         _assert_writes_back(interval_data, indexed, data, data[0])
@@ -221,6 +224,7 @@ class TestIntervalData(unittest.TestCase):
         for name, dis in _dis_cases(3):
             with self.subTest(name):
                 interval_data = IntervalData(dis, data)
+                # [-1] is the last data row (row 2), even when the DIS spans several regions.
                 indexed = interval_data[-1]
                 self.assertIsInstance(indexed, np.ndarray)
                 np.testing.assert_equal(data[2], indexed)
@@ -247,10 +251,12 @@ class TestIntervalData(unittest.TestCase):
     def test_iter_disjoint_view(self):
         base = Interval('chr1', '+', 100, 106, self.genome)
         data = np.arange(0, 60).reshape(6, 10)
+        # The exons are data rows 0-1 and 4-5, so sub is backed by a DisjointView.
         exons = [Interval('chr1', '+', 100, 102, self.genome), Interval('chr1', '+', 104, 106, self.genome)]
         sub = IntervalData(base, data)[exons]
         items = [x for x in sub]
         np.testing.assert_equal([data[0], data[1], data[4], data[5]], items)
+        # items[2] is a view of data row 4, so this sets data[4] to all -1.
         items[2][...] = -1
         np.testing.assert_equal(-1, data[4])
 
@@ -271,6 +277,8 @@ class TestIntervalData(unittest.TestCase):
         interval = Interval('chr1', '+', 100, 107, self.genome)
         data = np.arange(7)
         interval_data = IntervalData(interval, data)
+        # NumPy returns an empty array for each of these. There's no interval for
+        # a slice that stops on the wrong side of its start, so IntervalData raises
         keys = [
             slice(5, 2), slice(-1, 1), (slice(3, 2),),
             slice(1, -1, -1), slice(2, 5, -1), (slice(2, 3, -1),),
@@ -290,12 +298,14 @@ class TestIntervalData(unittest.TestCase):
         self.assertEqual(Interval('chr1', '+', 103, 103, self.genome), sliced.interval)
         np.testing.assert_equal(data[3:3], sliced.data)
 
+        # A negative step flips the strand, so the empty interval is on '-'
         sliced = interval_data[3:3:-1]
         self.assertEqual(0, len(sliced))
         self.assertEqual(Interval('chr1', '-', 104, 104, self.genome), sliced.interval)
         np.testing.assert_equal(data[3:3:-1], sliced.data)
 
     def test_ndarray_subclass_unsupported(self):
+        # ndarray subclasses (masked, matrix, record, memmap) are rejected
         interval = Interval('chr1', '+', 100, 103, self.genome)
         with warnings.catch_warnings():
             # np.matrix is pending deprecation.
@@ -314,6 +324,7 @@ class TestIntervalData(unittest.TestCase):
                 with self.subTest(type(data).__name__):
                     with self.assertRaises(NotImplementedError):
                         IntervalData(interval, data)
+            # Release the memmap before the directory is removed.
             del subclassed, data
 
     def test_data_types(self):
@@ -1192,13 +1203,18 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         e1 = Interval('chr1', '+', 100, 102, self.genome)
         e2 = Interval('chr1', '+', 104, 106, self.genome)
         backing = Interval('chr1', '+', 100, 106, self.genome)
+        # data = [0, 1, 2, 3, 4, 5]; e1 is indices 0-1 and e2 is indices 4-5.
         data = np.arange(6)
         interval_data = IntervalData(backing, data)
+        # The value reads [0, 1, 4, 5] reversed, i.e. [5, 4, 1, 0], from data itself.
+        # e1 gets [5, 4] and e2 gets [1, 0]; indices 2-3 are untouched.
         interval_data[[e1, e2]] = interval_data[[e1, e2]][::-1]
         np.testing.assert_array_equal([5, 4, 2, 3, 1, 0], data)
 
         data = np.arange(6)
         interval_data = IntervalData(backing, data)
+        # The value is a view of data: data[0:4][::-1] = [3, 2, 1, 0]. e1 gets [3, 2]
+        # and e2 gets [1, 0]
         interval_data[[e1, e2]] = data[0:4][::-1]
         np.testing.assert_array_equal([3, 2, 2, 3, 1, 0], data)
 
@@ -1342,6 +1358,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 30).reshape(5, 3, 2)
         interval_data = IntervalData(interval, data, axis=1)
+        # A bare key indexes axis 0, but the aligned axis is 1, so it must be a tuple.
         with self.assertRaises(IndexError):
             interval_data[0]
 
@@ -1350,7 +1367,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 30).reshape(5, 3, 2)
         interval_data = IntervalData(interval, data, axis=1)
-        # An integer on the aligned axis returns `data` indexed as NumPy would.
+        # The returned slice should be equivalent to slicing the data array directly,
+        # since we index the aligned axis by an integer
         for key in [(2, 1), (slice(None), -1, 0), (None, slice(None), 1), (Ellipsis, 1, 0)]:
             with self.subTest(key=key):
                 indexed = interval_data[key]
@@ -1376,8 +1394,10 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval_data = IntervalData(interval, data, axis=1)
         # (key, the same selection on `data`, the result's aligned axis)
         cases = [
+            # Dropping axis 0 moves the aligned axis from 1 to 0
             ((2, slice(1, 2)), data[2, 1:2], 0),
             ((slice(None), slice(-1, None), 0), data[:, 2:3, 0], 1),
+            # Inserting an axis in front (None) moves it to 2
             ((None, slice(None), slice(1, 2)), data[None, :, 1:2], 2),
             ((Ellipsis, slice(1, 2), 0), data[..., 1:2, 0], 1),
         ]
@@ -1404,6 +1424,8 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 30).reshape(5, 3, 2)
         interval_data = IntervalData(interval, data, axis=1)
+        # [0, 1:] takes row 0 and positions 1-2: the interval loses its first base
+        # (chr1:101-103), and the aligned axis moves from 1 to 0.
         sliced = interval_data[0, 1:]
         self.assertEqual(interval.expand(-1, 0), sliced.interval)
         self.assertEqual(0, sliced.axis)
@@ -1423,6 +1445,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 30).reshape(5, 3, 2)
         interval_data = IntervalData(interval, data, axis=1)
+        # If axis != 0, need to slice via tuple to explicitly slice/index each dimension
         for key in [0, np.int64(0)]:
             with self.subTest(key=key):
                 with self.assertRaises(IndexError):
@@ -1434,6 +1457,7 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
         interval = position.expand(0, 3)
         data = np.arange(0, 60).reshape(5, 3, 4)
         interval_data = IntervalData(interval, data, axis=1)
+        # Only basic indexing supported
         for key in [([0, 2], slice(1, 3)), (slice(None), slice(None), [1, 0]), (data[:, 0, 0] > 10,)]:
             with self.subTest(key=key):
                 with self.assertRaises(NotImplementedError):

@@ -158,6 +158,9 @@ class TestIntervalData(unittest.TestCase):
     def test_data_read_only_does_not_affect_backing_array(self):
         position = Interval('chr1', '+', 100, 100, self.genome)
         interval = position.expand(0, 3)
+        # data = [[ 0,  1, ...,  9],
+        #         [10, 11, ..., 19],
+        #         [20, 21, ..., 29]]
         data = np.arange(0, 30).reshape(3, 10)
         interval_data = IntervalData(interval, data)
 
@@ -167,6 +170,7 @@ class TestIntervalData(unittest.TestCase):
             view[0, 0] = 1
 
         self.assertTrue(data.flags.writeable)
+        # [0, -1, ..., -9]
         interval_data[0] = -interval_data[0]
         np.testing.assert_equal(-np.arange(0, 10), interval_data[0])
 
@@ -181,6 +185,7 @@ class TestIntervalData(unittest.TestCase):
             with self.subTest(name):
                 interval_data = IntervalData(base, np.zeros((6, 4), dtype=int))
                 sub = interval_data[key]
+                # sub row 0 is backing row 1, so this sets data[1] = [1, 1, 1, 1].
                 sub[0] = 1
                 np.testing.assert_equal(np.ones(4), sub[0])
                 np.testing.assert_equal(np.ones(4), interval_data[1])

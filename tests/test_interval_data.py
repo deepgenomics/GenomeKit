@@ -155,6 +155,40 @@ class TestIntervalData(unittest.TestCase):
                 interval_data[0] = -interval_data[0]
                 np.testing.assert_equal(-data[0], interval_data[0])
 
+    def test_data_read_only_does_not_affect_backing_array(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, 3)
+        # data = [[ 0,  1, ...,  9],
+        #         [10, 11, ..., 19],
+        #         [20, 21, ..., 29]]
+        data = np.arange(0, 30).reshape(3, 10)
+        interval_data = IntervalData(interval, data)
+
+        view = interval_data.data
+        self.assertFalse(view.flags.writeable)
+        with self.assertRaises(ValueError):
+            view[0, 0] = 1
+
+        self.assertTrue(data.flags.writeable)
+        interval_data[0] = -1
+        np.testing.assert_equal([-1] * 10, interval_data[0])
+
+    def test_set_after_single_piece_concat(self):
+        base = Interval('chr1', '+', 100, 106, self.genome)
+        piece = Interval('chr1', '+', 101, 103, self.genome)
+        keys = {
+            'list': [piece],
+            'dis': DisjointIntervalSequence.from_intervals([piece]),
+        }
+        for name, key in keys.items():
+            with self.subTest(name):
+                interval_data = IntervalData(base, np.zeros((6, 4), dtype=int))
+                sub: IntervalData = interval_data[key]
+                # sub row 0 is backing row 1, so this sets data[1] = [1, 1, 1, 1].
+                sub[0] = 1
+                np.testing.assert_equal(np.ones(4), sub[0])
+                np.testing.assert_equal(np.ones(4), interval_data[1])
+
 
 class TestIntervalDataSliceIndex(unittest.TestCase):
     rank = 3
@@ -428,6 +462,25 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
                 interval_data = IntervalData(dis, data)
                 with self.assertRaises(IndexError):
                     interval_data[dis.shift(1)]
+
+    def test_opposite_strand_outside_range(self):
+        position = Interval('chr1', '+', 100, 100, self.genome)
+        interval = position.expand(0, self.rank)
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        interval_data = IntervalData(interval, data)
+        # The backing is chr1:+100-103. The key is chr1:-101-104: it runs one base
+        # past the backing's end and is on the other strand, so it has no data.
+        with self.assertRaises(IndexError):
+            interval_data[interval.shift(1).as_opposite_strand()]
+
+    def test_key_on_different_chromosome_dis(self):
+        data = np.arange(0, 10 * self.rank).reshape(self.rank, 10)
+        for name, dis in _dis_cases(self.rank):
+            with self.subTest(name):
+                interval_data = IntervalData(dis, data)
+                key = Interval('chr2', dis.strand, 150, 150 + self.rank, self.genome)
+                with self.assertRaises(IndexError):
+                    interval_data[key]
 
     def test_start_middle(self):
         position = Interval('chr1', '+', 100, 100, self.genome)

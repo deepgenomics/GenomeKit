@@ -2,6 +2,7 @@ from .diseq import DisjointIntervalSequence
 from .interval import Interval
 from typing import TypeAlias, Sequence
 import numpy as np
+from numpy.typing import ArrayLike
 
 # Interval-like types IntervalData can be backed by and indexed with. Both present
 # the same 5'->3' coordinate-space interface (__len__, strand, end5.start, expand,
@@ -46,7 +47,7 @@ class IntervalData:
 
     """
 
-    def __init__(self, interval: IntervalLike, data, axis=0):
+    def __init__(self, interval: IntervalLike, data: ArrayLike, axis=0):
         """Initialize an IntervalData.
 
         An IntervalData can be backed by either a :py:class:`~genome_kit.Interval` or a
@@ -60,7 +61,7 @@ class IntervalData:
             The genomic :py:class:`~genome_kit.Interval` or
             :py:class:`~genome_kit.DisjointIntervalSequence` of interest.
         data
-            An ``array_like`` the same length as ``interval`` along ``axis`` and
+            An ``ArrayLike`` the same length as ``interval`` along ``axis`` and
             ordered 5'->3'. Anything other than a ``numpy.ndarray`` (e.g. a ``list``)
             is converted to one.
         axis

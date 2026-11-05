@@ -129,6 +129,8 @@ class TestIntervalData(unittest.TestCase):
             Interval('chr1', '+', 100, 101, self.genome),
             Interval('chr1', '+', 103, 105, self.genome),
         ]
+        # backing covers rows 0-5 (chr1:100-106); key selects rows 0 and 3-4.
+        # data is a plain list: [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5]]
         data = [[i, i] for i in range(len(backing))]
         for name, value, expected in [
             ("block", [[9, 9], [8, 8], [7, 7]], [[9, 9], [8, 8], [7, 7]]),
@@ -138,9 +140,13 @@ class TestIntervalData(unittest.TestCase):
             with self.subTest(name):
                 interval_data = IntervalData(backing, deepcopy(data))
                 self.assertIsInstance(interval_data.data, np.ndarray)
+                # block:    rows 0, 3, 4 = [9, 9], [8, 8], [7, 7]
+                # position: [9, 9] is broadcast to rows 0, 3, 4
+                # scalar:   9 is broadcast to every element of rows 0, 3, 4
                 interval_data[key] = value
                 self.assertEqual((len(backing), 2), interval_data.data.shape)
                 np.testing.assert_array_equal(interval_data.data[[0, 3, 4]], expected)
+                # Rows outside the key keep their values: [1, 1], [2, 2], [5, 5].
                 np.testing.assert_array_equal(
                     interval_data.data[[1, 2, 5]], [data[1], data[2], data[5]]
                 )
@@ -782,9 +788,12 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         e1 = Interval('chr1', '+', 100, 105, self.genome)
         e2 = Interval('chr1', '+', 200, 205, self.genome)
         backing = Interval('chr1', '+', 100, 205, self.genome)
+        # data is (105, 10); e1 is rows 0-4 and e2 is rows 100-104.
         data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
         interval_data = IntervalData(backing, deepcopy(data))
+        # value is (10, 10): [[-1, ..., -10], [-11, ..., -20], ..., [-91, ..., -100]]
         value = -np.arange(1, 10 * 10 + 1).reshape(10, 10)
+        # value rows 0-4 go to e1, rows 5-9 to e2.
         interval_data[[e1, e2]] = value.tolist()
 
         np.testing.assert_array_equal(interval_data._data[0:5, :], value[0:5, :])
@@ -796,8 +805,10 @@ class TestIntervalDataSliceInterval(unittest.TestCase):
         backing = Interval('chr1', '+', 100, 205, self.genome)
         data = np.arange(0, 10 * len(backing)).reshape(len(backing), 10)
         interval_data = IntervalData(backing, deepcopy(data))
+        # A ragged list should be rejected
         with self.assertRaises(ValueError):
-            interval_data[[e1, e2]] = [[0] * 10, [0]]
+            # [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0, 0, 0]]
+            interval_data[[e1, e2]] = [*[[0]] * 9, [0, 0, 0]]
         np.testing.assert_array_equal(interval_data._data, data)
 
     def test_set_data_invalid_value_shape(self):
@@ -1193,17 +1204,21 @@ class TestIntervalDataAxisAlign(unittest.TestCase):
 
     def test_set_list_key_multi_region_nested_list_value(self):
         interval = Interval('chr1', '+', 100, 106, self.genome)
+        # 0 to 59, reshaped to (5, 6, 2)
         data = np.arange(0, 5 * 6 * 2).reshape(5, 6, 2)
         interval_data = IntervalData(interval, deepcopy(data), axis=1)
-        # Non-adjacent elements, so the value is split along the aligned axis.
+        # The key selects positions 0-1 and 4-5 on axis 1.
         key = [
             Interval('chr1', '+', 100, 102, self.genome),
             Interval('chr1', '+', 104, 106, self.genome),
         ]
+        # -1 to -40 arranged in an array of shape (5, 4, 2)
+        # value[:, 0:2] goes to positions 0-1, value[:, 2:4] to 4-5.
         value = -np.arange(1, 5 * 4 * 2 + 1).reshape(5, 4, 2)
         interval_data[key] = value.tolist()
         np.testing.assert_array_equal(interval_data._data[:, 0:2, :], value[:, 0:2, :])
         np.testing.assert_array_equal(interval_data._data[:, 4:6, :], value[:, 2:4, :])
+        # Positions 2-3 (the gap between the two regions) are unchanged.
         np.testing.assert_array_equal(interval_data._data[:, 2:4, :], data[:, 2:4, :])
 
     def test_set_position_value(self):

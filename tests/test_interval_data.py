@@ -170,9 +170,8 @@ class TestIntervalData(unittest.TestCase):
             view[0, 0] = 1
 
         self.assertTrue(data.flags.writeable)
-        # [0, -1, ..., -9]
-        interval_data[0] = -interval_data[0]
-        np.testing.assert_equal(-np.arange(0, 10), interval_data[0])
+        interval_data[0] = -1
+        np.testing.assert_equal([-1] * 10, interval_data[0])
 
     def test_set_after_single_piece_concat(self):
         base = Interval('chr1', '+', 100, 106, self.genome)
@@ -184,7 +183,7 @@ class TestIntervalData(unittest.TestCase):
         for name, key in keys.items():
             with self.subTest(name):
                 interval_data = IntervalData(base, np.zeros((6, 4), dtype=int))
-                sub = interval_data[key]
+                sub: IntervalData = interval_data[key]
                 # sub row 0 is backing row 1, so this sets data[1] = [1, 1, 1, 1].
                 sub[0] = 1
                 np.testing.assert_equal(np.ones(4), sub[0])

@@ -1,0 +1,1303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>genome_kit.diseq &mdash; GenomeKit 7.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d7ade025"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            GenomeKit
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../genomes.html">Genomes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../df.html">DataFrame Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../diseq.html">Disjoint Interval Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../data_org.html">Remote Data Organization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">genome_kit.diseq</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for genome_kit.diseq</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.interval</span><span class="w"> </span><span class="kn">import</span> <span class="n">Interval</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.genome_annotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transcript</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.genome</span><span class="w"> </span><span class="kn">import</span> <span class="n">Genome</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_CoordinateMetadata</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">reference_genome</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">chromosome</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">transcript_strand</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">]</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_SegmentMetadata</span><span class="p">:</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">on_coordinate_strand</span><span class="p">:</span> <span class="nb">bool</span>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DisjointIntervalSequence</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A flattened coordinate system over a sequence of disjoint genomic Intervals.</span>
+
+<span class="sd">    A DIS represents two layers:</span>
+
+<span class="sd">    - A **coordinate space** defined by a sequence of non-overlapping genomic</span>
+<span class="sd">      :py:class:`~genome_kit.Interval` objects (e.g. the exons of a transcript),</span>
+<span class="sd">      which are flattened into a contiguous 0-based index space. Index 0 is</span>
+<span class="sd">      always at the coordinate space's 5' end, regardless of genomic strand.</span>
+<span class="sd">    - A **segment** within that coordinate space, defined by a 5' and 3' index.</span>
+<span class="sd">      The segment may lie on the same, or opposite, strand as the coordinate space.</span>
+
+<span class="sd">    Use :py:meth:`from_transcript` or :py:meth:`from_intervals` to construct</span>
+<span class="sd">    instances rather than calling the constructor directly.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="DisjointIntervalSequence.__init__">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">coordinate_intervals</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Interval</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">coord_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_coordinate_strand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">end</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Low-level constructor.</span>
+
+<span class="sd">        Prefer :py:meth:`from_transcript` or :py:meth:`from_intervals` for</span>
+<span class="sd">        public construction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coordinate_intervals</span>
+<span class="sd">            Non-empty sequence of non-overlapping Intervals on the same</span>
+<span class="sd">            chromosome, strand, and reference genome.</span>
+<span class="sd">        coord_name</span>
+<span class="sd">            Optional name for the coordinate space.</span>
+<span class="sd">        segment_name</span>
+<span class="sd">            Optional name for the segment.</span>
+<span class="sd">        on_coordinate_strand</span>
+<span class="sd">            Whether the segment is on the same strand as the coordinate</span>
+<span class="sd">            intervals. Defaults to True. Can be used to represent a sequence that binds</span>
+<span class="sd">            to the transcript if set to False.</span>
+<span class="sd">        start</span>
+<span class="sd">            start index of the segment in the coordinate space. Defaults to 0</span>
+<span class="sd">        end</span>
+<span class="sd">            end index of the segment in the coordinate space. Defaults to the length</span>
+<span class="sd">            of the coordinate space.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If coordinate intervals are empty, inconsistent, overlapping, or if start</span>
+<span class="sd">            is greater than end.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If any element is not an Interval.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinate_intervals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"coordinate_intervals must be non-empty"</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">iv</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coordinate_intervals</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iv</span><span class="p">,</span> <span class="n">Interval</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"coordinate_intervals[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] is </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, expected Interval"</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"coordinate_intervals[</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">] has an anchor set; "</span>
+                    <span class="sa">f</span><span class="s2">"anchored Intervals are not supported"</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Consistent chromosome, strand, reference_genome</span>
+        <span class="n">iv0</span> <span class="o">=</span> <span class="n">coordinate_intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">coordinate_intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">chromosome</span> <span class="o">!=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">chromosome</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"All intervals must share the same chromosome, "</span>
+                    <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">iv0</span><span class="o">.</span><span class="n">chromosome</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">iv</span><span class="o">.</span><span class="n">chromosome</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">strand</span> <span class="o">!=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">strand</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"All intervals must share the same strand, "</span>
+                    <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">iv0</span><span class="o">.</span><span class="n">strand</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">iv</span><span class="o">.</span><span class="n">strand</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">reference_genome</span> <span class="o">!=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"All intervals must share the same reference genome, "</span>
+                    <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">iv0</span><span class="o">.</span><span class="n">reference_genome</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">iv</span><span class="o">.</span><span class="n">reference_genome</span><span class="si">!r}</span><span class="s2">"</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Sort 5'-&gt;3'</span>
+        <span class="k">if</span> <span class="n">iv0</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="n">sorted_intervals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">coordinate_intervals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">iv</span><span class="p">:</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># On negative strand end is the 5' end since start &lt; end.</span>
+            <span class="c1"># Sort by -end to get 5'-&gt;3' order.</span>
+            <span class="n">sorted_intervals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">coordinate_intervals</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">iv</span><span class="p">:</span> <span class="o">-</span><span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="c1"># No overlaps (adjacent/touching OK)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_intervals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">cur_iv</span><span class="p">,</span> <span class="n">next_iv</span> <span class="o">=</span> <span class="n">sorted_intervals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sorted_intervals</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">plus_strand_overlap</span> <span class="o">=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s2">"+"</span> <span class="ow">and</span> <span class="n">cur_iv</span><span class="o">.</span><span class="n">end</span> <span class="o">&gt;</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">minus_strand_overlap</span> <span class="o">=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="ow">and</span> <span class="n">cur_iv</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">end</span>
+            <span class="k">if</span> <span class="n">plus_strand_overlap</span> <span class="ow">or</span> <span class="n">minus_strand_overlap</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Intervals must not overlap: [</span><span class="si">{</span><span class="n">cur_iv</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">cur_iv</span><span class="o">.</span><span class="n">end</span><span class="si">}</span><span class="s2">) and [</span><span class="si">{</span><span class="n">next_iv</span><span class="o">.</span><span class="n">start</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">next_iv</span><span class="o">.</span><span class="n">end</span><span class="si">}</span><span class="s2">)"</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Merge adjacent/touching intervals (e.g. [10, 20) and [20, 30) -&gt; [10, 30)).</span>
+        <span class="c1"># Touching is detected on genomic coordinates (cur_iv.end == next_iv.start),</span>
+        <span class="c1"># which holds regardless of strand since start &lt; end for every Interval.</span>
+        <span class="n">merged_intervals</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">sorted_intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">next_iv</span> <span class="ow">in</span> <span class="n">sorted_intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">last_iv</span> <span class="o">=</span> <span class="n">merged_intervals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">last_iv</span><span class="o">.</span><span class="n">end</span> <span class="o">==</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">end</span> <span class="o">==</span> <span class="n">last_iv</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                <span class="n">merged_intervals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span>
+                    <span class="n">iv0</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span>
+                    <span class="n">iv0</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="n">last_iv</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">start</span><span class="p">),</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">last_iv</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">next_iv</span><span class="o">.</span><span class="n">end</span><span class="p">),</span>
+                    <span class="n">iv0</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">merged_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_iv</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Interval</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">merged_intervals</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span> <span class="o">=</span> <span class="n">_CoordinateMetadata</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">coord_name</span><span class="p">,</span>
+            <span class="n">reference_genome</span><span class="o">=</span><span class="n">iv0</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span>
+            <span class="n">chromosome</span><span class="o">=</span><span class="n">iv0</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span>
+            <span class="n">transcript_strand</span><span class="o">=</span><span class="n">iv0</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span> <span class="o">=</span> <span class="n">_SegmentMetadata</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">segment_name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Default segment start/end to span the full coordinate</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span>
+
+        <span class="c1"># Validate that start is less than or equal to end</span>
+        <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"start index </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2"> cannot be greater than end index </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">end</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.from_intervals">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.from_intervals">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_intervals</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">intervals</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Interval</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">coord_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct a DIS from a sequence of Intervals</span>
+<span class="sd">        (or :py:class:`~genome_kit.Exon`/:py:class:`~genome_kit.Cds`/:py:class:`~genome_kit.Utr` objects).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        intervals</span>
+<span class="sd">            Sequence of Interval or annotation objects.</span>
+<span class="sd">        coord_name</span>
+<span class="sd">            Optional name for the coordinate space.</span>
+<span class="sd">        segment_name</span>
+<span class="sd">            Optional name for the segment.</span>
+<span class="sd">        """</span>
+        <span class="n">coord_intervals</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">iv</span><span class="o">.</span><span class="n">interval</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">iv</span><span class="p">,</span> <span class="s2">"interval"</span><span class="p">)</span> <span class="k">else</span> <span class="n">iv</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">intervals</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">coord_intervals</span><span class="p">,</span> <span class="n">coord_name</span><span class="o">=</span><span class="n">coord_name</span><span class="p">,</span> <span class="n">segment_name</span><span class="o">=</span><span class="n">segment_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.from_transcript">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.from_transcript">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_transcript</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">transcript</span><span class="p">:</span> <span class="n">Transcript</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">region</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"exons"</span><span class="p">,</span> <span class="s2">"cds"</span><span class="p">,</span> <span class="s2">"utr5"</span><span class="p">,</span> <span class="s2">"utr3"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"exons"</span><span class="p">,</span>
+        <span class="n">coord_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">segment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Construct a DIS from a transcript's exons, CDS, or UTR regions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transcript</span>
+<span class="sd">            The source Transcript object.</span>
+<span class="sd">        region</span>
+<span class="sd">            Which region to extract — ``"exons"``, ``"cds"``,</span>
+<span class="sd">            ``"utr5"``, or ``"utr3"``.</span>
+<span class="sd">        coord_name</span>
+<span class="sd">            Optional name for the coordinate space. Defaults to ``transcript.id``.</span>
+<span class="sd">        segment_name</span>
+<span class="sd">            Optional name for the segment. Defaults to ``transcript.id``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If region is not one of the allowed values.</span>
+<span class="sd">        """</span>
+        <span class="k">match</span> <span class="n">region</span><span class="p">:</span>
+            <span class="k">case</span> <span class="s2">"exons"</span><span class="p">:</span>
+                <span class="n">region_elements</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">exons</span>
+            <span class="k">case</span> <span class="s2">"cds"</span><span class="p">:</span>
+                <span class="n">region_elements</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">cdss</span>
+            <span class="k">case</span> <span class="s2">"utr5"</span><span class="p">:</span>
+                <span class="n">region_elements</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">utr5s</span>
+            <span class="k">case</span> <span class="s2">"utr3"</span><span class="p">:</span>
+                <span class="n">region_elements</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">utr3s</span>
+            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid region: </span><span class="si">{</span><span class="n">region</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">coord_intervals</span> <span class="o">=</span> <span class="p">[</span><span class="n">element</span><span class="o">.</span><span class="n">interval</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">region_elements</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">coord_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">coord_name</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+        <span class="k">if</span> <span class="n">segment_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">segment_name</span> <span class="o">=</span> <span class="n">transcript</span><span class="o">.</span><span class="n">id</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">coord_intervals</span><span class="p">,</span> <span class="n">coord_name</span><span class="o">=</span><span class="n">coord_name</span><span class="p">,</span> <span class="n">segment_name</span><span class="o">=</span><span class="n">segment_name</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coord_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Name of the coordinate space, or None."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reference_genome</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reference genome of the coordinate intervals."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">reference_genome</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chromosome</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Chromosome of the coordinate intervals."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">chromosome</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coord_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Strand of the coordinate intervals (the transcript strand)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">transcript_strand</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Name of the segment, or None."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_coordinate_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if the segment is on the same strand as the coordinate intervals."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Effective strand of the segment, accounting for on_coordinate_strand."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span>
+        <span class="c1"># Segment is on opposite strand</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"-"</span>
+        <span class="k">return</span> <span class="s2">"+"</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end5_index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""5' index of the segment."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end3_index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""3' index of the segment."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Start index of the segment in the coordinate space."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""End index of the segment in the coordinate space."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_at_index</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a 0-length DIS at the given index position."""</span>
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end5</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""0-length DIS at the segment's 5' end."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_at_index</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end5_index</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end3</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""0-length DIS at the segment's 3' end."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_at_index</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end3_index</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coord_end5</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""0-length DIS at the coordinate space's 5' end."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_at_index</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coord_end3</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""0-length DIS at the coordinate space's 3' end."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_at_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coordinate_intervals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Interval</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The underlying genomic intervals of the coordinate-space, sorted 5'-&gt;3'."""</span>
+        <span class="c1"># Deepcopy to preserve imutability of this DIS</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coordinate_length</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Total length of the coordinate space in bases."""</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Length of the segment on the coordinate space."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lower_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coord</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Convert a DIS coordinate index to the genomic coordinate(s).</span>
+
+<span class="sd">        Returns a 1-element list for indices interior to a single coord</span>
+<span class="sd">        interval, at the outer 5' (``coord == 0``) and 3'</span>
+<span class="sd">        (``coord == coordinate_length``) edges of the DIS, and for any</span>
+<span class="sd">        extrapolated index (``coord &lt; 0`` or ``coord &gt; coordinate_length``).</span>
+<span class="sd">        Extrapolation is linear from the nearest interval boundary and may</span>
+<span class="sd">        yield negative values or values exceeding the chromosome length.</span>
+
+<span class="sd">        Returns a 2-element list ``[iv_upstream_coord, iv_downstream_coord]`` sorted</span>
+<span class="sd">        5' -&gt; 3' when ``coord`` falls exactly on an internal boundary between two</span>
+<span class="sd">        adjacent coord intervals — where ``iv_upstream_coord`` is the upstream-most</span>
+<span class="sd">        coordinate boundary, and ``iv_downstream_coord`` is the downstream-most</span>
+<span class="sd">        coordinate boundary (regardless of strand). Touching intervals produce</span>
+<span class="sd">        two equal values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coord</span>
+<span class="sd">            Index in the DIS coordinate space.</span>
+<span class="sd">        """</span>
+        <span class="n">ivs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span>
+        <span class="n">on_plus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span> <span class="o">==</span> <span class="s2">"+"</span>
+        <span class="n">coord_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span>
+
+        <span class="c1"># Upstream of first interval — extrapolate (no upstream neighbor)</span>
+        <span class="k">if</span> <span class="n">coord</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">on_plus</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coord</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">end</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">coord</span><span class="p">)]</span>
+
+        <span class="c1"># Downstream of last interval — extrapolate (no downstream neighbor)</span>
+        <span class="k">if</span> <span class="n">coord</span> <span class="o">&gt;=</span> <span class="n">coord_len</span><span class="p">:</span>
+            <span class="n">overshoot</span> <span class="o">=</span> <span class="n">coord</span> <span class="o">-</span> <span class="n">coord_len</span>
+            <span class="k">if</span> <span class="n">on_plus</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span> <span class="o">+</span> <span class="n">overshoot</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">overshoot</span><span class="p">]</span>
+
+        <span class="c1"># Walk intervals, consuming coord with a decrementing delta</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">coord</span>
+        <span class="n">interval_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">while</span> <span class="n">delta</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">interval_index</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">delta</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ivs</span><span class="p">[</span><span class="n">interval_index</span><span class="p">])</span>
+
+        <span class="n">iv</span> <span class="o">=</span> <span class="n">ivs</span><span class="p">[</span><span class="n">interval_index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">delta</span> <span class="o">==</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">iv</span><span class="p">):</span>
+            <span class="c1"># coord landed on the cumulative end of ivs[interval_index - 1],</span>
+            <span class="c1"># i.e. the internal boundary between two coord intervals.</span>
+            <span class="n">upstream</span> <span class="o">=</span> <span class="n">ivs</span><span class="p">[</span><span class="n">interval_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">on_plus</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span>
+                    <span class="n">upstream</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+                    <span class="n">iv</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                <span class="p">]</span>  <span class="c1"># indices ordered 5' -&gt; 3' w.r.t segment strand</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span>
+                    <span class="n">upstream</span><span class="o">.</span><span class="n">start</span><span class="p">,</span>
+                    <span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">,</span>
+                <span class="p">]</span>  <span class="c1"># indices ordered 5' -&gt; 3' w.r.t segment strand</span>
+
+        <span class="k">if</span> <span class="n">on_plus</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">iv</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">iv</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_upstream_index_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">on_coordinate_strand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return +1 or -1 indicating the upstream direction in index space.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        on_coordinate_strand</span>
+<span class="sd">            Override for which strand to compute the step for. Defaults to</span>
+<span class="sd">            this segment's ``on_coordinate_strand``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">on_coordinate_strand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">on_coordinate_strand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">on_coordinate_strand</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_same_coordinate_space</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise if other does not share the same coordinate space."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Expected DisjointIntervalSequence, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"DIS objects must share the same coordinate intervals"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_from_end_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end5</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end3</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a new DIS with the same coordinate space but different segment indices."""</span>
+        <span class="c1"># Validate end5 is upstream of or equal to end3</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end5</span> <span class="o">&gt;</span> <span class="n">end3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Invalid indices: end5 index </span><span class="si">{</span><span class="n">end5</span><span class="si">}</span><span class="s2"> is downstream of end3 index </span><span class="si">{</span><span class="n">end3</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">end5</span> <span class="o">&lt;</span> <span class="n">end3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Invalid indices: end5 index </span><span class="si">{</span><span class="n">end5</span><span class="si">}</span><span class="s2"> is downstream of end3 index </span><span class="si">{</span><span class="n">end3</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">segment_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">end5</span><span class="p">,</span> <span class="n">end3</span><span class="p">),</span>
+            <span class="n">end</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">end5</span><span class="p">,</span> <span class="n">end3</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="DisjointIntervalSequence.cut">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.cut">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a new DIS with the segment set to absolute coordinate-space indices.</span>
+
+<span class="sd">        The coordinate space and ``on_coordinate_strand`` are preserved; only the</span>
+<span class="sd">        segment's :py:attr:`start` and :py:attr:`end` indices change. ``start`` and</span>
+<span class="sd">        ``end`` are absolute, 0-based, half-open indices into the coordinate space,</span>
+<span class="sd">        so ``start`` must be the lower index regardless of strand. Indices</span>
+<span class="sd">        outside ``[0, coordinate_length]`` are permitted and represent flanking positions</span>
+<span class="sd">        extrapolated past the coordinate space's edges.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start</span>
+<span class="sd">            New segment start index in the coordinate space.</span>
+<span class="sd">        end</span>
+<span class="sd">            New segment end index in the coordinate space (exclusive).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``start`` is greater than ``end``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">segment_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.shift">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.shift">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Shift the segment downstream by amount (negative shifts upstream).</span>
+<span class="sd">        The coordinate space is unchanged. Only the segment indices move.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        amount</span>
+<span class="sd">            Bases to shift the segment downstream. Negative values shift upstream.</span>
+<span class="sd">        """</span>
+        <span class="n">downstream_step</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">amount</span> <span class="o">*</span> <span class="n">downstream_step</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_end_indices</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end5_index</span> <span class="o">+</span> <span class="n">delta</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end3_index</span> <span class="o">+</span> <span class="n">delta</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.expand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.expand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expand</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">upstream</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dnstream</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Expand the segment upstream and/or downstream.</span>
+
+<span class="sd">        Negative values contract the segment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        upstream</span>
+<span class="sd">            Bases to expand (or contract if negative) toward the 5' end.</span>
+<span class="sd">        dnstream</span>
+<span class="sd">            Bases to expand (or contract if negative) toward the 3' end.</span>
+<span class="sd">            Defaults to upstream (symmetric).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If contraction would result in end5 being downstream of end3.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">dnstream</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dnstream</span> <span class="o">=</span> <span class="n">upstream</span>
+        <span class="n">up_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span>
+        <span class="n">down_step</span> <span class="o">=</span> <span class="o">-</span><span class="n">up_step</span>
+        <span class="n">new_end5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end5_index</span> <span class="o">+</span> <span class="p">(</span><span class="n">upstream</span> <span class="o">*</span> <span class="n">up_step</span><span class="p">)</span>
+        <span class="n">new_end3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end3_index</span> <span class="o">+</span> <span class="p">(</span><span class="n">dnstream</span> <span class="o">*</span> <span class="n">down_step</span><span class="p">)</span>
+        <span class="c1"># Validate end5 is still upstream of or equal to end3</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">new_end5</span> <span class="o">-</span> <span class="n">new_end3</span><span class="p">)</span> <span class="o">*</span> <span class="n">up_step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Invalid expansion: end5 would be downstream of end3 "</span>
+                <span class="sa">f</span><span class="s2">"(end5=</span><span class="si">{</span><span class="n">new_end5</span><span class="si">}</span><span class="s2">, end3=</span><span class="si">{</span><span class="n">new_end3</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_end_indices</span><span class="p">(</span><span class="n">new_end5</span><span class="p">,</span> <span class="n">new_end3</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.expand_coord">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.expand_coord">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expand_coord</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">upstream</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dnstream</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Expand the coordinate space and possibly segment at its 5' and/or 3' ends.</span>
+
+<span class="sd">        The outer 5' edge of the first coord interval is extended ``upstream``</span>
+<span class="sd">        bases and the outer 3' edge of the last coord interval is extended</span>
+<span class="sd">        ``dnstream`` bases. If the segment spans the coordinate intervals exactly,</span>
+<span class="sd">        it is expanded an equal amount in the upstream/downstream direction as</span>
+<span class="sd">        the coordinate intervals, otherwise it is left unexpanded.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        upstream</span>
+<span class="sd">            Bases to add at the coordinate space's 5' end.</span>
+<span class="sd">        dnstream</span>
+<span class="sd">            Bases to add at the coordinate space's 3' end.</span>
+<span class="sd">            Defaults to upstream (symmetric).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If either argument is negative.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">dnstream</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dnstream</span> <span class="o">=</span> <span class="n">upstream</span>
+        <span class="k">if</span> <span class="n">upstream</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dnstream</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"expand_coord requires non-negative values; "</span>
+                <span class="sa">f</span><span class="s2">"got upstream=</span><span class="si">{</span><span class="n">upstream</span><span class="si">}</span><span class="s2">, dnstream=</span><span class="si">{</span><span class="n">dnstream</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Segment does not span coord intervals exactly: do not expand segment</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span><span class="p">:</span>
+            <span class="c1"># Re-indexing of coord space only occurs on upstream expansion, so only</span>
+            <span class="c1"># adjust indices based on this change. Downstream expansion leaves existing</span>
+            <span class="c1"># indices intact, so no adjustment needed</span>
+            <span class="n">new_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">+</span> <span class="n">upstream</span>
+            <span class="n">new_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">+</span> <span class="n">upstream</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The interval's lower index stays at self._start in the new coord space due</span>
+            <span class="c1"># to re-indexing of the coord space implicitly 'expanding' start upstream.</span>
+            <span class="c1"># end index is adjusted to account for extra bases introduced by upstream and</span>
+            <span class="c1"># downstream expansion</span>
+            <span class="n">new_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+            <span class="n">new_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">+</span> <span class="n">upstream</span> <span class="o">+</span> <span class="n">dnstream</span>
+
+        <span class="n">coord_ivs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">)</span>
+        <span class="n">iv0</span><span class="p">,</span> <span class="n">ivn</span> <span class="o">=</span> <span class="n">coord_ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord_ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">coord_ivs</span> <span class="o">=</span> <span class="p">[</span><span class="n">iv0</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">dnstream</span><span class="p">)]</span>  <span class="c1"># iv0 is ivn</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coord_ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">iv0</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">coord_ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ivn</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dnstream</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="n">coord_ivs</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">segment_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">new_start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">new_end</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.upstream_of">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.upstream_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upstream_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if self is strictly upstream of other (no overlap).</span>
+
+<span class="sd">        Requires the same coordinate space and same on_coordinate_strand.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_coordinate_space</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Cannot compare: self is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"strand but other is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> strand"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.dnstream_of">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.dnstream_of">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dnstream_of</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if self is strictly downstream of other (no overlap).</span>
+
+<span class="sd">        Requires the same coordinate space and same on_coordinate_strand.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_coordinate_space</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Cannot compare: self is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"strand but other is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> strand"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.within">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.within">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if self's segment is contained within other's segment.</span>
+
+<span class="sd">        Requires the same coordinate space and same on_coordinate_strand.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_coordinate_space</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Cannot compare: self is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"strand but other is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> strand"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.contains">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.contains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if self's segment contains other's segment.</span>
+
+<span class="sd">        Requires the same coordinate space and same on_coordinate_strand.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.is_on_coordinate_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.is_on_coordinate_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_on_coordinate_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if the segment is on the coordinate strand."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.is_positive_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.is_positive_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_positive_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""True if the segment is on the positive strand."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.as_positive_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.as_positive_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_positive_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a DIS with the segment on the positive strand.</span>
+
+<span class="sd">        Returns ``self`` if already on the positive strand. The coordinate</span>
+<span class="sd">        intervals are unchanged; only the segment strand is affected.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_positive_strand</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.as_negative_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.as_negative_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_negative_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a DIS with the segment on the negative strand.</span>
+
+<span class="sd">        Returns ``self`` if already on the negative strand. The coordinate</span>
+<span class="sd">        intervals are unchanged; only the segment strand is affected.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_positive_strand</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.as_off_coordinate_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.as_off_coordinate_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_off_coordinate_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a DIS with the segment on the strand opposite the coordinate strand.</span>
+
+<span class="sd">        Returns ``self`` if the segment is already off the coordinate strand.</span>
+<span class="sd">        The coordinate intervals are unchanged; only the segment strand is</span>
+<span class="sd">        affected.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.as_on_coordinate_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.as_on_coordinate_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_on_coordinate_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a DIS with the segment on the coordinate strand.</span>
+
+<span class="sd">        Returns ``self`` if the segment is already on the coordinate strand.</span>
+<span class="sd">        The coordinate intervals are unchanged; only the segment strand is</span>
+<span class="sd">        affected.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.as_opposite_strand">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.as_opposite_strand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_opposite_strand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a new DIS with the segment on the opposite strand.</span>
+
+<span class="sd">        Toggles the segment's ``on_coordinate_strand`` (matching</span>
+<span class="sd">        :py:meth:`~genome_kit.Interval.as_opposite_strand`). The coordinate</span>
+<span class="sd">        intervals are unchanged; only the segment strand is affected.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">segment_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.lower">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.lower">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Project the interval back to genomic :py:class:`~genome_kit.Interval` objects.</span>
+
+<span class="sd">        Returns the genomic representation of the DIS interval as one or more</span>
+<span class="sd">        Intervals, in 5'-&gt;3' order. Multiple intervals are returned when the</span>
+<span class="sd">        DIS interval spans boundaries between coordinate intervals. All</span>
+<span class="sd">        returned Intervals use the effective strand of the DIS interval.</span>
+
+<span class="sd">        Indices outside the coordinate space are extrapolated linearly from</span>
+<span class="sd">        the nearest boundary, so returned Intervals may extend beyond the</span>
+<span class="sd">        chromosome (their start may be negative or their end may exceed the</span>
+<span class="sd">        chromosome length).</span>
+
+<span class="sd">        When lowering a 0-length interval on an internal boundary, the returned</span>
+<span class="sd">        value corresponds to either an upstream, or downstream interval boundary</span>
+<span class="sd">        (more specifically, whichever value is an Interval.start,</span>
+<span class="sd">        since Interval.end is exclusive).</span>
+<span class="sd">        """</span>
+        <span class="n">chrom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span>
+        <span class="n">strand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span>
+        <span class="n">refg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span>
+        <span class="n">coord_strand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span>
+        <span class="n">on_plus</span> <span class="o">=</span> <span class="n">coord_strand</span> <span class="o">==</span> <span class="s2">"+"</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span>
+
+        <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_coord</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+            <span class="c1"># On an internal boundary _lower_coord returns two flanking values;</span>
+            <span class="c1"># collapse to a single 0-length Interval corresponding to the value of</span>
+            <span class="c1"># the index that is an Interval.start (we do this because Interval.end</span>
+            <span class="c1"># is exclusive).</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">refg</span><span class="p">)]</span>
+
+        <span class="c1"># _lower_coord returns 1 value interior/edge/extrapolated, or 2 values</span>
+        <span class="c1"># in 5'-&gt;3' order at an internal boundary. Cumulative len(_lower_coord(start)) +</span>
+        <span class="c1"># len(_lower_coord(end)) is 2 (neither on boundary), 3 (one on boundary), or 4</span>
+        <span class="c1"># (both on boundary). In all cases, the start_pos should be the downstream-most</span>
+        <span class="c1"># value and the end_pos should be the upstream-most value.</span>
+        <span class="n">start_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_coord</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">end_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_coord</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+        <span class="n">start_pos</span> <span class="o">=</span> <span class="n">start_positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Since sorted 5' -&gt; 3', -1 is downstream</span>
+        <span class="n">end_pos</span> <span class="o">=</span> <span class="n">end_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 0 is the upstream value</span>
+
+        <span class="n">start_iv</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">coord_strand</span><span class="p">,</span> <span class="n">start_pos</span><span class="p">,</span> <span class="n">start_pos</span><span class="p">,</span> <span class="n">refg</span><span class="p">)</span>
+        <span class="n">end_iv</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">coord_strand</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">,</span> <span class="n">refg</span><span class="p">)</span>
+
+        <span class="n">coord_ivs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span>
+        <span class="n">last_interval_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="n">first_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">first_idx</span> <span class="o">&lt;</span> <span class="n">last_interval_index</span> <span class="ow">and</span> <span class="n">start_iv</span><span class="o">.</span><span class="n">dnstream_of</span><span class="p">(</span>
+            <span class="n">coord_ivs</span><span class="p">[</span><span class="n">first_idx</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">first_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">last_idx</span> <span class="o">=</span> <span class="n">last_interval_index</span>
+        <span class="k">while</span> <span class="n">last_idx</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">end_iv</span><span class="o">.</span><span class="n">upstream_of</span><span class="p">(</span><span class="n">coord_ivs</span><span class="p">[</span><span class="n">last_idx</span><span class="p">]):</span>
+            <span class="n">last_idx</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interval</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first_idx</span><span class="p">,</span> <span class="n">last_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">iv</span> <span class="o">=</span> <span class="n">coord_ivs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">is_first</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="n">first_idx</span>
+            <span class="n">is_last</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="n">last_idx</span>
+            <span class="k">if</span> <span class="n">on_plus</span><span class="p">:</span>
+                <span class="n">genomic_start</span> <span class="o">=</span> <span class="n">start_pos</span> <span class="k">if</span> <span class="n">is_first</span> <span class="k">else</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">genomic_end</span> <span class="o">=</span> <span class="n">end_pos</span> <span class="k">if</span> <span class="n">is_last</span> <span class="k">else</span> <span class="n">iv</span><span class="o">.</span><span class="n">end</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># swap start and end positions since going from coordinate-space that</span>
+                <span class="c1"># runs 5' -&gt; 3' (DIS) to genomic space (3' -&gt; 5' on - strand)</span>
+                <span class="n">genomic_start</span> <span class="o">=</span> <span class="n">end_pos</span> <span class="k">if</span> <span class="n">is_last</span> <span class="k">else</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span>
+                <span class="n">genomic_end</span> <span class="o">=</span> <span class="n">start_pos</span> <span class="k">if</span> <span class="n">is_first</span> <span class="k">else</span> <span class="n">iv</span><span class="o">.</span><span class="n">end</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">chrom</span><span class="p">,</span> <span class="n">strand</span><span class="p">,</span> <span class="n">genomic_start</span><span class="p">,</span> <span class="n">genomic_end</span><span class="p">,</span> <span class="n">refg</span><span class="p">))</span>
+
+        <span class="c1"># The loop emits intervals in coord 5'-&gt;3' order. When the segment is on</span>
+        <span class="c1"># the opposite strand, that is the reverse of segment 5'-&gt;3'.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.genomic_span">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.genomic_span">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">genomic_span</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Interval</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a single :py:class:`~genome_kit.Interval` spanning the</span>
+<span class="sd">        segment's genomic extent (from its 5'-most to 3'-most positions),</span>
+<span class="sd">        ignoring gaps between coordinate intervals.</span>
+<span class="sd">        """</span>
+        <span class="n">start_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_coord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">end_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_coord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="n">start_pos</span> <span class="o">=</span> <span class="n">start_positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Since sorted 5' -&gt; 3', -1 is downstream</span>
+        <span class="n">end_pos</span> <span class="o">=</span> <span class="n">end_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 0 is the upstream value</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">strand</span><span class="p">,</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">),</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_lift_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">clip</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Map a genomic position to a DIS index in this coordinate space.</span>
+
+<span class="sd">        Positions outside the coord intervals are linearly extrapolated from</span>
+<span class="sd">        the nearest outer edge. If ``clip`` is True, positions</span>
+<span class="sd">        in a gap between coord intervals are clipped to the cumulative end of the</span>
+<span class="sd">        previous interval (i.e. the boundary index), otherwise they return None.</span>
+<span class="sd">        """</span>
+        <span class="n">ivs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span>
+        <span class="n">coord_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;</span> <span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">coord_len</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="n">cumulative</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">ivs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">pos</span> <span class="o">&lt;=</span> <span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">cumulative</span> <span class="o">+</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">cumulative</span> <span class="k">if</span> <span class="n">clip</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="n">cumulative</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Position not found in any interval"</span>
+        <span class="c1"># minus</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;</span> <span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ivs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">pos</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">&lt;</span> <span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">coord_len</span> <span class="o">+</span> <span class="p">(</span><span class="n">ivs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="n">cumulative</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">ivs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">iv</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;=</span> <span class="n">pos</span> <span class="o">&lt;=</span> <span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cumulative</span> <span class="o">+</span> <span class="p">(</span><span class="n">iv</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">pos</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;</span> <span class="n">iv</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cumulative</span> <span class="k">if</span> <span class="n">clip</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">cumulative</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"Position not found in any interval"</span>
+
+<div class="viewcode-block" id="DisjointIntervalSequence.lift_interval">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.lift_interval">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lift_interval</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">intersect_on_lift</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence | None"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Lift a genomic :py:class:`~genome_kit.Interval` onto this DIS's segment.</span>
+
+<span class="sd">        The interval's genomic span is mapped into DIS coordinate-space indices</span>
+<span class="sd">        and intersected with this DIS's segment. The returned DIS represents</span>
+<span class="sd">        that intersection as a segment in this coordinate space.</span>
+
+<span class="sd">        ``other`` may lie on either strand. The returned DIS's</span>
+<span class="sd">        ``on_coordinate_strand`` reflects whether ``other`` is on the</span>
+<span class="sd">        coordinate strand, so an interval on the strand opposite this DIS's</span>
+<span class="sd">        segment lifts to an opposite-strand segment.</span>
+
+<span class="sd">        Returns None if intersection is empty when ``other`` is lifted</span>
+<span class="sd">        (``other`` lies entirely outside the DIS's segment).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        intersect_on_lift</span>
+<span class="sd">            If True, the lifted interval is intersected with this DIS's segment.</span>
+<span class="sd">            Default is False, and results in a ValueError if the interval is not fully</span>
+<span class="sd">            contained within the DIS's segment.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``other`` is not on the same chromosome and reference genome.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">chromosome</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Interval chromosome </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">chromosome</span><span class="si">!r}</span><span class="s2"> does not match DIS "</span>
+                <span class="sa">f</span><span class="s2">"chromosome </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">reference_genome</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Interval reference_genome </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">reference_genome</span><span class="si">!r}</span><span class="s2"> does not "</span>
+                <span class="sa">f</span><span class="s2">"match DIS reference_genome </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">lowered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="c1"># Need the intervals on same strand as other to check if other is within any of</span>
+        <span class="c1"># the lowered intervals, since other may be on the opposite strand.</span>
+        <span class="n">lowered_ivs_on_same_strand_as_other</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">lowered</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">strand</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">iv</span><span class="o">.</span><span class="n">as_opposite_strand</span><span class="p">()</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">lowered</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Since DIS segment lowered intervals are not contiguous, if other is not</span>
+        <span class="c1"># fully contained within one of the lowered intervals then it is not fully</span>
+        <span class="c1"># contained within the DIS segment.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">intersect_on_lift</span>
+            <span class="ow">and</span> <span class="nb">sum</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">within</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">lowered_ivs_on_same_strand_as_other</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Interval </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2"> lies outside the bases defined by the segment of this DIS. "</span>
+                <span class="sa">f</span><span class="s2">"Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment."</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Set variables for the other interval's start and end positions in the DIS</span>
+        <span class="c1"># coordinate space to keep logic simple</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span> <span class="o">==</span> <span class="s2">"+"</span><span class="p">:</span>
+            <span class="n">other_corrected_start</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">other_corrected_end</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># On minus, lower genomic position maps to higher DIS index.</span>
+            <span class="n">other_corrected_start</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">end</span>
+            <span class="n">other_corrected_end</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">start</span>
+        <span class="n">lift_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lift_position</span><span class="p">(</span><span class="n">other_corrected_start</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">lift_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lift_position</span><span class="p">(</span><span class="n">other_corrected_end</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intersect_on_lift</span> <span class="ow">and</span> <span class="p">(</span><span class="n">lift_start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">lift_end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Interval </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2"> lies between the intervals that define the segment of this DIS. "</span>
+                <span class="sa">f</span><span class="s2">"Set intersect_on_lift=True to allow lifting and intersecting with the DIS segment."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">intersect_on_lift</span> <span class="ow">and</span> <span class="n">lift_start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lift_end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># It should only be permissible to have a single None when intersect_on_lift=True,</span>
+        <span class="c1"># since it's possible to lift an interval that is partially in a gap between coord intervals</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intersect_on_lift</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">lift_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lift_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">seg_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lift_position</span><span class="p">(</span><span class="n">other_corrected_start</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="n">intersect_on_lift</span><span class="p">)</span>
+        <span class="n">seg_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lift_position</span><span class="p">(</span><span class="n">other_corrected_end</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="n">intersect_on_lift</span><span class="p">)</span>
+        <span class="c1"># lifted interval is entirely upstream or downstream of the DIS segment</span>
+        <span class="k">if</span> <span class="n">seg_end</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="n">seg_start</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">seg_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">seg_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="c1"># Clip to self's segment via half-open intersection</span>
+        <span class="c1"># (no-op if intersect_on_lift=False due to prior checks)</span>
+        <span class="n">intersected_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">seg_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span>
+        <span class="n">intersected_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">seg_end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">intersected_start</span> <span class="o">&lt;=</span> <span class="n">intersected_end</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intersect_on_lift</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">intersected_start</span> <span class="o">==</span> <span class="n">seg_start</span> <span class="ow">and</span> <span class="n">intersected_end</span> <span class="o">==</span> <span class="n">seg_end</span>
+
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">strand</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span><span class="p">),</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">intersected_start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">intersected_end</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.intersect">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.intersect">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intersect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"DisjointIntervalSequence"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DisjointIntervalSequence | None"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Segment-wise intersection with another DIS in the same coord space.</span>
+
+<span class="sd">        Both DIS objects must share the same coordinate intervals and the same</span>
+<span class="sd">        ``on_coordinate_strand``. 0-length intersections return None.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the DIS objects do not share the same coordinate space or</span>
+<span class="sd">            ``on_coordinate_strand`` differs.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_coordinate_space</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Cannot compare: self is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"strand but other is on "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'same'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">other</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'opposite'</span><span class="si">}</span><span class="s2"> strand"</span>
+            <span class="p">)</span>
+
+        <span class="n">intersected_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span>
+        <span class="n">intersected_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_end</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">intersected_start</span> <span class="o">&gt;=</span> <span class="n">intersected_end</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+            <span class="n">coord_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">=</span><span class="n">intersected_start</span><span class="p">,</span>
+            <span class="n">end</span><span class="o">=</span><span class="n">intersected_end</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.dna">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.dna">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dna</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_outside_coord</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the DNA sequence corresponding to the segment.</span>
+
+<span class="sd">        Bases outside the coordinate intervals (segment indices ``&lt; 0`` or</span>
+<span class="sd">        ``&gt;= coordinate_length``) are returned as ``N`` when</span>
+<span class="sd">        ``allow_outside_coord`` is True; otherwise a ValueError is raised.</span>
+<span class="sd">        Returns an empty string for a 0-length segment. DNA is returned in</span>
+<span class="sd">        5' -&gt; 3' order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        allow_outside_coord</span>
+<span class="sd">            When True (default), pad out-of-coord regions with ``N``. When</span>
+<span class="sd">            False, raise if the segment extends past the coord intervals.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the segment extends past the coord intervals and</span>
+<span class="sd">            ``allow_outside_coord`` is False.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">""</span>
+
+        <span class="n">coord_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate_length</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upstream_index_step</span><span class="p">()</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">upstream_pad</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span>
+            <span class="n">downstream_pad</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">-</span> <span class="n">coord_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">upstream_pad</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">-</span> <span class="n">coord_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">downstream_pad</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">upstream_pad</span> <span class="ow">or</span> <span class="n">downstream_pad</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_outside_coord</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"DIS segment [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="si">}</span><span class="s2">) extends outside "</span>
+                <span class="sa">f</span><span class="s2">"coord range [0, </span><span class="si">{</span><span class="n">coord_len</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Clip start to being at least start of coord space</span>
+        <span class="n">clipped_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Clip end to being at most end of coord space</span>
+        <span class="n">clipped_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="p">,</span> <span class="n">coord_len</span><span class="p">)</span>
+        <span class="c1"># If the clipped segment has a positive length, get the DNA</span>
+        <span class="k">if</span> <span class="n">clipped_start</span> <span class="o">&lt;</span> <span class="n">clipped_end</span><span class="p">:</span>
+            <span class="n">clipped</span> <span class="o">=</span> <span class="n">DisjointIntervalSequence</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="p">,</span>
+                <span class="n">on_coordinate_strand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_coordinate_strand</span><span class="p">,</span>
+                <span class="n">start</span><span class="o">=</span><span class="n">clipped_start</span><span class="p">,</span>
+                <span class="n">end</span><span class="o">=</span><span class="n">clipped_end</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">genome</span> <span class="o">=</span> <span class="n">Genome</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_genome</span><span class="p">)</span>
+            <span class="n">clipped_dna</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">genome</span><span class="o">.</span><span class="n">dna</span><span class="p">(</span><span class="n">iv</span><span class="p">)</span> <span class="k">for</span> <span class="n">iv</span> <span class="ow">in</span> <span class="n">clipped</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clipped_dna</span> <span class="o">=</span> <span class="s2">""</span>
+
+        <span class="k">return</span> <span class="s2">"N"</span> <span class="o">*</span> <span class="n">upstream_pad</span> <span class="o">+</span> <span class="n">clipped_dna</span> <span class="o">+</span> <span class="s2">"N"</span> <span class="o">*</span> <span class="n">downstream_pad</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.__len__">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.__len__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the length of the segment."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.__repr__">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.__repr__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a human-readable representation."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"DisjointIntervalSequence("</span>
+            <span class="sa">f</span><span class="s2">"coord_name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">chromosome</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coord_strand</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"len=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"coord_intervals=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"start=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_start</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"end=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_end</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"end5=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end5_index</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"end3=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end3_index</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DisjointIntervalSequence.__eq__">
+<a class="viewcode-back" href="../../api.html#genome_kit.diseq.DisjointIntervalSequence.__eq__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Equality based on coordinate intervals, metadata, and index values."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DisjointIntervalSequence</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_coord_metadata</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_coord_metadata</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_segment_metadata</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_segment_metadata</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_start</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_end</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coordinate_intervals</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_coordinate_intervals</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

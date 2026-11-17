@@ -1,0 +1,230 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Genomes &mdash; GenomeKit 7.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d7ade025"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DataFrame Utilities" href="df.html" />
+    <link rel="prev" title="API Documentation" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            GenomeKit
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="anchors.html">Anchors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Genomes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#assemblies">Assemblies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#annotations">Annotations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#appris-mane">APPRIS / MANE</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gencode">GENCODE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#refseq">RefSeq</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mane">MANE</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="df.html">DataFrame Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diseq.html">Disjoint Interval Sequences</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_org.html">Remote Data Organization</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GenomeKit</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Genomes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/genomes.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="genomes">
+<span id="id1"></span><h1>Genomes<a class="headerlink" href="#genomes" title="Link to this heading"></a></h1>
+<p>GenomeKit now supports building and using assemblies and annotations. For
+assemblies, the schema will follow the UCSC format, and for annotations, they
+must be specified in GENCODE/Ensembl/NCBI GFF3 formats.</p>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<p>Clone the GenomeKit git repo to see scripts under data-src/ for examples of how to build annotation data files.</p>
+<blockquote>
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/deepgenomics/GenomeKit.git
+<span class="nb">pushd</span><span class="w"> </span>GenomeKit
+</pre></div>
+</div>
+</div></blockquote>
+<p>Scripts under <code class="docutils literal notranslate"><span class="pre">data-src</span></code> are used to obtain and generate the data files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data-src/&lt;assembly&gt;/assembly</span></code> for the assembly, e.g <code class="docutils literal notranslate"><span class="pre">data-src/hg19/assembly</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data-src/&lt;assembly&gt;/&lt;annotation-source&gt;/&lt;annotation&gt;</span></code>, e.g <code class="docutils literal notranslate"><span class="pre">data-src/hg19/GENCODE/v26lift37</span></code></p></li>
+<li></li>
+</ul>
+<section id="assemblies">
+<h3>Assemblies<a class="headerlink" href="#assemblies" title="Link to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Generate a hash file</p></li>
+<li><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="k">$(</span>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import genome_kit as gk; print(gk.Genome._refg_hash("hg19"))'</span><span class="k">)</span><span class="w"> </span>&gt;<span class="w"> </span>hg19.hash
+</pre></div>
+</div>
+</li>
+</ol>
+<p>(replace <code class="docutils literal notranslate"><span class="pre">hg19</span></code> with the desired assembly name)</p>
+<ol class="arabic">
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">2bit</span></code>, <code class="docutils literal notranslate"><span class="pre">chrom.sizes</span></code>, and <code class="docutils literal notranslate"><span class="pre">chromAlias.txt</span></code> files from
+<a class="reference external" href="https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/">https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/</a>.
+and the <code class="docutils literal notranslate"><span class="pre">hash</span></code> file you generated into your</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import os ; import appdirs ; print(os.environ.get("GENOMEKIT_DATA_DIR", appdirs.user_data_dir("genome_kit")))'</span>
+</pre></div>
+</div>
+<p>directory.</p>
+<p>If you need to generate from a <cite>fasta</cite>:</p>
+<ol class="arabic">
+<li><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>ucsc-tools<span class="w"> </span>ucsc-fatotwobit<span class="w"> </span>ucsc-twobitinfo
+</pre></div>
+</div>
+</li>
+<li><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>ucsc-tools
+</pre></div>
+</div>
+</li>
+<li><p>follow the instructions at <a class="reference external" href="https://genome.ucsc.edu/goldenPath/help/twoBit.html">https://genome.ucsc.edu/goldenPath/help/twoBit.html</a></p></li>
+<li><p>optionally create an <cite>chromAlias.txt</cite> with any contig aliases required.</p></li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="annotations">
+<h3>Annotations<a class="headerlink" href="#annotations" title="Link to this heading"></a></h3>
+<ol class="arabic">
+<li><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import genome_kit as gk; print(gk.GenomeAnnotation.build_gencode("MY_ANNO.gff3", "MY_ANNO", gk.Genome("MY_ASSEMBLY")))'</span>
+</pre></div>
+</div>
+</li>
+<li><p>Copy the resulting files into the</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import appdirs; print(appdirs.user_data_dir("genome_kit"))'</span>
+</pre></div>
+</div>
+<p>directory.</p>
+<p>The <cite>.dganno</cite> file contains the compiled <code class="docutils literal notranslate"><span class="pre">GFF3</span></code> and the <cite>.cfg</cite> file
+contains metadata, such as <code class="docutils literal notranslate"><span class="pre">refg=hg38</span></code>.</p>
+</li>
+</ol>
+</section>
+</section>
+<section id="appris-mane">
+<h2>APPRIS / MANE<a class="headerlink" href="#appris-mane" title="Link to this heading"></a></h2>
+<p>When adding an annotation, you can also generate APPRIS/MANE data files for it if public data is available.</p>
+<p>APPRIS files are available on <a class="reference external" href="https://apprisws.bioinfo.cnio.es/pub/releases/">https://apprisws.bioinfo.cnio.es/pub/releases/</a>.
+As noted in the <a class="reference external" href="https://github.com/deepgenomics/GenomeKit/blob/41c1fbe5c011d04504b08eef4435c50771c01471/genome_kit/_build_appris.py#L107">GenomeKit source code</a>,
+we maintain a partial archive of APPRIS.</p>
+<section id="gencode">
+<h3>GENCODE<a class="headerlink" href="#gencode" title="Link to this heading"></a></h3>
+<p>For GENCODE annotations, first <a class="reference external" href="https://www.gencodegenes.org/human/releases.html">find the matching Ensembl release</a>.
+For example, for GENCODE v47, the matching Ensembl release is 113. So you’ll need to find an APPRIS release that
+includes e113. The earliest release that includes e113 is 2024_10.v49 (e113v49).</p>
+<p>If our archive doesn’t already includes this release, you’ll need to download the release and add it to the archive.</p>
+</section>
+<section id="refseq">
+<h3>RefSeq<a class="headerlink" href="#refseq" title="Link to this heading"></a></h3>
+<p>You can similarly find the matching release for RefSeq annotations. For example, for RefSeq v110, the earliest APPRIS
+release you can find rs110 is 2023_05.v48 (rs110v48).</p>
+</section>
+<section id="mane">
+<h3>MANE<a class="headerlink" href="#mane" title="Link to this heading"></a></h3>
+<p>For MANE releases, search through versions on <a class="reference external" href="https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/">https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/</a>.
+Each MANE release includes a <cite>README_versions.txt</cite> the releated Ensembl and RefSeq releases.</p>
+<p>For help on building APPRIS/MANE:</p>
+<blockquote>
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>genome_kit<span class="w"> </span>build<span class="w"> </span>--help
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="df.html" class="btn btn-neutral float-right" title="DataFrame Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Deep Genomics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

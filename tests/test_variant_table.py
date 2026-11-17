@@ -6,6 +6,7 @@ from __future__ import print_function
 import unittest
 import platform
 import os
+import sys
 import gc
 
 import numpy as np
@@ -1221,6 +1222,32 @@ class TestVCFTable(unittest.TestCase):
             vcf_variants = [(x.chromosome, x.start, x.ref, x.alt)
                             for x in vt.sequence_variations(Interval("chr1", "+", 100, 105, genome))]
         self.assertEqual(vcf_variants, expected)
+
+    def test_sequence_variations_no_leak(self):
+        dumptext(
+            self.tmpvcf, vcf_header1, """
+            #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	samp1
+            1	102	.	A	AT	.	.	AF=0.5	GT	0/1
+            1	100	.	AGC	A	.	.	AF=0.5	GT	0/1
+            1	104	.	AGC	AT	.	.	AF=0.5	GT	0/1
+            """)
+
+        genome = self.make_vcfbin()
+        interval = Interval("chr1", "+", 100, 105, genome)
+        with VCFTable(self.tmpbin) as vt:
+            # the list must hold the only reference to each returned variant
+            variants = vt.sequence_variations(interval)
+            self.assertEqual(len(variants), 3)
+            self.assertEqual([sys.getrefcount(variants[i]) for i in range(3)], [2, 2, 2])
+            del variants
+
+            # each variant references the table, so leaked variants keep it alive
+            gc.collect()
+            before = sys.getrefcount(vt)
+            for _ in range(100):
+                vt.sequence_variations(interval)
+            gc.collect()
+            self.assertEqual(sys.getrefcount(vt), before)
 
     def test_sequence_variations_insert_at_pos5(self):
         dumptext(

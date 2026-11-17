@@ -582,7 +582,6 @@ static bool append_vcf(PyObject* list, PyObject* vcftable, const packed_variant*
 	PyAutoRef item(PyTable_CreateItem<PyVCFVariant>(vcftable, elem));
 	if (PyList_Append(list, item.get()) != 0)
 		return false;
-	item.release();
 	return true;
 }
 

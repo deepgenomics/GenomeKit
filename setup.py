@@ -164,8 +164,12 @@ if toolset == "gcc":
 
 elif toolset == "msvc":
 
-    os.environ["DISTUTILS_USE_SDK"] = "1"
-    os.environ["MSSdk"] = "1"
+    # Under conda, the MSVC environment is already activated, so tell
+    # setuptools to use it as-is.  When building wheels (cibuildwheel),
+    # let setuptools find and initialise MSVC on its own via vswhere/vcvarsall.
+    if not os.environ.get("GK_BUILD_WHEELS"):
+        os.environ["DISTUTILS_USE_SDK"] = "1"
+        os.environ["MSSdk"] = "1"
 
     condalib_dir = sys.prefix + "/Library"
     condalib_inc = condalib_dir + "/include"
@@ -173,12 +177,22 @@ elif toolset == "msvc":
     include_dirs.append(condalib_inc)
     library_dirs.append(condalib_lib)
 
+    # Also pick up paths from INCLUDE/LIB env vars (e.g. vcpkg paths set by CI)
+    if os.environ.get("INCLUDE"):
+        for p in os.environ["INCLUDE"].split(";"):
+            if p and p not in include_dirs:
+                include_dirs.append(p)
+    if os.environ.get("LIB"):
+        for p in os.environ["LIB"].split(";"):
+            if p and p not in library_dirs:
+                library_dirs.append(p)
+
     define_macros += [
         ("_CRT_SECURE_NO_WARNINGS", None),
     ]
 
     libraries += [
-        "zlib",
+        "zs" if os.environ.get("GK_BUILD_WHEELS") else "zlib",
     ]
 
     # VC flags common to both debug and release modes
@@ -390,6 +404,9 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
             "Programming Language :: Python :: 3.13",
+            "Operating System :: Microsoft :: Windows",
+            "Operating System :: POSIX :: Linux",
+            "Operating System :: MacOS :: MacOS X",
         ],
         description="GenomeKit is a Python library for fast and easy access to genomic resources such as sequence, data tracks, and annotations.",
         long_description=(Path(__file__).parent / "README.md").read_text(),

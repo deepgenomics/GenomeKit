@@ -125,6 +125,112 @@ jobs:
           path: wheelhouse/*.whl
 
 
+  build-wheel-windows:
+    name: Build windows wheels
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: try to restore the windows wheels cache
+        id: restore_windows_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: windows-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+
+      # skip remaining steps on cache hit
+
+      - if: ${{ steps.restore_windows_wheels.outputs.cache-hit != 'true' }}
+        name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+
+      - if: ${{ steps.restore_windows_wheels.outputs.cache-hit != 'true' }}
+        name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.23.3
+
+      - if: ${{ steps.restore_windows_wheels.outputs.cache-hit != 'true' }}
+        name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse && dir wheelhouse\
+        env:
+          GK_BUILD_WHEELS: "1"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+          CIBW_ARCHS_WINDOWS: AMD64
+          CIBW_ENVIRONMENT_PASS_WINDOWS: GK_BUILD_WHEELS
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            INCLUDE="C:\\vcpkg\\installed\\x64-windows-static\\include"
+            LIB="C:\\vcpkg\\installed\\x64-windows-static\\lib"
+          CIBW_BEFORE_BUILD_WINDOWS: vcpkg install zlib:x64-windows-static
+          CIBW_BUILD_VERBOSITY: "3"
+
+      - if: ${{ steps.restore_windows_wheels.outputs.cache-hit != 'true' }}
+        name: cache windows wheels
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ steps.restore_windows_wheels.outputs.cache-primary-key }}
+          path: wheelhouse/*.whl
+
+
+  test-wheel-windows:
+    needs: build-wheel-windows
+    name: Test wheels on windows / Python ${{ matrix.pyver }}
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        include:
+          - {"pyver": "3.10", "pyvershort": "310"}
+          - {"pyver": "3.11", "pyvershort": "311"}
+          - {"pyver": "3.12", "pyvershort": "312"}
+          - {"pyver": "3.13", "pyvershort": "313"}
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pyver }}
+
+      - uses: actions/checkout@v4
+
+      - name: Download built wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: windows-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Install wheel
+        shell: bash
+        run: |
+          wheel=$(ls wheelhouse/*cp${{ matrix.pyvershort }}*win*.whl | head -1)
+          echo "Installing wheel: $wheel"
+          pip install "$wheel"
+
+      # separate step from above b/c GITHUB_PATH updates don't take effect until the next step
+      - name: Verify GK loads
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          python -c "import genome_kit; print(genome_kit.__version__)"
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          # Run from a temp dir so that the local genome_kit/ source folder
+          # doesn't shadow the installed wheel.
+          test_dir="$RUNNER_TEMP/gk_tests"
+          mkdir -p "$test_dir"
+          cp -r tests "$test_dir/tests"
+          cd "$test_dir"
+          for f in tests/test_*.py; do
+            module="tests.$(basename "$f" .py)"
+            echo "Running: $module"
+            CI=1 python -m unittest "$module" || exit $?
+          done
+
+
   test-wheel-macos:
     needs: build-wheel-macos
     name: Test wheels on ${{ matrix.os }}
@@ -215,6 +321,14 @@ jobs:
 #          path: wheelhouse/*.whl
 #          fail-on-cache-miss: true
 #
+#      - name: Restore the windows wheels cache
+#        id: restore_windows_wheels
+#        uses: actions/cache/restore@v4
+#        with:
+#          key: windows-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+#          path: wheelhouse/*.whl
+#          fail-on-cache-miss: true
+#
 #      - name: Debug see what's in wheelhouse dir
 #        run: |
 #          set -euxo pipefail
@@ -231,7 +345,7 @@ jobs:
 
   publish-to-pypi:
     name: Publish to PyPI
-    needs: [build-wheel-linux, test-wheel-macos]
+    needs: [build-wheel-linux, test-wheel-macos, test-wheel-windows]
     runs-on: ubuntu-latest
 
     environment:
@@ -265,6 +379,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: macos-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
+          path: wheelhouse/*.whl
+          fail-on-cache-miss: true
+
+      - name: Restore the windows wheels cache
+        id: restore_windows_wheels
+        uses: actions/cache/restore@v4
+        with:
+          key: windows-wheels-${{ hashFiles('.github/workflows/build-wheels.yaml', '.github/actions/**', 'src/**', 'genome_kit/**', 'pyproject.toml', 'setup.py', 'setup/**') }}
           path: wheelhouse/*.whl
           fail-on-cache-miss: true
 
